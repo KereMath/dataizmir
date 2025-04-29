@@ -48,3 +48,4 @@ node_modules/
 # docker
 contrib/docker/.env
 cypress.env.json
+ckan/public/kilavuz_video.mp4

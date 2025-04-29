@@ -1,0 +1,18 @@
+{% extends "page.html" %}
+
+{% block subtitle %}İZKA Açık Veri Lisansı{% endblock %}
+
+
+{% block primary %}
+  <article class="module" role="main">
+    <div class="module-content">
+      {% block about %}
+          <h1 class="page-heading">İZKA Açık Veri Lisansı</h1>
+          {% snippet 'home/snippets/license_text.html' %}
+        
+      {% endblock %}
+    </div>
+  </article>
+{% endblock %}
+
+{% block secondary %}{% endblock %}

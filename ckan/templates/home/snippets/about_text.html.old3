@@ -1,0 +1,42 @@
+{% trans %}
+
+<head>
+<style>
+* {
+  box-sizing: border-box;
+}
+
+/* Create two equal columns that floats next to each other */
+.column {
+  float: left;
+  width: 45%;
+  padding: 20px 50px;
+  margin-left: 10px;
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
+</head>
+
+<body>
+<div class="row">
+
+	<div class="column" style="background-color:#fff; font-family:Arial">
+		<h1 style="color: black; font-weight: bold; line-height: 1.25">Data İzmir<br>Platformu<br>nedir?</h1>
+		<p align="justify">İzmir Kalkınma Ajansı, İzmir’in sürdürülebilir kalkınması için bütüncül bir yaklaşım ile yerel potansiyeli harekete geçirecek katılımcı araçlar geliştirmekte ve uygulamaktadır.<br><br>Bu kapsamda Data İzmir Platformu, yerel, bölgesel, ulusal ve uluslararası ölçekte İzmir'i konu edinen her türlü politika, tasarım, karar alma ve araştırma süreçlerinde İzmir için kanıta dayalı bir çalışma pratiğinin hayata geçirilmesine yönelik ihtiyaç duyulan veri setlerini içeren bir portaldır.</p>
+	</div>
+  
+	<div class="column" style="background-color:#fff; font-family:Arial">
+		<h4 style="font-weight: bold">- Data İzmir Platformu nasıl kullanılır?</h4>
+		<iframe width="448" height="268" src="https://www.youtube.com/embed/bc3hS9QpXIs?si=sv-hDcNWHOnjwXbw" title="Data İzmir Kullanım Videosu" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+    </div>
+
+</div>
+</body>
+
+{% endtrans %}

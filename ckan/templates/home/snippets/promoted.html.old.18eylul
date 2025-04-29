@@ -1,0 +1,27 @@
+{% set intro = g.site_intro_text %}
+{% set title = g.site_title %}
+
+
+<div class="module-content">
+  <div>
+    {% if intro %}
+      <h1 class="page-heading" style="color:#fff;">{{ h.render_markdown(title) }}</h1>
+    {% else %}
+      <h1 class="page-heading" style="color:#fff;">{{ _("İZKA Açık Veri Platformu") }}</h1>
+    {% endif %}
+    {% if intro %}
+    <div style="color:#fff;font-size: 14px;">
+      {{ h.render_markdown(intro) }}
+    </div>
+    {% else %}
+      <h1 class="page-heading">{{ _("Welcome to CKAN") }}</h1>
+      <p>
+        {% trans %}This is a nice introductory paragraph about CKAN or the site
+        in general. We don't have any copy to go here yet but soon we will
+        {% endtrans %}
+      </p>
+    {% endif %}
+  </div>
+
+  
+</div>

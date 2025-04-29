@@ -1,0 +1,17 @@
+{% trans %}
+<p>Bu site altında yer alan tüm materyaller aksi belirtilmedikçe CC BY 4.0 uluslararası lisansı ile İzmir Kalkınma Ajansı tarafından lisanslanmıştır. Lisans detayları için;</p>
+<p><a href="https://creativecommons.org/licenses/by/4.0/deed.tr"><b><u>https://creativecommons.org/licenses/by/4.0/deed.tr</u></b></a> bağlantısını kullanabilirsiniz.</p>
+<p>Veriler atıf vermek kaydıyla ticari amaç da dahil olmak üzere kopyalanabilir, düzenlenebilir, dağıtılabilir.</p>
+<p>Şunları Yapmakta Özgürsünüz;</p>
+<ul>
+    <li>Verileri kopyalamak, yayımlamak, dağıtmak ve iletmek,</li>
+    <li>Verileri uyarlamak,</li>
+    <li>Verileri, ticari olarak veya ticari olmayan şekilde, örneğin diğer verilerle birleştirerek veya kendi ürününüze veya uygulamanıza ekleyerek kullanabilirsiniz.</li>
+</ul>
+<p>Şunları Yapmalısınız;</p>
+<p>Ürününüzde, çalışmanızda veya uygulamalarınızda kullanacağınız verilerin kaynaklarını bir atıf bildirimi vasıtasıyla referans göstermeli ve mümkünse bu lisansa bir bağlantı sağlamalısınız. </p>
+<p>Bildirim sağlanamadığı takdirde “Atıf 4.0 Uluslararası (CC BY 4.0) kapsamında lisanslanan kamu sektörü bilgilerini içerir.“ ifadesi kullanılmalıdır.</p>
+<p>Eğer çoklu veri sağlayıcı kaynağı kullanılması sebebiyle bu bildirimleri yapamıyorsanız, gerekli bildirimleri içeren kaynağa link koyabilirsiniz.</p>
+<p>Bu portalda yer alan verilerdeki hatalar ve eksiklikler sebebiyle veri sağlayıcılar ve lisans veren sorumlu tutulamaz. Aynı şekilde kullanımdan kaynaklı herhangi bir kayıp veya ziyandan veri sağlayıcılar ve veri lisanslayan sorumlu değildir. Veri sağlayıcılar verinin sürekliliğini garanti etmez.</p>
+<br>
+{% endtrans %}

@@ -1,0 +1,62 @@
+<head>
+<style>
+.border-right {
+    border-right: 2px solid grey; /* Change the color as needed */
+}
+
+.col-md-2 {
+    vertical-align: top; /* Ensure all columns align to the top */
+}
+
+.row > div:last-child {
+    border-right: none; /* Remove border from the last column */
+}
+
+.site-footer a {
+    color: grey; /* Set all footer links to grey */
+}
+
+</style>
+</head>
+
+<footer class="site-footer">
+  <div class="container">
+    {% block footer_content %}
+    <div class="row">
+	
+      <div class="col-md-2 attribution border-right" style="padding: 4px 0px; vertical-align: top;">
+        <a class="logoalt" href="https://izka.org.tr"><img src="/base/images/theme/logo-izka-beyaz.png" alt="İzmir Kalkınma Ajansı" title="İzmir Kalkınma Ajansı" /></a>
+      </div>
+	  	
+      <div class="col-md-2 footer-links border-right" style="padding: 14px 0px 0px 40px; vertical-align: top;">
+        {% block footer_nav %}
+          <ul class="list-unstyled">
+            {% block footer_links %}
+            {% endblock %}
+          </ul>
+          <ul class="list-unstyled">
+            {% block footer_links_ckan %}
+              {% set api_url = 'http://docs.ckan.org/en/{0}/api/'.format(g.ckan_doc_version) %}
+              
+              <li style="text-align: left;"><a href="{{ h.url_for(controller='home', action='license') }}">Veri Politikası</a></li>
+              <li style="text-align: left;"><a href="https://dataizmir.izka.org.tr/dataizmir_kvkk.pdf">KVKK</a></li>
+              <li style="text-align: left;"><a href="https://dataizmir.izka.org.tr/dataizmir_kosullar.pdf">Kullanım Koşulları</a></li>
+            {% endblock %}
+          </ul>
+        {% endblock %}
+      </div>
+	  	
+      <div class="col-md-2 attribution" style="color: gray; padding: 14px 0px 0px 40px; vertical-align: top;">
+        <a href="mailto:%20dataizmir@izka.org.tr">Görüş & Öneri<br>Destek Talebi</a>
+      </div>	  	
+
+    </div>
+    {% endblock %}
+  </div>
+
+  {% block footer_debug %}
+    {% if g.debug %}
+      {% include 'snippets/debug.html' %}
+    {% endif %}
+  {% endblock %}
+</footer>

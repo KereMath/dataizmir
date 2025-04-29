@@ -1,0 +1,42 @@
+<footer class="site-footer">
+  <div class="container">
+    {% block footer_content %}
+    <div class="row">
+	
+      <div class="col-md-4 attribution">
+        <a class="logoalt" href="https://izka.org.tr"><img src="/base/images/theme/logo-izka-beyaz.png" alt="İzmir Kalkınma Ajansı" title="İzmir Kalkınma Ajansı" /></a>
+      </div>
+	  
+      <div class="col-md-4 footer-links" style="text-align: justify;">
+        {% block footer_nav %}
+          <ul class="list-unstyled">
+            {% block footer_links %}
+            {% endblock %}
+          </ul>
+          <ul class="list-unstyled">
+            {% block footer_links_ckan %}
+              {% set api_url = 'http://docs.ckan.org/en/{0}/api/'.format(g.ckan_doc_version) %}
+              
+              <li style="text-align: center;"><a href="{{ h.url_for(controller='home', action='license') }}">Lisans</a></li>
+			  <li style="text-align: center;"><a href="https://dataizmir.izka.org.tr/dataizmir_kvkk.pdf">KVKK</a></li>
+			  <li style="text-align: center;"><a href="https://dataizmir.izka.org.tr/dataizmir_kosullar.pdf">Kullanım Koşulları</a></li>
+            {% endblock %}
+          </ul>
+        {% endblock %}
+      </div>
+	  
+      <div class="col-md-4 attribution" style="padding: 15px 0px">
+		  <a href="mailto:%20dataizmir@izka.org.tr" style="float: right;">Görüş & Öneri<br>Destek Talebi</a>
+          <a href="mailto:%20dataizmir@izka.org.tr"><img src="/base/images/theme/envelope.png" style="float: right;"></a>
+      </div>	  
+
+    </div>
+    {% endblock %}
+  </div>
+
+  {% block footer_debug %}
+    {% if g.debug %}
+      {% include 'snippets/debug.html' %}
+    {% endif %}
+  {% endblock %}
+</footer>

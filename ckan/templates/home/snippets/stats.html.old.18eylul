@@ -1,0 +1,98 @@
+{% set stats = h.get_site_statistics() %}
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+/* Create two equal columns that floats next to each other */
+.column1 {
+  float: left;
+  width: 30%;
+  padding: 20px;
+  height: auto; /* Should be removed. Only for demonstration */
+}
+
+.column2 {
+  float: left;
+  width: 70%;
+  padding: 30px;
+  height: auto; /* Should be removed. Only for demonstration */
+}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+</style>
+
+
+<div class="col-md-8 col1">    
+		<img src="https://dataizmir.izka.org.tr/slider-gorseli.png" style="width: 100%; vertical-align: middle;">
+</div>
+
+<div class="col-md-4 col2">    
+
+	  <div class="heroverticalcolumns">
+		<div href="{{ h.url_for('dataset.search') }}" style="color: white!important; font-size: 36px; font-weight: bold; float: left; padding: 20px 0px">
+		&nbsp&nbsp{{ h.SI_number_span(stats.organization_count) }}
+		<span style="color: white!important; font-size: 16px;">&nbspVERİ PAYDAŞI</span>
+		</div>
+	  </div>	  
+	  
+	  <div class="heroverticalcolumns">
+		<div href="{{ h.url_for('dataset.search') }}" style="color: white!important; font-size: 36px; font-weight: bold; float: left; padding: 20px 0px">
+		{{ h.SI_number_span(stats.dataset_count) }}
+		<span style="color: white!important; font-size: 16px;">&nbspVERİ SETİ</span>
+		</div>
+	  </div>
+	  
+	  <div class="heroverticalcolumns">
+		<div href="{{ h.url_for('dataset.search') }}" style="color: white!important; font-size: 36px; font-weight: bold; float: left; padding: 20px 0px">
+		&nbsp&nbsp{{ h.SI_number_span(stats.group_count) }}
+		<span style="color: white!important; font-size: 16px;">&nbspKATEGORİ</span>
+		</div>
+	  </div>	  
+
+<!-- 	<div class="heroverticalcolumns">
+	  <div class="column1">
+		<div href="{{ h.url_for('dataset.search') }}" style="color: white!important; font-size: 36px; font-weight: bold; float: left; padding: 10px 0px">
+		{{ h.SI_number_span(stats.organization_count) }}
+		</div>
+	  </div>
+	  <div class="column2">
+		<div style="color: white!important; font-size: 16px; font-weight: bold; float: left; padding: 20px 0px">
+		VERİ PAYDAŞI
+		</div>
+	  </div>
+	</div>
+	
+	<div class="heroverticalcolumns">
+	  <div class="column1">
+		<div href="{{ h.url_for('dataset.search') }}" style="color: white!important; font-size: 36px; font-weight: bold; float: left; padding: 10px 0px">
+		{{ h.SI_number_span(stats.dataset_count) }}
+		</div>
+	  </div>
+	  <div class="column2">
+		<div style="color: white!important; font-size: 16px; font-weight: bold; float: left; padding: 20px 0px">
+		VERİ SETİ
+		</div>
+	  </div>
+	</div>
+	
+	<div class="heroverticalcolumns">
+	  <div class="column1">
+		<div href="{{ h.url_for('dataset.search') }}" style="color: white!important; font-size: 36px; font-weight: bold; float: left; padding: 10px 0px">
+		{{ h.SI_number_span(stats.group_count) }}
+		</div>
+	  </div>
+	  <div class="column2">
+		<div style="color: white!important; font-size: 16px; font-weight: bold; float: left; padding: 20px 0px">
+		KATEGORİ
+		</div>
+	  </div>
+	</div> -->
+
+</div>

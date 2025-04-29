@@ -1,0 +1,65 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Groups') }}{% endblock %}
+{%- block header %}
+    {% include "header.html" %}
+    <div id="title" class="package-title container-fluid" style="background-image:url(&quot;/base/images/theme/background_photo.jpg&quot;);color: #fff;">
+      <div class="background-overlay">
+      <div class="restricted-max-width">
+      <div class="col-xs-12 col-md-10 col-md-offset-1">
+      <div id="title-container" class="col-xs-12 col-md-6 text-left">
+      <h1>{{ _('Groups') }}</h1>
+      <p class="description">
+      Burada platform içindeki veri setlerinin kolayca aranabilir ve bulunabilir olması için ayrıldıkları kategoriler yer almaktadır.
+      </p>
+      </div>
+      <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
+      <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
+      <p class="stat" style="font-size: 30px;font-weight: bolder;">{{page.item_count}}</p>
+      <p class="stats-legend datasets">{{ _('Group') }}</p>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+  {% endblock -%}
+{% block breadcrumb_content %}
+  <li class="active">{% link_for _('Groups'), named_route=group_type+'.index' %}</li>
+{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+{% block page_primary_action %}
+  {% if h.check_access('group_create') %}
+    {% link_for _('Add Group'), named_route=group_type+'.new', class_='btn btn-primary', icon='plus-square' %}
+  {% endif %}
+{% endblock %}
+
+{% block primary_content_inner %}
+  <h1 class="hide-heading">{{ _('Groups') }}</h1>
+  {% block groups_search_form %}
+    {% snippet 'snippets/search_form.html', form_id='group-search-form', type='group', query=q, sorting_selected=sort_by_selected, count=page.item_count, placeholder=_('Search groups...'), show_empty=request.params, no_bottom_border=true if page.items, sorting = [(_('Name Ascending'), 'title asc'), (_('Name Descending'), 'title desc')] %}
+  {% endblock %}
+  {% block groups_list %}
+    {% if page.items or request.params %}
+      {% if page.items %}
+        {% snippet "group/snippets/group_list.html", groups=page.items %}
+      {% endif %}
+    {% else %}
+      <p class="empty">
+        {{ _('There are currently no groups for this site') }}.
+        {% if h.check_access('group_create') %}
+          {% link_for _('How about creating one?'), named_route=group_type+'.new' %}</a>.
+        {% endif %}
+      </p>
+    {% endif %}
+  {% endblock %}
+  {% block page_pagination %}
+    {{ page.pager(q=q or '', sort=sort_by_selected or '') }}
+  {% endblock %}
+{% endblock %}
+
+{% block secondary_content %}
+  {% snippet "group/snippets/helper.html" %}
+{% endblock %}

@@ -1,0 +1,44 @@
+{% set tags = h.get_facet_items_dict('tags', c.search_facets, limit=3) %}
+{% set placeholder = "" %}
+<style>
+  .search-form{
+    margin-top: 12px!important;
+    margin-bottom: 0!important;
+    border-top: none!important;
+  }
+
+  .moduleout{
+    padding: 2%;
+    background-color: #699df67a;
+    border-radius: 5px;
+  }
+
+  .search-form .search-input.search-giant input{
+    padding: 5px!important;
+  }
+  .form-control {
+    width: 80%!important;
+
+  }
+
+  .search-form .search-input button i{
+    color: #fff;
+  }
+
+</style>
+<div class="moduleout">
+  <h1 class="page-heading" style="color:#fff;font-size: 16px!important;margin-bottom: -10px!important;padding: 5px;">Veri Setini Arayın</h1>
+  <div class="module">
+    <form class="module-content search-form" method="get" action="{% url_for 'dataset.search' %}">
+      <div class="search-input form-group search-giant">
+        <input aria-label="{% block header_site_search_label %}{{ _('Search datasets') }}{% endblock %}"
+          id="field-main-search" type="text" class="form-control" name="q" value="" autocomplete="off"
+          placeholder="{% block search_placeholder %}{{ placeholder }}{% endblock %}" />
+        <button type="submit" aria-labelledby="search-label">
+          <i class="fa fa-search"></i>
+          <span class="sr-only" id="search-label">{{ _('Search') }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

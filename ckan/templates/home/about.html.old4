@@ -1,0 +1,44 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('About') }}{% endblock %}
+
+{%- block header %}
+    {% include "header.html" %}
+    <div id="title" class="package-title container-fluid" style="background-image:url(&quot;/base/images/theme/background_photo.jpg&quot;);color: #fff;">
+      <div class="background-overlay">
+      <div class="restricted-max-width">
+      <div class="col-xs-12 col-md-10 col-md-offset-1">
+      <div id="title-container" class="col-xs-10 col-md-6 text-left">
+      <h1 style="margin-left: 200px; ">Platform Nasıl Kullanılır</h1>
+      </div>
+      <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
+      <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
+      <p class="stat" style="font-size: 30px;font-weight: bolder;"> <span style="font-size: 18px"> </span></p>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+  {% endblock -%}
+ 
+{% block breadcrumb_content %}
+  <li class="active">{% link_for _('About'), 'home.about' %}</li>
+{% endblock %}
+
+{% block primary %}
+  <article class="module" role="main">
+    <div class="module-content">
+      {% block about %}
+        {% if g.site_about %}
+          {{ h.render_markdown(g.site_about) }}
+        {% else %}
+          <!-- <h6 class="page-heading"></h6> -->
+          {% snippet 'home/snippets/about_text.html' %}
+        {% endif %}
+      {% endblock %}
+    </div>
+  </article>
+{% endblock %}
+
+{% block secondary %}{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Organizations') }}{% endblock %}
+{%- block header %}
+    {% include "header.html" %}
+    <div id="title" class="package-title container-fluid" style="background-image:url(&quot;/base/images/theme/background_photo.jpg&quot;);color: #fff;">
+      <div class="background-overlay">
+      <div class="restricted-max-width">
+      <div class="col-xs-12 col-md-10 col-md-offset-1">
+      <div id="title-container" class="col-xs-12 col-md-6 text-left">
+      <h1>Veri Paydaşları</h1>
+      <p class="description">
+      Bu kısımda, veri setlerini oluşturan, yayımlayan ve düzenleyen veri paydaşları yer almaktadır.
+      </p>
+      </div>
+      <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
+      <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
+      <p class="stat" style="font-size: 30px;font-weight: bolder;">{{page.item_count}}</p>
+      <p class="stats-legend datasets">Veri Paydaşı</p>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+  {% endblock -%}
+{% block breadcrumb_content %}
+  <li class="active">{% link_for _('Organizations'), named_route=group_type+'.index' %}</li>
+{% endblock %}
+
+{% block page_header %}{% endblock %}
+
+{% block page_primary_action %}
+  {% if h.check_access('organization_create') %}
+    {% link_for _('Add Organization'), named_route=group_type+'.new', class_='btn btn-primary', icon='plus-square' %}
+  {% endif %}
+{% endblock %}
+
+{% block primary_content_inner %}
+  <h1 class="hide-heading">{% block page_heading %}{{ _('Organizations') }}{% endblock %}</h1>
+  {% block organizations_search_form %}
+    {% snippet 'snippets/search_form.html', form_id='organization-search-form', type='organization', query=q, sorting_selected=sort_by_selected, count=page.item_count, placeholder=_('Search organizations...'), show_empty=request.params, no_bottom_border=true if page.items, sorting = [(_('Name Ascending'), 'title asc'), (_('Name Descending'), 'title desc')] %}
+  {% endblock %}
+  {% block organizations_list %}
+    {% if page.items or request.params %}
+      {% if page.items %}
+        {% snippet "organization/snippets/organization_list.html", organizations=page.items %}
+      {% endif %}
+    {% else %}
+      <p class="empty">
+        {{ _('There are currently no organizations for this site') }}.
+        {% if h.check_access('organization_create') %}
+          {% link_for _('How about creating one?'), named_route=group_type+'.new' %}</a>.
+        {% endif %}
+      </p>
+    {% endif %}
+  {% endblock %}
+  {% block page_pagination %}
+    {{ page.pager(q=q or '', sort=sort_by_selected or '') }}
+  {% endblock %}
+{% endblock %}
+
+{% block secondary_content %}
+  {% snippet "organization/snippets/helper.html" %}
+{% endblock %}

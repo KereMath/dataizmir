@@ -1,0 +1,92 @@
+{% set intro1 = g.site_intro_text %}
+{% set title = g.site_title %}
+{% set intro = g.site_about %}
+<style>
+ 
+  .slide {
+    display: none;
+  }
+  .active {
+    display: block;
+  }
+  /* Dots styling */
+  .dots {
+    margin-top: 20px;
+  }
+  .dot {
+    height: 15px;
+    width: 15px;
+    background-color: #9595956f;
+    border-radius: 50%;
+    display: inline-block;
+    margin: 0 5px;
+    cursor: pointer;
+  }
+  .dot.active-dot {
+    background-color: #f6f6f6cf;
+  }
+</style>
+
+
+<div class="module-content" style="max-width: 500px;margin-top: 20px;height: 260px;">
+  <div>
+    
+    <h1 class="page-heading" style="color:#fff;">{{ h.render_markdown(title) }}</h1>
+    
+
+    <div class="slide active" style="color:#fff;font-size: 14px;">
+      {{ h.render_markdown(intro) }}
+    </div>
+
+    <div class="slide" style="color:#fff;font-size: 14px;">{{ h.render_markdown(intro1) }}</div>
+    
+  </div>
+
+  <!-- Dots Section -->
+  
+
+</div>
+<div class="dots">
+  <span class="dot active-dot"></span>
+  <span class="dot"></span>
+</div>
+
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.slide');
+  console.log(slides);
+  const dots = document.querySelectorAll('.dot');
+
+  function showNextSlide() {
+    // Remove active class from current slide and dot
+    slides[currentSlide].classList.remove('active');
+    dots[currentSlide].classList.remove('active-dot');
+
+    // Update the current slide index
+    currentSlide = (currentSlide + 1) % slides.length;
+
+    // Add active class to the new slide and dot
+    slides[currentSlide].classList.add('active');
+    dots[currentSlide].classList.add('active-dot');
+  }
+
+  // Automatically change slides every 5 seconds
+  setInterval(showNextSlide, 8000);
+
+  // Dots click event
+  dots.forEach((dot, index) => {
+    dot.addEventListener('click', () => {
+      // Remove active class from current slide and dot
+      slides[currentSlide].classList.remove('active');
+      dots[currentSlide].classList.remove('active-dot');
+
+      // Set the current slide to the clicked dot's index
+      currentSlide = index;
+
+      // Add active class to the new slide and dot
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide].classList.add('active-dot');
+    });
+  });
+</script>

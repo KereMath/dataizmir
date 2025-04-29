@@ -1,0 +1,120 @@
+
+{% set my_string = 'https://dataizmir.izka.org.tr/group/' %}
+<style>
+    .card-1 {
+        display: flex;
+    }
+
+    .card-1 .icon {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-right: 20px;
+        position: relative;
+    }
+
+    .card-1 .icon img {
+        width: 48px;
+        height: 60px;
+        margin-top: -5px;
+    }
+
+
+    .card-1 .content {
+        display: flex;
+        flex-direction: column;
+        width: 300px;
+    }
+
+    .card-1 h3 {
+        font-size: 18px;
+        margin: 0;
+        color: #101752;
+        padding-right: 60px;
+        min-height: 125px;
+    }
+
+    .card-1:hover h3{
+        color: #fff!important;
+    }
+
+    .card-1:hover .views span{
+        color: #fff!important;
+    }
+    .card-1:hover .date{
+        color: #fff!important;
+    }
+
+    .card-1:hover .icon img {
+        filter: brightness(0) invert(1);
+    }
+
+    .card-1 .views {
+        display: flex;
+        align-items: center;
+        margin-top: 10px;
+    }
+
+    .card-1 .views img {
+        width: 40px;
+        height: 40px;
+        margin-right: 5px;
+    }
+
+    .card-1 .views span {
+        font-size: 24px;
+        color: #4f7cc2;
+        font-weight: bold;
+    }
+
+    .card-1 .date {
+        font-size: 14px;
+        color: #101752;
+        margin-top: 10px;
+        text-align: end;
+        margin-top: 50px !important;
+    }
+
+    .label {
+
+        margin-top: 10px!important;
+        
+    }
+</style>
+{% for package in packages %}
+{% set my_string = my_string + package.name%}
+{% set date_string = package.metadata_modified %}
+{% set year = date_string[:4] %}
+{% set month = date_string[5:7] %}
+{% set day = date_string[8:10] %}
+
+<a class="card border card-grid-item hover-overlay" href="{{h.url_for('%s.read' % package.type, id=package.name)}}" title="{{ package.title or package.name }}">
+    <div class="card-1">
+        <div class="icon">
+            <img src="/checked.png" alt="PDF icon">
+            
+
+            {% if package.resources and not hide_resources %}
+            {% for resource in h.dict_list_reduce(package.resources, 'format') %}
+
+            <div href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="label label-default"
+                data-format="{{ resource.lower() }}">{{ resource }}</div>
+
+            {% endfor %}
+            {% endif %}
+
+        </div>
+
+        <div class="content">
+            <h3>{{package.title or package.name}}</h3>
+            <div class="views">
+                <img src="/view.png" alt="Eye icon">
+                <span>{{package.tracking_summary.total}}</span>
+            </div>
+            <div class="date">
+                <span><strong>Son Değiştirme: </strong>{{ day }}/{{ month }}/{{ year }}</span>
+            </div>
+        </div>
+    </div>
+</a>
+{% endfor %}

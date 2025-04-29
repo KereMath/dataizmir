@@ -1,0 +1,25 @@
+{% set stats = h.get_site_statistics() %}
+
+
+<div class="col-md-6 col1"> </div>
+        
+        <div class="col-md-6 col2">
+          <div class="heroverticalcolumns">
+            <a href="{{ h.url_for(controller='organization', action='index') }}" style="color: white!important;">
+            <h1 style="font-size: 40px;">{{ h.SI_number_span(stats.organization_count) }}</h1>
+            <p>VERİ PAYDAŞI</p>
+          </a>
+          </div>
+          <div class="heroverticalcolumns" >
+            <a href="{{ h.url_for('dataset.search') }}" style="color: white!important;">
+            <h1 style="font-size: 40px;">{{ h.SI_number_span(stats.dataset_count) }}</h1>
+            <p>VERİ SETİ</p>
+          </a>
+          </div>
+          <div class="heroverticalcolumns" >
+            <a href="{{ h.url_for(controller='group', action='index') }}" style="color: white!important;">
+            <h1 style="font-size: 40px;">{{ h.SI_number_span(stats.group_count) }}</h1>
+            <p>KATEGORİ</p>
+          </a>
+          </div>
+        </div>

@@ -1,0 +1,17 @@
+{% set groups = h.get_featured_groups(count=30) %}
+{% set my_string = 'https://dataizmir.izka.org.tr/group/' %}
+{% for group in groups %}
+{% set my_string = my_string + group.name%}
+    <a class="card border card-grid-item hover-overlay" href="{{ my_string }}"
+          title="{{ group.title or group.name }}">
+          
+          <img class="card-img-top" src="{{ group.image_display_url or h.url_for_static('/base/images/placeholder-group.png') }}"
+            alt="{{ group.title or group.name }}"></img>
+            <div class="d-flex flex-row justify-content-end">
+              <span class="badge" style="font-size: 36px; background-color: transparent;">{{ group.package_count }}</span>
+            </div>
+			<div style="margin-top: 5px;">{{ group.title or group.name }}</div>
+
+          
+        </a>
+{% endfor %}

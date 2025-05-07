@@ -1,17 +1,78 @@
-{% set groups = h.get_featured_groups(count=30) %}
-{% set my_string = 'https://dataizmir.izka.org.tr/group/' %}
-{% for group in groups %}
-{% set my_string = my_string + group.name%}
-    <a class="card border card-grid-item hover-overlay" href="{{ my_string }}"
-          title="{{ group.title or group.name }}">
-          
-          <img class="card-img-top" src="{{ group.image_display_url or h.url_for_static('/base/images/placeholder-group.png') }}"
-            alt="{{ group.title or group.name }}"></img>
-            <div class="d-flex flex-row justify-content-end">
-              <span class="badge" style="font-size: 36px; background-color: transparent;">{{ group.package_count }}</span>
-            </div>
-			<div style="margin-top: 5px;">{{ group.title or group.name }}</div>
+{% set base_url = 'https://dataizmir.izka.org.tr/group/' %}
+<style>
+  .card-grid .card-grid-item span{ color:black !important; }
 
-          
-        </a>
+  /* === Kart kenarlığı + köşe yuvarlama === */
+  .card.nohover{
+      border:1px solid #dee2e6;
+      border-radius:10px;
+      background:#fff;
+  }
+
+  /* --- Kart hover’ı: yazılar/ikonlar değişmesin, BUTON HARİÇ --- */
+  .card.nohover:hover,
+  .card.nohover:hover *:not(.btn1-inceleyin):not(.btn1-inceleyin *){   /* butonu hariç tut */
+      background:#fff !important;
+      color:inherit !important;
+      stroke:inherit !important;
+      filter:none !important;
+      text-decoration:none !important;
+  }
+
+  /* Başlık (mavi) */
+  .group-title{
+      font-family:Labrada;font-weight:600;font-size:24px;line-height:26px;
+      text-align:center;margin-top:5px;color:#0a1458;
+  }
+  .card.nohover:hover .group-title{ color:#0a1458 !important; }
+
+  /* === “Veri Setini İnceleyin” butonu === */
+  .btn1-inceleyin{
+      margin-top:5px;
+      display:flex;align-items:center;justify-content:center;gap:6px;
+      text-decoration:none;background:transparent;color:#000;
+      font-family:Labrada;font-weight:600;font-size:16px;line-height:100%;
+      letter-spacing:0;text-align:center;
+  }
+  .btn1-inceleyin:hover{
+      background:#658dc9 !important;   /* sadece butonun arka planı değişsin */
+      color:#000      !important;       /* yazı siyah */
+  }
+
+  /* Ok her durumda siyah */
+  .btn1-inceleyin svg path,
+  .btn1-inceleyin:hover svg path{ stroke:#000 !important; }
+</style>
+
+{% set groups = h.get_featured_groups(count=30) %}
+
+{% for group in groups %}
+  <div class="card border card-grid-item nohover">
+
+      <!-- Görsel -->
+      <img class="card-img-top"
+           src="{{ group.image_display_url or h.url_for_static('/base/images/placeholder-group.png') }}"
+           alt="{{ group.title or group.name }}">
+
+      <!-- Grup adı -->
+      <div style="margin-top:-4px;" class="group-title">{{ group.title or group.name }}</div>
+
+      <!-- Veri seti sayısı + ok -->
+      <a style="margin-top:18px; border-radius: 3px;" class="btn1-inceleyin"
+         href="{{ base_url ~ group.name }}"
+         title="{{ group.title or group.name }}">
+
+          <span>{{ group.package_count }} Veri Setini<br>İnceleyin</span>
+
+          <!-- 14 × 12 px sağ ok -->
+          <svg width="14" height="12" viewBox="0 0 14 12"
+               xmlns="http://www.w3.org/2000/svg">
+              <path d="M8.5 1l4.5 5-4.5 5M1 6h11.5"
+                    stroke-width="1.5" fill="none"
+                    stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+      </a>
+
+  </div>
 {% endfor %}
+

@@ -1,4 +1,4 @@
-{# layout2.html – INTRO (video + metin) ➜ popüler ➜ kategoriler #}
+{# layout2.html – hero ➜ INTRO (video + metin) ➜ popüler ➜ kategoriler #}
 
 <style>
 /* ——— VAR OLAN STILLER (popüler & kategori) ——— */
@@ -21,8 +21,8 @@
 /* ——— INTRO BÖLÜMÜ ——— */
 .intro-main                   { background:#EEF1F6; }
 .intro-row                    { display:flex; flex-wrap:wrap; justify-content:center; padding:40px 0 }
-.intro-video-col              { flex:0 0 50%; max-width:50%; padding:20px 50px }
-.intro-text-col               { flex:1 1 50%;  padding:0 }
+.intro-video-col              { flex:0 0 50%; max-width:50%; padding:20px 50px }  /* video tam %50 */
+.intro-text-col               { flex:1 1 50%;  padding:0px 0 }                   /* yazı geri kalan */
 @media (max-width:991px){
   .intro-video-col, .intro-text-col{ flex:0 0 90%; max-width:90%; padding:20px }
 }
@@ -38,28 +38,46 @@
 }
 </style>
 
-{# ——— HERO BLOĞU ÇIKARILDI; header artık index.html’de ——— #}
-
+<!-- ——— HERO ——— -->
+<div role="main" class="hero">
+  <div class="container">
+    <div class="row row1">
+      <div>{% block promoted %}{% snippet 'home/snippets/promoted.html' %}{% endblock %}</div>
+      <div class="col-md-4 col2" style="margin-top:50px!important">
+        {% block search %}{% snippet 'home/snippets/search.html' %}{% endblock %}
+        {% block stats  %}{% snippet 'home/snippets/stats.html'  %}{% endblock %}
+      </div>
+    </div>
+  </div>
+</div>
 <!-- ——— VERİ PAYDAŞLARIMIZ ——— -->
-<div role="main" style="background-color: white; padding: 20px 0 40px 0;">
+<div role="main" style="background-color: #ebebeb; padding: 20px 0 40px 0;">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
-        <h1 style="color: black; font-family: Izmir; font-weight: 700; font-size: 24px; line-height: 58px; text-align: center;">
+        <h1 style="color: black; font-family: Izmir; font-weight: 700; font-size: 24px; leading-trim: Cap height; line-height: 58px; letter-spacing: 0%; text-align: center;">
           Veri Paydaşlarımız
         </h1>
-
-        <div class="paydas-logos-container" style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:20px;">
+        
+        <!-- Top 5 Organization Logos -->
+        <div class="paydas-logos-container" style="display: flex; justify-content: center; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+          {# Retrieve all organizations #}
           {% set all_organizations = h.organizations_available('read', True) %}
+          
+          {# Sort by package count (descending) and take top 5 #}
           {% set sorted_organizations = all_organizations|sort(attribute='package_count', reverse=True) %}
           {% set top_organizations = sorted_organizations[:5] %}
+          
           {% for organization in top_organizations %}
             {% set url = h.url_for('organization.read', id=organization.name) %}
-            <a href="{{ url }}" class="paydas-logo" style="display:block;margin:0 15px 25px;text-align:center;text-decoration:none;width:150px;">
-              <img src="{{ organization.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}"
-                   alt="{{ organization.display_name }}"
+            <a href="{{ url }}" class="paydas-logo" style="display: block; margin: 0 15px; text-align: center; text-decoration: none; width: 150px; margin-bottom: 25px;">
+              <img src="{{ organization.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}" 
+                   alt="{{ organization.display_name }}" 
                    title="{{ organization.display_name }}"
-                   style="max-width:120px;max-height:80px;border-radius:5px;">
+                   style="max-width: 120px; max-height: 80px; margin-bottom: 10px; border-radius: 5px;">
+              <span style="display: block; font-family: Labrada, sans-serif; font-size: 14px; color: #333; font-weight: 600;">
+                {{ organization.display_name }}
+              </span>
             </a>
           {% endfor %}
         </div>
@@ -67,11 +85,12 @@
     </div>
   </div>
 </div>
-
 <!-- ——— INTRO (Video + Metin) ——— -->
 <div role="main" class="intro-main">
   <div class="container">
     <div class="intro-row">
+
+      <!-- SOL: Video -->
       <div class="intro-video-col">
         <iframe src="https://www.youtube.com/embed/MXWNIhQ1AnA"
                 title="Data İzmir Kullanım Videosu"
@@ -80,14 +99,21 @@
                 referrerpolicy="strict-origin-when-cross-origin"
                 allowfullscreen></iframe>
       </div>
+
+      <!-- SAĞ: Başlık + paragraf -->
       <div class="intro-text-col" style="font-family:Labrada">
-        <h3 style="font:600 18px Labrada,sans-serif;margin-bottom:10px;color:black">Data İzmir Platformu Kullanım Rehberi</h3>
-        <h1 style="font:700 44px/54px Labrada,sans-serif;color:black">Data İzmir Platformu Nedir? Kullanım Rehberimiz Yayında!</h1>
-        <p style="font:400 16px/26px Labrada,sans-serif;color:black">
-          İzmir Kalkınma Ajansı, sürdürülebilir kalkınma için yerel potansiyeli harekete geçirirken,
+        <h3 style="font:600 18px Labrada,sans-serif; line-height:100%; color:black; margin-bottom:10px">
+          Data İzmir Platformu Kullanım Rehberi
+        </h3>
+        <h1 style="font:700 44px/54px Labrada,sans-serif; color:black">
+          Data İzmir Platformu Nedir? Kullanım Rehberimiz Yayında!
+        </h1>
+        <p style="font:400 16px/26px Labrada,sans-serif; color:black">
+          İzmir Kalkınma Ajansı, sürdürülebilir kalkınma için yerel potansiyeli harekete geçiren araçlar geliştirirken,
           Data İzmir Platformu İzmir'e yönelik kanıta dayalı karar süreçleri için veri sunar.
         </p>
       </div>
+
     </div>
   </div>
 </div>
@@ -102,7 +128,7 @@
 
     <div class="row row2" style="margin-top:10px!important">
       <div id="featured-datasets" class="card-grid-popular">
-        {% snippet 'home/popular_grid.html', packages=extra_deg %}
+        {% block featured_datasets %}{% snippet 'home/popular_grid.html', packages=extra_deg %}{% endblock %}
       </div>
       <div id="pagination-container" class="pagination-container"></div>
     </div>
@@ -112,16 +138,16 @@
 <!-- ——— KATEGORİLER ——— -->
 <div role="main" class="catg-main">
   <div class="container">
-    <div class="category-header" style="text-align:center;margin-bottom:30px">
-      <h3 style="font:600 18px Labrada,sans-serif;margin-bottom:15px;color:black">Veri Kategorilerimiz</h3>
-      <h1 style="font:700 44px/54px Labrada,sans-serif;color:black">
+    <div class="category-header" style="text-align:center; margin-bottom:30px">
+      <h3 style="font:600 18px Labrada,sans-serif; color:black; margin-bottom:15px">Veri Kategorilerimiz</h3>
+      <h1 style="font:700 44px/54px Labrada,sans-serif; color:black">
         Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi&nbsp;İnceleyin…
       </h1>
     </div>
 
     <div class="row row2" style="margin-top:30px">
       <div class="card-grid">
-        {% snippet 'home/snippets/featured_group.html' %}
+        {% block featured_group %}{% snippet 'home/snippets/featured_group.html' %}{% endblock %}
       </div>
     </div>
   </div>

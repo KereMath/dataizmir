@@ -1,0 +1,159 @@
+<!-- tuFGe2ZbspXdfN7ZWJSMqB3Dm/rOf4VSeiXh0zxILNQyXsTJ4L03Oo/H5uXWpVFmAE7Ah+F4POvMLFQIER4N4t3F3lbMXNpC+1egSDCCFEk= -->
+{% if c.userobj %}
+<style>
+  .li-giris {
+    display: none!important;
+  }
+  .li-kayit {
+    display: none!important;
+  }
+</style>
+{% else %}
+<style>
+  .account-masthead {
+    display: none !important;
+  }
+  @media (min-width: 768px) {
+  .li-giris {
+    background-color: #4f7cc1;
+    color: #fff!important;
+    border-radius: 5%!important;
+    border: 1px solid #4f7cc1;
+    padding: 10px 35px!important;
+    text-decoration: none!important;
+    margin-right: 10px!important;
+  }
+
+  .li-giris:hover {
+    background-color: #ffffff;
+    color: #4f7cc1!important;
+    border: 1px solid #4f7cc1;
+    padding: 10px 35px!important;
+    text-decoration: none!important;
+  }
+
+  .li-kayit {
+    color: #4f7cc1!important;
+    border: 1px solid #4f7cc1;
+    padding: 10px 35px!important;
+    text-decoration: none!important;
+  }
+
+  .li-kayit:hover  {
+    color: #ffffff!important;
+    border: 1px solid #4f7cc1;
+    background-color: #4f7cc1!important;
+    padding: 10px 35px!important;
+    text-decoration: none!important;
+  }  }
+  
+</style>
+{% endif %}
+{% block header_wrapper %} {% block header_account %}
+<div class="account-masthead">
+  <div class="container">
+    {% block header_account_container_content %} {% if c.userobj %}
+    <div class="account avatar authed" data-module="me" data-me="{{ c.userobj.id }}">
+      <ul class="list-unstyled">
+        {% block header_account_logged %} {% if c.userobj.sysadmin %}
+        <li>
+          <a href="{{ h.url_for(controller='admin', action='index') }}" title="{{ _('Sysadmin settings') }}">
+            <i class="fa fa-gavel" aria-hidden="true"></i>
+            <span class="text">{{ _('Admin') }}</span>
+          </a>
+        </li>
+        {% endif %}
+        <li>
+          <a href="{{ h.url_for('user.read', id=c.userobj.name) }}" class="image" title="{{ _('View profile') }}">
+            {{ h.user_image((c.user if c and c.user else ''), size=22) }}
+            <span class="username">{{ c.userobj.display_name }}</span>
+          </a>
+        </li>
+        {% set new_activities = h.new_activities() %}
+        <li class="notifications {% if new_activities > 0 %}notifications-important{% endif %}">
+          {% set notifications_tooltip = ngettext('Dashboard (%(num)d new item)', 'Dashboard (%(num)d new items)',
+          new_activities)
+          %}
+          <a href="{{ h.url_for('dashboard.index') }}" title="{{ notifications_tooltip }}">
+            <i class="fa fa-tachometer" aria-hidden="true"></i>
+            <span class="text">{{ _('Dashboard') }}</span>
+            <span class="badge">{{ new_activities }}</span>
+          </a>
+        </li>
+        {% block header_account_settings_link %}
+        <li>
+          <a href="{{ h.url_for('user.edit', id=c.userobj.name) }}" title="{{ _('Profile settings') }}">
+            <i class="fa fa-cog" aria-hidden="true"></i>
+            <span class="text">{{ _('Profile settings') }}</span>
+          </a>
+        </li>
+        {% endblock %} {% block header_account_log_out_link %}
+        <li>
+          <a href="{{ h.url_for('/user/_logout') }}" title="{{ _('Log out') }}">
+            <i class="fa fa-sign-out" aria-hidden="true"></i>
+            <span class="text">{{ _('Log out') }}</span>
+          </a>
+        </li>
+        {% endblock %} {% endblock %}
+      </ul>
+    </div>
+    {% else %}
+    <nav class="account not-authed" aria-label="{{ _('Account') }}">
+      <ul class="list-unstyled">
+
+      </ul>
+    </nav>
+    {% endif %} {% endblock %}
+  </div>
+</div>
+{% endblock %}
+<header class="navbar navbar-static-top masthead" style="background-color:transparent;">
+  {% block header_debug %} {% if g.debug and not g.debug_supress_header %}
+  <div class="debug">Controller : {{ c.controller }}<br />Action : {{ c.action }}</div>
+  {% endif %} {% endblock %}
+  <div class="container">
+    <div class="navbar-right">
+      <button data-target="#main-navigation-toggle" data-toggle="collapse" class="navbar-toggle collapsed" type="button"
+        aria-label="expand or collapse" aria-expanded="false">
+        <span class="sr-only">{{ _('Toggle navigation') }}</span>
+        <span class="fa fa-bars"></span>
+      </button>
+    </div>
+    <hgroup class="{{ g.header_class }} navbar-left">
+      {% block header_logo %} {% if g.site_logo %}
+<a class="logo" href="{{ h.url_for('home.index') }}">
+  <img src="{{ h.url_for_static_or_external('/logonew.png') }}"
+       alt="{{ g.site_title }}" title="{{ g.site_title }}" />
+</a>
+      {% else %}
+      <h1>
+        <a href="{{ h.url_for('home.index') }}">{{ g.site_title }}</a>
+      </h1>
+      {% if g.site_description %}
+      <h2>{{ g.site_description }}</h2>{% endif %} {% endif %} {% endblock %}
+    </hgroup>
+
+    <div class="collapse navbar-collapse" style="float:unset !important; margin-left:20% !important;" id="main-navigation-toggle">
+      {% block header_site_navigation %}
+      <nav class="section navigation">
+        <ul class="nav nav-pills">
+          {% block header_site_navigation_tabs %}
+          {{ h.build_nav_main(
+          ('dataset.search', _('Datasets')),
+          ('organization.index', _('Organizations')),
+          ('group.index', _('Groups')) ) }}
+          {% endblock %}
+          <!-- <li><a href="https://dataizmir.izka.org.tr/mapstore">Haritalar</a></li> -->
+          <li><a href="{{ h.url_for('home.about') }}">Platform Nasıl Kullanılır</a></li>
+          {% block header_account_notlogged %}
+          <li ><a class="li-giris" href="/user/login">Giriş Yap</a></li>
+          {% if h.check_access('user_create') %}
+          <li><a class="li-kayit" href="/user/register">Kayıt Ol</a></li>
+          {% endif %} {% endblock %}
+        </ul>
+      </nav>
+      {% endblock %}
+    </div>
+  </div>
+</header>
+{% endblock %}

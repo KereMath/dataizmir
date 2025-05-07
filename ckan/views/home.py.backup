@@ -49,7 +49,7 @@ def index():
                 for extra in package["extras"]:
                     if "anasayfa" in str(extra).lower():
                         test12.append(package)
-
+        
         g.facet_titles = {
             u'organization': 'Kuruluşlar',
             u'groups': 'Gruplar',

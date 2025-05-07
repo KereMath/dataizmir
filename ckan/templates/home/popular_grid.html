@@ -1,120 +1,120 @@
+{# popular_grid.html — tümüyle düzeltilmiş sürüm #}
 
-{% set my_string = 'https://dataizmir.izka.org.tr/group/' %}
 <style>
-    .card-1 {
-        display: flex;
-    }
+/* ————— Genel kart görselliği ————— */
+.card-grid-item {
+    text-decoration: none;          /* link altı çizgisi olmasın           */
+    border: 1px solid #E0E0E0;      /* isteğe bağlı çerçeve                */
+    border-radius: 6px;
+    padding: 14px;
+    display: block;
+    transition: box-shadow .15s;
+}
+.card-grid-item:hover {
+    box-shadow: 0 2px 6px rgba(0,0,0,.12);
+}
 
-    .card-1 .icon {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        margin-right: 20px;
-        position: relative;
-    }
+/* ————— “İnceleyin” butonu ————— */
+.btn-inceleyin {
+    font-family: Labrada, sans-serif;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    background: transparent;
+    color: #000;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;          /* anchor olduğu için                  */
+}
+.btn-inceleyin:hover {
+    background: #658dc9 !important; /* yarı saydam mavi‑mor                */
+    color: #fff !important;
+}
+.btn-inceleyin:hover svg path { stroke: #fff !important; }
 
-    .card-1 .icon img {
-        width: 48px;
-        height: 60px;
-        margin-top: -5px;
-    }
-
-
-    .card-1 .content {
-        display: flex;
-        flex-direction: column;
-        width: 300px;
-    }
-
-    .card-1 h3 {
-        font-size: 18px;
-        margin: 0;
-        color: #101752;
-        padding-right: 60px;
-        min-height: 125px;
-    }
-
-    .card-1:hover h3{
-        color: #fff!important;
-    }
-
-    .card-1:hover .views span{
-        color: #fff!important;
-    }
-    .card-1:hover .date{
-        color: #fff!important;
-    }
-
-    .card-1:hover .icon img {
-        filter: brightness(0) invert(1);
-    }
-
-    .card-1 .views {
-        display: flex;
-        align-items: center;
-        margin-top: 10px;
-    }
-
-    .card-1 .views img {
-        width: 40px;
-        height: 40px;
-        margin-right: 5px;
-    }
-
-    .card-1 .views span {
-        font-size: 24px;
-        color: #4f7cc2;
-        font-weight: bold;
-    }
-
-    .card-1 .date {
-        font-size: 14px;
-        color: #101752;
-        margin-top: 10px;
-        text-align: end;
-        margin-top: 50px !important;
-    }
-
-    .label {
-
-        margin-top: 10px!important;
-        
-    }
+/* ————— Kart içi düzen ————— */
+.card-1           { display: flex; flex-direction: column; }
+.cardtop          { display: flex; }
+.cardtop img      { width: 60px; height: 60px; margin-left: 15px; margin-right: auto; }
+.cardtopright     { display: grid; }
+.date, .views     { font-family: Labrada, sans-serif; font-weight: 700; font-size: 14px; color: #4D535B; line-height: 30px; }
+.views            { display: flex; align-items: center; gap: 5px; }
+.content h3       { font-family: Labrada, sans-serif; font-weight: 600; font-size: 24px; color: #221D5D; margin: 0; line-height: 26px; }
+.icon             { text-align: left; margin-top: 10px !important; }
+/* format simgeleri tıklanabilir değil; sadece gösterim */
+.label    { display: inline-block; margin-right: 6px; }
 </style>
+
 {% for package in packages %}
-{% set my_string = my_string + package.name%}
-{% set date_string = package.metadata_modified %}
-{% set year = date_string[:4] %}
-{% set month = date_string[5:7] %}
-{% set day = date_string[8:10] %}
+    {# Tarih parçalama #}
+    {% set ds = package.metadata_modified %}
+    {% set year  = ds[:4]  %}
+    {% set month = ds[5:7] %}
+    {% set day   = ds[8:10] %}
 
-<a class="card border card-grid-item hover-overlay" href="{{h.url_for('%s.read' % package.type, id=package.name)}}" title="{{ package.title or package.name }}">
-    <div class="card-1">
-        <div class="icon">
-            <img src="/checked.png" alt="PDF icon">
-            
+    <div class="card-grid-item" title="{{ package.title or package.name }}">
+        <div class="card-1">
 
+            <!-- Üst kısım: ikon + tarih + görüntülenme -->
+            <div class="cardtop">
+                <img src="https://dataizmir.izka.org.tr/base/images/carbon_text-link-analysis.png" alt="Dataset icon">
+
+                <div class="cardtopright">
+                    <div class="date">
+                        <img src="https://dataizmir.izka.org.tr/base/images/clarity_date-line.png" alt="" style="width:16px;height:16px;">
+                        {{ day }}/{{ month }}/{{ year }}
+                    </div>
+                    <div class="views">
+                        <img src="https://dataizmir.izka.org.tr/base/images/lsicon_view-filled.png" alt="" style="width:16px;height:16px;">
+                        {{ package.tracking_summary.total }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Başlık -->
+            <div class="content" style="margin-top:30px !important; height:75px;">
+                <h3>{{ package.title or package.name }}</h3>
+            </div>
+
+            <!-- Format simgeleri -->
+            <div class="icon">
             {% if package.resources and not hide_resources %}
-            {% for resource in h.dict_list_reduce(package.resources, 'format') %}
-
-            <div href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="label label-default"
-                data-format="{{ resource.lower() }}">{{ resource }}</div>
-
-            {% endfor %}
+                {% for fmt in h.dict_list_reduce(package.resources, 'format') %}
+                    {% set f = fmt.lower() %}
+                    <span class="label label-default" data-format="{{ f }}" style="background:transparent;">
+                        {% if f == 'pdf' %}
+                            <img src="https://dataizmir.izka.org.tr/base/images/iwwa_file-pdf.png"  alt="PDF"  style="width:24px;height:24px;">
+                        {% elif f in ['xlsx','xls'] %}
+                            <img src="https://dataizmir.izka.org.tr/base/images/ri_file-excel-2-line.png" alt="Excel" style="width:24px;height:24px;">
+                        {% elif f == 'csv' %}
+                            <img src="https://dataizmir.izka.org.tr/base/images/iwwa_file-csv.png"  alt="CSV"  style="width:24px;height:24px;">
+                        {% elif f == 'api' %}
+                            <img src="https://dataizmir.izka.org.tr/base/images/gravity-ui_abbr-api.png" alt="API"  style="width:24px;height:24px;">
+                        {% else %}
+                            {{ fmt }}
+                        {% endif %}
+                    </span>
+                {% endfor %}
             {% endif %}
-
-        </div>
-
-        <div class="content">
-            <h3>{{package.title or package.name}}</h3>
-            <div class="views">
-                <img src="/view.png" alt="Eye icon">
-                <span>{{package.tracking_summary.total}}</span>
             </div>
-            <div class="date">
-                <span><strong>Son Değiştirme: </strong>{{ day }}/{{ month }}/{{ year }}</span>
+
+            <!-- İnceleyin butonu -->
+            <div style="margin-top:10px !important;">
+                <a href="{{ h.url_for('%s.read' % package.type, id=package.name) }}"
+                   class="btn-inceleyin">
+                    İnceleyin
+                    <svg width="14" height="12" viewBox="0 0 14 12" xmlns="http://www.w3.org/2000/svg" style="margin-left:12px;">
+                        <path d="M8.5 1l4.5 5-4.5 5M1 6h11.5" stroke="currentColor" stroke-width="2"
+                              fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </a>
             </div>
+
         </div>
     </div>
-</a>
 {% endfor %}

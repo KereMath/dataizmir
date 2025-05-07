@@ -1,92 +1,144 @@
 {% set intro1 = g.site_intro_text %}
-{% set title = g.site_title %}
-{% set intro = g.site_about %}
+{% set title  = g.site_title %}
+{% set intro  = g.site_about %}
+
 <style>
- 
-  .slide {
-    display: none;
+  /* === ALAN DÜZENİ === */
+  .module-content{
+      margin-top:20px;
+      position:relative;
   }
-  .active {
-    display: block;
+
+  /* Başlık bloğu – ortada, yukarıda, daha geniş alan */
+  .title-area{
+      height:120px;              /* "daha uzun" başlık alanı */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
   }
-  /* Dots styling */
-  .dots {
-    margin-top: 20px;
+  .title-area h1{
+      color:#fff;
+      font-size:32px;
+      line-height:1.2;
+      margin:0;
   }
-  .dot {
-    height: 15px;
-    width: 15px;
-    background-color: #9595956f;
-    border-radius: 50%;
-    display: inline-block;
-    margin: 0 5px;
-    cursor: pointer;
+
+  /* İleride eklenecek ikon alanı */
+  .icon-area{
+      position:absolute;
+      top:140px; left:10px;      /* örnek yerleşim */
+      display:flex; gap:8px;
   }
-  .dot.active-dot {
-    background-color: #f6f6f6cf;
+
+  /* Yan yana düzen için container */
+  .content-container {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      margin: 20px 0;
+      gap: 30px;
+  }
+
+  /* Matrix resmi için stil */
+  .matrix-image-container {
+      width: 33.33%; /* Sayfanın 3'te 1'i */
+  }
+  .matrix-image {
+      width: 100%;
+      height: auto;  /* Yükseklik ene göre oranlı olacak */
+  }
+
+  /* Gövde yazısı için stil */
+  .body-text {
+      flex: 1;
+      font-family: Labrada;
+      font-weight: 500;
+      font-size: 18px;
+      line-height: 30px;
+      letter-spacing: 0%;
+      color: black !important;
   }
 </style>
 
+<div class="module-content" style="margin-top:60px !important;">
 
-<div class="module-content" style="max-width: 500px;margin-top: 20px;height: 260px;">
-  <div>
-    
-    <h1 class="page-heading" style="color:#fff;">{{ h.render_markdown(title) }}</h1>
-    
-
-    <div class="slide active" style="color:#fff;font-size: 14px;">
-      {{ h.render_markdown(intro) }}
-    </div>
-
-    <div class="slide" style="color:#fff;font-size: 14px;">{{ h.render_markdown(intro1) }}</div>
-    
+  <!-- Başlık -->
+  <div class="title-area">
+      <h1 class="page-heading" style="font-family: Labrada !important;
+      font-weight: 700 !important;
+      font-size: 60px !important;
+      line-height: 72px !important;
+      letter-spacing: 0% !important;
+      text-align: left !important;
+      color:black !important;
+      ">{{ h.render_markdown(title) }}</h1>
   </div>
 
-  <!-- Dots Section -->
-  
+  <!-- İçerik container - Resim solda, yazı sağda -->
+  <div class="content-container">
+    <!-- Matrix resmi - sol taraf -->
+    <div class="matrix-image-container">
+      <img src="https://dataizmir.izka.org.tr/matrix.png" alt="Matrix" class="matrix-image" style="margin-top:18px;">
+      <div class="stats-wrapper" style="display:none !important;margin-top: -45px; margin-right: -45px;">
+        {% block stats %}{% snippet 'home/snippets/stats.html' %}{% endblock %}
+      </div>
+    </div>
 
-</div>
-<div class="dots">
-  <span class="dot active-dot"></span>
-  <span class="dot"></span>
-</div>
+    <!-- Gövde yazı - sağ taraf -->
+    <div class="body-text" style="max-width:42.5%; margin-left:27.5%;">
+      {{ h.render_markdown(intro) }}
+      {% block search %}{% snippet 'home/snippets/search.html' %}{% endblock %}
+    </div>
+  </div>
 
+  <!-- İkonlar için yer (şimdilik boş) -->
+  <div class="icon-area">
+      <!-- <img src="..." alt="icon"> -->
+  </div>
 
-<script>
-  let currentSlide = 0;
-  const slides = document.querySelectorAll('.slide');
-  console.log(slides);
-  const dots = document.querySelectorAll('.dot');
+  {# ------------------------------------------------------------------
+     ARAMA ALANI AŞAĞIDA YORUM İÇİNE ALINDI
 
-  function showNextSlide() {
-    // Remove active class from current slide and dot
-    slides[currentSlide].classList.remove('active');
-    dots[currentSlide].classList.remove('active-dot');
+     Aşağıdaki kayar‑yazı (slide) mekanizması daha sonra tekrar
+     kullanılmak istenirse diye K O M E N T E   A L I N D I.
+  ------------------------------------------------------------------- #}
+  {#
+  <div class="slide active" style="color:#fff;font-size:14px;">
+      {{ h.render_markdown(intro) }}
+  </div>
+  <div class="slide" style="color:#fff;font-size:14px;">
+      {{ h.render_markdown(intro1) }}
+  </div>
 
-    // Update the current slide index
-    currentSlide = (currentSlide + 1) % slides.length;
+  <!-- Dots -->
+  <div class="dots">
+      <span class="dot active-dot"></span>
+      <span class="dot"></span>
+  </div>
 
-    // Add active class to the new slide and dot
-    slides[currentSlide].classList.add('active');
-    dots[currentSlide].classList.add('active-dot');
-  }
-
-  // Automatically change slides every 5 seconds
-  setInterval(showNextSlide, 8000);
-
-  // Dots click event
-  dots.forEach((dot, index) => {
-    dot.addEventListener('click', () => {
-      // Remove active class from current slide and dot
-      slides[currentSlide].classList.remove('active');
-      dots[currentSlide].classList.remove('active-dot');
-
-      // Set the current slide to the clicked dot's index
-      currentSlide = index;
-
-      // Add active class to the new slide and dot
-      slides[currentSlide].classList.add('active');
-      dots[currentSlide].classList.add('active-dot');
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots   = document.querySelectorAll('.dot');
+    function showNextSlide(){
+        slides[currentSlide].classList.remove('active');
+        dots[currentSlide].classList.remove('active-dot');
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].classList.add('active');
+        dots[currentSlide].classList.add('active-dot');
+    }
+    setInterval(showNextSlide,8000);
+    dots.forEach((dot,index)=>{
+        dot.addEventListener('click',()=>{
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active-dot');
+            currentSlide=index;
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active-dot');
+        });
     });
-  });
-</script>
+  </script>
+  #}
+
+</div>

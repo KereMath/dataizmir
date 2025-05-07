@@ -1,0 +1,172 @@
+<style>
+  .pop-main {
+    background: url("../../populer_veri_setleri_zemin.png") !important;
+    background-position: center !important;
+    background-size: 220% auto !important;
+  }
+
+  .catg-main {
+    background: url("../../kategoriler_zemin.png") !important;
+    background-position: center !important;
+    background-size: 170% auto !important;
+  }
+
+  .alt-borderli-yazi {
+    position: relative;
+    display: inline-block;
+  }
+
+  .alt-borderli-yazi::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 30%;
+    /* Kenarlığın genişliği */
+    height: 3px;
+    /* Kenarlığın kalınlığı */
+    background-color: #101752;
+    /* Kenarlığın rengi */
+  }
+
+  .alt-borderli-yazi-1 {
+    position: relative;
+    display: inline-block;
+  }
+
+  .alt-borderli-yazi-1::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 20%;
+    /* Kenarlığın genişliği */
+    height: 3px;
+    /* Kenarlığın kalınlığı */
+    background-color: #101752;
+    /* Kenarlığın rengi */
+  }
+
+  .card-grid-popular {
+    text-align: justify;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 1rem;
+    grid-auto-flow: dense;
+  }
+
+  @media screen and (max-width: 767px) {
+    .card-grid-popular {
+    grid-template-columns: repeat(1, 1fr)!important;
+    padding: 10px!important;
+  }
+}
+
+  .card-grid-popular .card-grid-item:hover {
+    background-color: #4f7cc1;
+    /* #E7E7E7; */
+    color: #ffffff;
+  }
+
+  .card-grid-popular .card-grid-item {
+    min-width: 150px;
+    min-height: 200px;
+    border: none;
+    padding: 20px;
+    text-decoration: none;
+    transition: all 0.2s ease-in-out;
+    font-size: 18px;
+    font-weight: bold;
+    background-color: white;
+    border-radius: 20px;
+    color: #0a1458;
+  }
+
+  .card-grid-popular .card-grid-item img {
+    height: 80px;
+    margin: auto;
+  }
+</style>
+<div role="main" class="hero">
+  <div class="container">
+    <div class="row row1">
+      <div class="col-md-8 col1">
+        {% block promoted %}
+        {% snippet 'home/snippets/promoted.html' %}
+        {% endblock %}
+
+      </div>
+      <div class="col-md-4 col2" style="margin-top:50px!important">
+        {% block search %}
+        {% snippet 'home/snippets/search.html' %}
+        {% endblock %}
+
+        {% block stats %}
+        {% snippet 'home/snippets/stats.html' %}
+        {% endblock %}
+
+      </div>
+    </div>
+  </div>
+</div>
+<div role="main" class="pop-main">
+  <div class="container">
+    <div class="category-header" style="text-align: center !important; margin-bottom: 30px !important;">
+      <h3 style="font-family: Labrada !important;
+               font-weight: 600 !important;
+               font-size: 18px !important;
+               line-height: 100% !important;
+               letter-spacing: 0% !important;
+               margin-bottom: 15px !important;
+               color: #101752 !important;">Veri Setlerimiz</h3>
+
+      <h1 style="font-family: Labrada !important;
+               font-weight: 700 !important;
+               font-size: 44px !important;
+               line-height: 54px !important;
+               letter-spacing: 0% !important;
+               text-align: center !important;
+               color: #101752 !important;">Önce Çıkan Veri Setlerimiz ile Data İzmir Platformu</h1>
+    </div>
+    
+    <div class="row row2" style="margin-top:10px!important;">
+      <div class="card-grid-popular">
+        {% block featured_datasets %}
+        {% snippet 'home/popular_grid.html', packages=extra_deg %}
+        {% endblock %}
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div role="main" class="catg-main">
+  <div class="container">
+    <div class="category-header" style="text-align: center !important; margin-bottom: 30px !important;">
+      <h3 style="font-family: Labrada !important;
+               font-weight: 600 !important;
+               font-size: 18px !important;
+               line-height: 100% !important;
+               letter-spacing: 0% !important;
+               margin-bottom: 15px !important;
+               color: #101752 !important;">Veri Kategorilerimiz</h3>
+      
+      <h1 style="font-family: Labrada !important;
+               font-weight: 700 !important;
+               font-size: 44px !important;
+               line-height: 54px !important;
+               letter-spacing: 0% !important;
+               text-align: center !important;
+               color: #101752 !important;">Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi İnceleyin...</h1>
+    </div>
+    
+    <div class="row row2" style="margin-top:30px !important;">
+      <div class="card-grid">
+        {% block featured_group %}
+        {% snippet 'home/snippets/featured_group.html' %}
+        {% endblock %}
+      </div>
+    </div>
+  </div>
+</div>

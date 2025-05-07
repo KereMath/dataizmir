@@ -25,6 +25,9 @@
 
   {# 1) Eski account‑masthead’i boş bırakarak saklıyoruz (JS çakışmasın) #}
   {% block header_account %}
+    <div class="account-masthead" style="background-color:transparent!important;">
+      <div class="container"></div>
+    </div>
   {% endblock %}
 
   {# 2) YENİ HEADER — LOGO • NAV • ACCOUNT MENÜSÜ #}

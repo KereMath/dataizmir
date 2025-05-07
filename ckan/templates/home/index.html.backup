@@ -1,26 +1,14 @@
 {% extends "page.html" %}
 {% set homepage_style = ( g.homepage_style or '1' ) %}
 
-{# ——— HEADER artık .hero içinde, en yukarıda ——— #}
-{% block header %}
-  <div role="main" class="hero">
-    <div class="container">
-      {% include "header.html" %}
-      <div class="row row1">
-        <div>
-          {% snippet 'home/snippets/promoted.html' %}
-        </div>
-        <div class="col-md-4 col2" style="margin-top:50px!important"></div>
-      </div>
-    </div>
-  </div>
-{% endblock %}
-
 {% block subtitle %}{{ _("Homepage") }}{% endblock %}
+
 {% block maintag %}{% endblock %}
 {% block toolbar %}{% endblock %}
 
 {% block content %}
+
+
   <div class="homepage layout-{{ homepage_style }}">
     <div id="content" class="container">
       {{ self.flash() }}

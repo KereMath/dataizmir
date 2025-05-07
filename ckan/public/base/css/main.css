@@ -9570,9 +9570,9 @@ h4 small {
 }
 @media (min-width: 768px) {
   .hero {
-    background: url("../../slider-arkaplan.png");
+    background: url("../../BG.png");
     background-position: center;
-    background-size: 115% auto;
+    background-size: 100% auto;
   }
   .hero::before {
     content: "";
@@ -9581,7 +9581,7 @@ h4 small {
     left: 0;
     width: 100%;
     height: 100%;
-    background: #192258bd; /* Mavi renk ve şeffaflık */
+    background: transparent; /* Mavi renk ve şeffaflık */
     z-index: 1; /* Arka plan resmi üzerine gelir */
     pointer-events: none; /* Overlay'e tıklanabilirlik eklemez */
 }

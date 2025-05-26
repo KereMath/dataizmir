@@ -7170,7 +7170,7 @@ a.tag:hover {
 }
 .media-grid:before,
 .media-grid:after {
-  display: table;
+  display: none;
   content: " ";
 }
 .media-grid:after {
@@ -7178,7 +7178,7 @@ a.tag:hover {
 }
 .media-grid:before,
 .media-grid:after {
-  display: table;
+  display: none;
   content: " ";
 }
 .media-grid:after {

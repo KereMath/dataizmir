@@ -40,24 +40,46 @@
     {% snippet "organization/snippets/helper.html" %}
   </div>
   
-  <!-- Orijinal çalışan search form - sadece sorting seçenekleri değiştirildi -->
+  <!-- Search form ve limit selector -->
   {% block organizations_search_form %}
-    {% snippet 'snippets/search_form.html', 
-       form_id='organization-search-form', 
-       type='organization', 
-       query=q, 
-       sorting_selected=sort_by_selected, 
-       count=page.item_count, 
-       placeholder='Veri paydaşı ismi ile arayın...', 
-       show_empty=request.params, 
-       no_bottom_border=true if page.items, 
-       sorting=[
-           ('İsim (A-Z)', 'title asc'), 
-           ('İsim (Z-A)', 'title desc'),
-           ('En Çok Veri Seti', 'package_count desc'),
-           ('En Az Veri Seti', 'package_count asc')
-       ]
-    %}
+    <div class="search-form-container">
+      {% snippet 'snippets/search_form.html', 
+         form_id='organization-search-form', 
+         type='organization', 
+         query=q, 
+         sorting_selected=sort_by_selected, 
+         count=page.item_count, 
+         placeholder='Veri paydaşı ismi ile arayın...', 
+         show_empty=request.params, 
+         no_bottom_border=true if page.items, 
+         sorting=[
+             ('İsim (A-Z)', 'title asc'), 
+             ('İsim (Z-A)', 'title desc'),
+             ('En Çok Veri Seti', 'package_count desc'),
+             ('En Az Veri Seti', 'package_count asc')
+         ]
+      %}
+      
+      <!-- Sayfa başına gösterim seçeneği -->
+      <div class="limit-selector" style="margin-top: 15px;">
+        <form method="GET" id="limit-form" style="display: inline-block;">
+          <label for="limit-select" style="margin-right: 10px;">Sayfa başına:</label>
+          <select name="limit" id="limit-select" class="form-control" style="width: auto; display: inline-block;">
+            <option value="5" {% if request.params.get('limit', '20') == '5' %}selected{% endif %}>5'li</option>
+            <option value="10" {% if request.params.get('limit', '20') == '10' %}selected{% endif %}>10'lu</option>
+            <option value="20" {% if request.params.get('limit', '20') == '20' %}selected{% endif %}>20'li</option>
+          </select>
+          
+          <!-- Mevcut parametreleri koru -->
+          {% if q %}
+            <input type="hidden" name="q" value="{{ q }}">
+          {% endif %}
+          {% if sort_by_selected %}
+            <input type="hidden" name="sort" value="{{ sort_by_selected }}">
+          {% endif %}
+        </form>
+      </div>
+    </div>
   {% endblock %}
   
   {% block organizations_list %}
@@ -134,5 +156,39 @@ body.page-organization aside.secondary.col-sm-3 {
     background: none;
     border: 1px solid #ddd;
     border-width: 1px 0;
+}
+
+/* Search form styling */
+.search-form-container {
+    background: #fff;
+    padding: 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    margin-bottom: 20px;
+}
+
+.limit-selector {
+    text-align: right;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+.limit-selector label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.limit-selector select {
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 5px 10px;
+    transition: all 0.2s ease;
+}
+
+.limit-selector select:focus {
+    border-color: #4f46e5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 </style>

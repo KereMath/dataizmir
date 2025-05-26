@@ -26,40 +26,12 @@
 
 {% block page_header %}{% endblock %}
 
-<!-- Özel Veri Paydaşı Ekle Butonu -->
-{% if h.check_access('organization_create') %}
-<div style="position: fixed; bottom: 30px; right: 30px; z-index: 1000;">
-  <a href="{{ h.url_for(group_type+'.new') }}" class="floating-add-btn" style="
-    display: flex; 
-    align-items: center; 
-    justify-content: center;
-    width: 60px;
-    height: 60px;
-    background: linear-gradient(135deg, #FF6B6B, #4ECDC4); 
-    color: white; 
-    border-radius: 50%; 
-    text-decoration: none; 
-    font-size: 24px;
-    font-weight: bold;
-    box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border: 3px solid white;
-  "
-  onmouseover="
-    this.style.transform='scale(1.1) rotate(90deg)'; 
-    this.style.boxShadow='0 8px 30px rgba(255, 107, 107, 0.6)';
-    this.style.background='linear-gradient(135deg, #4ECDC4, #FF6B6B)';
-  "
-  onmouseout="
-    this.style.transform='scale(1) rotate(0deg)'; 
-    this.style.boxShadow='0 4px 20px rgba(255, 107, 107, 0.4)';
-    this.style.background='linear-gradient(135deg, #FF6B6B, #4ECDC4)';
-  "
-  title="Yeni Veri Paydaşı Ekle">
-    +
-  </a>
-</div>
-{% endif %}
+{% block page_primary_action %}
+  {% if h.check_access('organization_create') %}
+    {% link_for _('Add Organization'), named_route=group_type+'.new', class_='btn btn-primary', icon='plus-square' %}
+  {% endif %}
+{% endblock %}
+
 {% block primary_content_inner %}
   <h1 class="hide-heading">{% block page_heading %}{{ _('Organizations') }}{% endblock %}</h1>
   

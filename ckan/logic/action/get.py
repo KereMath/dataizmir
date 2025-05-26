@@ -354,7 +354,7 @@ def _group_or_org_list(context, data_dict, is_org=False):
         # all_fields is really computationally expensive, so need a tight limit
         try:
             max_limit = int(config.get(
-                'ckan.group_and_organization_list_all_fields_max', 25))
+                'ckan.group_and_organization_list_all_fields_max', 500))
         except ValueError:
             max_limit = 25
     else:

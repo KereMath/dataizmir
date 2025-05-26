@@ -34,9 +34,45 @@
 
 {% block primary_content_inner %}
   <h1 class="hide-heading">{{ _('Groups') }}</h1>
-  {% block groups_search_form %}
-    {% snippet 'snippets/search_form.html', form_id='group-search-form', type='group', query=q, sorting_selected=sort_by_selected, count=page.item_count, placeholder=_('Search groups...'), show_empty=request.params, no_bottom_border=true if page.items, sorting = [(_('Name Ascending'), 'title asc'), (_('Name Descending'), 'title desc')] %}
-  {% endblock %}
+  
+  <!-- Grup Açıklaması Yukarıya Alındı -->
+  <div class="groups-info" style="margin-bottom: 30px;">
+    {% snippet "group/snippets/helper.html" %}
+  </div>
+  
+  <!-- Arama ve Filtreleme -->
+  <div class="search-and-filters" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+    <!-- Arama Input -->
+    <div style="flex: 2; min-width: 250px;">
+      <input type="text" 
+             class="form-control" 
+             placeholder="Grup ismi ile arayın..." 
+             value="{{ q or '' }}"
+             id="search-groups"
+             style="width: 100%;">
+    </div>
+    
+    <!-- Sıralama -->
+    <div style="flex: 1; min-width: 180px;">
+      <select class="form-control" id="sort-select">
+        <option value="title asc" {% if sort_by_selected == 'title asc' %}selected{% endif %}>İsim (A-Z)</option>
+        <option value="title desc" {% if sort_by_selected == 'title desc' %}selected{% endif %}>İsim (Z-A)</option>
+        <option value="package_count desc" {% if sort_by_selected == 'package_count desc' %}selected{% endif %}>En Çok Veri Seti</option>
+        <option value="package_count asc" {% if sort_by_selected == 'package_count asc' %}selected{% endif %}>En Az Veri Seti</option>
+      </select>
+    </div>
+    
+    <!-- Sayfa başına gösterim -->
+    <div style="flex: 1; min-width: 120px;">
+      <select class="form-control" id="items-per-page">
+        <option value="10" {% if request.params.get('limit', 20)|int == 10 %}selected{% endif %}>10'lu</option>
+        <option value="20" {% if request.params.get('limit', 20)|int == 20 %}selected{% endif %}>20'li</option>
+        <option value="50" {% if request.params.get('limit', 20)|int == 50 %}selected{% endif %}>50'li</option>
+        <option value="100" {% if request.params.get('limit', 20)|int == 100 %}selected{% endif %}>100'lü</option>
+      </select>
+    </div>
+  </div>
+  
   {% block groups_list %}
     {% if page.items or request.params %}
       {% if page.items %}
@@ -51,11 +87,96 @@
       </p>
     {% endif %}
   {% endblock %}
+  
   {% block page_pagination %}
-    {{ page.pager(q=q or '', sort=sort_by_selected or '') }}
+    {{ page.pager(q=q or '', sort=sort_by_selected or '', limit=request.params.get('limit', 20)) }}
   {% endblock %}
 {% endblock %}
 
 {% block secondary_content %}
-  {% snippet "group/snippets/helper.html" %}
+  <!-- Boş bırakıldı çünkü helper yukarıya taşındı -->
 {% endblock %}
+
+<script>
+function updateFilters() {
+    const searchInput = document.getElementById('search-groups');
+    const sortSelect = document.getElementById('sort-select');
+    const itemsSelect = document.getElementById('items-per-page');
+    
+    const url = new URL(window.location);
+    
+    // Arama terimi
+    if (searchInput && searchInput.value.trim()) {
+        url.searchParams.set('q', searchInput.value.trim());
+    } else {
+        url.searchParams.delete('q');
+    }
+    
+    // Sıralama
+    if (sortSelect && sortSelect.value) {
+        url.searchParams.set('sort', sortSelect.value);
+    }
+    
+    // Sayfa başına gösterim
+    if (itemsSelect && itemsSelect.value) {
+        url.searchParams.set('limit', itemsSelect.value);
+    }
+    
+    // Sayfa numarasını sıfırla
+    url.searchParams.delete('page');
+    
+    window.location.href = url.toString();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('search-groups');
+    const sortSelect = document.getElementById('sort-select');
+    const itemsSelect = document.getElementById('items-per-page');
+    
+    // Arama - 500ms gecikme ile
+    if (searchInput) {
+        let searchTimeout;
+        searchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(updateFilters, 500);
+        });
+    }
+    
+    // Sıralama - anında
+    if (sortSelect) {
+        sortSelect.addEventListener('change', updateFilters);
+    }
+    
+    // Sayfa başına gösterim - anında
+    if (itemsSelect) {
+        itemsSelect.addEventListener('change', updateFilters);
+    }
+});
+</script>
+
+<style>
+.groups-info .module {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.search-and-filters {
+    background: #fff;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .search-and-filters {
+        flex-direction: column;
+    }
+    
+    .search-and-filters > div {
+        width: 100% !important;
+        flex: none !important;
+    }
+}
+</style>

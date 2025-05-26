@@ -1,0 +1,212 @@
+{% set intro1 = g.site_intro_text %}
+{% set title  = g.site_title %}
+{% set intro  = g.site_about %}
+
+<style>
+  /* === ALAN DÜZENİ === */
+  .module-content{
+      margin-top:20px;
+      position:relative;
+  }
+
+  /* Başlık bloğu – ortada, yukarıda, daha geniş alan */
+  .title-area{
+      height:120px;              /* "daha uzun" başlık alanı */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+  }
+  .title-area h1{
+      color:#fff;
+      font-size:32px;
+      line-height:1.2;
+      margin:0;
+  }
+
+  /* İleride eklenecek ikon alanı */
+  .icon-area{
+      position:absolute;
+      top:140px; left:10px;      /* örnek yerleşim */
+      display:flex; gap:8px;
+  }
+
+  /* Yan yana düzen için container */
+  .content-container {
+      display: flex;
+      flex-direction: row;
+      align-items: flex-start;
+      margin: 20px 0;
+      gap: 30px;
+      margin-top:60px !important;
+  }
+
+  /* Matrix resmi için stil */
+  .matrix-image-container {
+      width: 35%; /* Sayfanın 3'te 1'i */
+      margin-top:30px;
+  }
+  .matrix-image {
+      width: 100%;
+      height: auto;  /* Yükseklik ene göre oranlı olacak */
+  }
+
+  /* Gövde yazısı için stil */
+  .body-text {
+      margin-top: 15px;
+      flex: 1;
+      font-family: Labrada;
+      font-weight: 500;
+      font-size: 18px;
+      line-height: 30px;
+      letter-spacing: 0%;
+      color: black !important;
+  }
+</style>
+
+<div class="module-content" style="margin-top:60px !important;">
+
+  <!-- Başlık ------------------------------------------------------->
+  <div class="title-area">
+      <h1 class="page-heading" style="font-family: Labrada !important;
+      font-weight: 700 !important;
+      font-size: 60px !important;
+      line-height: 72px !important;
+      letter-spacing: 0% !important;
+      text-align: left !important;
+      color:black !important;
+      ">{{ h.render_markdown(title) }}</h1>
+  </div>
+
+  <!-- İçerik container - Resim solda, yazı sağda ------------------->
+  <div class="content-container">
+    <!-- Matrix resmi - sol taraf -->
+    <div class="matrix-image-container">
+      <img src="https://dataizmir.izka.org.tr/matrix.png" alt="Matrix" class="matrix-image" style="margin-top:18px;">
+      <div class="stats-wrapper" style="display:none !important;margin-top: -30px; margin-right: -45px;">
+        {% block stats %}{% snippet 'home/snippets/stats.html' %}{% endblock %}
+      </div>
+    </div>
+
+    <!-- Gövde yazı ve kutular - sağ taraf ------------------------->
+    <div class="textmid" style="margin-left:0%; margin-top:45px;max-width:25%">
+
+      <!-- 475+ veri seti kutusu -->
+      <div style="    max-width: 60%;
+      min-width: 60%;
+      padding: 2px 4px;
+      border: 2px solid #101752;
+      border-radius: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-left: 5%;">
+        <span style="font-family:'Labrada',sans-serif;font-weight:700;font-size:40px;
+                     leading-trim:cap;line-height:50px;letter-spacing:0;text-align:center;">
+          475+ Veri Seti
+        </span>
+      </div>
+
+      <!-- Veri Kategorileri kutusu (güncellenmiş) ----------------->
+      <div style="    background: #221D5D;
+      color: #FFF;
+      border-radius: 12px;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      width: 110%;
+      margin-top: 27px;
+      margin-left: -37%;">
+        <!-- Başlık: iki satıra bölünmüş -->
+        <p style="margin:0;font-family:'Labrada',sans-serif;font-weight:600;font-size:21px;
+                  leading-trim:cap;line-height:32px;letter-spacing:0;text-align:left;">
+          Sürekli Genişleyen Veri<br/>
+          Kategorilerimizi Keşfedin
+        </p>
+
+        <!-- Alt bölüm -->
+        <div style="    display: flex;
+            align-items: center;
+            gap: 32px;
+            flex-wrap: wrap;
+            margin-top: -15px;">
+          <!-- Sol istatistik -->
+          <div style="flex:0 0 30%;text-align:center;">
+            <span style="font-family:'Izmir',sans-serif;font-weight:700;font-size:40px;
+                         leading-trim:cap;line-height:50px;letter-spacing:0;">
+              20+
+            </span>
+          </div>
+
+          <!-- Sağ açıklama -->
+          <div style="flex:1;">
+            <p style="    margin: 0;
+            font-family: 'Labrada', sans-serif;
+            font-weight: 500;
+            font-size: 12px;
+            leading-trim: cap;
+            line-height: 24px;
+            letter-spacing: 0;">
+              Veri Platformumuza Siz de Üye Olun, Veri Setlerinizi Ekleyin
+            </p>
+          </div>
+        </div>
+      </div><!-- /Veri Kategorileri kutusu -->
+
+    </div><!-- /textmid -->
+
+    <!-- Gövde markdown metni ------------------------------------->
+    <div class="body-text" style="max-width:42.5%; margin-left:-6%;">
+      {{ h.render_markdown(intro) }}
+      {% block search %}{% snippet 'home/snippets/search.html' %}{% endblock %}
+    </div>
+  </div><!-- /content-container -->
+
+  <!-- İkonlar için yer (şimdilik boş) ----------------------------->
+  <div class="icon-area">
+      <!-- <img src="..." alt="icon"> -->
+  </div>
+
+  {# ------------------------------------------------------------------
+     ARAMA ALANI AŞAĞIDA YORUM İÇİNE ALINDI
+     ------------------------------------------------------------------ #}
+  {#
+  <div class="slide active" style="color:#fff;font-size:14px;">
+      {{ h.render_markdown(intro) }}
+  </div>
+  <div class="slide" style="color:#fff;font-size:14px;">
+      {{ h.render_markdown(intro1) }}
+  </div>
+
+  <!-- Dots -->
+  <div class="dots">
+      <span class="dot active-dot"></span>
+      <span class="dot"></span>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const dots   = document.querySelectorAll('.dot');
+    function showNextSlide(){
+        slides[currentSlide].classList.remove('active');
+        dots[currentSlide].classList.remove('active-dot');
+        currentSlide = (currentSlide + 1) % slides.length;
+        slides[currentSlide].classList.add('active');
+        dots[currentSlide].classList.add('active-dot');
+    }
+    setInterval(showNextSlide,8000);
+    dots.forEach((dot,index)=>{
+        dot.addEventListener('click',()=>{
+            slides[currentSlide].classList.remove('active');
+            dots[currentSlide].classList.remove('active-dot');
+            currentSlide=index;
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active-dot');
+        });
+    });
+  </script>
+  #}
+
+</div><!-- /module-content -->

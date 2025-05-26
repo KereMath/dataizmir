@@ -1,54 +1,85 @@
-<head>
+{# footer.html – güncellenmiş sürüm #}
+
 <style>
-.border-right {
-    border-right: 2px solid grey; /* Change the color as needed */
-}
+  /* --- GENEL --- */
+  .site-footer{
+      width:100%;
+      padding:60px 0;                 /* height biraz arttı (üst‑alt 60px) */
+  }
 
-.col-md-2 {
-    vertical-align: top; /* Ensure all columns align to the top */
-}
+  /* sütunları taşıyan satır */
+  .footer-columns{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:space-between;  /* sola yapışmasın, boşluklu dağılsın */
+      gap:60px;                       /* sütun arası boşluk */
+  }
 
-.row > div:last-child {
-    border-right: none; /* Remove border from the last column */
-}
+  /* sütunlar */
+  .footer-column{
+      flex:1 1 200px;                 /* min 200px, esnek */
+      color:#ccc;
+  }
+  .footer-column a{color:#ccc;text-decoration:none;}
+  .footer-column a:hover{color:#fff;}
 
-.site-footer a {
-    color: grey; /* Set all footer links to grey */
-}
+  /* dikey kenar çizgisi – son sütun hariç */
+  .footer-column.border-right{border-right:2px solid #555;padding-right:40px;}
+  .footer-column.border-right:last-of-type{border-right:none;}
 
+  /* logo sütunu */
+  .logo-column img{max-width:160px;height:auto;}
+
+  /* liste biçimi */
+  .footer-links ul{margin:0;padding:0;list-style:none;}
+  .footer-links li{margin-bottom:6px;text-align:left;}
+
+  /* responsive ince ayar */
+  @media (max-width:767px){
+      .footer-columns{gap:30px;justify-content:center;}
+      .footer-column.border-right{border-right:none;padding-right:0;}
+  }
 </style>
-</head>
 
 <footer class="site-footer">
+  <!-- .container tutmaya devam, genişlik eskisi gibi ortada -->
   <div class="container">
     {% block footer_content %}
-    <div class="row">
-	
-      <div class="col-md-2 attribution border-right" style="padding: 4px 0px; vertical-align: top;">
-        <a class="logoalt" href="https://izka.org.tr"><img src="/base/images/theme/logo-izka-beyaz.png" alt="İzmir Kalkınma Ajansı" title="İzmir Kalkınma Ajansı" /></a>
+    <div class="footer-columns">
+
+      <!-- LOGO ------------------------------------------------------>
+      <div class="footer-column logo-column border-right">
+        <a class="logoalt" href="https://izka.org.tr">
+          <img src="/base/images/theme/logo-izka-beyaz.png"
+               alt="İzmir Kalkınma Ajansı"
+               title="İzmir Kalkınma Ajansı" />
+        </a>
       </div>
-	  	
-      <div class="col-md-2 footer-links border-right" style="padding: 14px 0px 0px 40px; vertical-align: top;">
+
+      <!-- MENÜ / LİNKLER ------------------------------------------->
+      <div class="footer-column footer-links border-right">
         {% block footer_nav %}
-          <ul class="list-unstyled">
+          <ul>
             {% block footer_links %}
             {% endblock %}
           </ul>
-          <ul class="list-unstyled">
+          <ul>
             {% block footer_links_ckan %}
               {% set api_url = 'http://docs.ckan.org/en/{0}/api/'.format(g.ckan_doc_version) %}
-              
-              <li style="text-align: left;"><a href="{{ h.url_for(controller='home', action='license') }}">Veri Politikası</a></li>
-              <li style="text-align: left;"><a href="https://dataizmir.izka.org.tr/dataizmir_kvkk.pdf">KVKK</a></li>
-              <li style="text-align: left;"><a href="https://dataizmir.izka.org.tr/dataizmir_kosullar.pdf">Kullanım Koşulları</a></li>
+              <li><a href="{{ h.url_for(controller='home', action='license') }}">Veri&nbsp;Politikası</a></li>
+              <li><a href="https://dataizmir.izka.org.tr/dataizmir_kvkk.pdf">KVKK</a></li>
+              <li><a href="https://dataizmir.izka.org.tr/dataizmir_kosullar.pdf">Kullanım&nbsp;Koşulları</a></li>
             {% endblock %}
           </ul>
         {% endblock %}
       </div>
-	  	
-      <div class="col-md-2 attribution" style="color: gray; padding: 14px 0px 0px 40px; vertical-align: top;">
-        <a href="mailto:%20dataizmir@izka.org.tr">Görüş & Öneri<br>Destek Talebi</a>
-      </div>	  	
+
+      <!-- İLETİŞİM -------------------------------------------------->
+      <div class="footer-column contact-column">
+        <a href="mailto:dataizmir@izka.org.tr">
+          Görüş&nbsp;&amp;&nbsp;Öneri<br/>Destek&nbsp;Talebi
+        </a>
+      </div>
 
     </div>
     {% endblock %}
@@ -60,3 +91,4 @@
     {% endif %}
   {% endblock %}
 </footer>
+

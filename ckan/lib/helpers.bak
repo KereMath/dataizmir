@@ -2173,27 +2173,17 @@ def groups_available(am_member=False):
 
 
 @core_helper
-def organizations_available(permission='read', include_dataset_count=False):
-    """
-    • Giriş yapılmamışsa   →  Tüm public kuruluşlar (ignore_auth=True)
-    • Giriş yapılmışsa     →  Kullanıcının belirtilen yetkide erişebildiği kuruluşlar
-    """
-    # ── 1. Oturum YOK → public liste
-    if not c.user:                          # '' veya None
-        context = {"ignore_auth": True}
-        data_dict = {
-            "all_fields": True,             # logo, vb. alanlar için
-            "include_dataset_count": include_dataset_count,
-        }
-        return logic.get_action("organization_list")(context, data_dict)
-
-    # ── 2. Oturum VAR → eski davranış
-    context = {"user": c.user}
+def organizations_available(
+        permission='manage_group', include_dataset_count=False):
+    '''Return a list of organizations that the current user has the specified
+    permission for.
+    '''
+    context = {'user': c.user}
     data_dict = {
-        "permission": permission,
-        "include_dataset_count": include_dataset_count,
-    }
-    return logic.get_action("organization_list_for_user")(context, data_dict)
+        'permission': permission,
+        'include_dataset_count': include_dataset_count}
+    return logic.get_action('organization_list_for_user')(context, data_dict)
+
 
 @core_helper
 def roles_translated():

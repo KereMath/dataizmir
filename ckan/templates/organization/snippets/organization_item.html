@@ -5,7 +5,8 @@ organization - A organization dict.
 
 Example:
 
-    <ul class="media-grid">
+    <ul class="media-grid" style="    min-height: 240px !important;
+">
       {% for organization in organizations %}
         {% snippet "organization/snippets/organization_item.html", organization=organization %}
       {% endfor %}

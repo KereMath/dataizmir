@@ -4,12 +4,6 @@
 /* ——— VAR OLAN STILLER (popüler & kategori) ——— */
 .pop-main { background:url("../../populer_veri_setleri_zemin.png") center/220% auto no-repeat!important; }
 .catg-main{ background:url("../../kategoriler_zemin.png")     center/170% auto no-repeat!important; }
-  .card-grid{
-      display:grid;
-      grid-template-columns:repeat(5,1fr);   /* her satırda 5 */
-      grid-auto-rows:auto;                   /* satır yüksekliği içeriğe göre */
-      gap:1rem;
-  }
 
 .card-grid-popular            { text-align:justify; display:grid; grid-template-columns:repeat(4,1fr); grid-gap:1rem; grid-auto-flow:dense; visibility:hidden; opacity:0; transition:opacity .5s }
 @media (max-width:767px)      { .card-grid-popular{ grid-template-columns:repeat(1,1fr)!important; padding:10px!important } }
@@ -23,7 +17,6 @@
 
 .veri-sets-ust-baslik         { font:600 18px Labrada,sans-serif; color:black; margin-bottom:10px }
 .veri-sets-alt-baslik         { font:700 44px/54px Labrada,sans-serif; color:black; margin-bottom:20px }
-.veri-sets-alt-baslik1         { font:700 44px/54px Labrada,sans-serif; color:black; margin-bottom:20px }
 
 /* ——— INTRO BÖLÜMÜ ——— */
 .intro-main                   { background:#EEF1F6; }
@@ -75,66 +68,6 @@
   </div>
 </div>
 
-
-
-
-
-<!-- ——— Tematik Verilerimiz——— -->
-<div role="main" style="background-color: white; padding: 20px 0 40px 0;">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <div style="text-align:center">
-          <h1 style="color: black; font-family: Izmir; font-weight: 700; font-size: 24px; line-height: 58px; text-align: center;">
-            TEMATİK VERİLERİMİZ
-          </h1>
-          <h1 class="veri-sets-alt-baslik1">7 Ana Tema Altında İzmir’in Tüm Verileri
-
-          </h1>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-
-
-
-<!-- ——— POPÜLER VERİ SETLERİ ——— -->
-<div role="main" class="pop-main">
-  <div class="container">
-    <div style="text-align:center">
-      <h3 class="veri-sets-ust-baslik">Veri Setlerimiz</h3>
-      <h1 class="veri-sets-alt-baslik">Öne Çıkan Veri Setlerimiz ile Data İzmir Platformu</h1>
-    </div>
-
-    <div class="row row2" style="margin-top:10px!important">
-      <div id="featured-datasets" class="card-grid-popular">
-        {% snippet 'home/popular_grid.html', packages=extra_deg %}
-      </div>
-      <div id="pagination-container" class="pagination-container"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ——— KATEGORİLER ——— -->
-<div role="main" class="catg-main" style="padding-bottom:60px;">
-  <div class="container">
-    <div class="category-header" style="text-align:center;margin-bottom:30px">
-      <h3 style="font:600 18px Labrada,sans-serif;margin-bottom:15px;color:black">Veri Kategorilerimiz</h3>
-      <h1 style="font:700 44px/54px Labrada,sans-serif;color:black">
-        Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi&nbsp;İnceleyin…
-      </h1>
-    </div>
-
-    <div class="row row2" style="margin-top:30px">
-      <div class="card-grid">
-        {% snippet 'home/snippets/featured_group.html' %}
-      </div>
-    </div>
-  </div>
-</div>
 <!-- ——— INTRO (Video + Metin) ——— -->
 <div role="main" class="intro-main">
   <div class="container">
@@ -154,6 +87,41 @@
           İzmir Kalkınma Ajansı, sürdürülebilir kalkınma için yerel potansiyeli harekete geçirirken,
           Data İzmir Platformu İzmir'e yönelik kanıta dayalı karar süreçleri için veri sunar.
         </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ——— POPÜLER VERİ SETLERİ ——— -->
+<div role="main" class="pop-main">
+  <div class="container">
+    <div style="text-align:center">
+      <h3 class="veri-sets-ust-baslik">Veri Setlerimiz</h3>
+      <h1 class="veri-sets-alt-baslik">Öne Çıkan Veri Setlerimiz ile Data İzmir Platformu</h1>
+    </div>
+
+    <div class="row row2" style="margin-top:10px!important">
+      <div id="featured-datasets" class="card-grid-popular">
+        {% snippet 'home/popular_grid.html', packages=extra_deg %}
+      </div>
+      <div id="pagination-container" class="pagination-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ——— KATEGORİLER ——— -->
+<div role="main" class="catg-main" style="padding-bottom:100px;">
+  <div class="container">
+    <div class="category-header" style="text-align:center;margin-bottom:30px">
+      <h3 style="font:600 18px Labrada,sans-serif;margin-bottom:15px;color:black">Veri Kategorilerimiz</h3>
+      <h1 style="font:700 44px/54px Labrada,sans-serif;color:black">
+        Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi&nbsp;İnceleyin…
+      </h1>
+    </div>
+
+    <div class="row row2" style="margin-top:30px">
+      <div class="card-grid">
+        {% snippet 'home/snippets/featured_group.html' %}
       </div>
     </div>
   </div>

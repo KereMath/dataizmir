@@ -1,5 +1,9 @@
 {% extends "page.html" %}
-
+{% block page_primary_action %}
+  {% if h.check_access('organization_create') %}
+    {% link_for _('Add Organization'), named_route=group_type+'.new', class_='btn btn-primary', icon='plus-square' %}
+  {% endif %}
+{% endblock %}
 {% block subtitle %}{{ _('Organizations') }}{% endblock %}
 {%- block header %}
     {% include "header.html" %}
@@ -20,11 +24,7 @@
       </div>
       </div>
   {% endblock -%}
-  {% block page_primary_action %}
-  {% if h.check_access('organization_create') %}
-    {% link_for _('Add Organization'), named_route=group_type+'.new', class_='btn btn-primary', icon='plus-square' %}
-  {% endif %}
-{% endblock %}
+  
 {% block breadcrumb_content %}
   <li class="active">{% link_for _('Organizations'), named_route=group_type+'.index' %}</li>
 {% endblock %}

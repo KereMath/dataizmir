@@ -142,7 +142,7 @@ class GroupController(base.BaseController):
         group_type = self._guess_group_type()
 
         page = h.get_page_number(request.params) or 1
-        items_per_page = 21
+        items_per_page = 200
 
         context = {'model': model, 'session': model.Session,
                    'user': c.user, 'for_view': True,

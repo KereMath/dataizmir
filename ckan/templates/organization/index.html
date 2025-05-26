@@ -121,18 +121,55 @@ let itemsPerPage = 20;
 
 // Sayfa yüklendiğinde çalışacak
 document.addEventListener('DOMContentLoaded', function() {
-    // Organizasyon verilerini al
+    // Önce template'den gelen veriyi al
     const orgDataElement = document.getElementById('org-data');
     if (orgDataElement) {
         allOrgs = JSON.parse(orgDataElement.textContent);
         filteredOrgs = [...allOrgs];
     }
     
+    // Sonra API'den tüm organizasyonları çek
+    loadAllOrganizations();
+});
+
+// API'den tüm organizasyonları çek
+async function loadAllOrganizations() {
+    try {
+        const response = await fetch('/api/3/action/organization_list?all_fields=true&include_extras=true');
+        const data = await response.json();
+        
+        if (data.success && data.result.length > allOrgs.length) {
+            // API'den daha fazla organizasyon geldi, onları kullan
+            allOrgs = data.result.map(org => ({
+                name: org.name,
+                display_name: org.display_name || org.title || org.name,
+                package_count: org.package_count || 0,
+                image_url: org.image_display_url || '/base/images/placeholder-organization.png',
+                url: `/organization/${org.name}`
+            }));
+            
+            filteredOrgs = [...allOrgs];
+            document.getElementById('showing-count').textContent = allOrgs.length;
+            
+            // Event listener'ları yeniden kur
+            setupEventListeners();
+            console.log(`${allOrgs.length} organizasyon yüklendi`);
+        } else {
+            // API'den az veri geldi veya hata oldu, mevcut veriyi kullan
+            setupEventListeners();
+            console.log(`Template'den ${allOrgs.length} organizasyon kullanılıyor`);
+        }
+    } catch (error) {
+        console.log('API hatası, mevcut veri kullanılıyor:', error);
+        setupEventListeners();
+    }
+}
+
+function setupEventListeners() {
     // Event listener'ları ekle
     const searchInput = document.getElementById('search-input');
     const sortSelect = document.getElementById('sort-select');
     const limitSelect = document.getElementById('limit-select');
-    
     // Arama - her tuş vuruşunda
     searchInput.addEventListener('input', function() {
         filterAndRender();
@@ -150,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         renderPagination();
         renderCurrentPage();
     });
-});
+}
 
 function filterAndRender() {
     const searchTerm = document.getElementById('search-input').value.toLowerCase();

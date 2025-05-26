@@ -76,7 +76,7 @@
       {% if page.items %}
         <!-- Organizasyon listesi container -->
         <div id="organizations-container">
-          <ul class="media-grid" id="organizations-list" style="padding-left: 0; margin: 0; list-style: none; min-height: 240px !important; padding-top: 15px; background: none; border: 1px solid #ddd; border-width: 1px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+          <ul class="media-grid" id="organizations-list" style="padding: 0; margin: 0; list-style: none; min-height: 240px !important; background: none; border: 1px solid #ddd; border-width: 1px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
             <!-- JavaScript ile doldurulacak -->
           </ul>
         </div>
@@ -105,16 +105,30 @@
                 const response = await fetch('/api/3/action/organization_list?all_fields=true&include_extras=true&limit=1000');
                 const data = await response.json();
                 
+                // FULL API RESPONSE'U LOGLA
+                console.log('API Full Response:', data);
+                console.log('API Result Count:', data.result ? data.result.length : 0);
+                
                 if (data.success && data.result && data.result.length > 0) {
+                    // ORGANİZASYON STATE'LERİNİ KONTROL ET
+                    const stateCount = {};
+                    data.result.forEach(org => {
+                        const state = org.state || 'unknown';
+                        stateCount[state] = (stateCount[state] || 0) + 1;
+                    });
+                    console.log('Organization States:', stateCount);
+                    
                     allOrganizations = data.result.map(org => ({
                         name: org.name || '',
                         display_name: org.display_name || org.title || org.name || '',
                         package_count: parseInt(org.package_count) || 0,
                         image_url: org.image_display_url || '/base/images/placeholder-organization.png',
-                        url: '/organization/' + (org.name || '')
+                        url: '/organization/' + (org.name || ''),
+                        state: org.state || 'unknown'
                     }));
                     
                     console.log(`${allOrganizations.length} organizasyon yüklendi`);
+                    console.log('First 5 orgs:', allOrganizations.slice(0, 5));
                     
                     // İlk render
                     filteredOrganizations = [...allOrganizations];
@@ -243,16 +257,18 @@
             }
             
             const organizationHTML = currentOrgs.map(org => `
-                <li style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05);" 
+                <li style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;" 
                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'"
                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)'">
-                    <img src="${org.image_url}" alt="${org.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin: 0 auto 15px; display: block;">
-                    <h2 style="font-size: 18px; margin: 0 0 10px; color: #333;">${org.display_name}</h2>
-                    <strong style="display: block; margin-bottom: 15px; color: #666;">${org.package_count} Veri Seti</strong>
-                    <a href="${org.url}" style="display: inline-block; padding: 8px 16px; background: #4f46e5; color: white; text-decoration: none; border-radius: 4px; transition: background 0.2s;"
-                       onmouseover="this.style.background='#3730a3'" 
-                       onmouseout="this.style.background='#4f46e5'">
-                        <span>${org.display_name} görüntüle</span>
+                    <div>
+                        <img src="${org.image_url}" alt="${org.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin: 0 auto 15px; display: block;">
+                        <h2 style="font-size: 18px; margin: 0 0 10px; color: #333;">${org.display_name}</h2>
+                        <strong style="display: block; margin-bottom: 15px; color: #666;">${org.package_count} Veri Seti</strong>
+                    </div>
+                    <a href="${org.url}" style="display: inline-block; background: #4f7cc1 !important; color: white !important; text-decoration: none; border-radius: 4px; transition: background 0.2s; margin-top: auto; padding: 8px 16px;"
+                       onmouseover="this.style.background='#3a5a8a !important'" 
+                       onmouseout="this.style.background='#4f7cc1 !important'">
+                        Görüntüle
                     </a>
                 </li>
             `).join('');

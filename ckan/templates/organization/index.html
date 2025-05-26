@@ -35,43 +35,50 @@
 {% block primary_content_inner %}
   <h1 class="hide-heading">{% block page_heading %}{{ _('Organizations') }}{% endblock %}</h1>
   
-  <!-- Veri Paydaşları Açıklaması Yukarıya Alındı -->
+  <!-- Veri Paydaşları Açıklaması -->
   <div class="organizations-info" style="margin-bottom: 30px;">
     {% snippet "organization/snippets/helper.html" %}
   </div>
   
-  <!-- Arama ve Filtreleme -->
-  <div class="search-and-filters" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
+  <!-- Arama ve Filtreleme Formu -->
+  <form method="GET" id="organization-filter-form" class="search-and-filters" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
     <!-- Arama Input -->
     <div style="flex: 2; min-width: 250px;">
       <input type="text" 
+             name="q"
              class="form-control" 
              placeholder="Veri paydaşı ismi ile arayın..." 
-             value="{{ q or '' }}"
+             value="{{ request.params.get('q', '') }}"
              id="search-organizations"
              style="width: 100%;">
     </div>
     
     <!-- Sıralama -->
     <div style="flex: 1; min-width: 180px;">
-      <select class="form-control" id="sort-select">
-        <option value="title asc" {% if sort_by_selected == 'title asc' %}selected{% endif %}>İsim (A-Z)</option>
-        <option value="title desc" {% if sort_by_selected == 'title desc' %}selected{% endif %}>İsim (Z-A)</option>
-        <option value="package_count desc" {% if sort_by_selected == 'package_count desc' %}selected{% endif %}>En Çok Veri Seti</option>
-        <option value="package_count asc" {% if sort_by_selected == 'package_count asc' %}selected{% endif %}>En Az Veri Seti</option>
+      <select name="sort" class="form-control" id="sort-select">
+        <option value="title asc" {% if request.params.get('sort', 'title asc') == 'title asc' %}selected{% endif %}>İsim (A-Z)</option>
+        <option value="title desc" {% if request.params.get('sort') == 'title desc' %}selected{% endif %}>İsim (Z-A)</option>
+        <option value="package_count desc" {% if request.params.get('sort') == 'package_count desc' %}selected{% endif %}>En Çok Veri Seti</option>
+        <option value="package_count asc" {% if request.params.get('sort') == 'package_count asc' %}selected{% endif %}>En Az Veri Seti</option>
       </select>
     </div>
     
     <!-- Sayfa başına gösterim -->
     <div style="flex: 1; min-width: 120px;">
-      <select class="form-control" id="items-per-page">
-        <option value="10" {% if request.params.get('limit', 20)|int == 10 %}selected{% endif %}>10'lu</option>
-        <option value="20" {% if request.params.get('limit', 20)|int == 20 %}selected{% endif %}>20'li</option>
-        <option value="50" {% if request.params.get('limit', 20)|int == 50 %}selected{% endif %}>50'li</option>
-        <option value="100" {% if request.params.get('limit', 20)|int == 100 %}selected{% endif %}>100'lü</option>
+      <select name="limit" class="form-control" id="items-per-page">
+        <option value="5" {% if request.params.get('limit', '20')|string == '5' %}selected{% endif %}>5'li</option>
+        <option value="10" {% if request.params.get('limit', '20')|string == '10' %}selected{% endif %}>10'lu</option>
+        <option value="20" {% if request.params.get('limit', '20')|string == '20' %}selected{% endif %}>20'li</option>
       </select>
     </div>
-  </div>
+    
+    <!-- Gizli alanlar - mevcut sayfa durumunu korumak için -->
+    {% for key, value in request.params.items() %}
+      {% if key not in ['q', 'sort', 'limit', 'page'] %}
+        <input type="hidden" name="{{ key }}" value="{{ value }}">
+      {% endif %}
+    {% endfor %}
+  </form>
   
   {% block organizations_list %}
     {% if page.items or request.params %}
@@ -89,7 +96,7 @@
   {% endblock %}
   
   {% block page_pagination %}
-    {{ page.pager(q=q or '', sort=sort_by_selected or '', limit=request.params.get('limit', 20)) }}
+    {{ page.pager(q=request.params.get('q', ''), sort=request.params.get('sort', ''), limit=request.params.get('limit', '20')) }}
   {% endblock %}
 {% endblock %}
 
@@ -98,96 +105,98 @@
 {% endblock %}
 
 <script>
-function updateFilters() {
-    const searchInput = document.getElementById('search-organizations');
-    const sortSelect = document.getElementById('sort-select');
-    const itemsSelect = document.getElementById('items-per-page');
-    
-    const url = new URL(window.location);
-    
-    // Arama terimi
-    if (searchInput && searchInput.value.trim()) {
-        url.searchParams.set('q', searchInput.value.trim());
-    } else {
-        url.searchParams.delete('q');
-    }
-    
-    // Sıralama
-    if (sortSelect && sortSelect.value) {
-        url.searchParams.set('sort', sortSelect.value);
-    }
-    
-    // Sayfa başına gösterim
-    if (itemsSelect && itemsSelect.value) {
-        url.searchParams.set('limit', itemsSelect.value);
-    }
-    
-    // Sayfa numarasını sıfırla
-    url.searchParams.delete('page');
-    
-    window.location.href = url.toString();
-}
-
 document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('organization-filter-form');
     const searchInput = document.getElementById('search-organizations');
     const sortSelect = document.getElementById('sort-select');
     const itemsSelect = document.getElementById('items-per-page');
     
-    // Arama - 500ms gecikme ile
+    let searchTimeout;
+    
+    // Arama için gecikme ile form gönderimi
+    function handleSearchInput() {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(function() {
+            // Sayfa numarasını sıfırla
+            removePageParam();
+            form.submit();
+        }, 500);
+    }
+    
+    // Diğer değişiklikler için anında form gönderimi
+    function handleInstantChange() {
+        // Sayfa numarasını sıfırla
+        removePageParam();
+        form.submit();
+    }
+    
+    // Sayfa parametresini kaldır
+    function removePageParam() {
+        const pageInput = form.querySelector('input[name="page"]');
+        if (pageInput) {
+            pageInput.remove();
+        }
+    }
+    
+    // Event listener'ları ekle
     if (searchInput) {
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(updateFilters, 500);
-        });
+        searchInput.addEventListener('input', handleSearchInput);
     }
     
-    // Sıralama - anında
     if (sortSelect) {
-        sortSelect.addEventListener('change', updateFilters);
+        sortSelect.addEventListener('change', handleInstantChange);
     }
     
-    // Sayfa başına gösterim - anında
     if (itemsSelect) {
-        itemsSelect.addEventListener('change', updateFilters);
+        itemsSelect.addEventListener('change', handleInstantChange);
     }
+    
+    // Form gönderildiğinde loading göstergesi (opsiyonel)
+    form.addEventListener('submit', function() {
+        const submitButton = form.querySelector('button[type="submit"]');
+        if (submitButton) {
+            submitButton.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Yükleniyor...';
+            submitButton.disabled = true;
+        }
+    });
 });
 </script>
 
 <style>
-
 /* En yüksek öncelik için body de ekliyoruz */
 body div.row.wrapper:before {
   content: none !important;
   display: none !important;
 }
-  div.row.wrapper:before{display:none!important;content:none!important}
+div.row.wrapper:before{display:none!important;content:none!important}
 
-    .wrapper:before {
-        content: '';
-        display: none !important;
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 0;
-        width: 25%;
-        border-right: 1px solid #ddd;
-        z-index: 1;
-    }
+.wrapper:before {
+    content: '';
+    display: none !important;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 25%;
+    border-right: 1px solid #ddd;
+    z-index: 1;
+}
 
-
-  div.row.wrapper:before {
+div.row.wrapper:before {
   display: none !important;   /* görünmez yap */
   content: none !important;   /* varsa içeriği temizle */
 }
-  @media (min-width: 768px) {
+
+@media (min-width: 768px) {
     .col-sm-9 {
          width: 100% !important; 
     }
 }
-  body.page-organization aside.secondary.col-sm-3 {
+
+body.page-organization aside.secondary.col-sm-3 {
   display: none !important;
 }
+
 .organizations-info .module {
     background-color: #f8f9fa;
     border: 1px solid #dee2e6;
@@ -196,22 +205,45 @@ body div.row.wrapper:before {
 
 .search-and-filters {
     background: #fff;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    padding: 20px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
 }
 
+.search-and-filters:hover {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.search-and-filters .form-control {
+    border: 2px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 10px 15px;
+    transition: all 0.2s ease;
+    font-size: 14px;
+}
+
+.search-and-filters .form-control:focus {
+    border-color: #4f46e5;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Responsive tasarım */
 @media (max-width: 768px) {
     .search-and-filters {
         flex-direction: column;
+        gap: 10px !important;
     }
     
     .search-and-filters > div {
         width: 100% !important;
         flex: none !important;
+        min-width: auto !important;
     }
 }
+
 .media-grid {
     padding-left: 0;
     margin: 0;
@@ -221,5 +253,19 @@ body div.row.wrapper:before {
     background: none;
     border: 1px solid #ddd;
     border-width: 1px 0;
+}
+
+/* Loading durumu için stil */
+.form-control:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Arama input'u için özel stil */
+#search-organizations {
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23666" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>');
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 40px;
 }
 </style>

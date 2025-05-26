@@ -32,7 +32,7 @@
             </div>
           {% endblock %}
 
-          {% block toolbar %}
+          <!-- {% block toolbar %}
             <div class="toolbar" role="navigation" aria-label="{{ _('Breadcrumb') }}">
               {% block breadcrumb %}
                 {% if self.breadcrumb_content() | trim %}
@@ -43,7 +43,7 @@
                 {% endif %}
               {% endblock %}
             </div>
-          {% endblock %}
+          {% endblock %} -->
 
           <div class="row wrapper{% block wrapper_class %}{% endblock %}{% if self.secondary()|trim == '' or c.action=='resource_read' %} no-nav{% endif %}">
             {#

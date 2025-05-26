@@ -29,7 +29,7 @@
 
 {% block page_primary_action %}
   {% if h.check_access('organization_create') %}
-    {% link_for _('Add Organization'), named_route=group_type+'.new', class_='btn btn-primary', icon='plus-square' %}
+    {% link_for _('Add Organization'), named_route=group_type+'.new', class_='btn btn-primary1', icon='plus-square' %}
   {% endif %}
 {% endblock %}
 
@@ -214,5 +214,10 @@ body.page-organization aside.secondary.col-sm-3{display:none!important;}
   .fab-left{padding:12px 18px 12px 16px;gap:10px;left:15px;}
   .fab-plus{font-size:28px;}
   .fab-text{font-size:15px;}
+}
+.btn-primary1 {
+    color: #fff;
+    background-color: rgb(79, 124, 193);
+    border-color: rgb(79, 124, 193);
 }
 </style>

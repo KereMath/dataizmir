@@ -12,7 +12,7 @@
       </div>
       <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
       <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
-      <p class="stat" style="font-size: 30px;font-weight: bolder;"><span id="total-count">{{page.item_count}}</span><span style="font-size: 18px"> Veri Paydaşı</span></p>
+      <p class="stat" style="font-size: 30px;font-weight: bolder;"><span id="showing-count">{{page.item_count}}</span><span style="font-size: 18px"> Veri Paydaşı</span></p>
       </div>
       </div>
       </div>
@@ -40,30 +40,30 @@
     {% snippet "organization/snippets/helper.html" %}
   </div>
   
-  <!-- Client-side Arama ve Filtreleme -->
+  <!-- Basit Arama ve Filtreleme -->
   <div class="search-and-filters" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
     <!-- Arama Input -->
     <div style="flex: 2; min-width: 250px;">
       <input type="text" 
              class="form-control" 
              placeholder="Veri paydaşı ismi ile arayın..." 
-             id="search-organizations"
+             id="search-input"
              style="width: 100%;">
     </div>
     
     <!-- Sıralama -->
     <div style="flex: 1; min-width: 180px;">
       <select class="form-control" id="sort-select">
-        <option value="title_asc">İsim (A-Z)</option>
-        <option value="title_desc">İsim (Z-A)</option>
-        <option value="package_count_desc">En Çok Veri Seti</option>
-        <option value="package_count_asc">En Az Veri Seti</option>
+        <option value="name-asc">İsim (A-Z)</option>
+        <option value="name-desc">İsim (Z-A)</option>
+        <option value="count-desc">En Çok Veri Seti</option>
+        <option value="count-asc">En Az Veri Seti</option>
       </select>
     </div>
     
     <!-- Sayfa başına gösterim -->
     <div style="flex: 1; min-width: 120px;">
-      <select class="form-control" id="items-per-page">
+      <select class="form-control" id="limit-select">
         <option value="5">5'li</option>
         <option value="10">10'lu</option>
         <option value="20" selected>20'li</option>
@@ -71,36 +71,41 @@
     </div>
   </div>
   
-  <!-- Organizasyon Listesi -->
-  <div id="organizations-container">
-    <ul class="media-grid" id="organizations-list">
-      <!-- JavaScript ile doldurulacak -->
-    </ul>
-  </div>
-  
-  <!-- Pagination -->
-  <div id="pagination-container">
-    <!-- JavaScript ile doldurulacak -->
-  </div>
-  
-  <!-- Organizasyon verilerini JavaScript'e aktar -->
-  <script>
-    window.CKAN_ORGANIZATIONS = [
-      {% for organization in page.items %}
-        {
-          "id": "{{ organization.id }}",
-          "name": "{{ organization.name }}",
-          "display_name": "{{ organization.display_name or organization.title or organization.name }}",
-          "title": "{{ organization.title or organization.display_name or organization.name }}",
-          "package_count": {{ organization.package_count or 0 }},
-          "image_display_url": "{{ organization.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}",
-          "type": "{{ organization.type or 'organization' }}",
-          "url": "{{ h.url_for((organization.type or 'organization') ~ '.read', id=organization.name) }}"
-        }{% if not loop.last %},{% endif %}
-      {% endfor %}
-    ];
-    window.PLACEHOLDER_IMAGE = '{{ h.url_for_static('/base/images/placeholder-organization.png') }}';
-  </script>
+  {% block organizations_list %}
+    {% if page.items or request.params %}
+      {% if page.items %}
+        <!-- Orijinal organizasyon listesi - JavaScript ile manipüle edilecek -->
+        <div id="organizations-container">
+          {% snippet "organization/snippets/organization_list.html", organizations=page.items %}
+        </div>
+        
+        <!-- Pagination container -->
+        <div id="pagination-container"></div>
+        
+        <!-- JavaScript için organizasyon verilerini gizli olarak sakla -->
+        <script type="application/json" id="org-data">
+        [
+          {% for org in page.items %}
+          {
+            "name": "{{ org.name }}",
+            "display_name": "{{ org.display_name }}",
+            "package_count": {{ org.package_count or 0 }},
+            "image_url": "{{ org.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}",
+            "url": "{{ h.url_for(org.type ~ '.read', id=org.name) }}"
+          }{% if not loop.last %},{% endif %}
+          {% endfor %}
+        ]
+        </script>
+      {% endif %}
+    {% else %}
+      <p class="empty">
+        {{ _('There are currently no organizations for this site') }}.
+        {% if h.check_access('organization_create') %}
+          {% link_for _('How about creating one?'), named_route=group_type+'.new' %}</a>.
+        {% endif %}
+      </p>
+    {% endif %}
+  {% endblock %}
 {% endblock %}
 
 {% block secondary_content %}
@@ -108,222 +113,146 @@
 {% endblock %}
 
 <script>
-class OrganizationManager {
-    constructor() {
-        this.allOrganizations = [];
-        this.filteredOrganizations = [];
-        this.currentPage = 1;
-        this.itemsPerPage = 20;
-        this.searchTerm = '';
-        this.sortBy = 'title_asc';
-        
-        this.loadOrganizations();
+// Basit filtreleme ve pagination sistemi
+let allOrgs = [];
+let filteredOrgs = [];
+let currentPage = 1;
+let itemsPerPage = 20;
+
+// Sayfa yüklendiğinde çalışacak
+document.addEventListener('DOMContentLoaded', function() {
+    // Organizasyon verilerini al
+    const orgDataElement = document.getElementById('org-data');
+    if (orgDataElement) {
+        allOrgs = JSON.parse(orgDataElement.textContent);
+        filteredOrgs = [...allOrgs];
     }
     
-class OrganizationManager {
-    constructor() {
-        this.allOrganizations = [];
-        this.filteredOrganizations = [];
-        this.currentPage = 1;
-        this.itemsPerPage = 20;
-        this.searchTerm = '';
-        this.sortBy = 'title_asc';
-        
-        this.loadOrganizations();
-    }
+    // Event listener'ları ekle
+    const searchInput = document.getElementById('search-input');
+    const sortSelect = document.getElementById('sort-select');
+    const limitSelect = document.getElementById('limit-select');
     
-    async loadOrganizations() {
-        // Önce template'den gelen veriyi kullan
-        if (window.CKAN_ORGANIZATIONS && window.CKAN_ORGANIZATIONS.length > 0) {
-            this.allOrganizations = [...window.CKAN_ORGANIZATIONS];
-        }
-        
-        // Eğer çok az veri varsa veya tümünü istiyorsak API'den çek
-        try {
-            const response = await fetch('/api/3/action/organization_list?all_fields=true&include_extras=true');
-            const data = await response.json();
-            
-            if (data.success && data.result.length > this.allOrganizations.length) {
-                this.allOrganizations = data.result.map(org => ({
-                    id: org.id,
-                    name: org.name,
-                    display_name: org.display_name || org.title || org.name,
-                    title: org.title || org.display_name || org.name,
-                    package_count: org.package_count || 0,
-                    image_display_url: org.image_display_url || window.PLACEHOLDER_IMAGE,
-                    type: org.type || 'organization',
-                    url: `/organization/${org.name}`
-                }));
-            }
-        } catch (error) {
-            console.log('API kullanılamıyor, mevcut veri ile devam ediliyor');
-        }
-        
-        this.filteredOrganizations = [...this.allOrganizations];
-        this.initEventListeners();
-        this.render();
-        
-        // Toplam sayıyı güncelle
-        document.getElementById('total-count').textContent = this.allOrganizations.length;
-    }
+    // Arama - her tuş vuruşunda
+    searchInput.addEventListener('input', function() {
+        filterAndRender();
+    });
     
-    initEventListeners() {
-        const searchInput = document.getElementById('search-organizations');
-        const sortSelect = document.getElementById('sort-select');
-        const itemsSelect = document.getElementById('items-per-page');
-        
-        // Arama - 300ms gecikme ile
-        let searchTimeout;
-        searchInput.addEventListener('input', (e) => {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(() => {
-                this.searchTerm = e.target.value.toLowerCase();
-                this.currentPage = 1;
-                this.filterAndSort();
-                this.render();
-            }, 300);
-        });
-        
-        // Sıralama
-        sortSelect.addEventListener('change', (e) => {
-            this.sortBy = e.target.value;
-            this.currentPage = 1;
-            this.filterAndSort();
-            this.render();
-        });
-        
-        // Sayfa başına gösterim
-        itemsSelect.addEventListener('change', (e) => {
-            this.itemsPerPage = parseInt(e.target.value);
-            this.currentPage = 1;
-            this.render();
-        });
-    }
+    // Sıralama - seçilir seçilmez
+    sortSelect.addEventListener('change', function() {
+        filterAndRender();
+    });
     
-    filterAndSort() {
-        // Filtreleme
-        this.filteredOrganizations = this.allOrganizations.filter(org => 
-            org.display_name.toLowerCase().includes(this.searchTerm) ||
-            org.title.toLowerCase().includes(this.searchTerm)
-        );
-        
-        // Sıralama
-        this.filteredOrganizations.sort((a, b) => {
-            switch(this.sortBy) {
-                case 'title_asc':
-                    return a.display_name.localeCompare(b.display_name, 'tr');
-                case 'title_desc':
-                    return b.display_name.localeCompare(a.display_name, 'tr');
-                case 'package_count_desc':
-                    return b.package_count - a.package_count;
-                case 'package_count_asc':
-                    return a.package_count - b.package_count;
-                default:
-                    return 0;
-            }
-        });
-        
-        // Toplam sayıyı güncelle
-        document.getElementById('total-count').textContent = this.filteredOrganizations.length;
-    }
+    // Limit - seçilir seçilmez
+    limitSelect.addEventListener('change', function() {
+        itemsPerPage = parseInt(this.value);
+        currentPage = 1;
+        renderPagination();
+        renderCurrentPage();
+    });
+});
+
+function filterAndRender() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const sortBy = document.getElementById('sort-select').value;
     
-    render() {
-        this.renderOrganizations();
-        this.renderPagination();
-    }
+    // Filtreleme
+    filteredOrgs = allOrgs.filter(org => 
+        org.display_name.toLowerCase().includes(searchTerm)
+    );
     
-    renderOrganizations() {
-        const container = document.getElementById('organizations-list');
-        const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-        const endIndex = startIndex + this.itemsPerPage;
-        const currentOrgs = this.filteredOrganizations.slice(startIndex, endIndex);
-        
-        if (currentOrgs.length === 0) {
-            container.innerHTML = '<li class="empty-message"><p class="empty">Hiçbir veri paydaşı bulunamadı.</p></li>';
-            return;
+    // Sıralama
+    filteredOrgs.sort((a, b) => {
+        switch(sortBy) {
+            case 'name-asc':
+                return a.display_name.localeCompare(b.display_name, 'tr');
+            case 'name-desc':
+                return b.display_name.localeCompare(a.display_name, 'tr');
+            case 'count-desc':
+                return b.package_count - a.package_count;
+            case 'count-asc':
+                return a.package_count - b.package_count;
+            default:
+                return 0;
         }
-        
-        const organizationHTML = currentOrgs.map((org, index) => `
-            <li class="media-item">
-                <img src="${org.image_display_url}" alt="${org.name}" class="img-responsive media-image">
-                <h2 class="media-heading">${org.display_name}</h2>
-                ${org.package_count > 0 
-                    ? `<strong class="count">${org.package_count} Veri Seti</strong>` 
-                    : `<span class="count">0 Veri Seti</span>`
-                }
-                <a href="${org.url}" title="${org.display_name} görüntüle" class="media-view">
-                    <span>${org.display_name} görüntüle</span>
-                </a>
-            </li>
-        `).join('');
-        
-        container.innerHTML = organizationHTML;
-    }
+    });
     
-    renderPagination() {
-        const container = document.getElementById('pagination-container');
-        const totalPages = Math.ceil(this.filteredOrganizations.length / this.itemsPerPage);
-        
-        if (totalPages <= 1) {
-            container.innerHTML = '';
-            return;
-        }
-        
-        let paginationHTML = '<div class="pagination-wrapper"><ul class="pagination">';
-        
-        // Önceki sayfa
-        if (this.currentPage > 1) {
-            paginationHTML += `<li><a href="#" data-page="${this.currentPage - 1}">« Önceki</a></li>`;
-        }
-        
-        // Sayfa numaraları
-        const startPage = Math.max(1, this.currentPage - 2);
-        const endPage = Math.min(totalPages, this.currentPage + 2);
-        
-        if (startPage > 1) {
-            paginationHTML += `<li><a href="#" data-page="1">1</a></li>`;
-            if (startPage > 2) {
-                paginationHTML += `<li class="disabled"><span>...</span></li>`;
-            }
-        }
-        
-        for (let i = startPage; i <= endPage; i++) {
-            paginationHTML += `<li class="${i === this.currentPage ? 'active' : ''}">
-                <a href="#" data-page="${i}">${i}</a>
-            </li>`;
-        }
-        
-        if (endPage < totalPages) {
-            if (endPage < totalPages - 1) {
-                paginationHTML += `<li class="disabled"><span>...</span></li>`;
-            }
-            paginationHTML += `<li><a href="#" data-page="${totalPages}">${totalPages}</a></li>`;
-        }
-        
-        // Sonraki sayfa
-        if (this.currentPage < totalPages) {
-            paginationHTML += `<li><a href="#" data-page="${this.currentPage + 1}">Sonraki »</a></li>`;
-        }
-        
-        paginationHTML += '</ul></div>';
-        container.innerHTML = paginationHTML;
-        
-        // Pagination click events
-        container.querySelectorAll('a[data-page]').forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                this.currentPage = parseInt(e.target.getAttribute('data-page'));
-                this.render();
-                window.scrollTo(0, 0);
-            });
-        });
-    }
+    // Sayfa numarasını sıfırla
+    currentPage = 1;
+    
+    // Toplam sayıyı güncelle
+    document.getElementById('showing-count').textContent = filteredOrgs.length;
+    
+    // Render et
+    renderPagination();
+    renderCurrentPage();
 }
 
-// Sayfa yüklendiğinde başlat
-document.addEventListener('DOMContentLoaded', () => {
-    new OrganizationManager();
-});
+function renderCurrentPage() {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentOrgs = filteredOrgs.slice(startIndex, endIndex);
+    
+    const container = document.querySelector('#organizations-container .media-grid');
+    if (!container) return;
+    
+    if (currentOrgs.length === 0) {
+        container.innerHTML = '<li><p class="empty">Hiçbir veri paydaşı bulunamadı.</p></li>';
+        return;
+    }
+    
+    container.innerHTML = currentOrgs.map(org => `
+        <li class="media-item">
+            <img src="${org.image_url}" alt="${org.name}" class="img-responsive media-image">
+            <h2 class="media-heading">${org.display_name}</h2>
+            <strong class="count">${org.package_count} Veri Seti</strong>
+            <a href="${org.url}" title="${org.display_name} görüntüle" class="media-view">
+                <span>${org.display_name} görüntüle</span>
+            </a>
+        </li>
+    `).join('');
+}
+
+function renderPagination() {
+    const totalPages = Math.ceil(filteredOrgs.length / itemsPerPage);
+    const container = document.getElementById('pagination-container');
+    
+    if (totalPages <= 1) {
+        container.innerHTML = '';
+        return;
+    }
+    
+    let html = '<div class="text-center"><ul class="pagination">';
+    
+    // Önceki
+    if (currentPage > 1) {
+        html += `<li><a href="#" onclick="goToPage(${currentPage - 1})">« Önceki</a></li>`;
+    }
+    
+    // Sayfa numaraları
+    for (let i = 1; i <= totalPages; i++) {
+        if (i === currentPage) {
+            html += `<li class="active"><span>${i}</span></li>`;
+        } else {
+            html += `<li><a href="#" onclick="goToPage(${i})">${i}</a></li>`;
+        }
+    }
+    
+    // Sonraki
+    if (currentPage < totalPages) {
+        html += `<li><a href="#" onclick="goToPage(${currentPage + 1})">Sonraki »</a></li>`;
+    }
+    
+    html += '</ul></div>';
+    container.innerHTML = html;
+}
+
+function goToPage(page) {
+    currentPage = page;
+    renderCurrentPage();
+    renderPagination();
+    window.scrollTo(0, 0);
+}
 </script>
 
 <style>
@@ -373,11 +302,7 @@ body.page-organization aside.secondary.col-sm-3 {
     border: 2px solid #e5e7eb;
     border-radius: 8px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-    transition: all 0.2s ease;
-}
-
-.search-and-filters:hover {
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
 }
 
 .search-and-filters .form-control {
@@ -385,7 +310,6 @@ body.page-organization aside.secondary.col-sm-3 {
     border-radius: 6px;
     padding: 10px 15px;
     transition: all 0.2s ease;
-    font-size: 14px;
 }
 
 .search-and-filters .form-control:focus {
@@ -403,112 +327,6 @@ body.page-organization aside.secondary.col-sm-3 {
     background: none;
     border: 1px solid #ddd;
     border-width: 1px 0;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-
-.media-item {
-    flex: 0 0 calc(33.333% - 15px);
-    background: white;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    padding: 15px;
-    text-align: center;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-}
-
-.media-item:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
-
-.media-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 50%;
-    margin: 0 auto 15px;
-    display: block;
-}
-
-.media-heading {
-    font-size: 18px;
-    margin: 0 0 10px;
-    color: #333;
-}
-
-.count {
-    display: block;
-    margin-bottom: 15px;
-    color: #666;
-}
-
-.media-view {
-    display: inline-block;
-    padding: 8px 16px;
-    background: #4f46e5;
-    color: white;
-    text-decoration: none;
-    border-radius: 4px;
-    transition: background 0.2s;
-}
-
-.media-view:hover {
-    background: #3730a3;
-    color: white;
-    text-decoration: none;
-}
-
-.empty-message {
-    width: 100%;
-    text-align: center;
-    padding: 40px;
-    color: #666;
-}
-
-.pagination-wrapper {
-    text-align: center;
-    margin-top: 30px;
-}
-
-.pagination {
-    display: inline-flex;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    gap: 5px;
-}
-
-.pagination li {
-    list-style: none;
-}
-
-.pagination a, .pagination span {
-    display: block;
-    padding: 8px 12px;
-    text-decoration: none;
-    border: 1px solid #ddd;
-    color: #333;
-    border-radius: 4px;
-    transition: all 0.2s;
-}
-
-.pagination a:hover {
-    background: #f5f5f5;
-    text-decoration: none;
-}
-
-.pagination .active a {
-    background: #4f46e5;
-    color: white;
-    border-color: #4f46e5;
-}
-
-.pagination .disabled span {
-    color: #ccc;
-    background: #f9f9f9;
 }
 
 /* Responsive tasarım */
@@ -523,22 +341,37 @@ body.page-organization aside.secondary.col-sm-3 {
         flex: none !important;
         min-width: auto !important;
     }
-    
-    .media-item {
-        flex: 0 0 calc(50% - 10px);
-    }
 }
 
-@media (max-width: 480px) {
-    .media-item {
-        flex: 0 0 100%;
-    }
-}
-
-#search-organizations {
+#search-input {
     background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="%23666" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>');
     background-repeat: no-repeat;
     background-position: right 12px center;
     padding-right: 40px;
+}
+
+.pagination {
+    margin-top: 20px;
+}
+
+.pagination li a {
+    padding: 8px 12px;
+    text-decoration: none;
+    border: 1px solid #ddd;
+    color: #333;
+    border-radius: 4px;
+    margin: 0 2px;
+}
+
+.pagination li.active span {
+    background: #4f46e5;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+}
+
+.pagination li a:hover {
+    background: #f5f5f5;
+    text-decoration: none;
 }
 </style>

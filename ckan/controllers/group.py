@@ -204,7 +204,7 @@ class GroupController(base.BaseController):
         return render(self._index_template(group_type),
                       extra_vars={'group_type': group_type})
 
-    def read(self, id, limit=20):
+    def read(self, id, limit=200):
         group_type = self._ensure_controller_matches_group_type(
             id.split('@')[0])
 

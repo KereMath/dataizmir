@@ -364,7 +364,7 @@ class TestGroupList(object):
     def test_all_fields_limit_default(self):
         self._create_bulk_groups("org_all_fields_default", 30)
         results = helpers.call_action("group_list", all_fields=True)
-        assert len(results) == 25  # i.e. default value
+        assert len(results) == 250  # i.e. default value
 
     @pytest.mark.ckan_config(
         "ckan.group_and_organization_list_all_fields_max", "5"
@@ -752,7 +752,7 @@ class TestOrganizationList(object):
     def test_all_fields_limit_default(self):
         self._create_bulk_orgs("org_all_fields_default", 30)
         results = helpers.call_action("organization_list", all_fields=True)
-        assert len(results) == 25  # i.e. default value
+        assert len(results) == 250  # i.e. default value
 
     @pytest.mark.ckan_config("ckan.group_and_organization_list_all_fields_max", "5")
     def test_all_fields_limit_with_custom_max_limit(self):

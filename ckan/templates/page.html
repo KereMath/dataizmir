@@ -18,7 +18,12 @@
   {# The content block allows you to replace the content of the page if needed #}
   {%- block content %}
     {% block maintag %}<div class="main">{% endblock %}
-      <div id="content" class="container">
+                            {% if self.page_primary_action() | trim %}
+                        <div class="page_primary_action" style="margin-top:150px; margin-left:120px;">
+                          {% block page_primary_action %}{% endblock %}
+                        </div>
+                      {% endif %}
+      <div id="content" class="container" style="margin-top:-180px;">
         {% block main_content %}
           {% block flash %}
             <div class="flash-messages">
@@ -70,6 +75,7 @@
                     <p>Some content for the page</p>
                   {% endblock %}
                 #}
+                
                 {% block primary_content %}
                   <article class="module">
                     {% block page_header %}
@@ -85,11 +91,7 @@
                       </header>
                     {% endblock %}
                     <div class="module-content">
-                      {% if self.page_primary_action() | trim %}
-                        <div class="page_primary_action">
-                          {% block page_primary_action %}{% endblock %}
-                        </div>
-                      {% endif %}
+
                       {% block primary_content_inner %}
                       {% endblock %}
                     </div>

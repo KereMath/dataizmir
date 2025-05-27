@@ -1,33 +1,79 @@
-{% extends "page.html" %}
+{# templates/user/new.html — modern Register sayfası #}
+<!DOCTYPE html>
+<html lang="{{ g.lang or 'en' }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ _('Register') }}</title>
 
-{% block subtitle %}{{ _('Register') }}{% endblock %}
+  <!-- CKAN ana stilleri -->
+  <link rel="stylesheet" href="{{ h.url_for_static('/base/css/main.css') }}">
 
-{% block breadcrumb_content %}
-  <li class="active">{{ h.nav_link(_('Registration'), named_route='user.register') }}</li>
-{% endblock %}
+  <style>
+    html,body{margin:0;height:100%}
 
-{% block primary_content %}
-  <article class="module">
-    <div class="module-content">
-      {% block primary_content_inner %}
-      <h1 class="page-heading">
-        {% block page_heading %}{{ _('Register for an Account') }}{% endblock %}
-      </h1>
-      {{ form | safe }}
-      {% endblock %}
+    /*========== ÜST ŞERİT ==========*/
+    .page-header{
+      margin-top:0px;
+      position:fixed;top:0;left:0;width:100%;
+      height:132px;background:#F8F7FA;
+      display:flex;align-items:center;z-index:1000;
+    }
+    .site-logo{margin-left:20px;display:block}
+    .site-logo img{height:48px;width:auto}
+
+    /*========== ANA ALAN ==========*/
+    .page-wrapper{
+      position:fixed;top:132px;left:0;
+      width:100vw;height:calc(100vh - 132px);
+      display:flex;overflow:hidden;
+    }
+    .page-bg{
+      flex:0 0 65vw;
+      background:url('{{ h.url_for_static("/bground.png") }}') center/100% 100% no-repeat;
+      background-color:#F8F7FA;
+    }
+    .page-form-side{
+      flex:1;display:flex;align-items:center;justify-content:center;
+      background:#fff;padding:40px;overflow:auto;
+    }
+
+    /*========== KUTU ==========*/
+    .register-box{width:100%;max-width:420px}
+    .page-heading{
+      margin:0 0 1.5rem;font-size:1.8rem;text-align:center
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sabit üst şerit + logo -->
+  <header class="page-header">
+    <a href="/" class="site-logo">
+      <img src="{{ h.url_for_static_or_external('/logonew.png') }}" alt="Logo">
+    </a>
+  </header>
+
+  <!-- Sol arka plan + sağ form kutusu -->
+  <div class="page-wrapper">
+    <div class="page-bg"></div>
+
+    <div class="page-form-side">
+      <div class="register-box">
+        {% block primary_content %}
+          <article class="module">
+            <div class="module-content">
+              {% block primary_content_inner %}
+                <h1 class="page-heading">
+                  {% block page_heading %}{{ _('Register for an Account') }}{% endblock %}
+                </h1>
+                {{ form | safe }}
+              {% endblock %}
+            </div>
+          </article>
+        {% endblock %}
+      </div>
     </div>
-  </article>
-{% endblock %}
+  </div>
 
-{% block secondary_content %}
-  {% block help %}
-  <section class="module module-narrow module-shallow">
-    {% block help_inner %}
-    <h2 class="module-heading">{{ _('Why Sign Up?') }}</h2>
-    <div class="module-content">
-      <p>{% trans %}Create datasets, groups and other exciting things{% endtrans %}</p>
-    </div>
-    {% endblock %}
-  </section>
-  {% endblock %}
-{% endblock %}
+</body>
+</html>

@@ -1,54 +1,88 @@
-{% extends "page.html" %}
+{# templates/user/login.html — bağımsız şablon #}
+{% import 'macros/form.html' as form %}
+<!DOCTYPE html>
+<html lang="{{ g.lang or 'en' }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ _('Login') }}</title>
 
-{% block subtitle %}{{ _('Login') }}{% endblock %}
+  <!-- CKAN’ın ana stilleri -->
+  <link rel="stylesheet" href="{{ h.url_for_static('/base/css/main.css') }}">
 
-{% block breadcrumb_content %}
-  <li class="active">{{ h.nav_link(_('Login'), named_route='user.login') }}</li>
-{% endblock %}
+  <style>
+    html,body{margin:0;height:100%}
 
-{% block primary_content %}
-  <section class="module">
-    <div class="module-content">
-      <h1 class="page-heading">{% block page_heading %}{{ _('Login') }}{% endblock %}</h1>
-      {% block form %}
-        {% snippet "user/snippets/login_form.html", action=g.login_handler, error_summary=error_summary %}
-      {% endblock %}
+    /*========== HEADER ==========*/
+    .login-header{
+      position:fixed;top:0;left:0;width:100%;
+      height:132px;                       /* istenen yükseklik  */
+      background:#F8F7FA;                 /* istenen arkaplan   */
+      display:flex;align-items:center;    /* logoyu dikey ortala*/
+      z-index:1000;
+    }
+    .site-logo{margin-left:20px;display:block}
+    .site-logo img{height:48px;width:auto}
+
+    /*========== ANA BÖLÜM ==========*/
+    .login-wrapper{
+      position:fixed;top:132px;left:0;              /* header’dan sonra başla */
+      width:100vw;height:calc(100vh - 132px);       /* header yüksekliğini düş */
+      display:flex;overflow:hidden;
+    }
+    .login-bg{
+      flex:0 0 65vw;
+      background: url('/bground.png') center/100% 100% no-repeat;
+      background-color:#F8F7FA;
+    }
+    .login-form-side{
+      flex:1;
+      display:flex;align-items:center;justify-content:center;
+      background:#F8F7FA;padding:40px; margin-top:-120px;
+    }
+
+    /*========== FORM TASARIMI ==========*/
+    .login-box{width:100%;max-width:360px}
+    .login-box h1{margin:0 0 1.5rem;font-size:1.8rem;text-align:center}
+    .login-box label{display:block;margin:.8rem 0 .2rem}
+    .login-box input{width:100%;padding:.55rem .6rem;border:1px solid #ccc;border-radius:4px}
+    .login-box button{
+      width:100%;margin-top:1.4rem;padding:.6rem 1rem;
+      border:none;border-radius:4px;cursor:pointer;
+      background:#007acc;color:#fff;font-size:1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Üst şerit + Logo -->
+  <header class="login-header">
+    <a href="/" class="site-logo">
+      <img src="{{ h.url_for_static_or_external('/logonew.png') }}" alt="Logo">
+    </a>
+  </header>
+
+  <!-- Arka plan + Form -->
+  <div class="login-wrapper">
+    <div class="login-bg"></div>
+
+    <div class="login-form-side">
+      <form class="login-box" action="{{ g.login_handler }}" method="post">
+        <h1>{{ _('Login') }}</h1>
+
+        {% if error_summary %}
+          {{ form.errors(errors=error_summary) }}
+        {% endif %}
+
+        <label for="login">{{ _('Username') }}</label>
+        <input id="login" name="login" type="text" required>
+
+        <label for="password">{{ _('Password') }}</label>
+        <input id="password" name="password" type="password" required>
+
+        <button type="submit">{{ _('Login') }}</button>
+      </form>
     </div>
-  </section>
-{% endblock %}
+  </div>
 
-{% block secondary_content %}
-  {% if h.check_access('user_create') %}
-  {% block help_register %}
-  <section class="module module-narrow module-shallow">
-    {% block help_register_inner %}
-      <h2 class="module-heading">{{ _('Need an Account?') }}</h2>
-      <div class="module-content">
-        <p>{% trans %}Then sign right up, it only takes a minute.{% endtrans %}</p>
-        <p class="action">
-        {% block help_register_button %}
-          <a class="btn btn-default" href="{{ h.url_for('user.register') }}">{{ _('Create an Account') }}</a>
-        {% endblock %}
-        </p>
-      </div>
-    {% endblock %}
-  </section>
-  {% endblock %}
-  {% endif %}
-
-  {% block help_forgotten %}
-  <section class="module module-narrow module-shallow">
-    {% block help_forgotten_inner %}
-    <h2 class="module-heading">{{ _('Forgotten your password?') }}</h2>
-    <div class="module-content">
-      <p>{% trans %}No problem, use our password recovery form to reset it.{% endtrans %}</p>
-      <p class="action">
-        {% block help_forgotten_button %}
-        <a class="btn btn-default" href="{{ h.url_for('user.request_reset') }}">{{ _('Forgot your password?') }}</a>
-        {% endblock %}
-      </p>
-    </div>
-    {% endblock %}
-  </section>
-  {% endblock %}
-{% endblock %}
+</body>
+</html>

@@ -19,11 +19,11 @@
   {%- block content %}
     {% block maintag %}<div class="main">{% endblock %}
                             {% if self.page_primary_action() | trim %}
-                        <div class="page_primary_action" style="margin-top:150px; margin-left:120px;">
+                        <div class="page_primary_action" style="top:150px; left:120px; position:fixed; z-index:100;">
                           {% block page_primary_action %}{% endblock %}
                         </div>
                       {% endif %}
-      <div id="content" class="container" style="margin-top:-180px;">
+      <div id="content" class="container" >
         {% block main_content %}
           {% block flash %}
             <div class="flash-messages">

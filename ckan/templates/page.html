@@ -17,12 +17,17 @@
 
   {# The content block allows you to replace the content of the page if needed #}
   {%- block content %}
+
+
+{% if self.yeni_artı_butonu_blok() | trim %}
+    <div class="ekle_floating_btn_container"  style="background-color: rgb(88,84,124) ">
+        {% block yeni_artı_butonu_blok %}{% endblock %}
+    </div>
+{% endif %}
+
+
     {% block maintag %}<div class="main">{% endblock %}
-                            {% if self.page_primary_action() | trim %}
-                        <div class="page_primary_action" style="top:150px; left:120px; position:fixed; z-index:100;">
-                          {% block page_primary_action %}{% endblock %}
-                        </div>
-                      {% endif %}
+
       <div id="content" class="container" >
         {% block main_content %}
           {% block flash %}
@@ -123,3 +128,65 @@
   {% endif %}
   {{ super() }}
 {% endblock -%}
+<style>
+/* ► Genel buton gövdesi */
+.butonmarkins{
+  position:fixed !important;
+  top:180px !important;
+  left:30px !important;          /* solda */
+  z-index:1000 !important;
+
+  width:64px !important;
+  height:64px !important;
+  background:#6f42c1 !important;
+  color:#fff !important;
+  border-radius:50% !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-decoration:none !important;
+  box-shadow:0 4px 8px rgba(0,0,0,.25) !important;
+  transition:all .25s ease !important;
+}
+
+/* ► “+” ikonu */
+.butonmarkins i{
+  font-size:40px !important;     /* 30-40 px arası: 40 px verdik */
+  line-height:1 !important;
+}
+
+/* ► Metin (başta gizli) */
+.butonmarkins .btn-label{
+  display:none !important;
+  font-size:24px !important;
+  margin-left:12px !important;
+  white-space:nowrap !important;
+}
+
+/* ► Hover / 5 sn gösterim sırasında */
+.butonmarkins.show-label{
+  width:auto !important;
+  padding:0 24px 0 20px !important;
+  border-radius:32px !important;
+}
+.butonmarkins.show-label .btn-label{
+  display:inline-block !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded',function(){
+  const btn=document.querySelector('.butonmarkins');
+  if(!btn) return;
+
+  let timer;
+  const show = () => {
+    btn.classList.add('show-label');
+    clearTimeout(timer);
+    timer = setTimeout(()=>btn.classList.remove('show-label'), 5000); // 5 sn sonra gizle
+  };
+
+  btn.addEventListener('mouseenter', show);
+  btn.addEventListener('mouseleave', show);   // imleç çıksa da sayaç devam etsin
+});
+</script>

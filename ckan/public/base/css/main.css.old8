@@ -6976,7 +6976,7 @@ a.tag:hover {
 .pagination-wrapper {
   text-align: center;
   border-top: 1px solid #eeeeee;
-  padding-top: 10px;
+  padding-top: 10px;display:none !important;
 }
 .module h1 {
   margin-top: 0;

@@ -1,79 +1,394 @@
-{#
-Displays a single of dataset.
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <title>Veri Seti Tablosu</title>
+  <style>
+    .search-form {
+display:none !important;
+}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
 
-package        - A package to display.
-item_class     - The class name to use on the list item.
-hide_resources - If true hides the resources (default: false).
-banner         - If true displays a popular banner (default: false).
-truncate       - The length to trucate the description to (default: 180)
-truncate_title - The length to truncate the title to (default: 80).
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+    }
 
-Example:
+    .page-container {
+      display: flex;
+      min-height: 100vh;
+    }
 
-  {% snippet 'snippets/package_item.html', package=c.datasets[0] %}
+    /* Sidebar Stilleri */
+    .sidebar-filter {
+      width: 300px;
+      background-color: #fff;
+      border-right: 1px solid #e9ecef;
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
 
-#}
-{% set truncate = truncate or 180 %}
-{% set truncate_title = truncate_title or 80 %}
-{% set title = package.title or package.name %}
-{% set notes = h.markdown_extract(package.notes, extract_length=truncate) %}
+    .sidebar-filter h3 {
+      margin-bottom: 20px;
+      color: #495057;
+      font-size: 18px;
+      font-weight: 600;
+    }
 
-{% block package_item %}
-  <li class="{{ item_class or "dataset-item" }}">
-    {% block content %}
-      <div class="dataset-content">
-        {% block heading %}
-          <h2 class="dataset-heading">
-            {% block heading_private %}
-              {% if package.private %}
-                <span class="dataset-private label label-inverse">
-                    <i class="fa fa-lock"></i>
-                    {{ _('Private') }}
-                </span>
-              {% endif %}
-            {% endblock %}
-            {% block heading_title %}
-		{{ h.link_to(h.truncate(title, truncate_title), h.url_for('%s.read' % package.type, id=package.name)) }}
-            {% endblock %}
-            {% block heading_meta %}
-              {% if package.get('state', '').startswith('draft') %}
-                <span class="label label-info">{{ _('Draft') }}</span>
-              {% elif package.get('state', '').startswith('deleted') %}
-                <span class="label label-danger">{{ _('Deleted') }}</span>
-              {% endif %}
-              {{ h.popular('recent views', package.tracking_summary.recent, min=10) if package.tracking_summary }}
-            {% endblock %}
-          </h2>
-        {% endblock %}
-        {% block banner %}
-          {% if banner %}
-            <span class="banner">{{ _('Popular') }}</span>
-          {% endif %}
-        {% endblock %}
-        <p class="dataset-heading">{{package.organization.title}}</p>
-        {% block notes %}
-          {% if notes %}
-            <div>{{ notes|urlize }}</div>
-          {% else %}
-            <p class="empty"></p>
-          {% endif %}
-        {% endblock %}
+    .filter-section {
+      margin-bottom: 25px;
+    }
+
+    .filter-section label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    .filter-section input[type="search"],
+    .filter-section select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      background-color: #fff;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .filter-section input[type="search"]:focus,
+    .filter-section select:focus {
+      outline: none;
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+
+    .multi-select {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background-color: #fff;
+    }
+
+    .multi-select-option {
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      border-bottom: 1px solid #f8f9fa;
+      display: flex;
+      align-items: center;
+    }
+
+    .multi-select-option:last-child {
+      border-bottom: none;
+    }
+
+    .multi-select-option:hover {
+      background-color: #f8f9fa;
+    }
+
+    .multi-select-option.selected {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+
+    .multi-select-option input[type="checkbox"] {
+      margin-right: 8px;
+    }
+
+    /* Ana İçerik Alanı */
+    .main-container {
+      margin-left: 12px;
+      padding: 0px;
+      width: calc(100% - 60px);
+    }
+
+    /* Tablo Stilleri */
+    .dataset-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .dataset-table thead {
+      background-color: #495057;
+      color: white;
+    }
+
+    .dataset-table th {
+      padding: 15px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+    }
+
+    .dataset-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f3f4;
+      vertical-align: top;
+    }
+
+    .dataset-table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .dataset-link {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .dataset-link:hover {
+      text-decoration: underline;
+    }
+
+    .t-title { width: 25%; }
+    .t-desc { width: 35%; }
+    .t-org { width: 15%; }
+    .t-upd { width: 12%; }
+    .t-formats { width: 13%; }
+
+    .empty-cell {
+      color: #9b98a7;
+      font-style: italic;
+    }
+
+    .format-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      margin: 1px 2px;
+      text-transform: uppercase;
+    }
+
+    .fmt-csv { background-color: #e8f5e8; color: #2e7d32; }
+    .fmt-xls { background-color: #e3f2fd; color: #1976d2; }
+    .fmt-json { background-color: #fff3e0; color: #f57c00; }
+    .fmt-xml { background-color: #fce4ec; color: #c2185b; }
+    .fmt-pdf { background-color: #ffebee; color: #d32f2f; }
+    .fmt-shp { background-color: #f3e5f5; color: #7b1fa2; }
+    .fmt-zip { background-color: #f1f8e9; color: #558b2f; }
+    .fmt-html { background-color: #e0f2f1; color: #00796b; }
+    .fmt-doc { background-color: #e8eaf6; color: #3f51b5; }
+    .fmt-txt { background-color: #fafafa; color: #616161; }
+    .fmt-other { background-color: #eceff1; color: #455a64; }
+
+    /* Responsive tasarım */
+    @media (max-width: 1024px) {
+      .sidebar-filter {
+        width: 250px;
+      }
+      
+      .main-container {
+        margin-left: 250px;
+        width: calc(100% - 250px);
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar-filter {
+        width: 100%;
+        position: relative;
+        height: auto;
+      }
+      
+      .main-container {
+        margin-left: 0;
+        width: 100%;
+      }
+      
+      .page-container {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <div class="sidebar-filter" id="filterSidebar">
+      <h3>Filtreler</h3>
+      
+      <div class="filter-section">
+        <label for="searchTitle">Başlıkta Ara</label>
+        <input type="search" id="searchTitle" placeholder="Başlık ara...">
       </div>
-      {% block resources %}
-        {% if package.resources and not hide_resources %}
-          {% block resources_outer %}
-            <ul class="dataset-resources list-unstyled">
-              {% block resources_inner %}
-                {% for resource in h.dict_list_reduce(package.resources, 'format') %}
-                <li>
-                  <a href="{{ h.url_for(package.type ~ '.read', id=package.name) }}" class="label label-default" data-format="{{ resource.lower() }}">{{ resource }}</a>
-                </li>
-                {% endfor %}
-              {% endblock %}
-            </ul>
-          {% endblock %}
-        {% endif %}
-      {% endblock %}
-    {% endblock %}
-  </li>
-{% endblock %}
+      
+      <div class="filter-section">
+        <label>Organizasyonlar</label>
+        <div class="multi-select" id="orgSelect"></div>
+      </div>
+      
+      <div class="filter-section">
+        <label>Formatlar</label>
+        <div class="multi-select" id="fmtSelect"></div>
+      </div>
+      
+      <div class="filter-section">
+        <label>Güncelleme Tarihi</label>
+        <select id="sortDate">
+          <option value="desc">En Yeni Önce</option>
+          <option value="asc">En Eski Önce</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="main-container">
+      <table class="dataset-table">
+        <thead>
+          <tr>
+            <th class="t-title">Başlık</th>
+            <th class="t-desc">Açıklama</th>
+            <th class="t-org">Organizasyon</th>
+            <th class="t-upd">Güncellenme</th>
+            <th class="t-formats">Format Çeşitleri</th>
+          </tr>
+        </thead>
+        <tbody id="dataset-table-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Değişkenler
+    var allDatasets = [];
+    var allOrgs = [];
+    var allFormats = [];
+    var selectedOrgs = new Set();
+    var selectedFormats = new Set();
+
+    function formatClass(fmt) {
+      if(!fmt) return 'fmt-other';
+      fmt = fmt.toLowerCase();
+      if(fmt==='csv') return 'fmt-csv';
+      if(fmt==='xls'||fmt==='xlsx') return 'fmt-xls';
+      if(fmt==='json') return 'fmt-json';
+      if(fmt==='xml') return 'fmt-xml';
+      if(fmt==='pdf') return 'fmt-pdf';
+      if(fmt==='shp') return 'fmt-shp';
+      if(fmt==='zip') return 'fmt-zip';
+      if(fmt==='html') return 'fmt-html';
+      if(fmt==='doc'||fmt==='docx') return 'fmt-doc';
+      if(fmt==='txt') return 'fmt-txt';
+      return 'fmt-other';
+    }
+
+    function renderMultiSelect(containerId, items, selectedSet, onchange) {
+      var c = document.getElementById(containerId);
+      c.innerHTML = "";
+      items.forEach(function(item) {
+        var opt = document.createElement("div");
+        opt.className = "multi-select-option" + (selectedSet.has(item) ? " selected" : "");
+        opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item) ? "checked" : ""}> <span>${item}</span>`;
+        opt.onclick = function(e) {
+          e.stopPropagation();
+          if(selectedSet.has(item)){
+            selectedSet.delete(item);
+          } else {
+            selectedSet.add(item);
+          }
+          renderMultiSelect(containerId, items, selectedSet, onchange);
+          onchange();
+        };
+        c.appendChild(opt);
+      });
+    }
+
+    function renderTable() {
+      var searchVal = document.getElementById("searchTitle").value.trim().toLowerCase();
+      var dateSort = document.getElementById("sortDate").value;
+      var filtered = allDatasets.filter(function(pkg) {
+        var title = (pkg.title || pkg.name || '').toLowerCase();
+        if(searchVal && !title.includes(searchVal)) return false;
+        if(selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
+        if(selectedFormats.size){
+          var fmts = Object.keys(pkg.fmts);
+          if(!Array.from(selectedFormats).every(function(fmt){return fmts.includes(fmt)})) return false;
+        }
+        return true;
+      });
+      filtered.sort(function(a,b){
+        var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
+        var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
+        return (dateSort==='desc' ? tb-ta : ta-tb);
+      });
+
+      var rows = '';
+      filtered.forEach(function(pkg) {
+        var title = pkg.title || pkg.name || '';
+        var link = '/dataset/' + encodeURIComponent(pkg.name);
+        var desc = pkg.notes ? pkg.notes.replace(/\n/g,' ') : '';
+        if(desc.length > 180) desc = desc.slice(0,180) + '...';
+        desc = desc ? desc : `<span class="empty-cell">Yok</span>`;
+        var org = pkg.orgTitle ? pkg.orgTitle : `<span class="empty-cell">Yok</span>`;
+        var upd = pkg.metadata_modified ? pkg.metadata_modified.split('T')[0].split('-').reverse().join('.') : '';
+        upd = upd ? upd : `<span class="empty-cell">–</span>`;
+        var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(function(f){
+          return `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`;
+        }).join(' ') : `<span class="empty-cell">–</span>`;
+        rows += `<tr>
+          <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private?'<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>':''}</td>
+          <td class="t-desc">${desc}</td>
+          <td class="t-org">${org}</td>
+          <td class="t-upd">${upd}</td>
+          <td class="t-formats">${formats}</td>
+        </tr>`;
+      });
+      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="5" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
+    }
+
+    // Gizli datasetleri de getir
+    fetch('/api/3/action/package_search?rows=1000&include_private=true', {
+      credentials: 'include'
+    })
+      .then(function(r){return r.json()})
+      .then(function(data){
+        if(!data.result || !data.result.results) return;
+        var results = data.result.results;
+        var orgSet = new Set();
+        var fmtSet = new Set();
+        allDatasets = results.map(function(pkg) {
+          var orgTitle = (pkg.organization && pkg.organization.title) ? pkg.organization.title : "";
+          orgSet.add(orgTitle);
+          var fmts = {};
+          if(pkg.resources && pkg.resources.length){
+            pkg.resources.forEach(function(r){
+              if(r.format) fmtSet.add(r.format.toLowerCase());
+              if(r.format) fmts[r.format.toLowerCase()] = true;
+            });
+          }
+          return Object.assign({}, pkg, {orgTitle:orgTitle, fmts:fmts});
+        });
+        allOrgs = Array.from(orgSet).filter(Boolean).sort();
+        allFormats = Array.from(fmtSet).filter(Boolean).sort();
+
+        renderMultiSelect("orgSelect", allOrgs, selectedOrgs, renderTable);
+        renderMultiSelect("fmtSelect", allFormats, selectedFormats, renderTable);
+
+        document.getElementById("searchTitle").oninput = renderTable;
+        document.getElementById("sortDate").onchange = renderTable;
+
+        renderTable();
+      })
+      .catch(function(error) {
+        console.error('Veri yüklenirken hata:', error);
+        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="5" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+      });
+  </script>
+</body>
+</html>

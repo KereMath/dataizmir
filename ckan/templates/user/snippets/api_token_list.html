@@ -1,10 +1,225 @@
-{#
-  Template variables:
+<style>
+/* Hide original table structure and convert to cards */
+.table {
+    display: block !important;
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+}
 
-  user - currently viewed user
-  tokens - list of ApiToken entities
+.table thead {
+    display: none !important;
+}
 
-  #}
+.table tbody {
+    display: grid !important;
+    gap: 1.5rem !important;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)) !important;
+}
+
+.table tbody tr {
+    display: block !important;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%) !important;
+    border: 2px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    padding: 1.5rem !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+}
+
+.table tbody tr::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    height: 4px !important;
+    background: linear-gradient(90deg, #8b5cf6 0%, #a855f7 50%, #c084fc 100%) !important;
+}
+
+.table tbody tr:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 20px 25px -5px rgba(139, 92, 246, 0.1), 0 10px 10px -5px rgba(139, 92, 246, 0.04) !important;
+    border-color: #8b5cf6 !important;
+    background: linear-gradient(135deg, #faf5ff 0%, #f3e8ff 100%) !important;
+}
+
+.table tbody td {
+    display: block !important;
+    padding: 0 !important;
+    border: none !important;
+    margin-bottom: 1rem !important;
+}
+
+.table tbody td:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Token name styling */
+.table tbody td:first-child {
+    margin-bottom: 1.5rem !important;
+}
+
+.table tbody td:first-child code {
+    display: block !important;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+    color: white !important;
+    padding: 1rem 1.25rem !important;
+    border-radius: 12px !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
+    border: none !important;
+    word-break: break-all !important;
+    box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.2) !important;
+}
+
+/* Last access styling */
+.table tbody td:nth-child(2) {
+    margin-bottom: 1.5rem !important;
+    position: relative !important;
+    padding-left: 2.5rem !important;
+}
+
+.table tbody td:nth-child(2)::before {
+    content: '🕒' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    font-size: 1.2rem !important;
+}
+
+.table tbody td:nth-child(2)::after {
+    content: 'Son Erişim' !important;
+    display: block !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #6b7280 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin-bottom: 0.25rem !important;
+}
+
+.table tbody td:nth-child(2) {
+    color: #374151 !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    background: rgba(139, 92, 246, 0.05) !important;
+    padding: 0.75rem 1rem 0.75rem 2.5rem !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(139, 92, 246, 0.1) !important;
+}
+
+/* Actions styling */
+.table tbody td:last-child {
+    text-align: right !important;
+}
+
+.table tbody td form {
+    margin: 0 !important;
+    display: inline-block !important;
+}
+
+.table tbody td .btn {
+    padding: 0.75rem 1.5rem !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    transition: all 0.2s ease !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.025em !important;
+}
+
+.table tbody td .btn-danger {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 14px 0 rgba(220, 38, 38, 0.2) !important;
+}
+
+.table tbody td .btn-danger:hover {
+    background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 8px 25px -8px rgba(220, 38, 38, 0.4) !important;
+}
+
+.table tbody td .btn-danger i {
+    font-size: 0.875rem !important;
+}
+
+.table tbody td .btn-danger::after {
+    content: 'İptal Et' !important;
+    margin-left: 0.25rem !important;
+}
+
+/* Button Group */
+.table tbody td .btn-group {
+    display: inline-flex !important;
+    gap: 0.75rem !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .table tbody {
+        grid-template-columns: 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .table tbody tr {
+        padding: 1.25rem !important;
+    }
+    
+    .table tbody td:first-child code {
+        font-size: 0.8rem !important;
+        padding: 0.875rem 1rem !important;
+    }
+    
+    .table tbody td .btn {
+        padding: 0.625rem 1.25rem !important;
+        font-size: 0.8rem !important;
+    }
+}
+
+/* Animation */
+@keyframes slideUp {
+    from {
+        opacity: 0 !important;
+        transform: translateY(20px) !important;
+    }
+    to {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+}
+
+.table tbody tr {
+    animation: slideUp 0.5s ease-out !important;
+}
+
+.table tbody tr:nth-child(1) { animation-delay: 0s !important; }
+.table tbody tr:nth-child(2) { animation-delay: 0.1s !important; }
+.table tbody tr:nth-child(3) { animation-delay: 0.2s !important; }
+.table tbody tr:nth-child(4) { animation-delay: 0.3s !important; }
+.table tbody tr:nth-child(5) { animation-delay: 0.4s !important; }
+
+/* Special styling for "Never" access */
+.table tbody td:nth-child(2):has-text("Never") {
+    color: #dc2626 !important;
+    background: rgba(220, 38, 38, 0.05) !important;
+    border-color: rgba(220, 38, 38, 0.1) !important;
+}
+
+/* Add some glow effect on hover */
+.table tbody tr:hover .table tbody td:first-child code {
+    box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.3) !important;
+}
+</style>
 
 <table class="table table-stripped table-condensed table-header table-hover table-bordered">
   <thead>

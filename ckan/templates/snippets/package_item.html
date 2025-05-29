@@ -35,6 +35,76 @@ display:none !important;
       flex-shrink: 0;
     }
 
+    /* Profil Kartı Stilleri */
+    .profile-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .profile-image {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      margin-right: 15px;
+      object-fit: cover;
+      background-color: rgba(255,255,255,0.2);
+    }
+
+    .profile-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .profile-type {
+      font-size: 12px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    .profile-info {
+      display: grid;
+      gap: 8px;
+    }
+
+    .profile-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 14px;
+    }
+
+    .profile-field-label {
+      opacity: 0.8;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .profile-field-value {
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .profile-description {
+      margin-top: 12px;
+      font-size: 13px;
+      opacity: 0.9;
+      line-height: 1.4;
+      font-style: italic;
+    }
+
     .sidebar-filter h3 {
       margin-bottom: 20px;
       color: #495057;
@@ -307,12 +377,24 @@ display:none !important;
         justify-content: center;
         flex-wrap: wrap;
       }
+
+      .profile-header {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .profile-image {
+        margin: 0 0 10px 0;
+      }
     }
   </style>
 </head>
 <body>
   <div class="page-container">
     <div class="sidebar-filter" id="filterSidebar">
+      <!-- Profil bilgileri buraya gelecek -->
+      <div id="profileCard" class="profile-card" style="display: none;"></div>
+      
       <h3>Filtreler</h3>
       
       <div class="filter-section">
@@ -385,26 +467,138 @@ display:none !important;
     var currentPage = 1;
     var itemsPerPage = 20;
 
+    // URL'den path türünü ve ismini al
+    function getPathInfo() {
+      var currentUrl = window.location.pathname;
+      if (currentUrl.startsWith('/organization/')) {
+        var name = currentUrl.replace('/organization/', '');
+        return { type: 'organization', name: name };
+      } else if (currentUrl.startsWith('/group/')) {
+        var name = currentUrl.replace('/group/', '');
+        return { type: 'group', name: name };
+      } else if (currentUrl.startsWith('/dataset/')) {
+        return { type: 'dataset', name: null };
+      }
+      return { type: null, name: null };
+    }
+
+    // Profil bilgilerini render et
+    function renderProfileCard(profileData) {
+      var profileCard = document.getElementById('profileCard');
+      if (!profileData) {
+        profileCard.style.display = 'none';
+        return;
+      }
+
+      var html = '';
+      
+      // Header kısmı
+      html += '<div class="profile-header">';
+      if (profileData.image_display_url) {
+        html += '<img src="' + profileData.image_display_url + '" class="profile-image" alt="' + (profileData.title || '') + '">';
+      } else {
+        html += '<div class="profile-image"></div>';
+      }
+      html += '<div>';
+      html += '<h3 class="profile-title">' + (profileData.title || profileData.display_name || profileData.name || '') + '</h3>';
+      html += '<div class="profile-type">' + (profileData.type || '') + '</div>';
+      html += '</div>';
+      html += '</div>';
+
+      // Bilgiler kısmı
+      html += '<div class="profile-info">';
+      
+      // Dinamik alanları göster
+      if (profileData.package_count !== undefined) {
+        html += '<div class="profile-field">';
+        html += '<span class="profile-field-label">Veri Seti:</span>';
+        html += '<span class="profile-field-value">' + profileData.package_count + '</span>';
+        html += '</div>';
+      }
+      
+      if (profileData.num_followers !== undefined) {
+        html += '<div class="profile-field">';
+        html += '<span class="profile-field-label">Takipçi:</span>';
+        html += '<span class="profile-field-value">' + profileData.num_followers + '</span>';
+        html += '</div>';
+      }
+      
+      if (profileData.created) {
+        var createdDate = new Date(profileData.created);
+        html += '<div class="profile-field">';
+        html += '<span class="profile-field-label">Oluşturulma:</span>';
+        html += '<span class="profile-field-value">' + createdDate.toLocaleDateString('tr-TR') + '</span>';
+        html += '</div>';
+      }
+      
+      if (profileData.state) {
+        html += '<div class="profile-field">';
+        html += '<span class="profile-field-label">Durum:</span>';
+        html += '<span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</span>';
+        html += '</div>';
+      }
+
+      html += '</div>';
+
+      // Açıklama
+      if (profileData.description) {
+        html += '<div class="profile-description">' + profileData.description + '</div>';
+      }
+
+      profileCard.innerHTML = html;
+      profileCard.style.display = 'block';
+    }
+
     // URL'den API query parametresi oluştur
     function buildApiQuery() {
-      var currentUrl = window.location.pathname;
+      var pathInfo = getPathInfo();
       var baseQuery = 'rows=1000&include_private=true';
       
       // URL'yi kontrol et ve uygun filtreyi ekle
-      if (currentUrl.startsWith('/organization/')) {
-        var orgName = currentUrl.replace('/organization/', '');
-        if (orgName) {
-          return baseQuery + '&fq=organization:' + encodeURIComponent(orgName);
-        }
-      } else if (currentUrl.startsWith('/group/')) {
-        var groupName = currentUrl.replace('/group/', '');
-        if (groupName) {
-          return baseQuery + '&fq=groups:' + encodeURIComponent(groupName);
-        }
+      if (pathInfo.type === 'organization' && pathInfo.name) {
+        return baseQuery + '&fq=organization:' + encodeURIComponent(pathInfo.name);
+      } else if (pathInfo.type === 'group' && pathInfo.name) {
+        return baseQuery + '&fq=groups:' + encodeURIComponent(pathInfo.name);
       }
       
       // Diğer durumlar için normal query
       return baseQuery;
+    }
+
+    // Profil bilgilerini yükle
+    function loadProfileData() {
+      var pathInfo = getPathInfo();
+      
+      // Dataset sayfasında profil gösterme
+      if (pathInfo.type === 'dataset' || !pathInfo.name) {
+        renderProfileCard(null);
+        return;
+      }
+
+      var apiEndpoint = '';
+      if (pathInfo.type === 'organization') {
+        apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
+      } else if (pathInfo.type === 'group') {
+        apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
+      }
+
+      if (apiEndpoint) {
+        fetch(apiEndpoint, {
+          credentials: 'include'
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (data.success && data.result) {
+            renderProfileCard(data.result);
+          } else {
+            renderProfileCard(null);
+          }
+        })
+        .catch(function(error) {
+          console.error('Profil bilgileri yüklenirken hata:', error);
+          renderProfileCard(null);
+        });
+      }
     }
 
     // Duplicate elementleri gizle
@@ -633,6 +827,9 @@ display:none !important;
     document.addEventListener('DOMContentLoaded', function() {
       hideDuplicateElements();
     });
+
+    // Profil bilgilerini yükle
+    loadProfileData();
 
     // URL'ye göre API query oluştur ve veri çek
     var apiQuery = buildApiQuery();

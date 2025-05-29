@@ -1,14 +1,10 @@
 {# ──────────────────────────────────────────────────────────────
-  Anasayfa (home/index.html) – dataset sayısını g.package_count
-  üzerinden alan, “crash-proof” sürüm
+  Anasayfa (home/index.html) – dataset sayısını API'den çeken sürüm
 ──────────────────────────────────────────────────────────────── #}
 
 {% set intro1 = g.site_intro_text %}
 {% set title  = g.site_title %}
 {% set intro  = g.site_about %}
-
-{#  Toplam dataset sayısı – Python tarafında gelen #}
-{% set dataset_total = g.package_count if g.package_count is not none else 0 %}
 
 <style>
   /* === ALAN DÜZENİ === */
@@ -53,7 +49,7 @@
                   display:flex;justify-content:center;align-items:center;margin-left:5%;">
         <span style="font-family:'Labrada',sans-serif;font-weight:700;
                      font-size:40px;line-height:50px;text-align:center;">
-          {{ h.localised_number(dataset_total) }} Veri Seti
+          <span id="dataset-count-main">0</span> Veri Seti
         </span>
       </div>
 
@@ -92,3 +88,23 @@
 
   <div class="icon-area"><!-- ikonlar buraya --></div>
 </div><!-- /module-content -->
+
+<!-- ——— Dataset sayısını çek ve güncelle ——— -->
+<script>
+// Dataset sayısını API'den çek ve güncelle
+fetch('/api/3/action/package_search?rows=0&include_private=true', {
+  credentials: 'include'
+})
+.then(function(response) { return response.json(); })
+.then(function(data) {
+  if (data.success && data.result && typeof data.result.count === 'number') {
+    var countElement = document.getElementById('dataset-count-main');
+    if (countElement) {
+      countElement.textContent = data.result.count;
+    }
+  }
+})
+.catch(function(error) {
+  console.error('Dataset sayısı alınırken hata:', error);
+});
+</script>

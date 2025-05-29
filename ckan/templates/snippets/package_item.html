@@ -113,6 +113,82 @@ display:none !important;
       width: calc(100% - 60px);
     }
 
+    /* Pagination Controls */
+    .pagination-controls {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .per-page-select {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .per-page-select label {
+      font-weight: 500;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    .per-page-select select {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      background-color: #fff;
+    }
+
+    .pagination-info {
+      color: #6c757d;
+      font-size: 14px;
+    }
+
+    .pagination-buttons {
+      display: flex;
+      gap: 5px;
+    }
+
+    .pagination-btn {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      background-color: #fff;
+      color: #495057;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.15s ease;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background-color: #e9ecef;
+      border-color: #adb5bd;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination-btn.active {
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+
+    .pagination-btn.active:hover {
+      background-color: #0056b3;
+      border-color: #0056b3;
+    }
+
     /* Tablo Stilleri */
     .dataset-table {
       width: 100%;
@@ -189,6 +265,11 @@ display:none !important;
     .fmt-txt { background-color: #fafafa; color: #616161; }
     .fmt-other { background-color: #eceff1; color: #455a64; }
 
+    /* Duplicate gizleme */
+    .duplicate-hidden {
+      display: none !important;
+    }
+
     /* Responsive tasarım */
     @media (max-width: 1024px) {
       .sidebar-filter {
@@ -215,6 +296,16 @@ display:none !important;
       
       .page-container {
         flex-direction: column;
+      }
+
+      .pagination-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .pagination-buttons {
+        justify-content: center;
+        flex-wrap: wrap;
       }
     }
   </style>
@@ -249,6 +340,25 @@ display:none !important;
     </div>
 
     <div class="main-container">
+      <div class="pagination-controls">
+        <div class="per-page-select">
+          <label for="itemsPerPage">Sayfa başına:</label>
+          <select id="itemsPerPage">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+        
+        <div class="pagination-info" id="paginationInfo">
+          <!-- Pagination bilgisi buraya gelecek -->
+        </div>
+        
+        <div class="pagination-buttons" id="paginationButtons">
+          <!-- Pagination butonları buraya gelecek -->
+        </div>
+      </div>
+
       <table class="dataset-table">
         <thead>
           <tr>
@@ -267,10 +377,62 @@ display:none !important;
   <script>
     // Değişkenler
     var allDatasets = [];
+    var filteredDatasets = [];
     var allOrgs = [];
     var allFormats = [];
     var selectedOrgs = new Set();
     var selectedFormats = new Set();
+    var currentPage = 1;
+    var itemsPerPage = 20;
+
+    // URL'den API query parametresi oluştur
+    function buildApiQuery() {
+      var currentUrl = window.location.pathname;
+      var baseQuery = 'rows=1000&include_private=true';
+      
+      // URL'yi kontrol et ve uygun filtreyi ekle
+      if (currentUrl.startsWith('/organization/')) {
+        var orgName = currentUrl.replace('/organization/', '');
+        if (orgName) {
+          return baseQuery + '&fq=organization:' + encodeURIComponent(orgName);
+        }
+      } else if (currentUrl.startsWith('/group/')) {
+        var groupName = currentUrl.replace('/group/', '');
+        if (groupName) {
+          return baseQuery + '&fq=groups:' + encodeURIComponent(groupName);
+        }
+      }
+      
+      // Diğer durumlar için normal query
+      return baseQuery;
+    }
+
+    // Duplicate elementleri gizle
+    function hideDuplicateElements() {
+      // Sidebar'ları kontrol et
+      var sidebars = document.querySelectorAll('.sidebar-filter');
+      for (var i = 1; i < sidebars.length; i++) {
+        sidebars[i].classList.add('duplicate-hidden');
+      }
+      
+      // Tabloları kontrol et
+      var tables = document.querySelectorAll('.dataset-table');
+      for (var i = 1; i < tables.length; i++) {
+        tables[i].classList.add('duplicate-hidden');
+      }
+      
+      // Ana containerları kontrol et
+      var containers = document.querySelectorAll('.main-container');
+      for (var i = 1; i < containers.length; i++) {
+        containers[i].classList.add('duplicate-hidden');
+      }
+      
+      // Page containerları kontrol et
+      var pageContainers = document.querySelectorAll('.page-container');
+      for (var i = 1; i < pageContainers.length; i++) {
+        pageContainers[i].classList.add('duplicate-hidden');
+      }
+    }
 
     function formatClass(fmt) {
       if(!fmt) return 'fmt-other';
@@ -309,10 +471,11 @@ display:none !important;
       });
     }
 
-    function renderTable() {
+    function filterDatasets() {
       var searchVal = document.getElementById("searchTitle").value.trim().toLowerCase();
       var dateSort = document.getElementById("sortDate").value;
-      var filtered = allDatasets.filter(function(pkg) {
+      
+      filteredDatasets = allDatasets.filter(function(pkg) {
         var title = (pkg.title || pkg.name || '').toLowerCase();
         if(searchVal && !title.includes(searchVal)) return false;
         if(selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
@@ -322,14 +485,126 @@ display:none !important;
         }
         return true;
       });
-      filtered.sort(function(a,b){
+      
+      filteredDatasets.sort(function(a,b){
         var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
         var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
         return (dateSort==='desc' ? tb-ta : ta-tb);
       });
+      
+      currentPage = 1; // Reset to first page when filtering
+    }
 
+    function renderPagination() {
+      var totalItems = filteredDatasets.length;
+      var totalPages = Math.ceil(totalItems / itemsPerPage);
+      var startItem = (currentPage - 1) * itemsPerPage + 1;
+      var endItem = Math.min(currentPage * itemsPerPage, totalItems);
+      
+      // Pagination info
+      var infoText = totalItems === 0 ? 
+        "Gösterilecek kayıt yok" : 
+        `${startItem}-${endItem} / ${totalItems} kayıt`;
+      document.getElementById('paginationInfo').textContent = infoText;
+      
+      // Pagination buttons
+      var buttonsContainer = document.getElementById('paginationButtons');
+      buttonsContainer.innerHTML = '';
+      
+      if (totalPages <= 1) return;
+      
+      // Previous button
+      var prevBtn = document.createElement('button');
+      prevBtn.className = 'pagination-btn';
+      prevBtn.textContent = '‹ Önceki';
+      prevBtn.disabled = currentPage === 1;
+      prevBtn.onclick = function() {
+        if (currentPage > 1) {
+          currentPage--;
+          renderTable();
+        }
+      };
+      buttonsContainer.appendChild(prevBtn);
+      
+      // Page number buttons
+      var startPage = Math.max(1, currentPage - 2);
+      var endPage = Math.min(totalPages, currentPage + 2);
+      
+      if (startPage > 1) {
+        var firstBtn = document.createElement('button');
+        firstBtn.className = 'pagination-btn';
+        firstBtn.textContent = '1';
+        firstBtn.onclick = function() {
+          currentPage = 1;
+          renderTable();
+        };
+        buttonsContainer.appendChild(firstBtn);
+        
+        if (startPage > 2) {
+          var dotsBtn = document.createElement('button');
+          dotsBtn.className = 'pagination-btn';
+          dotsBtn.textContent = '...';
+          dotsBtn.disabled = true;
+          buttonsContainer.appendChild(dotsBtn);
+        }
+      }
+      
+      for (var i = startPage; i <= endPage; i++) {
+        var pageBtn = document.createElement('button');
+        pageBtn.className = 'pagination-btn' + (i === currentPage ? ' active' : '');
+        pageBtn.textContent = i;
+        pageBtn.onclick = (function(page) {
+          return function() {
+            currentPage = page;
+            renderTable();
+          };
+        })(i);
+        buttonsContainer.appendChild(pageBtn);
+      }
+      
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          var dotsBtn = document.createElement('button');
+          dotsBtn.className = 'pagination-btn';
+          dotsBtn.textContent = '...';
+          dotsBtn.disabled = true;
+          buttonsContainer.appendChild(dotsBtn);
+        }
+        
+        var lastBtn = document.createElement('button');
+        lastBtn.className = 'pagination-btn';
+        lastBtn.textContent = totalPages;
+        lastBtn.onclick = function() {
+          currentPage = totalPages;
+          renderTable();
+        };
+        buttonsContainer.appendChild(lastBtn);
+      }
+      
+      // Next button
+      var nextBtn = document.createElement('button');
+      nextBtn.className = 'pagination-btn';
+      nextBtn.textContent = 'Sonraki ›';
+      nextBtn.disabled = currentPage === totalPages;
+      nextBtn.onclick = function() {
+        if (currentPage < totalPages) {
+          currentPage++;
+          renderTable();
+        }
+      };
+      buttonsContainer.appendChild(nextBtn);
+    }
+
+    function renderTable() {
+      filterDatasets();
+      renderPagination();
+      
+      var startIndex = (currentPage - 1) * itemsPerPage;
+      var endIndex = startIndex + itemsPerPage;
+      var pageDatasets = filteredDatasets.slice(startIndex, endIndex);
+      
       var rows = '';
-      filtered.forEach(function(pkg) {
+      pageDatasets.forEach(function(pkg) {
         var title = pkg.title || pkg.name || '';
         var link = '/dataset/' + encodeURIComponent(pkg.name);
         var desc = pkg.notes ? pkg.notes.replace(/\n/g,' ') : '';
@@ -349,11 +624,19 @@ display:none !important;
           <td class="t-formats">${formats}</td>
         </tr>`;
       });
-      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="5" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
+      
+      document.getElementById('dataset-table-body').innerHTML = rows || 
+        `<tr><td colspan="5" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
     }
 
-    // Gizli datasetleri de getir
-    fetch('/api/3/action/package_search?rows=1000&include_private=true', {
+    // Sayfa yüklendiğinde duplicate elementleri gizle
+    document.addEventListener('DOMContentLoaded', function() {
+      hideDuplicateElements();
+    });
+
+    // URL'ye göre API query oluştur ve veri çek
+    var apiQuery = buildApiQuery();
+    fetch('/api/3/action/package_search?' + apiQuery, {
       credentials: 'include'
     })
       .then(function(r){return r.json()})
@@ -382,13 +665,31 @@ display:none !important;
 
         document.getElementById("searchTitle").oninput = renderTable;
         document.getElementById("sortDate").onchange = renderTable;
+        document.getElementById("itemsPerPage").onchange = function() {
+          itemsPerPage = parseInt(this.value);
+          currentPage = 1;
+          renderTable();
+        };
 
         renderTable();
+        hideDuplicateElements(); // Veri yüklendikten sonra da kontrol et
       })
       .catch(function(error) {
         console.error('Veri yüklenirken hata:', error);
-        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="5" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+        document.getElementById('dataset-table-body').innerHTML = 
+          `<tr><td colspan="5" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
       });
+
+    // Sayfa değişikliklerini dinle (dinamik içerik için)
+    var observer = new MutationObserver(function(mutations) {
+      hideDuplicateElements();
+    });
+    
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
   </script>
+  
 </body>
 </html>

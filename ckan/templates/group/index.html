@@ -3,180 +3,132 @@
 {% block subtitle %}{{ _('Groups') }}{% endblock %}
 {%- block header %}
     {% include "header.html" %}
-    <div id="title" class="package-title container-fluid" style="background-image:url(&quot;/base/images/theme/background_photo.jpg&quot;);color: #fff;">
-      <div class="background-overlay">
-      <div class="restricted-max-width">
+    <div id="title" class="package-title container-fluid" style="background-image:url('/base/images/theme/background_photo.jpg');color: #fff;">
+  <div class="background-overlay">
+    <div class="restricted-max-width">
       <div class="col-xs-12 col-md-10 col-md-offset-1">
-      <div id="title-container" class="col-xs-10 col-md-6 text-left">
-      <h1 style="margin-left: 200px;">{{ _('Groups') }}</h1>
+        <div id="title-container" class="col-xs-10 col-md-6 text-left">
+          <h1 style="margin-left: 200px;">{{ _('Groups') }}</h1>
+        </div>
+        <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
+          <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
+            <p class="stat" style="font-size: 30px;font-weight: bolder;">
+              {{page.item_count}}<span style="font-size: 18px"> {{ _('Group') }}</span>
+            </p>
+            {% if h.check_access('group_create') %}
+              <a href="/group/new" style="width:70px; height:30px;">
+                <button type="button" style="width:70px; height:30px;">Kategori Ekle</button>
+              </a>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
-      <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
-      <p class="stat" style="font-size: 30px;font-weight: bolder;">{{page.item_count}}<span style="font-size: 18px"> {{ _('Group') }}</span></p>
-      </div>
-      </div>
-      </div>
-      </div>
-      </div>
-      </div>
+    </div>
+  </div>
+</div>
+
   {% endblock -%}
-{% block breadcrumb_content %}
-  <li class="active">{% link_for _('Groups'), named_route=group_type+'.index' %}</li>
-{% endblock %}
 
 {% block page_header %}{% endblock %}
 
-{% block page_primary_action %}
-  {% if h.check_access('group_create') %}
-    {% link_for _('Add Group'), named_route=group_type+'.new', class_='btn btn-primary', icon='plus-square' %}
-  {% endif %}
-{% endblock %}
+{# --- SADECE admin ve loginliyse solda sabit KATEGORİ EKLE butonu --- #}
+  <a href="/group/new" style="width:200px; height:200px;">
+    <button type="button" style="width:200px; height:200px;">Kategori Ekle</button>
+  </a>
 
-{% block primary_content_inner %}
-  <h1 class="hide-heading">{{ _('Groups') }}</h1>
-  
-  <!-- Grup Açıklaması Yukarıya Alındı -->
-  <div class="groups-info" style="margin-bottom: 30px;">
-    {% snippet "group/snippets/helper.html" %}
-  </div>
-  
-  <!-- Arama ve Filtreleme -->
-  <div class="search-and-filters" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap;">
-    <!-- Arama Input -->
-    <div style="flex: 2; min-width: 250px;">
-      <input type="text" 
-             class="form-control" 
-             placeholder="Grup ismi ile arayın..." 
-             value="{{ q or '' }}"
-             id="search-groups"
-             style="width: 100%;">
-    </div>
-    
-    <!-- Sıralama -->
-    <div style="flex: 1; min-width: 180px;">
-      <select class="form-control" id="sort-select">
-        <option value="title asc" {% if sort_by_selected == 'title asc' %}selected{% endif %}>İsim (A-Z)</option>
-        <option value="title desc" {% if sort_by_selected == 'title desc' %}selected{% endif %}>İsim (Z-A)</option>
-        <option value="package_count desc" {% if sort_by_selected == 'package_count desc' %}selected{% endif %}>En Çok Veri Seti</option>
-        <option value="package_count asc" {% if sort_by_selected == 'package_count asc' %}selected{% endif %}>En Az Veri Seti</option>
-      </select>
-    </div>
-    
-    <!-- Sayfa başına gösterim -->
-    <div style="flex: 1; min-width: 120px;">
-      <select class="form-control" id="items-per-page">
-        <option value="10" {% if request.params.get('limit', 20)|int == 10 %}selected{% endif %}>10'lu</option>
-        <option value="20" {% if request.params.get('limit', 20)|int == 20 %}selected{% endif %}>20'li</option>
-        <option value="50" {% if request.params.get('limit', 20)|int == 50 %}selected{% endif %}>50'li</option>
-        <option value="100" {% if request.params.get('limit', 20)|int == 100 %}selected{% endif %}>100'lü</option>
-      </select>
+
+{% block primary %}
+  <div role="main" class="catg-main" style="padding-bottom:60px;">
+    <div class="container">
+
+      <div class="row row2" style="margin-top:30px;">
+        <div class="card-grid">
+          {% snippet 'home/snippets/featured_group.html' %}
+        </div>
+      </div>
     </div>
   </div>
-  
-  {% block groups_list %}
-    {% if page.items or request.params %}
-      {% if page.items %}
-        {% snippet "group/snippets/group_list.html", groups=page.items %}
-      {% endif %}
-    {% else %}
-      <p class="empty">
-        {{ _('There are currently no groups for this site') }}.
-        {% if h.check_access('group_create') %}
-          {% link_for _('How about creating one?'), named_route=group_type+'.new' %}</a>.
-        {% endif %}
-      </p>
-    {% endif %}
-  {% endblock %}
-  
-  {% block page_pagination %}
-    {{ page.pager(q=q or '', sort=sort_by_selected or '', limit=request.params.get('limit', 20)) }}
-  {% endblock %}
+
+  <style>
+    .catg-main {
+      padding-bottom: 60px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 28px 24px;
+      margin-top: 24px;
+    }
+    @media (max-width: 1200px) {
+      .card-grid { grid-template-columns: repeat(3, 1fr);}
+    }
+    @media (max-width: 900px) {
+      .card-grid { grid-template-columns: repeat(2, 1fr);}
+    }
+    @media (max-width: 600px) {
+      .card-grid { grid-template-columns: 1fr;}
+    }
+    .catg-title {
+      font: 600 18px Labrada, sans-serif;
+      margin-bottom: 15px;
+      color: #111;
+    }
+    .catg-subtitle {
+      font: 700 44px/54px Labrada, sans-serif;
+      color: #111;
+      margin-bottom: 0;
+      letter-spacing: -.5px;
+    }
+    @media (max-width: 700px) {
+      .catg-subtitle { font-size: 28px; line-height: 36px;}
+      .catg-title { font-size: 15px;}
+    }
+    /* --- Kategori Ekle Butonu Modern Stil --- */
+    .kategori-ekle-btn {
+      position: fixed;
+      left: 38px;
+      bottom: 42px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      background: #8B3FFD;
+      color: #fff !important;
+      padding: 16px 28px 16px 20px;
+      border-radius: 42px;
+      box-shadow: 0 8px 28px rgba(42,60,90,0.11);
+      font-weight: 700;
+      font-size: 20px;
+      text-decoration: none !important;
+      letter-spacing: .5px;
+      transition: box-shadow .2s, background .2s, transform .15s;
+    }
+    .kategori-ekle-btn:hover {
+      background: #6924bd;
+      box-shadow: 0 12px 36px rgba(42,60,90,0.16);
+      transform: scale(1.07);
+    }
+    .kategori-btn-icon {
+      font-size: 38px;
+      margin-right: 16px;
+      font-family: inherit;
+      font-weight: 900;
+      line-height: 1;
+    }
+    .kategori-btn-text {
+      font-family: 'Labrada', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: .4px;
+    }
+    @media (max-width: 600px) {
+      .kategori-ekle-btn {
+        left: 12px;
+        bottom: 16px;
+        padding: 11px 18px 11px 14px;
+        font-size: 16px;
+      }
+      .kategori-btn-icon { font-size: 28px; margin-right: 10px; }
+      .kategori-btn-text { font-size: 16px;}
+    }
+  </style>
 {% endblock %}
-
-{% block secondary_content %}
-  <!-- Boş bırakıldı çünkü helper yukarıya taşındı -->
-{% endblock %}
-
-<script>
-function updateFilters() {
-    const searchInput = document.getElementById('search-groups');
-    const sortSelect = document.getElementById('sort-select');
-    const itemsSelect = document.getElementById('items-per-page');
-    
-    const url = new URL(window.location);
-    
-    // Arama terimi
-    if (searchInput && searchInput.value.trim()) {
-        url.searchParams.set('q', searchInput.value.trim());
-    } else {
-        url.searchParams.delete('q');
-    }
-    
-    // Sıralama
-    if (sortSelect && sortSelect.value) {
-        url.searchParams.set('sort', sortSelect.value);
-    }
-    
-    // Sayfa başına gösterim
-    if (itemsSelect && itemsSelect.value) {
-        url.searchParams.set('limit', itemsSelect.value);
-    }
-    
-    // Sayfa numarasını sıfırla
-    url.searchParams.delete('page');
-    
-    window.location.href = url.toString();
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('search-groups');
-    const sortSelect = document.getElementById('sort-select');
-    const itemsSelect = document.getElementById('items-per-page');
-    
-    // Arama - 500ms gecikme ile
-    if (searchInput) {
-        let searchTimeout;
-        searchInput.addEventListener('input', function() {
-            clearTimeout(searchTimeout);
-            searchTimeout = setTimeout(updateFilters, 500);
-        });
-    }
-    
-    // Sıralama - anında
-    if (sortSelect) {
-        sortSelect.addEventListener('change', updateFilters);
-    }
-    
-    // Sayfa başına gösterim - anında
-    if (itemsSelect) {
-        itemsSelect.addEventListener('change', updateFilters);
-    }
-});
-</script>
-
-<style>
-.groups-info .module {
-    background-color: #f8f9fa;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
-}
-
-.search-and-filters {
-    background: #fff;
-    padding: 15px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-
-@media (max-width: 768px) {
-    .search-and-filters {
-        flex-direction: column;
-    }
-    
-    .search-and-filters > div {
-        width: 100% !important;
-        flex: none !important;
-    }
-}
-</style>

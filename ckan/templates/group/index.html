@@ -3,132 +3,424 @@
 {% block subtitle %}{{ _('Groups') }}{% endblock %}
 {%- block header %}
     {% include "header.html" %}
-    <div id="title" class="package-title container-fluid" style="background-image:url('/base/images/theme/background_photo.jpg');color: #fff;">
-  <div class="background-overlay">
-    <div class="restricted-max-width">
+    <div id="title" class="package-title container-fluid" style="background-image:url('/base/images/theme/background_photo.jpg');color:#fff;">
+      <div class="background-overlay">
+      <div class="restricted-max-width">
       <div class="col-xs-12 col-md-10 col-md-offset-1">
-        <div id="title-container" class="col-xs-10 col-md-6 text-left">
-          <h1 style="margin-left: 200px;">{{ _('Groups') }}</h1>
-        </div>
-        <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
-          <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
-            <p class="stat" style="font-size: 30px;font-weight: bolder;">
-              {{page.item_count}}<span style="font-size: 18px"> {{ _('Group') }}</span>
-            </p>
-            {% if h.check_access('group_create') %}
-              <a href="/group/new" style="width:70px; height:30px;">
-                <button type="button" style="width:70px; height:30px;">Kategori Ekle</button>
-              </a>
-            {% endif %}
-          </div>
-        </div>
+      <div id="title-container" class="col-xs-10 col-md-6 text-left">
+      <h1 style="margin-left: 200px;">{{ _('Groups') }}</h1>
       </div>
-    </div>
-  </div>
-</div>
+      <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
+      <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
+      <p class="stat" style="font-size: 30px;font-weight: bolder;"><span id="showing-count">{{page.item_count}}</span><span style="font-size: 18px"> {{ _('Group') }}</span></p>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+      </div>
+{% endblock -%}
 
-  {% endblock -%}
+{% block breadcrumb_content %}
+  <li class="active">{% link_for _('Groups'), named_route=group_type+'.index' %}</li>
+{% endblock %}
 
 {% block page_header %}{% endblock %}
-
-{# --- SADECE admin ve loginliyse solda sabit KATEGORİ EKLE butonu --- #}
-  <a href="/group/new" style="width:200px; height:200px;">
-    <button type="button" style="width:200px; height:200px;">Kategori Ekle</button>
-  </a>
-
+{% block yeni_artı_butonu_blok %}
+    {% if h.check_access('group_create') %}
+        <a href="{{ h.url_for(group_type+'.new') }}" class="yeni_artı_buton_stili" style="    max-width:210px; margin-left:70%; font-size:60px; color:white !important; display:flex !important; align-items:center !important; text-decoration:none !important;">
+            <span style="margin-right:10px;">+</span>
+            <span style="font-size:18px; color:white; line-height:1 !important; margin-top:-2px;">Kategori Ekleyin</span>
+        </a>
+    {% endif %}
+{% endblock %}
 
 {% block primary %}
   <div role="main" class="catg-main" style="padding-bottom:60px;">
-    <div class="container">
-
-      <div class="row row2" style="margin-top:30px;">
-        <div class="card-grid">
-          {% snippet 'home/snippets/featured_group.html' %}
+    <div class="container" style="width: 90vw !important;"">
+      <h1 class="hide-heading">{% block page_heading %}{{ _('Groups') }}{% endblock %}</h1>
+      
+      <!-- Kategoriler Açıklaması -->
+      <!-- <div class="groups-info" style="margin-bottom: 30px;">
+        {% snippet "group/snippets/helper.html" %}
+      </div> -->
+      
+      <!-- TAMAMEN CLIENT-SIDE FİLTRELEME -->
+      <div class="search-and-filters" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #fff; padding: 20px; border: 2px solid #e5e7eb; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+        <!-- Arama Input -->
+        <div style="flex: 2; min-width: 250px;">
+          <input type="text" 
+                 class="form-control" 
+                 placeholder="Kategori ismi ile arayın..." 
+                 id="search-input"
+                 style="width: 100%; border: 2px solid #e5e7eb; border-radius: 6px; ; background-image: url('data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;16&quot; height=&quot;16&quot; fill=&quot;%23666&quot; viewBox=&quot;0 0 16 16&quot;><path d=&quot;M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z&quot;/></svg>'); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px;">
+        </div>
+        
+        <!-- Sıralama -->
+        <div style="flex: 1; min-width: 180px;">
+          <select class="form-control" id="sort-select" style="border: 2px solid #e5e7eb; border-radius: 6px; ;">
+            <option value="name-asc">İsim (A-Z)</option>
+            <option value="name-desc">İsim (Z-A)</option>
+            <option value="count-desc">En Çok Veri Seti</option>
+            <option value="count-asc">En Az Veri Seti</option>
+          </select>
+        </div>
+        
+        <!-- Sayfa başına gösterim -->
+        <div style="flex: 1; min-width: 120px;">
+          <select class="form-control" id="limit-select" style="border: 2px solid #e5e7eb; border-radius: 6px; ;">
+            <option value="5">5'li</option>
+            <option value="10">10'lu</option>
+            <option value="20" selected>20'li</option>
+          </select>
         </div>
       </div>
+      
+      {% block groups_list %}
+        {% if page.items or request.params %}
+          {% if page.items %}
+            <!-- Kategoriler listesi container -->
+            <div id="groups-container">
+              <ul class="media-grid" id="groups-list" style="padding: 0; margin: 0; list-style: none; min-height: 240px !important; background: none; border: 1px solid #ddd; border-width: 1px 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <!-- JavaScript ile doldurulacak -->
+              </ul>
+            </div>
+            
+            <!-- Pagination container -->
+            <div id="pagination-container" style="text-align: center; margin-top: 30px;"></div>
+            
+            <!-- Tüm kategorileri API'den çekmek için script -->
+            <script>
+            // Global değişkenler
+            let allGroups = [];
+            let filteredGroups = [];
+            let currentPage = 1;
+            let itemsPerPage = 20;
+
+            // Sayfa yüklendiğinde başlat
+            document.addEventListener('DOMContentLoaded', function() {
+                loadAllGroups();
+            });
+
+            // API'den tüm kategorileri çek
+            async function loadAllGroups() {
+                try {
+                    const response = await fetch('/api/3/action/group_list?all_fields=true&include_extras=true&limit=1000');
+                    const data = await response.json();
+                    
+                    if (data.success && data.result && data.result.length > 0) {
+                        allGroups = data.result.map(group => ({
+                            name: group.name || '',
+                            display_name: group.display_name || group.title || group.name || '',
+                            package_count: parseInt(group.package_count) || 0,
+                            image_url: group.image_display_url || '/base/images/placeholder-group.png',
+                            url: '/group/' + (group.name || ''),
+                            state: group.state || 'unknown'
+                        }));
+                        
+                        filteredGroups = [...allGroups];
+                        updateUI();
+                        setupEventListeners();
+                        
+                    } else {
+                        loadFallbackData();
+                    }
+                } catch (error) {
+                    loadFallbackData();
+                }
+            }
+
+            // Fallback: Template'den veri al
+            function loadFallbackData() {
+                allGroups = [
+                  {% for group in page.items %}
+                  {
+                    name: "{{ group.name }}",
+                    display_name: "{{ group.display_name or group.title or group.name }}",
+                    package_count: {{ group.package_count or 0 }},
+                    image_url: "{{ group.image_display_url or h.url_for_static('/base/images/placeholder-group.png') }}",
+                    url: "{{ h.url_for((group.type or 'group') ~ '.read', id=group.name) }}"
+                  }{% if not loop.last %},{% endif %}
+                  {% endfor %}
+                ];
+                
+                filteredGroups = [...allGroups];
+                updateUI();
+                setupEventListeners();
+            }
+
+            // Event listener'ları kur
+            function setupEventListeners() {
+                const searchInput = document.getElementById('search-input');
+                const sortSelect = document.getElementById('sort-select');
+                const limitSelect = document.getElementById('limit-select');
+                
+                if (searchInput) {
+                    searchInput.addEventListener('input', filterAndRender);
+                }
+                
+                if (sortSelect) {
+                    sortSelect.addEventListener('change', filterAndRender);
+                }
+                
+                if (limitSelect) {
+                    limitSelect.addEventListener('change', function() {
+                        itemsPerPage = parseInt(this.value);
+                        currentPage = 1;
+                        updateUI();
+                    });
+                }
+            }
+
+            // Filtreleme ve sıralama
+            function filterAndRender() {
+                const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
+                const sortBy = document.getElementById('sort-select').value;
+                
+                filteredGroups = allGroups.filter(group => 
+                    group.display_name.toLowerCase().includes(searchTerm)
+                );
+                
+                filteredGroups.sort((a, b) => {
+                    switch(sortBy) {
+                        case 'name-asc':
+                            return a.display_name.localeCompare(b.display_name, 'tr');
+                        case 'name-desc':
+                            return b.display_name.localeCompare(a.display_name, 'tr');
+                        case 'count-desc':
+                            return b.package_count - a.package_count;
+                        case 'count-asc':
+                            return a.package_count - b.package_count;
+                        default:
+                            return 0;
+                    }
+                });
+                
+                currentPage = 1;
+                updateUI();
+            }
+
+            // UI'yi güncelle
+            function updateUI() {
+                renderGroups();
+                renderPagination();
+                updateCount();
+            }
+
+            // Kategorileri render et
+            function renderGroups() {
+                const container = document.getElementById('groups-list');
+                if (!container) return;
+                
+                const startIndex = (currentPage - 1) * itemsPerPage;
+                const endIndex = startIndex + itemsPerPage;
+                const currentGroups = filteredGroups.slice(startIndex, endIndex);
+                
+                if (currentGroups.length === 0) {
+                    container.innerHTML = '<li style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #666;"><p>Hiçbir kategori bulunamadı.</p></li>';
+                    return;
+                }
+                
+                const groupHTML = currentGroups.map(group => `
+                    <li style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;" 
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)'">
+                        <div>
+                            <img src="${group.image_url}" alt="${group.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin: 0 auto 15px; display: block;">
+                            <h2 style="font-size: 18px; margin: 0 0 10px; color: #333;">${group.display_name}</h2>
+                            <strong style="display: block; margin-bottom: 15px; color: #666;">${group.package_count} Veri Seti</strong>
+                        </div>
+                        <a href="${group.url}" style="display: inline-block; background: #4f7cc1 !important; color: white !important; text-decoration: none; border-radius: 4px; transition: background 0.2s; margin-top: auto; padding: 8px 16px;"
+                           onmouseover="this.style.background='#3a5a8a !important'" 
+                           onmouseout="this.style.background='#4f7cc1 !important'">
+                            Görüntüle
+                        </a>
+                    </li>
+                `).join('');
+                
+                container.innerHTML = groupHTML;
+            }
+
+            // Pagination render
+            function renderPagination() {
+                const container = document.getElementById('pagination-container');
+                if (!container) return;
+                
+                const totalPages = Math.ceil(filteredGroups.length / itemsPerPage);
+                
+                if (totalPages <= 1) {
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                let html = '<ul style="display: inline-flex; list-style: none; padding: 0; margin: 0; gap: 5px;">';
+                
+                // Önceki
+                if (currentPage > 1) {
+                    html += `<li><a href="#" onclick="goToPage(${currentPage - 1}); return false;" style="display: block; padding: 8px 12px; text-decoration: none; border: 1px solid #ddd; color: #333; border-radius: 4px;">« Önceki</a></li>`;
+                }
+                
+                // Sayfa numaraları
+                for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+                    if (i === currentPage) {
+                        html += `<li><span style="display: block; padding: 8px 12px; background: #4f46e5; color: white; border-radius: 4px;">${i}</span></li>`;
+                    } else {
+                        html += `<li><a href="#" onclick="goToPage(${i}); return false;" style="display: block; padding: 8px 12px; text-decoration: none; border: 1px solid #ddd; color: #333; border-radius: 4px;">${i}</a></li>`;
+                    }
+                }
+                
+                // Sonraki
+                if (currentPage < totalPages) {
+                    html += `<li><a href="#" onclick="goToPage(${currentPage + 1}); return false;" style="display: block; padding: 8px 12px; text-decoration: none; border: 1px solid #ddd; color: #333; border-radius: 4px;">Sonraki »</a></li>`;
+                }
+                
+                html += '</ul>';
+                container.innerHTML = html;
+            }
+
+            // Sayfa değiştir
+            function goToPage(page) {
+                currentPage = page;
+                updateUI();
+                window.scrollTo(0, 0);
+            }
+
+            // Sayıyı güncelle
+            function updateCount() {
+                const countElement = document.getElementById('showing-count');
+                if (countElement) {
+                    countElement.textContent = filteredGroups.length;
+                }
+            }
+            </script>
+            
+          {% endif %}
+        {% else %}
+          <p class="empty">
+            {{ _('There are currently no groups for this site') }}.
+            {% if h.check_access('group_create') %}
+              {% link_for _('How about creating one?'), named_route=group_type+'.new' %}</a>.
+            {% endif %}
+          </p>
+        {% endif %}
+      {% endblock %}
     </div>
   </div>
-
-  <style>
-    .catg-main {
-      padding-bottom: 60px;
-    }
-    .card-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 28px 24px;
-      margin-top: 24px;
-    }
-    @media (max-width: 1200px) {
-      .card-grid { grid-template-columns: repeat(3, 1fr);}
-    }
-    @media (max-width: 900px) {
-      .card-grid { grid-template-columns: repeat(2, 1fr);}
-    }
-    @media (max-width: 600px) {
-      .card-grid { grid-template-columns: 1fr;}
-    }
-    .catg-title {
-      font: 600 18px Labrada, sans-serif;
-      margin-bottom: 15px;
-      color: #111;
-    }
-    .catg-subtitle {
-      font: 700 44px/54px Labrada, sans-serif;
-      color: #111;
-      margin-bottom: 0;
-      letter-spacing: -.5px;
-    }
-    @media (max-width: 700px) {
-      .catg-subtitle { font-size: 28px; line-height: 36px;}
-      .catg-title { font-size: 15px;}
-    }
-    /* --- Kategori Ekle Butonu Modern Stil --- */
-    .kategori-ekle-btn {
-      position: fixed;
-      left: 38px;
-      bottom: 42px;
-      z-index: 9999;
-      display: flex;
-      align-items: center;
-      background: #8B3FFD;
-      color: #fff !important;
-      padding: 16px 28px 16px 20px;
-      border-radius: 42px;
-      box-shadow: 0 8px 28px rgba(42,60,90,0.11);
-      font-weight: 700;
-      font-size: 20px;
-      text-decoration: none !important;
-      letter-spacing: .5px;
-      transition: box-shadow .2s, background .2s, transform .15s;
-    }
-    .kategori-ekle-btn:hover {
-      background: #6924bd;
-      box-shadow: 0 12px 36px rgba(42,60,90,0.16);
-      transform: scale(1.07);
-    }
-    .kategori-btn-icon {
-      font-size: 38px;
-      margin-right: 16px;
-      font-family: inherit;
-      font-weight: 900;
-      line-height: 1;
-    }
-    .kategori-btn-text {
-      font-family: 'Labrada', sans-serif;
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: .4px;
-    }
-    @media (max-width: 600px) {
-      .kategori-ekle-btn {
-        left: 12px;
-        bottom: 16px;
-        padding: 11px 18px 11px 14px;
-        font-size: 16px;
-      }
-      .kategori-btn-icon { font-size: 28px; margin-right: 10px; }
-      .kategori-btn-text { font-size: 16px;}
-    }
-  </style>
 {% endblock %}
+
+{% block secondary_content %}
+  <!-- Boş bırakıldı -->
+{% endblock %}
+
+{# ============ SAĞ-ÜST SABİT KATEGORİ EKLE BUTONU ============ #}
+{% if h.check_access('group_create') %}
+  <a href="{{ h.url_for(group_type + '.new') }}" class="add-group-btn" title="{{ _('Add Group') }}">
+    <i class="fa fa-plus" style="margin-right:6px;"></i>Kategori Ekle
+  </a>
+{% endif %}
+
+<style>
+/* CKAN layout override'ları */
+body div.row.wrapper:before,
+div.row.wrapper:before{display:none!important;content:none!important}
+@media (min-width: 768px){.col-sm-9{width:100%!important;}}
+body.page-group aside.secondary.col-sm-3{display:none!important;}
+.groups-info .module{background:#f8f9fa;border:1px solid #dee2e6;border-radius:6px;}
+
+@media (max-width: 768px){
+  .search-and-filters{flex-direction:column!important;gap:10px!important;}
+  .search-and-filters>div{width:100%!important;flex:none!important;min-width:auto!important;}
+  .media-grid{grid-template-columns:repeat(2,1fr)!important;gap:15px!important;}
+}
+@media (max-width: 480px){
+  .media-grid{grid-template-columns:1fr!important;gap:10px!important;}
+}
+.media-grid:before{display:none!important;}
+
+/* Sağ-üst "Kategori Ekle" düğmesi */
+.add-group-btn{
+  position:fixed;
+  top:100px;          /* sayfayı kaydırınca da sabit */
+  right:40px;
+  padding:11px 22px;
+  font-size:15px;
+  font-weight:600;
+  background:#8B3FFD;
+  color:#fff!important;
+  border-radius:8px;
+  box-shadow:0 4px 12px rgba(0,0,0,.3);
+  transition:background .15s,transform .15s;
+  z-index:1100;
+  text-decoration:none;
+}
+.add-group-btn:hover{
+  background:#6924bd;
+  transform:translateY(-2px);
+}
+@media (max-width: 768px){
+  .add-group-btn{right:20px;top:90px;font-size:14px;padding:10px 18px;}
+}
+
+.catg-main {
+  padding-bottom: 60px;
+}
+.catg-title {
+  font: 600 18px Labrada, sans-serif;
+  margin-bottom: 15px;
+  color: #111;
+}
+.catg-subtitle {
+  font: 700 44px/54px Labrada, sans-serif;
+  color: #111;
+  margin-bottom: 0;
+  letter-spacing: -.5px;
+}
+@media (max-width: 700px) {
+  .catg-subtitle { font-size: 28px; line-height: 36px;}
+  .catg-title { font-size: 15px;}
+}
+
+/* Floating + butonu - hiçbir mevcut stil ile çakışmaz */
+.ekle_floating_btn_container {
+    position: fixed !important;
+    top: 180px !important;
+    right: 120px !important;
+    z-index: 1000 !important;
+    display: none !important;
+}
+
+.yeni_artı_buton_stili {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    background-color: #8B3FFD !important;
+    color: white !important;
+    border: none !important;
+    cursor: pointer !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    text-decoration: none !important;
+    font-size: 40px !important;
+    font-weight: bold !important;
+    transition: all 0.3s ease !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3) !important;
+}
+
+.yeni_artı_buton_stili:hover {
+    background-color: #6924bd !important;
+    transform: scale(1.1) !important;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+    text-decoration: none !important;
+    color: white !important;
+}
+
+.yeni_artı_buton_stili:focus {
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(139, 63, 253, 0.3) !important;
+}
+
+.yeni_artı_buton_stili:active {
+    transform: scale(0.95) !important;
+}
+</style>

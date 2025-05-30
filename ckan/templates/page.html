@@ -20,7 +20,7 @@
 
 
 {% if self.yeni_artı_butonu_blok() | trim %}
-    <div class="ekle_floating_btn_container"  style="background-color: rgb(88,84,124) ">
+    <div class="ekle_floating_btn_container"  style="background-color: rgb(88,84,124); display: none !important; ">
         {% block yeni_artı_butonu_blok %}{% endblock %}
     </div>
 {% endif %}

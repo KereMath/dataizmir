@@ -2,197 +2,364 @@
 
 {% set user = user_dict %}
 
+{% block subtitle %}{{ user.display_name }} {{ g.template_title_delimiter }} {{ _('Users') }}{% endblock %}
+
+{% block breadcrumb_content %}
+  {{ h.build_nav('user.index', _('Users')) }}
+  {{ h.build_nav('user.read', user.display_name|truncate(35), id=user.name) }}
+{% endblock %}
+
+{% block content_action %}
+  {% if h.check_access('user_update', user) %}
+    {% link_for _('Manage'), named_route='user.edit', id=user.name, class_='btn btn-default', icon='wrench' %}
+  {% endif %}
+{% endblock %}
+
+{% block content_primary_nav %}
+  {{ h.build_nav_icon('user.read', _('Datasets'), id=user.name, icon='sitemap') }}
+  {{ h.build_nav_icon('user.activity', _('Activity Stream'), id=user.name, icon='clock-o') }}
+  {% if h.check_access('api_token_list', {'user': user['name']}) %}
+    {{ h.build_nav_icon('user.api_tokens', _('API Tokens'), id=user.name, icon='key') }}
+  {% endif %}
+{% endblock %}
+
 <style>
-  header.module-content.page-header {
-    display: none !important;
+  /* Cyber Profile Info Panel */
+  .cyber-profile-info-panel {
+    background: linear-gradient(135deg, rgba(12, 20, 84, 0.95), rgba(79, 124, 193, 0.85)) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 1px solid rgba(100, 255, 218, 0.3) !important;
+    border-radius: 20px !important;
+    padding: 30px !important;
+    margin: 20px 0 30px 0 !important;
+    box-shadow: 0 20px 60px rgba(12, 20, 84, 0.3) !important;
+    position: relative !important;
+    overflow: hidden !important;
   }
-  .page-header {
-    background-color: transparent !important;
+
+  .cyber-profile-info-panel::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: linear-gradient(45deg, rgba(100, 255, 218, 0.05), rgba(79, 124, 193, 0.05)) !important;
+    animation: profileGlow 6s ease-in-out infinite !important;
+  }
+
+  /* Profile Header */
+  .quantum-profile-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 25px !important;
+    margin-bottom: 25px !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  /* User Avatar */
+  .hologram-avatar {
+    width: 120px !important;
+    height: 120px !important;
+    border-radius: 50% !important;
+    border: 4px solid rgba(100, 255, 218, 0.5) !important;
+    box-shadow: 0 0 30px rgba(100, 255, 218, 0.4) !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .hologram-avatar:hover {
+    border-color: #64ffda !important;
+    box-shadow: 0 0 50px rgba(100, 255, 218, 0.8) !important;
+    transform: scale(1.05) !important;
+  }
+
+  /* User Details */
+  .plasma-user-details {
+    flex: 1 !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .neon-user-name {
+    font-size: 32px !important;
+    font-weight: 700 !important;
+    color: #fff !important;
+    margin-bottom: 10px !important;
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.5) !important;
+  }
+
+  .cyber-username {
+    font-size: 16px !important;
+    color: #64ffda !important;
+    margin-bottom: 15px !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 10px rgba(100, 255, 218, 0.5) !important;
+  }
+
+  .cyber-username::before {
+    content: "@" !important;
+    color: rgba(100, 255, 218, 0.7) !important;
+  }
+
+  /* User Stats Grid */
+  .quantum-stats-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+    gap: 20px !important;
+    margin-top: 20px !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .neural-stat-card {
+    background: rgba(255, 255, 255, 0.08) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(100, 255, 218, 0.3) !important;
+    border-radius: 15px !important;
+    padding: 20px !important;
+    text-align: center !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .neural-stat-card:hover {
+    transform: translateY(-5px) !important;
+    border-color: #64ffda !important;
+    box-shadow: 0 15px 30px rgba(100, 255, 218, 0.2) !important;
+  }
+
+  .stat-number {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    color: #64ffda !important;
+    display: block !important;
+    text-shadow: 0 0 15px rgba(100, 255, 218, 0.5) !important;
+  }
+
+  .stat-label {
+    font-size: 14px !important;
+    color: rgba(255, 255, 255, 0.8) !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    margin-top: 5px !important;
+  }
+
+  /* User Info Details */
+  .cosmic-user-info {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
+    gap: 15px !important;
+    margin-top: 25px !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .info-item {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 14px !important;
+  }
+
+  .info-label {
+    color: #64ffda !important;
+    font-weight: 600 !important;
+    min-width: 80px !important;
+  }
+
+  .info-value {
+    color: #fff !important;
+    font-weight: 500 !important;
+  }
+
+  .private-badge {
+    background: linear-gradient(45deg, #ff4757, #ff6b7a) !important;
+    color: #fff !important;
+    padding: 2px 8px !important;
+    border-radius: 10px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    margin-left: 8px !important;
+  }
+
+  /* API Key Special Styling */
+  .api-key-container {
+    background: rgba(0, 0, 0, 0.2) !important;
+    border: 1px solid rgba(100, 255, 218, 0.3) !important;
+    border-radius: 10px !important;
+    padding: 15px !important;
+    margin-top: 20px !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .api-key-label {
+    color: #64ffda !important;
+    font-weight: 700 !important;
+    font-size: 14px !important;
+    margin-bottom: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .api-key-value {
+    background: rgba(0, 0, 0, 0.3) !important;
+    border: 1px solid rgba(100, 255, 218, 0.2) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    color: #fff !important;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+    font-size: 12px !important;
+    word-break: break-all !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .api-key-value:hover {
+    background: rgba(100, 255, 218, 0.1) !important;
+    border-color: #64ffda !important;
+  }
+
+  /* Admin Badge */
+  .admin-badge {
+    position: absolute !important;
+    top: 20px !important;
+    right: 20px !important;
+    background: linear-gradient(45deg, #ff4757, #ff6b7a) !important;
+    color: #fff !important;
+    padding: 8px 15px !important;
+    border-radius: 20px !important;
+    font-size: 12px !important;
+    font-weight: 800 !important;
+    letter-spacing: 1px !important;
+    box-shadow: 0 5px 20px rgba(255, 71, 87, 0.4) !important;
+    z-index: 3 !important;
+  }
+
+  .admin-badge::before {
+    content: "👑 " !important;
+    margin-right: 5px !important;
+  }
+
+  /* Animations */
+  @keyframes profileGlow {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.6; }
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .quantum-profile-header {
+      flex-direction: column !important;
+      text-align: center !important;
+    }
+    
+    .quantum-stats-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+    
+    .cosmic-user-info {
+      grid-template-columns: 1fr !important;
+    }
+    
+    .hologram-avatar {
+      width: 100px !important;
+      height: 100px !important;
+    }
+    
+    .neon-user-name {
+      font-size: 24px !important;
+    }
   }
 </style>
 
-<script>
-// İlk test - sayfa yüklendiğinde basit log
-console.log('🚀 Page loaded, starting user profile API test...');
-console.log('👤 Current user from template:', '{{ user.name }}');
-
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('📝 DOM loaded, testing API...');
+<!-- Cyber Profile Info Panel -->
+<div class="cyber-profile-info-panel">
+  {% if user.sysadmin %}
+    <div class="admin-badge">SYSADMIN</div>
+  {% endif %}
+  
+  <div class="quantum-profile-header">
+    <div class="hologram-avatar">
+      {{ h.user_image(user.id, size=120) }}
+    </div>
     
-    // Basit test fonksiyonu
-    testAPI();
-});
-
-async function testAPI() {
-    console.log('🔍 Testing API endpoints...');
+    <div class="plasma-user-details">
+      <h1 class="neon-user-name">{{ user.display_name }}</h1>
+      <div class="cyber-username">{{ user.name }}</div>
+      
+      {% if about_formatted %}
+        <div style="color: rgba(255, 255, 255, 0.8) !important; font-size: 14px !important; line-height: 1.5 !important;">
+          {{ about_formatted }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+  
+  <div class="quantum-stats-grid">
+    <div class="neural-stat-card">
+      <span class="stat-number">{{ h.SI_number_span(user.num_followers) }}</span>
+      <div class="stat-label">{{ _('Followers') }}</div>
+    </div>
     
-    try {
-        // 1. Basit GET test
-        console.log('1️⃣ Testing simple GET...');
-        const simpleResponse = await fetch('/api/3/action/user_show?id={{ user.name }}', {
-            method: 'GET',
-            credentials: 'include'
-        });
-        console.log('GET Response Status:', simpleResponse.status);
-        console.log('GET Response Headers:', Object.fromEntries(simpleResponse.headers.entries()));
-        
-    } catch (error) {
-        console.error('❌ GET Error:', error);
-    }
+    <div class="neural-stat-card">
+      <span class="stat-number">{{ h.SI_number_span(user.number_created_packages) }}</span>
+      <div class="stat-label">{{ _('Datasets') }}</div>
+    </div>
     
-    try {
-        // 2. POST test - en basit hali
-        console.log('2️⃣ Testing POST...');
-        const postResponse = await fetch('/api/3/action/user_show', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                id: '{{ user.name }}'
-            })
-        });
-        
-        console.log('POST Response Status:', postResponse.status);
-        console.log('POST Response OK:', postResponse.ok);
-        
-        const postData = await postResponse.text(); // Önce text olarak al
-        console.log('POST Raw Response:', postData);
-        
-        try {
-            const jsonData = JSON.parse(postData);
-            console.log('POST JSON Response:', jsonData);
-            
-            if (jsonData.success) {
-                console.log('✅ SUCCESS! User data:', jsonData.result);
-                displayUserData(jsonData.result);
-            } else {
-                console.log('❌ API Error:', jsonData.error);
-            }
-        } catch (parseError) {
-            console.error('❌ JSON Parse Error:', parseError);
-        }
-        
-    } catch (error) {
-        console.error('❌ POST Error:', error);
-    }
+    <div class="neural-stat-card">
+      <span class="stat-number">{{ _(user.state) }}</span>
+      <div class="stat-label">{{ _('Status') }}</div>
+    </div>
     
-    try {
-        // 3. CSRF token ile test
-        console.log('3️⃣ Testing with CSRF token...');
-        
-        // CSRF token'ı bul
-        const csrfToken = document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || 
-                         document.querySelector('input[name=csrf_token]')?.value;
-        
-        console.log('CSRF Token found:', csrfToken);
-        
-        const headers = {
-            'Content-Type': 'application/json'
-        };
-        
-        if (csrfToken) {
-            headers['X-CSRFToken'] = csrfToken;
-        }
-        
-        const csrfResponse = await fetch('/api/3/action/user_show', {
-            method: 'POST',
-            headers: headers,
-            credentials: 'include',
-            body: JSON.stringify({
-                id: '{{ user.name }}'
-            })
-        });
-        
-        console.log('CSRF Response Status:', csrfResponse.status);
-        const csrfData = await csrfResponse.json();
-        console.log('CSRF Response:', csrfData);
-        
-    } catch (error) {
-        console.error('❌ CSRF Error:', error);
-    }
+    <div class="neural-stat-card">
+      <span class="stat-number">{{ h.render_datetime(user.created, '%Y') }}</span>
+      <div class="stat-label">{{ _('Member Since') }}</div>
+    </div>
+  </div>
+  
+  <div class="cosmic-user-info">
+    <div class="info-item">
+      <span class="info-label">{{ _('Username') }}:</span>
+      <span class="info-value">{{ user.name }}</span>
+    </div>
     
-    try {
-        // 4. Farklı endpoint test
-        console.log('4️⃣ Testing alternative endpoint...');
-        const altResponse = await fetch('/api/action/user_show', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            credentials: 'include',
-            body: JSON.stringify({
-                id: '{{ user.name }}'
-            })
-        });
-        
-        console.log('Alt Response Status:', altResponse.status);
-        const altData = await altResponse.json();
-        console.log('Alt Response:', altData);
-        
-    } catch (error) {
-        console.error('❌ Alt endpoint Error:', error);
-    }
-}
-
-function displayUserData(userData) {
-    console.log('🎯 === DETAILED USER DATA ===');
-    console.log('Name:', userData.name);
-    console.log('Display Name:', userData.display_name);
-    console.log('Email:', userData.email);
-    console.log('API Key:', userData.apikey);
-    console.log('Created:', userData.created);
-    console.log('State:', userData.state);
-    console.log('Sysadmin:', userData.sysadmin);
-    console.log('Number of datasets:', userData.number_created_packages);
-    console.log('Followers:', userData.num_followers);
-    console.log('Full object:', userData);
-}
-
-// Manual test fonksiyonları
-window.testAPI = testAPI;
-window.manualTest = function() {
-    console.log('🔧 Manual test başlatılıyor...');
+    {% if is_myself %}
+      <div class="info-item">
+        <span class="info-label">{{ _('Email') }}:</span>
+        <span class="info-value">{{ user.email }}</span>
+        <span class="private-badge">{{ _('Private') }}</span>
+      </div>
+    {% endif %}
     
-    fetch('/api/3/action/user_show', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ id: '{{ user.name }}' })
-    })
-    .then(response => {
-        console.log('Manual Response:', response);
-        return response.json();
-    })
-    .then(data => {
-        console.log('Manual Data:', data);
-    })
-    .catch(error => {
-        console.error('Manual Error:', error);
-    });
-};
-
-// Network debugger
-window.checkNetwork = function() {
-    console.log('🌐 Checking network...');
-    console.log('Current URL:', window.location.href);
-    console.log('User agent:', navigator.userAgent);
-    console.log('Cookies:', document.cookie);
-};
-
-// Sayfa yüklendiğinde hemen test et
-console.log('🎮 Available functions:');
-console.log('- testAPI() - Full API test');
-console.log('- manualTest() - Manual simple test');
-console.log('- checkNetwork() - Network debug');
-
-// Auto-run 2 saniye sonra
-setTimeout(function() {
-    console.log('⏰ Auto-running tests in 2 seconds...');
-    testAPI();
-}, 2000);
-</script>
+    <div class="info-item">
+      <span class="info-label">{{ _('Joined') }}:</span>
+      <span class="info-value">{{ h.render_datetime(user.created, with_hours=False) }}</span>
+    </div>
+    
+    <div class="info-item">
+      <span class="info-label">{{ _('Last Seen') }}:</span>
+      <span class="info-value">{{ h.render_datetime(user.last_active, with_hours=True) if user.last_active else _('Never') }}</span>
+    </div>
+  </div>
+  
+  {% if is_myself and user.apikey %}
+    <div class="api-key-container">
+      <div class="api-key-label">
+        <i class="fa fa-key"></i>
+        {{ _('API Key') }}
+        <span class="private-badge">{{ _('Private') }}</span>
+      </div>
+      <div class="api-key-value" onclick="navigator.clipboard.writeText('{{ user.apikey }}'); alert('API Key copied!')">
+        {{ user.apikey }}
+      </div>
+    </div>
+  {% endif %}
+</div>
 
 {% block secondary_content %}
 <div class="module context-info">

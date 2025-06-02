@@ -2,26 +2,186 @@
 
 {% set user = user_dict %}
 
-{% block subtitle %}{{ user.display_name }} {{ g.template_title_delimiter }} {{ _('Users') }}{% endblock %}
+<style>
+  header.module-content.page-header {
+    display: none !important;
+  }
+  .page-header {
+    background-color: transparent !important;
+  }
+</style>
 
-{% block breadcrumb_content %}
-  {{ h.build_nav('user.index', _('Users')) }}
-  {{ h.build_nav('user.read', user.display_name|truncate(35), id=user.name) }}
-{% endblock %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Kullanıcının kendi API bilgilerini fetch et
+    fetchUserProfile();
+});
 
-{% block content_action %}
-  {% if h.check_access('user_update', user) %}
-    {% link_for _('Manage'), named_route='user.edit', id=user.name, class_='btn btn-default', icon='wrench' %}
-  {% endif %}
-{% endblock %}
+async function fetchUserProfile() {
+    try {
+        console.log('🚀 Fetching user profile data...');
+        
+        // API isteği - session-based auth kullanıyor (kullanıcı zaten login)
+        const response = await fetch('/api/3/action/user_show', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include', // Session cookies dahil et
+            body: JSON.stringify({
+                id: '{{ user.name }}', // Mevcut kullanıcının name'i
+                include_datasets: true,
+                include_num_followers: true
+            })
+        });
 
-{% block content_primary_nav %}
-  {{ h.build_nav_icon('user.read', _('Datasets'), id=user.name, icon='sitemap') }}
-  {{ h.build_nav_icon('user.activity', _('Activity Stream'), id=user.name, icon='clock-o') }}
-  {% if h.check_access('api_token_list', {'user': user['name']}) %}
-    {{ h.build_nav_icon('user.api_tokens', _('API Tokens'), id=user.name, icon='key') }}
-  {% endif %}
-{% endblock %}
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+            console.log('✅ API Response Success!');
+            console.log('📊 Full User Data:', data.result);
+            
+            // Detaylı log'lar
+            console.log('👤 User Info:', {
+                name: data.result.name,
+                display_name: data.result.display_name,
+                email: data.result.email,
+                created: data.result.created,
+                state: data.result.state,
+                sysadmin: data.result.sysadmin,
+                apikey: data.result.apikey
+            });
+            
+            console.log('📈 User Stats:', {
+                number_created_packages: data.result.number_created_packages,
+                num_followers: data.result.num_followers,
+                email_hash: data.result.email_hash
+            });
+            
+            if (data.result.datasets) {
+                console.log('📦 User Datasets (' + data.result.datasets.length + ' total):', 
+                    data.result.datasets.map(dataset => ({
+                        name: dataset.name,
+                        title: dataset.title,
+                        state: dataset.state,
+                        private: dataset.private,
+                        created: dataset.metadata_created
+                    }))
+                );
+            }
+            
+            // Extra API call - get more detailed user info with all options
+            fetchExtendedUserInfo();
+            
+        } else {
+            console.error('❌ API Error:', data.error);
+        }
+        
+    } catch (error) {
+        console.error('💥 Fetch Error:', error);
+        console.log('🔄 Trying alternative method...');
+        
+        // Fallback: Try with current session
+        try {
+            const fallbackResponse = await fetch('/api/3/action/user_show', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    id: '{{ user.name }}'
+                })
+            });
+            
+            const fallbackData = await fallbackResponse.json();
+            console.log('🔄 Fallback Response:', fallbackData);
+            
+        } catch (fallbackError) {
+            console.error('💥 Fallback also failed:', fallbackError);
+        }
+    }
+}
+
+async function fetchExtendedUserInfo() {
+    try {
+        console.log('🔍 Fetching extended user info...');
+        
+        const extendedResponse = await fetch('/api/3/action/user_show', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                id: '{{ user.name }}',
+                include_datasets: true,
+                include_num_followers: true,
+                include_password_hash: false, // Bu sadece sysadmin için
+                include_plugin_extras: false // Bu sadece sysadmin için
+            })
+        });
+
+        if (extendedResponse.ok) {
+            const extendedData = await extendedResponse.json();
+            console.log('🎯 Extended User Data:', extendedData.result);
+            
+            // Özel alanları logla
+            if (extendedData.result.plugin_extras) {
+                console.log('🔌 Plugin Extras:', extendedData.result.plugin_extras);
+            }
+            
+            // User activity'leri de alabilir miyiz test edelim
+            fetchUserActivity();
+        }
+        
+    } catch (error) {
+        console.log('⚠️ Extended fetch failed:', error);
+    }
+}
+
+async function fetchUserActivity() {
+    try {
+        console.log('📈 Fetching user activity...');
+        
+        const activityResponse = await fetch('/api/3/action/user_activity_list', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                id: '{{ user.name }}',
+                limit: 10
+            })
+        });
+
+        if (activityResponse.ok) {
+            const activityData = await activityResponse.json();
+            console.log('🎬 User Activity:', activityData.result);
+        }
+        
+    } catch (error) {
+        console.log('⚠️ Activity fetch failed:', error);
+    }
+}
+
+// Debug için window'a fonksiyonları ekle
+window.fetchUserProfile = fetchUserProfile;
+window.fetchExtendedUserInfo = fetchExtendedUserInfo;
+window.fetchUserActivity = fetchUserActivity;
+
+console.log('🎮 User Profile API Debug Functions Available:');
+console.log('- fetchUserProfile()');
+console.log('- fetchExtendedUserInfo()');
+console.log('- fetchUserActivity()');
+</script>
 
 {% block secondary_content %}
 <div class="module context-info">

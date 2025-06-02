@@ -3,8 +3,252 @@
   .nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus {
     color: #fff !important;
     background-color: #4f7cc1 !important;
-}
+  }
+
+  /* Futuristic Sidebar Overlay */
+  .futuristic-overlay {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    backdrop-filter: blur(10px) !important;
+    z-index: -1 !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+  }
+
+  .futuristic-overlay.active {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display:none !important;
+  }
+
+  .futuristic-sidebar {
+    position: fixed !important;
+    top: 0 !important;
+    right: -450px !important;
+    width: 420px !important;
+    height: 100vh !important;
+    background: linear-gradient(135deg, rgba(12, 20, 84, 0.95), rgba(79, 124, 193, 0.85)) !important;
+    backdrop-filter: blur(20px) !important;
+    border-left: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: -10px 0 50px rgba(12, 20, 84, 0.3) !important;
+    transition: all 0.5s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    overflow-y: auto !important;
+    scrollbar-width: thin !important;
+    scrollbar-color: rgba(255, 255, 255, 0.3) transparent !important;
+  }
+
+  .futuristic-sidebar.active {
+    right: 0 !important;
+  }
+
+  .sidebar-header {
+    padding: 30px 25px 20px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.05), transparent) !important;
+  }
+
+  .sidebar-user-info {
+    display: flex !important;
+    align-items: center !important;
+    gap: 15px !important;
+    margin-bottom: 20px !important;
+  }
+
+  .sidebar-user-avatar {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 50% !important;
+    border: 3px solid rgba(255, 255, 255, 0.3) !important;
+    box-shadow: 0 0 20px rgba(79, 124, 193, 0.5) !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .sidebar-user-avatar:hover {
+    box-shadow: 0 0 30px rgba(79, 124, 193, 0.8) !important;
+    transform: scale(1.05) !important;
+  }
+
+  .sidebar-user-details h3 {
+    color: #fff !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin: 0 0 5px 0 !important;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3) !important;
+  }
+
+  .sidebar-user-details p {
+    color: rgba(255, 255, 255, 0.7) !important;
+    font-size: 12px !important;
+    margin: 0 !important;
+  }
+
+  .sidebar-close {
+    position: absolute !important;
+    top: 20px !important;
+    right: 20px !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: none !important;
+    color: #fff !important;
+    width: 40px !important;
+    height: 40px !important;
+    border-radius: 50% !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    backdrop-filter: blur(10px) !important;
+  }
+
+  .sidebar-close:hover {
+    background: rgba(255, 94, 77, 0.8) !important;
+    transform: rotate(90deg) !important;
+    box-shadow: 0 0 15px rgba(255, 94, 77, 0.5) !important;
+  }
+
+  .sidebar-content {
+    padding: 0 !important;
+  }
+
+  .sidebar-section {
+    margin-bottom: 0 !important;
+  }
+
+  .sidebar-section-title {
+    padding: 20px 25px 10px !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    background: rgba(255, 255, 255, 0.03) !important;
+  }
+
+  .sidebar-menu {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .sidebar-menu-item {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .sidebar-menu-item a {
+    display: flex !important;
+    align-items: center !important;
+    padding: 15px 25px !important;
+    color: rgba(255, 255, 255, 0.85) !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+  }
+
+  .sidebar-menu-item a::before {
+    content: '' !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 0 !important;
+    height: 100% !important;
+    background: linear-gradient(90deg, rgba(79, 124, 193, 0.3), rgba(255, 255, 255, 0.1)) !important;
+    transition: width 0.4s ease !important;
+    z-index: 0 !important;
+  }
+
+  .sidebar-menu-item a:hover::before {
+    width: 100% !important;
+  }
+
+  .sidebar-menu-item a:hover {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+    transform: translateX(10px) !important;
+    box-shadow: inset 5px 0 0 rgba(79, 124, 193, 0.8) !important;
+  }
+
+  .sidebar-menu-item i {
+    font-size: 16px !important;
+    margin-right: 15px !important;
+    width: 20px !important;
+    text-align: center !important;
+    position: relative !important;
+    z-index: 1 !important;
+    transition: all 0.3s ease !important;
+  }
+
+  .sidebar-menu-item a:hover i {
+    color: #64ffda !important;
+    text-shadow: 0 0 10px rgba(100, 255, 218, 0.5) !important;
+    transform: scale(1.1) !important;
+  }
+
+  .sidebar-menu-item span {
+    position: relative !important;
+    z-index: 1 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+  }
+
+  .sidebar-badge {
+    margin-left: auto !important;
+    background: linear-gradient(45deg, #ff4757, #ff6b7a) !important;
+    color: #fff !important;
+    padding: 4px 8px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    box-shadow: 0 0 10px rgba(255, 71, 87, 0.5) !important;
+    position: relative !important;
+    z-index: 1 !important;
+  }
+
+  /* Trigger Button */
+  .sidebar-trigger {
+    background: linear-gradient(135deg, rgba(12, 20, 84, 0.9), rgba(79, 124, 193, 0.8)) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    border-radius: 20px !important;
+    padding: 12px 20px !important;
+    color: #fff !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 4px 15px rgba(12, 20, 84, 0.3) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  .sidebar-trigger:hover {
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 25px rgba(79, 124, 193, 0.4) !important;
+    border-color: rgba(100, 255, 218, 0.5) !important;
+  }
+
+  .sidebar-trigger i {
+    font-size: 16px !important;
+    transition: transform 0.3s ease !important;
+  }
+
+  .sidebar-trigger:hover i {
+    transform: rotate(180deg) !important;
+  }
+
+  /* Glow Effect */
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 5px rgba(79, 124, 193, 0.5); }
+    50% { box-shadow: 0 0 20px rgba(79, 124, 193, 0.8); }
+  }
+
+  .glow-effect {
+    animation: glow 2s ease-in-out infinite !important;
+  }
 </style>
+
 {# ——— GİRİŞ / KAYIT düğmeleri için görünürlük ——— #}
 {% if c.userobj %}
   <style>.li-giris,.li-kayit{display:none!important}</style>
@@ -28,7 +272,7 @@
 {# ——— HEADER WRAPPER BLOĞU ——— #}
 {% block header_wrapper %}
 
-  {# 1) Eski account‑masthead’i boş bırakarak saklıyoruz (JS çakışmasın) #}
+  {# 1) Eski account‑masthead'i boş bırakarak saklıyoruz (JS çakışmasın) #}
   {% block header_account %}
   {% endblock %}
 
@@ -36,7 +280,7 @@
   <header class="navbar navbar-static-top masthead" style="background-color:transparent;">
     {% block header_debug %}
       {% if g.debug and not g.debug_supress_header %}
-        <div class="debug">Controller : {{ c.controller }} | Action : {{ c.action }}</div>
+        <div class="debug">Controller : {{ c.controller }} | Action : {{ c.action }}</div>
       {% endif %}
     {% endblock %}
 
@@ -64,77 +308,195 @@
                  ('dataset.search', _('Datasets')),
                  ('organization.index', _('Organizations')),
                  ('group.index', _('Groups')) ) }}
-            <li><a href="{{ h.url_for('home.about') }}">Platform Nasıl Kullanılır</a></li>
+            <li><a href="{{ h.url_for('home.about') }}">Platform Nasıl Kullanılır</a></li>
           </ul>
         </nav>
 
-        <!-- —— Hesap / Admin menüsü (sağ) —— -->
-        <nav class="account-nav"
-             style="background:{% if c.userobj %}#0C1454{% else %}transparent{% endif %};
-                    font-size:11px!important;border-radius:50px;
-                    display:flex;align-items:center;">
-          <ul class="nav nav-pills"
-              style="display:flex;gap:0;margin:0;padding:0;list-style:none;">
+        <!-- —— Futuristic Account Navigation —— -->
+        {% if c.userobj %}
+        <nav class="account-nav">
+          <button class="sidebar-trigger" onclick="toggleSidebar()">
+            <i class="fa fa-user-circle"></i>
+            <span>{{ c.userobj.display_name }}</span>
+            <i class="fa fa-chevron-right"></i>
+          </button>
+        </nav>
 
-            {% if c.userobj %}
+        <!-- Futuristic Sidebar -->
+        <div class="futuristic-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+        <div class="futuristic-sidebar" id="futuristicSidebar">
+          <button class="sidebar-close" onclick="closeSidebar()">
+            <i class="fa fa-times"></i>
+          </button>
+          
+          <div class="sidebar-header">
+            <div class="sidebar-user-info">
+              <div class="sidebar-user-avatar">
+                {{ h.user_image((c.user if c and c.user else ''), size=60) }}
+              </div>
+              <div class="sidebar-user-details">
+                <h3>{{ c.userobj.display_name }}</h3>
+                <p>@{{ c.userobj.name }}</p>
+              </div>
+            </div>
+          </div>
 
-              {% if c.userobj.sysadmin %}
-                <li>
-                  <a href="{{ h.url_for(controller='admin', action='index') }}"
-                     title="{{ _('Sysadmin settings') }}"
-                     style="color:#fff!important">
-                    <i class="fa fa-gavel" aria-hidden="true"></i>
+          <div class="sidebar-content">
+            
+            <!-- Profile Section -->
+            <div class="sidebar-section">
+              <div class="sidebar-section-title">
+                <i class="fa fa-user" style="margin-right:8px!important;"></i>
+                Profil Yönetimi
+              </div>
+              <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                  <a href="{{ h.url_for('user.read', id=c.userobj.name) }}">
+                    <i class="fa fa-eye"></i>
+                    <span>Profilimi Görüntüle</span>
                   </a>
                 </li>
-              {% endif %}
+                <li class="sidebar-menu-item">
+                  <a href="/user/activity/{{ c.userobj.name }}">
+                    <i class="fa fa-history"></i>
+                    <span>Aktivite Geçmişi</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a href="/user/{{ c.userobj.name }}/api-tokens">
+                    <i class="fa fa-key"></i>
+                    <span>API Tokenları</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a href="{{ h.url_for('user.edit', id=c.userobj.name) }}">
+                    <i class="fa fa-edit"></i>
+                    <span>Profili Düzenle</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
 
-              <li>
-                <a href="{{ h.url_for('user.read', id=c.userobj.name) }}" class="image"
-                   title="{{ _('View profile') }}" style="color:#fff!important">
-                  {{ h.user_image((c.user if c and c.user else ''), size=22) }}
-                  <span class="username" style="color:#fff!important">{{ c.userobj.display_name }}</span>
-                </a>
-              </li>
+            <!-- Dashboard Section -->
+            <div class="sidebar-section">
+              <div class="sidebar-section-title">
+                <i class="fa fa-tachometer" style="margin-right:8px!important;"></i>
+                Dashboard
+              </div>
+              <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                  <a href="{{ h.url_for('dashboard.datasets') }}">
+                    <i class="fa fa-database"></i>
+                    <span>Veri Setleri</span>
+                    {% set new_activities = h.new_activities() %}
+                    {% if new_activities > 0 %}
+                      <span class="sidebar-badge">{{ new_activities }}</span>
+                    {% endif %}
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a href="/dashboard/organizations">
+                    <i class="fa fa-building"></i>
+                    <span>Organizasyonlar</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a href="/dashboard/groups">
+                    <i class="fa fa-tags"></i>
+                    <span>Kategoriler</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a href="/dashboard">
+                    <i class="fa fa-activity"></i>
+                    <span>Aktivite Akışı</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
 
-              {% set new_activities = h.new_activities() %}
-              <li class="notifications {% if new_activities > 0 %}notifications-important{% endif %}">
-                {% set notifications_tooltip = ngettext(
-                       'Dashboard (%(num)d new item)',
-                       'Dashboard (%(num)d new items)', new_activities) %}
-                <a href="{{ h.url_for('dashboard.datasets') }}" title="{{ notifications_tooltip }}"
-                   style="color:#fff!important">
-                  <i class="fa fa-tachometer" aria-hidden="true"></i>
-                  <span class="badge" style="background:#fff;color:#0C1454">{{ new_activities }}</span>
-                </a>
-              </li>
-
-              <li>
-                <a href="{{ h.url_for('user.edit', id=c.userobj.name) }}"
-                   title="{{ _('Profile settings') }}" style="color:#fff!important">
-                  <i class="fa fa-cog" aria-hidden="true"></i>
-                </a>
-              </li>
-
-              <li>
-                <a href="{{ h.url_for('/user/_logout') }}" title="{{ _('Log out') }}"
-                   style="color:#fff!important">
-                  <i class="fa fa-sign-out" aria-hidden="true"></i>
-                </a>
-              </li>
-
-            {% else %}
-              <li><a class="li-giris" href="/user/login">Giriş Yap</a></li>
-              {% if h.check_access('user_create') %}
-                <li><a class="li-kayit" href="/user/register">Kayıt Ol</a></li>
-              {% endif %}
+            <!-- Admin Section -->
+            {% if c.userobj.sysadmin %}
+            <div class="sidebar-section">
+              <div class="sidebar-section-title">
+                <i class="fa fa-gavel" style="margin-right:8px!important;"></i>
+                Yönetici Paneli
+              </div>
+              <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                  <a href="{{ h.url_for(controller='admin', action='index') }}">
+                    <i class="fa fa-users"></i>
+                    <span>Sistem Yöneticileri</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a href="/ckan-admin/config">
+                    <i class="fa fa-cogs"></i>
+                    <span>Site Ayarları</span>
+                  </a>
+                </li>
+                <li class="sidebar-menu-item">
+                  <a href="/ckan-admin/trash">
+                    <i class="fa fa-trash"></i>
+                    <span>Çöp Kutusu</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
             {% endif %}
 
-          </ul>
+            <!-- Logout Section -->
+            <div class="sidebar-section">
+              <ul class="sidebar-menu">
+                <li class="sidebar-menu-item">
+                  <a href="{{ h.url_for('/user/_logout') }}" style="color:#ff6b7a!important;">
+                    <i class="fa fa-sign-out"></i>
+                    <span>Güvenli Çıkış</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+          </div>
+        </div>
+
+        {% else %}
+        <nav class="account-nav">
+          <a class="li-giris" href="/user/login">Giriş Yap</a>
+          {% if h.check_access('user_create') %}
+            <a class="li-kayit" href="/user/register">Kayıt Ol</a>
+          {% endif %}
         </nav>
+        {% endif %}
 
       </div><!-- /.header-flex -->
 
     </div><!-- /.container -->
   </header>
+
+  <script>
+    function toggleSidebar() {
+      const overlay = document.getElementById('sidebarOverlay');
+      const sidebar = document.getElementById('futuristicSidebar');
+      
+      overlay.classList.toggle('active');
+      sidebar.classList.toggle('active');
+    }
+
+    function closeSidebar() {
+      const overlay = document.getElementById('sidebarOverlay');
+      const sidebar = document.getElementById('futuristicSidebar');
+      
+      overlay.classList.remove('active');
+      sidebar.classList.remove('active');
+    }
+
+    // ESC key ile kapat
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeSidebar();
+      }
+    });
+  </script>
 
 {% endblock %}  {# /header_wrapper #}

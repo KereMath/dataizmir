@@ -57,13 +57,59 @@
     margin-bottom: 0 !important;
 }
 
-/* Token name styling */
+/* Token card styling */
 .table tbody td:first-child {
-    margin-bottom: 1.5rem !important;
+    margin-bottom: 0 !important;
+}
+
+/* Token name header */
+.token-name-header {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    margin-bottom: 1rem !important;
+    padding: 0.75rem 1rem !important;
+    background: rgba(139, 92, 246, 0.1) !important;
+    border-radius: 8px !important;
+    border: 1px solid rgba(139, 92, 246, 0.2) !important;
+}
+
+.token-name {
+    font-size: 1.1rem !important;
+    font-weight: 700 !important;
+    color: #1f2937 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.token-created {
+    font-size: 0.75rem !important;
+    color: #6b7280 !important;
+    font-weight: 500 !important;
+}
+
+/* Token value section */
+.token-value-section {
+    margin-bottom: 1rem !important;
+}
+
+.token-label {
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    color: #6b7280 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    margin-bottom: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
 }
 
 .table tbody td:first-child code {
-    display: block !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
     background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
     color: white !important;
     padding: 1rem 1.25rem !important;
@@ -74,55 +120,44 @@
     border: none !important;
     word-break: break-all !important;
     box-shadow: 0 4px 14px 0 rgba(139, 92, 246, 0.2) !important;
+    min-height: 48px !important;
 }
 
-/* Last access styling */
-.table tbody td:nth-child(2) {
-    margin-bottom: 1.5rem !important;
-    position: relative !important;
-    padding-left: 2.5rem !important;
+.token-text {
+    flex: 1 !important;
+    margin-right: 1rem !important;
 }
 
-.table tbody td:nth-child(2)::before {
-    content: '🕒' !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    font-size: 1.2rem !important;
-}
-
-.table tbody td:nth-child(2)::after {
-    content: 'Son Erişim' !important;
-    display: block !important;
-    font-size: 0.75rem !important;
-    font-weight: 600 !important;
-    color: #6b7280 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.05em !important;
-    margin-bottom: 0.25rem !important;
-}
-
-.table tbody td:nth-child(2) {
-    color: #374151 !important;
-    font-weight: 600 !important;
-    font-size: 0.875rem !important;
-    background: rgba(139, 92, 246, 0.05) !important;
-    padding: 0.75rem 1rem 0.75rem 2.5rem !important;
+.copy-btn {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    color: white !important;
+    padding: 0.5rem !important;
     border-radius: 8px !important;
-    border: 1px solid rgba(139, 92, 246, 0.1) !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-width: 40px !important;
+    height: 36px !important;
+    font-size: 0.875rem !important;
 }
 
-/* Actions styling */
-.table tbody td:last-child {
-    text-align: right !important;
+.copy-btn:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: scale(1.05) !important;
 }
 
-.table tbody td form {
-    margin: 0 !important;
-    display: inline-block !important;
+.copy-btn.copied {
+    background: #10b981 !important;
+    border-color: #10b981 !important;
 }
 
-.table tbody td .btn {
+/* Last access styling - Not used anymore with new layout */
+
+/* Button styling */
+.btn {
     padding: 0.75rem 1.5rem !important;
     border-radius: 10px !important;
     font-weight: 600 !important;
@@ -137,31 +172,76 @@
     letter-spacing: 0.025em !important;
 }
 
-.table tbody td .btn-danger {
+.btn-danger {
     background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%) !important;
     color: white !important;
     box-shadow: 0 4px 14px 0 rgba(220, 38, 38, 0.2) !important;
 }
 
-.table tbody td .btn-danger:hover {
+.btn-danger:hover {
     background: linear-gradient(135deg, #b91c1c 0%, #991b1b 100%) !important;
     transform: translateY(-2px) !important;
     box-shadow: 0 8px 25px -8px rgba(220, 38, 38, 0.4) !important;
 }
 
-.table tbody td .btn-danger i {
+.btn-danger i {
     font-size: 0.875rem !important;
 }
 
-.table tbody td .btn-danger::after {
+.btn-danger::after {
     content: 'İptal Et' !important;
     margin-left: 0.25rem !important;
 }
 
-/* Button Group */
-.table tbody td .btn-group {
-    display: inline-flex !important;
-    gap: 0.75rem !important;
+/* Button Group - Not used anymore */
+
+/* Loading state */
+.loading-spinner {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    padding: 3rem !important;
+    font-size: 1.125rem !important;
+    color: #6b7280 !important;
+}
+
+.spinner {
+    display: inline-block !important;
+    width: 20px !important;
+    height: 20px !important;
+    border: 2px solid #e5e7eb !important;
+    border-radius: 50% !important;
+    border-top-color: #8b5cf6 !important;
+    animation: spin 1s ease-in-out infinite !important;
+    margin-right: 0.75rem !important;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg) !important; }
+}
+
+/* Toast notification */
+.toast {
+    position: fixed !important;
+    bottom: 2rem !important;
+    right: 2rem !important;
+    background: #10b981 !important;
+    color: white !important;
+    padding: 1rem 1.5rem !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1) !important;
+    transform: translateY(100px) !important;
+    opacity: 0 !important;
+    transition: all 0.3s ease !important;
+    z-index: 1000 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.5rem !important;
+}
+
+.toast.show {
+    transform: translateY(0) !important;
+    opacity: 1 !important;
 }
 
 /* Responsive Design */
@@ -175,14 +255,39 @@
         padding: 1.25rem !important;
     }
     
+    .token-name-header {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        align-items: flex-start !important;
+    }
+    
     .table tbody td:first-child code {
         font-size: 0.8rem !important;
         padding: 0.875rem 1rem !important;
+        flex-direction: column !important;
+        gap: 0.75rem !important;
     }
     
-    .table tbody td .btn {
+    .token-text {
+        margin-right: 0 !important;
+        word-break: break-all !important;
+    }
+    
+    .btn {
         padding: 0.625rem 1.25rem !important;
         font-size: 0.8rem !important;
+    }
+
+    .toast {
+        bottom: 1rem !important;
+        right: 1rem !important;
+        left: 1rem !important;
+    }
+
+    /* Last Access section responsive */
+    div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 1rem !important;
     }
 }
 
@@ -209,14 +314,14 @@
 .table tbody tr:nth-child(5) { animation-delay: 0.4s !important; }
 
 /* Special styling for "Never" access */
-.table tbody td:nth-child(2):has-text("Never") {
+.last-access-never {
     color: #dc2626 !important;
     background: rgba(220, 38, 38, 0.05) !important;
     border-color: rgba(220, 38, 38, 0.1) !important;
 }
 
 /* Add some glow effect on hover */
-.table tbody tr:hover .table tbody td:first-child code {
+.table tbody tr:hover code {
     box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.3) !important;
 }
 </style>
@@ -224,43 +329,193 @@
 <table class="table table-stripped table-condensed table-header table-hover table-bordered">
   <thead>
     <tr>
-      {% block head_cells %}
-        {% block head_cell_token %}<th scope="col">{{ _('Token') }}</th>{% endblock %}
-        {% block head_cell_last_access %}<th scope="col">{{ _('Last access') }}</th>{% endblock %}
-        {% block head_cell_actions %}<th scope="col">{{ _('Actions') }}</th>{% endblock %}
-      {% endblock head_cells %}
+      <th scope="col">Token</th>
+      <th scope="col">Last access</th>
+      <th scope="col">Actions</th>
     </tr>
   </thead>
-  <tbody>
-    {% for token in tokens %}
-      <tr>
-        {% block token_cells scoped %}
-          {% block token_cell_token %}
-            <td colspan="1">
-              <code>
-                {{ token.name }}
-              </code>
-            </td>
-          {% endblock token_cell_token %}
-          {% block token_cell_last_access %}
-            <td>
-              {{ h.render_datetime(token.last_access, with_hours=True) or _('Never') }}
-            </td>
-          {% endblock token_cell_last_access %}
-          {% block token_cell_actions %}
-            <td>
-              {% set action = h.url_for("user.api_token_revoke", id=user['name'], jti=token['id']) %}
-              <form action="{{ action }}" method="POST">
-                <div class="btn-group">
-                  <button type="submit" href="{{ action }}" class="btn btn-danger btn-sm" title="{{ _('Revoke') }}" data-module="confirm-action">
-                    <i class="fa fa-times"></i>
-                  </button>
-                </div>
-              </form>
-            </td>
-          {% endblock token_cell_actions %}
-        {% endblock token_cells %}
-      </tr>
-    {% endfor %}
+  <tbody id="token-tbody">
+    <!-- Loading state -->
+    <tr>
+      <td colspan="3">
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+          Token'lar yükleniyor...
+        </div>
+      </td>
+    </tr>
   </tbody>
 </table>
+
+<!-- Toast notification -->
+<div id="toast" class="toast">
+  <i class="fa fa-check"></i>
+  Token kopyalandı!
+</div>
+
+<script>
+// Utility functions
+function formatDate(dateString) {
+    if (!dateString) return 'Hiç erişilmedi';
+    const date = new Date(dateString);
+    return date.toLocaleString('tr-TR', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast();
+    }).catch(err => {
+        console.error('Kopyalama hatası:', err);
+        // Fallback method
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast();
+    });
+}
+
+function showToast() {
+    const toast = document.getElementById('toast');
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+// Main function to load tokens
+async function loadTokens() {
+    const tbody = document.getElementById('token-tbody');
+    
+    try {
+        const response = await fetch('/api/3/action/api_token_list', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                user: 'izkaacikveri'
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (!data.success) {
+            throw new Error(data.error || 'API hatası');
+        }
+
+        displayTokens(data.result, tbody);
+        
+    } catch (err) {
+        console.error('Token yükleme hatası:', err);
+        showError(err.message, tbody);
+    }
+}
+
+function displayTokens(tokens, tbody) {
+    if (!tokens || tokens.length === 0) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="3" style="text-align: center; padding: 3rem; color: #6b7280;">
+                    <i class="fa fa-key" style="font-size: 2rem; margin-bottom: 1rem; opacity: 0.5;"></i>
+                    <br>
+                    Henüz API token'ınız yok
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    tbody.innerHTML = tokens.map((token, index) => {
+        const formattedLastAccess = formatDate(token.last_access);
+        const formattedCreated = formatDate(token.created_at);
+        const revokeUrl = `/user/api_token_revoke/izkaacikveri/${token.id}`;
+        
+        return `
+            <tr style="animation-delay: ${index * 0.1}s">
+                <td colspan="3">
+                    <!-- Token Name Header -->
+                    <div class="token-name-header">
+                        <div class="token-name">
+                            <i class="fa fa-key"></i>
+                            ${token.name}
+                        </div>
+                        <div class="token-created">
+                            Oluşturulma: ${formattedCreated}
+                        </div>
+                    </div>
+
+                    <!-- Token Value Section -->
+                    <div class="token-value-section">
+                        <div class="token-label">
+                            <i class="fa fa-code"></i>
+                            API Token
+                        </div>
+                        <code>
+                            <span class="token-text">${token.id}</span>
+                            <button class="copy-btn" onclick="copyToClipboard('${token.id}')" title="Token'ı kopyala">
+                                <i class="fa fa-copy"></i>
+                            </button>
+                        </code>
+                    </div>
+
+                    <!-- Last Access Info -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+                        <div class="${token.last_access ? '' : 'last-access-never'}" style="color: #374151; font-weight: 600; font-size: 0.875rem; background: rgba(139, 92, 246, 0.05); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.1); position: relative; padding-left: 2.5rem;">
+                            <span style="position: absolute; left: 0.75rem; top: 0.75rem; font-size: 1.1rem;">🕒</span>
+                            <div style="font-size: 0.75rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.25rem;">Son Erişim</div>
+                            ${formattedLastAccess}
+                        </div>
+
+                        <!-- Actions -->
+                        <form action="${revokeUrl}" method="POST" style="margin: 0;">
+                            <button type="submit" class="btn btn-danger btn-sm" title="Revoke" 
+                                    onclick="return confirm('${token.name} token\\'ını iptal etmek istediğinizden emin misiniz?')">
+                                <i class="fa fa-times"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function showError(message, tbody) {
+    tbody.innerHTML = `
+        <tr>
+            <td colspan="3" style="text-align: center; padding: 3rem; color: #dc2626; background: #fee2e2; border-radius: 12px;">
+                <i class="fa fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+                <br>
+                <strong>Hata:</strong> ${message}
+                <br><br>
+                <button onclick="loadTokens()" style="padding: 0.5rem 1rem; background: #dc2626; color: white; border: none; border-radius: 6px; cursor: pointer;">
+                    Tekrar Dene
+                </button>
+            </td>
+        </tr>
+    `;
+}
+
+// Load tokens when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    // Wait a bit for the page to fully load
+    setTimeout(loadTokens, 500);
+});
+
+// Auto-refresh every 5 minutes
+setInterval(loadTokens, 5 * 60 * 1000);
+</script>

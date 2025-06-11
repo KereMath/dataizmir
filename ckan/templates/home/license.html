@@ -3,13 +3,164 @@
 {% block subtitle %}Data İzmir Platformu Veri Politikası{% endblock %}
 
 {% block primary %}
-  <article class="module" role="main">
+<article class="module" role="main">
     <div class="module-content">
-      {% block about %}
-          <h1 class="page-heading">Data İzmir Platformu Veri Politikası</h1>
-          {% snippet 'home/snippets/license_text.html' %}   
-      {% endblock %}
+        {% block about %}
+
+        <style>
+            :root {
+                --accent-color: #00FFFF !important; /* Neon Cyan */
+                --glow-color: rgba(0, 255, 255, 0.6) !important;
+                --text-color-primary: #EAEAEA !important;
+                --text-color-secondary: #B0C4DE !important; /* Light Steel Blue */
+                --background-color: #0A0F1E !important; /* Çok Koyu Lacivert */
+                --container-background: rgba(15, 22, 42, 0.7) !important;
+            }
+
+            .license-page-container {
+                font-family: 'Exo 2', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+                background-color: var(--container-background) !important;
+                /* Subtle grid background */
+                background-image:
+                    linear-gradient(rgba(0, 255, 255, 0.05) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(0, 255, 255, 0.05) 1px, transparent 1px) !important;
+                background-size: 30px 30px !important;
+                padding: 3rem 3.5rem !important;
+                border: 1px solid rgba(0, 255, 255, 0.2) !important;
+                border-radius: 8px !important;
+                box-shadow: 0 0 25px rgba(0, 255, 255, 0.1) !important;
+                backdrop-filter: blur(5px) !important;
+                -webkit-backdrop-filter: blur(5px) !important;
+            }
+
+            .license-page-container .page-heading {
+                font-size: 3rem !important;
+                font-weight: 700 !important;
+                color: #fff !important;
+                text-transform: uppercase !important;
+                letter-spacing: 2px !important;
+                /* text-shadow: 0 0 5px #fff, 0 0 10px var(--glow-color), 0 0 15px var(--glow-color) !important; */
+                margin-top: 0 !important;
+                margin-bottom: 2.5rem !important;
+                padding-bottom: 1.5rem !important;
+                border-bottom: 1px solid rgba(0, 255, 255, 0.3) !important;
+            }
+
+            .license-page-container p {
+                font-size: 1.75rem !important;
+                line-height: 1.9 !important;
+                color: var(--text-color-primary) !important;
+                margin-bottom: 1.75rem !important;
+            }
+
+            .license-page-container p > b {
+                display: block !important;
+                font-size: 1.8rem !important;
+                font-weight: 600 !important;
+                text-transform: uppercase !important;
+                letter-spacing: 1px !important;
+                color: var(--accent-color) !important;
+                margin-top: 3.5rem !important;
+                margin-bottom: 1.5rem !important;
+            }
+
+            .license-page-container ul {
+                list-style: none !important;
+                padding-left: 0 !important;
+                margin-bottom: 1.5rem !important;
+            }
+
+            .license-page-container li {
+                display: flex !important;
+                align-items: baseline !important; /* Kökten hizalama çözümü */
+                margin-bottom: 1.75rem !important;
+                font-size: 1.75rem !important;
+                color: var(--text-color-secondary) !important;
+            }
+
+            /* --- YENİ FÜTÜRİSTİK ALTIGEN İKON --- */
+            .license-page-container li::before {
+                content: '' !important;
+                flex-shrink: 0 !important;
+                width: 16px !important;
+                height: 16px !important;
+                /* SVG ile altıgen ikonu */
+                background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3e%3cpath d='M12 2l-10 6v12l10 6 10-6V8l-10-6z' stroke-width='2.5' stroke='%2300FFFF' fill='rgba(0,255,255,0.1)'/%3e%3c/svg%3e") !important;
+                background-size: contain !important;
+                background-repeat: no-repeat !important;
+                background-position: center !important;
+                margin-right: 18px !important;
+                /* 'baseline' hizalama ile artık top/bottom ayarına gerek yok */
+            }
+
+            .license-page-container a {
+                color: var(--accent-color) !important;
+                font-weight: 500 !important;
+                text-decoration: none !important;
+                text-shadow: 0 0 3px var(--glow-color) !important;
+                border-bottom: 1px solid transparent !important;
+                transition: all .3s ease !important;
+            }
+
+            .license-page-container a:hover {
+                color: #fff !important;
+                border-bottom: 1px solid var(--accent-color) !important;
+                text-shadow: 0 0 5px #fff, 0 0 8px var(--glow-color) !important;
+            }
+            
+            .license-page-container b u {
+               text-decoration: none !important;
+            }
+        </style>
+        
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+        
+        <div class="license-page-container">
+            <h1 class="page-heading">Data İzmir Platformu Veri Politikası</h1>
+
+            {% trans %}
+            <p>Bu platforma yer alan tüm materyaller aksi belirtilmedikçe, <a href="https://izka.org.tr/"><b><u>İzmir Kalkınma Ajansı</u></b></a> tarafından <a href="https://creativecommons.org/licenses/by/4.0/deed.tr"><b><u>CC BY 4.0 uluslararası lisansı</u></b></a> ile lisanslanmıştır. Bu lisans çerçevesinde, atıf vermek kaydıyla ticari amaç da dahil olmak üzere verileri kopyalayabilir, düzenleyebilir, dağıtabilirsiniz. Lisans detayları aşağıda verilmektedir.
+            
+            <p><b>Lisans Kapsamı:</b></p>
+            <ul>
+                <li>Veri ve materyaller, uygun atıf verildiği sürece ticari ve ticari olmayan amaçlarla kullanılabilir.</li>
+                <li>Veriler, kullanıcı tarafından istenilen şekilde uyarlanabilir ve yeniden dağıtılabilir.</li>
+            </ul>
+            <br>
+            
+            <p><b>Yükümlülükler:</b></p>
+            <ul>
+                <li>Kullanılan verilerin kaynağı, açık bir atıf bildirimi ile belirtilmelidir.</li>
+                <li>Mümkünse, kullanılan veriler için lisans bağlantısı sağlanmalıdır.</li>
+            </ul>
+            <br>
+            
+            <p><b>Atıf Bildirimi:</b></p>
+            <ul>
+                <li>Verilerin kullanıldığı herhangi bir ürün, çalışma veya uygulamada, atıf bildirimi aracılığıyla İzmir Kalkınma Ajansı'nı kaynak olarak göstermek önemlidir.</li>
+            </ul>
+            <br>
+            
+            <p><b>Atıf Bildirimi Önerisi:</b></p>
+            <ul>
+                <li>Atıf bildirimi sağlanamadığı durumlarda, "Atıf 4.0 Uluslararası (CC BY 4.0) kapsamında lisanslanan kamu sektörü bilgilerini içerir." ifadesi kullanılmalıdır. Birden fazla veri sağlayıcı kaynağı kullanılıyorsa, ilgili kaynağa ait bildirimi içeren bir bağlantı eklenmelidir.</li>
+            </ul>
+            <br>
+            
+            <p><b>Sorumluluk Sınırlaması:</b></p>
+            <ul>
+                <li>Portal üzerinde yer alan verilerdeki hatalar, eksiklikler veya veri sağlayıcılar tarafından sağlanan verilerin sürekliliği konusunda herhangi bir garanti verilmemektedir.</li>
+                <li>Veri kullanımı veya bu verilerin neden olduğu kayıplardan veya zararlardan <b>İzmir Kalkınma Ajansı</b> veya veri sağlayıcıları sorumlu tutulamaz.</li>
+            </ul>
+            <br>
+            {% endtrans %}
+        </div>
+
+        {% endblock %}
     </div>
-  </article>
+</article>
 {% endblock %}
+
 {% block secondary %}{% endblock %}

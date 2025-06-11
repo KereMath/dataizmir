@@ -5,8 +5,8 @@
   <title>Veri Seti Tablosu</title>
   <style>
     .search-form {
-display:none !important;
-}
+        display:none !important;
+    }
     * {
       margin: 0;
       padding: 0;
@@ -45,7 +45,6 @@ display:none !important;
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    /* User profili için özel gradient */
     .profile-card.user-profile {
       background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
     }
@@ -191,17 +190,6 @@ display:none !important;
       margin-right: 8px;
     }
 
-    /* Group count badge */
-    .group-count {
-      background-color: #6c757d;
-      color: white;
-      padding: 1px 6px;
-      border-radius: 10px;
-      font-size: 10px;
-      margin-left: 5px;
-    }
-
-    /* Loading indicator */
     .loading-users {
       color: #6c757d;
       font-size: 12px;
@@ -209,14 +197,12 @@ display:none !important;
       padding: 5px 12px;
     }
 
-    /* Ana İçerik Alanı */
     .main-container {
-      margin-left: 12px;
-      padding: 0px;
-      width: calc(100% - 60px);
+      flex-grow: 1;
+      padding: 20px;
+      width: calc(100% - 320px);
     }
 
-    /* Pagination Controls */
     .pagination-controls {
       background-color: #fff;
       padding: 20px;
@@ -287,12 +273,6 @@ display:none !important;
       border-color: #007bff;
     }
 
-    .pagination-btn.active:hover {
-      background-color: #0056b3;
-      border-color: #0056b3;
-    }
-
-    /* Tablo Stilleri */
     .dataset-table {
       width: 100%;
       border-collapse: collapse;
@@ -319,6 +299,7 @@ display:none !important;
       padding: 12px;
       border-bottom: 1px solid #f1f3f4;
       vertical-align: top;
+      font-size: 14px;
     }
 
     .dataset-table tbody tr:hover {
@@ -334,50 +315,35 @@ display:none !important;
     .dataset-link:hover {
       text-decoration: underline;
     }
-
-    /* Updated column widths to accommodate group column */
-    .t-title { width: 20%; }
-    .t-desc { width: 25%; }
-    .t-org { width: 12%; }
-    .t-user { width: 10%; }
-    .t-groups { width: 13%; }
-    .t-upd { width: 10%; }
-    .t-formats { width: 10%; }
+    
+    /* Sütun genişlikleri Etiketler sütunu için güncellendi */
+    .t-title { width: 18%; }
+    .t-desc { width: 22%; }
+    .t-org { width: 10%; }
+    .t-user { width: 8%; }
+    .t-groups { width: 12%; }
+    .t-tags { width: 12%; } /* Yeni sütun */
+    .t-upd { width: 9%; }
+    .t-formats { width: 9%; }
 
     .empty-cell {
       color: #9b98a7;
       font-style: italic;
     }
 
-    .format-tag {
+    .format-tag, .user-tag, .group-tag, .tag-tag {
       display: inline-block;
       padding: 2px 6px;
       border-radius: 3px;
       font-size: 11px;
-      font-weight: 600;
-      margin: 1px 2px;
-      text-transform: uppercase;
-    }
-
-    .user-tag {
-      background-color: #e3f2fd;
-      color: #1976d2;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 11px;
-      font-weight: 500;
-    }
-
-    .group-tag {
-      background-color: #e8f5e8;
-      color: #2e7d32;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 10px;
       font-weight: 500;
       margin: 1px 2px;
-      display: inline-block;
+      white-space: nowrap;
     }
+
+    .user-tag { background-color: #e3f2fd; color: #1976d2; }
+    .group-tag { background-color: #e8f5e8; color: #2e7d32; }
+    .tag-tag { background-color: #fbe9e7; color: #d84315; } /* Yeni stil */
 
     .fmt-csv { background-color: #e8f5e8; color: #2e7d32; }
     .fmt-xls { background-color: #e3f2fd; color: #1976d2; }
@@ -391,73 +357,14 @@ display:none !important;
     .fmt-txt { background-color: #fafafa; color: #616161; }
     .fmt-other { background-color: #eceff1; color: #455a64; }
 
-    /* Duplicate gizleme */
     .duplicate-hidden {
       display: none !important;
-    }
-
-    /* Responsive tasarım */
-    @media (max-width: 1024px) {
-      .sidebar-filter {
-        width: 250px;
-      }
-      
-      .main-container {
-        margin-left: 250px;
-        width: calc(100% - 250px);
-      }
-    }
-
-    @media (max-width: 768px) {
-      .sidebar-filter {
-        width: 100%;
-        position: relative;
-        height: auto;
-      }
-      
-      .main-container {
-        margin-left: 0;
-        width: 100%;
-      }
-      
-      .page-container {
-        flex-direction: column;
-      }
-
-      .pagination-controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-
-      .pagination-buttons {
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-
-      .profile-header {
-        flex-direction: column;
-        text-align: center;
-      }
-
-      .profile-image {
-        margin: 0 0 10px 0;
-      }
-
-      /* Mobile responsive table columns */
-      .t-title { width: 22%; }
-      .t-desc { width: 25%; }
-      .t-org { width: 12%; }
-      .t-user { width: 12%; }
-      .t-groups { width: 12%; }
-      .t-upd { width: 10%; }
-      .t-formats { width: 7%; }
     }
   </style>
 </head>
 <body>
   <div class="page-container">
     <div class="sidebar-filter" id="filterSidebar">
-      <!-- Profil bilgileri buraya gelecek -->
       <div id="profileCard" class="profile-card" style="display: none;"></div>
       
       <h3>Filtreler</h3>
@@ -475,6 +382,11 @@ display:none !important;
       <div class="filter-section">
         <label>Kategoriler</label>
         <div class="multi-select" id="groupSelect"></div>
+      </div>
+      
+      <div class="filter-section">
+        <label>Etiketler</label>
+        <div class="multi-select" id="tagSelect"></div>
       </div>
       
       <div class="filter-section">
@@ -509,13 +421,8 @@ display:none !important;
           </select>
         </div>
         
-        <div class="pagination-info" id="paginationInfo">
-          <!-- Pagination bilgisi buraya gelecek -->
-        </div>
-        
-        <div class="pagination-buttons" id="paginationButtons">
-          <!-- Pagination butonları buraya gelecek -->
-        </div>
+        <div class="pagination-info" id="paginationInfo"></div>
+        <div class="pagination-buttons" id="paginationButtons"></div>
       </div>
 
       <table class="dataset-table">
@@ -526,7 +433,7 @@ display:none !important;
             <th class="t-org">Organizasyon</th>
             <th class="t-user">Oluşturan</th>
             <th class="t-groups">Kategoriler</th>
-            <th class="t-upd">Güncellenme</th>
+            <th class="t-tags">Etiketler</th> <th class="t-upd">Güncellenme</th>
             <th class="t-formats">Formatlar</th>
           </tr>
         </thead>
@@ -535,127 +442,83 @@ display:none !important;
     </div>
   </div>
 
-  <script>
-    // Değişkenler
+<script>
+    // --- Değişkenler ---
     var allDatasets = [];
     var filteredDatasets = [];
-    var allOrgs = [];
-    var allFormats = [];
-    var allUsers = [];
-    var allGroups = [];
+    var allOrgs = [], allFormats = [], allUsers = [], allGroups = [], allTags = [];
     var userCache = {}; // User ID -> Username cache
-    var selectedOrgs = new Set();
-    var selectedFormats = new Set();
-    var selectedUsers = new Set();
-    var selectedGroups = new Set();
+    var selectedOrgs = new Set(), selectedFormats = new Set(), selectedUsers = new Set(), selectedGroups = new Set(), selectedTags = new Set();
     var currentPage = 1;
     var itemsPerPage = 20;
     var usersLoaded = false;
 
-    // URL'den path türünü ve ismini al
+    // --- Fonksiyonlar (Orijinal yapı korunarak) ---
+
     function getPathInfo() {
       var currentUrl = window.location.pathname;
-      if (currentUrl.startsWith('/organization/')) {
-        var name = currentUrl.replace('/organization/', '');
-        return { type: 'organization', name: name };
-      } else if (currentUrl.startsWith('/group/')) {
-        var name = currentUrl.replace('/group/', '');
-        return { type: 'group', name: name };
-      } else if (currentUrl.startsWith('/user/')) {
-        var name = currentUrl.replace('/user/', '');
-        return { type: 'user', name: name };
-      } else if (currentUrl.startsWith('/dataset/')) {
-        return { type: 'dataset', name: null };
-      }
+      if (currentUrl.startsWith('/organization/')) return { type: 'organization', name: currentUrl.replace('/organization/', '') };
+      if (currentUrl.startsWith('/group/')) return { type: 'group', name: currentUrl.replace('/group/', '') };
+      if (currentUrl.startsWith('/user/')) return { type: 'user', name: currentUrl.replace('/user/', '') };
+      if (currentUrl.startsWith('/dataset/')) return { type: 'dataset', name: null };
       return { type: null, name: null };
     }
 
-    // User ID'den username çek
     async function fetchUsername(userId) {
-      if (!userId || userCache[userId]) {
-        return userCache[userId] || 'Bilinmiyor';
-      }
-
+      if (!userId || userCache[userId]) return userCache[userId] || 'Bilinmiyor';
       try {
         const response = await fetch('/api/3/action/user_show', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ id: userId })
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          credentials: 'include', body: JSON.stringify({ id: userId })
         });
-
         const data = await response.json();
         if (data.success && data.result) {
           const username = data.result.name || data.result.display_name || 'Bilinmiyor';
           userCache[userId] = username;
           return username;
         }
-      } catch (error) {
-        console.warn('User bilgisi alınamadı:', userId, error);
-      }
-
+      } catch (error) { console.warn('User bilgisi alınamadı:', userId, error); }
       userCache[userId] = 'Bilinmiyor';
       return 'Bilinmiyor';
     }
 
-    // Tüm unique user ID'leri topla ve username'leri çek
     async function loadUsernames() {
       const uniqueUserIds = [...new Set(allDatasets.map(pkg => pkg.creator_user_id).filter(Boolean))];
-      
       console.log('🔄 Toplam unique user sayısı:', uniqueUserIds.length);
-      
-      // Paralel olarak user bilgilerini çek (batch'ler halinde)
       const batchSize = 5;
       for (let i = 0; i < uniqueUserIds.length; i += batchSize) {
         const batch = uniqueUserIds.slice(i, i + batchSize);
-        const promises = batch.map(userId => fetchUsername(userId));
-        await Promise.all(promises);
-        
-        // Progress göster
+        await Promise.all(batch.map(userId => fetchUsername(userId)));
         const progress = Math.min(i + batchSize, uniqueUserIds.length);
         console.log(`📊 User yükleme: ${progress}/${uniqueUserIds.length}`);
-        
-        // UI'ı güncelle
         updateUsersFilter();
       }
-      
       usersLoaded = true;
       console.log('✅ Tüm user bilgileri yüklendi:', Object.keys(userCache).length);
       updateUsersFilter();
     }
 
-    // User filter'ını güncelle
     function updateUsersFilter() {
       const usernames = Object.values(userCache).filter(Boolean);
       allUsers = [...new Set(usernames)].sort();
-      
       if (allUsers.length > 0) {
         renderMultiSelect("userSelect", allUsers, selectedUsers, renderTable);
       } else if (!usersLoaded) {
-        document.getElementById('userSelect').innerHTML = 
-          '<div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>';
+        document.getElementById('userSelect').innerHTML = '<div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>';
       } else {
-        document.getElementById('userSelect').innerHTML = 
-          '<div class="loading-users">❌ Kullanıcı bilgisi bulunamadı</div>';
+        document.getElementById('userSelect').innerHTML = '<div class="loading-users">❌ Kullanıcı bilgisi bulunamadı</div>';
       }
     }
 
-    // Profil bilgilerini render et
+    // Orijinal renderProfileCard fonksiyonu eksiksiz olarak geri eklendi
     function renderProfileCard(profileData, profileType) {
       var profileCard = document.getElementById('profileCard');
       if (!profileData) {
         profileCard.style.display = 'none';
         return;
       }
-
       var html = '';
-      
-      // Profil tipine göre CSS class ekle
       profileCard.className = 'profile-card' + (profileType === 'user' ? ' user-profile' : '');
-      
-      // Header kısmı
       html += '<div class="profile-header">';
       if (profileData.image_display_url) {
         html += '<img src="' + profileData.image_display_url + '" class="profile-image" alt="' + (profileData.title || profileData.name || '') + '">';
@@ -663,8 +526,6 @@ display:none !important;
         html += '<div class="profile-image"></div>';
       }
       html += '<div>';
-      
-      // User için özel başlık formatı
       if (profileType === 'user') {
         var displayName = profileData.display_name || profileData.fullname || profileData.name || '';
         html += '<h3 class="profile-title">' + displayName;
@@ -677,582 +538,265 @@ display:none !important;
         html += '<h3 class="profile-title">' + (profileData.title || profileData.display_name || profileData.name || '') + '</h3>';
         html += '<div class="profile-type">' + (profileData.type || '') + '</div>';
       }
-      
-      html += '</div>';
-      html += '</div>';
-
-      // Bilgiler kısmı
+      html += '</div></div>';
       html += '<div class="profile-info">';
-      
-      // User için özel alanlar
       if (profileType === 'user') {
-        if (profileData.email) {
-          html += '<div class="profile-field">';
-          html += '<span class="profile-field-label">Email:</span>';
-          html += '<span class="profile-field-value">' + profileData.email + '</span>';
-          html += '</div>';
-        }
-        
-        if (profileData.number_created_packages !== undefined) {
-          html += '<div class="profile-field">';
-          html += '<span class="profile-field-label">Veri Seti:</span>';
-          html += '<span class="profile-field-value">' + profileData.number_created_packages + '</span>';
-          html += '</div>';
-        }
-        
-        if (profileData.created) {
-          var createdDate = new Date(profileData.created);
-          html += '<div class="profile-field">';
-          html += '<span class="profile-field-label">Üyelik:</span>';
-          html += '<span class="profile-field-value">' + createdDate.toLocaleDateString('tr-TR') + '</span>';
-          html += '</div>';
-        }
-        
-        if (profileData.state) {
-          html += '<div class="profile-field">';
-          html += '<span class="profile-field-label">Durum:</span>';
-          html += '<span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</span>';
-          html += '</div>';
-        }
+        if (profileData.email) html += '<div class="profile-field"><span class="profile-field-label">Email:</span><span class="profile-field-value">' + profileData.email + '</span></div>';
+        if (profileData.number_created_packages !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + profileData.number_created_packages + '</span></div>';
+        if (profileData.created) html += '<div class="profile-field"><span class="profile-field-label">Üyelik:</span><span class="profile-field-value">' + new Date(profileData.created).toLocaleDateString('tr-TR') + '</span></div>';
+        if (profileData.state) html += '<div class="profile-field"><span class="profile-field-label">Durum:</span><span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</span></div>';
       } else {
-        // Organization/Group için mevcut alanlar
-        if (profileData.package_count !== undefined) {
-          html += '<div class="profile-field">';
-          html += '<span class="profile-field-label">Veri Seti:</span>';
-          html += '<span class="profile-field-value">' + profileData.package_count + '</span>';
-          html += '</div>';
-        }
-        
-        if (profileData.num_followers !== undefined) {
-          html += '<div class="profile-field">';
-          html += '<span class="profile-field-label">Takipçi:</span>';
-          html += '<span class="profile-field-value">' + profileData.num_followers + '</span>';
-          html += '</div>';
-        }
-        
-        if (profileData.created) {
-          var createdDate = new Date(profileData.created);
-          html += '<div class="profile-field">';
-          html += '<span class="profile-field-label">Oluşturulma:</span>';
-          html += '<span class="profile-field-value">' + createdDate.toLocaleDateString('tr-TR') + '</span>';
-          html += '</div>';
-        }
-        
-        if (profileData.state) {
-          html += '<div class="profile-field">';
-          html += '<span class="profile-field-label">Durum:</span>';
-          html += '<span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</span>';
-          html += '</div>';
-        }
+        if (profileData.package_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + profileData.package_count + '</span></div>';
+        if (profileData.num_followers !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Takipçi:</span><span class="profile-field-value">' + profileData.num_followers + '</span></div>';
+        if (profileData.created) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(profileData.created).toLocaleDateString('tr-TR') + '</span></div>';
+        if (profileData.state) html += '<div class="profile-field"><span class="profile-field-label">Durum:</span><span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</span></div>';
       }
-
       html += '</div>';
-
-      // Açıklama
       var description = profileData.description || profileData.about;
       if (description) {
         html += '<div class="profile-description">' + description + '</div>';
       }
-
       profileCard.innerHTML = html;
       profileCard.style.display = 'block';
     }
 
-    // URL'den API query parametresi oluştur
     function buildApiQuery() {
       var pathInfo = getPathInfo();
       var baseQuery = 'rows=1000&include_private=true';
-      
-      // URL'yi kontrol et ve uygun filtreyi ekle
-      if (pathInfo.type === 'organization' && pathInfo.name) {
-        return baseQuery + '&fq=organization:' + encodeURIComponent(pathInfo.name);
-      } else if (pathInfo.type === 'group' && pathInfo.name) {
-        return baseQuery + '&fq=groups:' + encodeURIComponent(pathInfo.name);
-      } else if (pathInfo.type === 'user' && pathInfo.name) {
-        // User için önce user bilgisini al, sonra user ID'ye göre dataset'leri filtrele
-        return baseQuery; // İlk aşamada tüm dataset'leri al, sonra client-side filtrele
-      }
-      
-      // Diğer durumlar için normal query
+      if (pathInfo.type === 'organization' && pathInfo.name) return baseQuery + '&fq=organization:' + encodeURIComponent(pathInfo.name);
+      if (pathInfo.type === 'group' && pathInfo.name) return baseQuery + '&fq=groups:' + encodeURIComponent(pathInfo.name);
+      if (pathInfo.type === 'user' && pathInfo.name) return baseQuery;
       return baseQuery;
     }
-
-    // User name'den user ID'sini bul
-    async function getUserIdFromUsername(username) {
-      try {
-        const response = await fetch('/api/3/action/user_show', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({ id: username })
-        });
-
-        const data = await response.json();
-        if (data.success && data.result) {
-          return data.result.id;
-        }
-      } catch (error) {
-        console.warn('User ID alınamadı:', username, error);
-      }
-      return null;
-    }
-
-    // Profil bilgilerini yükle
+    
     async function loadProfileData() {
-      var pathInfo = getPathInfo();
-      
-      // Dataset sayfasında profil gösterme
-      if (pathInfo.type === 'dataset' || !pathInfo.name) {
-        renderProfileCard(null);
-        return;
-      }
-
-      var apiEndpoint = '';
-      var profileType = pathInfo.type;
-      
-      if (pathInfo.type === 'organization') {
-        apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
-      } else if (pathInfo.type === 'group') {
-        apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
-      } else if (pathInfo.type === 'user') {
-        apiEndpoint = '/api/3/action/user_show';
-      }
-
-      if (apiEndpoint) {
-        try {
-          let response;
-          if (pathInfo.type === 'user') {
-            response = await fetch(apiEndpoint, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              credentials: 'include',
-              body: JSON.stringify({ id: pathInfo.name })
-            });
-          } else {
-            response = await fetch(apiEndpoint, {
-              credentials: 'include'
-            });
-          }
-          
-          const data = await response.json();
-          if (data.success && data.result) {
-            renderProfileCard(data.result, profileType);
-          } else {
-            renderProfileCard(null);
-          }
-        } catch (error) {
-          console.error('Profil bilgileri yüklenirken hata:', error);
-          renderProfileCard(null);
+        // Bu fonksiyon orijinal haliyle korunmuştur.
+        var pathInfo = getPathInfo();
+        if (pathInfo.type === 'dataset' || !pathInfo.name) { renderProfileCard(null); return; }
+        var apiEndpoint = ''; var profileType = pathInfo.type;
+        if (pathInfo.type === 'organization') apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
+        else if (pathInfo.type === 'group') apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
+        else if (pathInfo.type === 'user') apiEndpoint = '/api/3/action/user_show';
+        if (apiEndpoint) {
+            try {
+                let response;
+                if (pathInfo.type === 'user') {
+                    response = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ id: pathInfo.name }) });
+                } else {
+                    response = await fetch(apiEndpoint, { credentials: 'include' });
+                }
+                const data = await response.json();
+                if (data.success && data.result) renderProfileCard(data.result, profileType);
+                else renderProfileCard(null);
+            } catch (error) { console.error('Profil bilgileri yüklenirken hata:', error); renderProfileCard(null); }
         }
-      }
     }
-
-    // Duplicate elementleri gizle
+    
+    // Orijinal hideDuplicateElements fonksiyonu geri eklendi
     function hideDuplicateElements() {
-      // Sidebar'ları kontrol et
-      var sidebars = document.querySelectorAll('.sidebar-filter');
-      for (var i = 1; i < sidebars.length; i++) {
-        sidebars[i].classList.add('duplicate-hidden');
-      }
-      
-      // Tabloları kontrol et
-      var tables = document.querySelectorAll('.dataset-table');
-      for (var i = 1; i < tables.length; i++) {
-        tables[i].classList.add('duplicate-hidden');
-      }
-      
-      // Ana containerları kontrol et
-      var containers = document.querySelectorAll('.main-container');
-      for (var i = 1; i < containers.length; i++) {
-        containers[i].classList.add('duplicate-hidden');
-      }
-      
-      // Page containerları kontrol et
-      var pageContainers = document.querySelectorAll('.page-container');
-      for (var i = 1; i < pageContainers.length; i++) {
-        pageContainers[i].classList.add('duplicate-hidden');
-      }
+      var selectors = ['.sidebar-filter', '.dataset-table', '.main-container', '.page-container'];
+      selectors.forEach(selector => {
+        var elements = document.querySelectorAll(selector);
+        for (var i = 1; i < elements.length; i++) {
+          elements[i].classList.add('duplicate-hidden');
+        }
+      });
     }
 
     function formatClass(fmt) {
-      if(!fmt) return 'fmt-other';
+      if (!fmt) return 'fmt-other';
       fmt = fmt.toLowerCase();
-      if(fmt==='csv') return 'fmt-csv';
-      if(fmt==='xls'||fmt==='xlsx') return 'fmt-xls';
-      if(fmt==='json') return 'fmt-json';
-      if(fmt==='xml') return 'fmt-xml';
-      if(fmt==='pdf') return 'fmt-pdf';
-      if(fmt==='shp') return 'fmt-shp';
-      if(fmt==='zip') return 'fmt-zip';
-      if(fmt==='html') return 'fmt-html';
-      if(fmt==='doc'||fmt==='docx') return 'fmt-doc';
-      if(fmt==='txt') return 'fmt-txt';
-      return 'fmt-other';
+      const classes = { csv: 'csv', xls: 'xls', xlsx: 'xls', json: 'json', xml: 'xml', pdf: 'pdf', shp: 'shp', zip: 'zip', html: 'html', doc: 'doc', docx: 'doc', txt: 'txt' };
+      return `fmt-${classes[fmt] || 'other'}`;
     }
 
+    // renderMultiSelect fonksiyonu basitleştirildi ve genelleştirildi
     function renderMultiSelect(containerId, items, selectedSet, onchange) {
       var c = document.getElementById(containerId);
       c.innerHTML = "";
-      
-      // Groups için özel rendering (count ile)
-      if (containerId === 'groupSelect' && Array.isArray(items) && items[0] && typeof items[0] === 'object') {
-        items.forEach(function(item) {
-          var opt = document.createElement("div");
-          opt.className = "multi-select-option" + (selectedSet.has(item.name) ? " selected" : "");
-          opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item.name) ? "checked" : ""}> <span>${item.display_name}<span class="group-count">${item.count}</span></span>`;
-          opt.onclick = function(e) {
-            e.stopPropagation();
-            if(selectedSet.has(item.name)){
-              selectedSet.delete(item.name);
-            } else {
-              selectedSet.add(item.name);
-            }
-            renderMultiSelect(containerId, items, selectedSet, onchange);
-            onchange();
-          };
-          c.appendChild(opt);
-        });
-      } else {
-        // Diğer filter'lar için normal rendering
-        items.forEach(function(item) {
-          var opt = document.createElement("div");
-          opt.className = "multi-select-option" + (selectedSet.has(item) ? " selected" : "");
-          opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item) ? "checked" : ""}> <span>${item}</span>`;
-          opt.onclick = function(e) {
-            e.stopPropagation();
-            if(selectedSet.has(item)){
-              selectedSet.delete(item);
-            } else {
-              selectedSet.add(item);
-            }
-            renderMultiSelect(containerId, items, selectedSet, onchange);
-            onchange();
-          };
-          c.appendChild(opt);
-        });
+      if (items.length === 0) {
+        c.innerHTML = `<div class="empty-cell" style="padding:10px;">Seçenek yok</div>`;
+        return;
       }
+      items.forEach(function(item) {
+        var opt = document.createElement("div");
+        opt.className = "multi-select-option" + (selectedSet.has(item) ? " selected" : "");
+        opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item) ? "checked" : ""}> <span>${item}</span>`;
+        opt.onclick = function(e) {
+          e.stopPropagation();
+          if(selectedSet.has(item)) selectedSet.delete(item);
+          else selectedSet.add(item);
+          renderMultiSelect(containerId, items, selectedSet, onchange);
+          onchange();
+        };
+        c.appendChild(opt);
+      });
     }
-
+    
+    // filterDatasets fonksiyonu yeni filtrelerle (tags) ve AND mantığı ile güncellendi
     function filterDatasets() {
       var searchVal = document.getElementById("searchTitle").value.trim().toLowerCase();
       var dateSort = document.getElementById("sortDate").value;
-      
+
       filteredDatasets = allDatasets.filter(function(pkg) {
-        var title = (pkg.title || pkg.name || '').toLowerCase();
-        if(searchVal && !title.includes(searchVal)) return false;
-        if(selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
-        if(selectedUsers.size && !selectedUsers.has(pkg.creatorUsername)) return false;
+        if (searchVal && !(pkg.title || pkg.name || '').toLowerCase().includes(searchVal)) return false;
+        if (selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
+        if (selectedUsers.size && !selectedUsers.has(pkg.creatorUsername)) return false;
+
+        // AND mantığı: Seçili her grubun, veri setinin gruplarında olması gerekir
+        if (selectedGroups.size && ![...selectedGroups].every(g => pkg.groupTitles.includes(g))) return false;
         
-        // Group filtresi
-        if(selectedGroups.size) {
-          var hasSelectedGroup = false;
-          if (pkg.groupNames && pkg.groupNames.length > 0) {
-            for (var i = 0; i < pkg.groupNames.length; i++) {
-              if (selectedGroups.has(pkg.groupNames[i])) {
-                hasSelectedGroup = true;
-                break;
-              }
-            }
-          }
-          if (!hasSelectedGroup) return false;
-        }
+        // AND mantığı: Seçili her etiketin, veri setinin etiketlerinde olması gerekir
+        if (selectedTags.size && ![...selectedTags].every(t => pkg.tagNames.includes(t))) return false;
+
+        var fmts = Object.keys(pkg.fmts);
+        if (selectedFormats.size && ![...selectedFormats].every(fmt => fmts.includes(fmt))) return false;
         
-        if(selectedFormats.size){
-          var fmts = Object.keys(pkg.fmts);
-          if(!Array.from(selectedFormats).every(function(fmt){return fmts.includes(fmt)})) return false;
-        }
         return true;
       });
-      
-      filteredDatasets.sort(function(a,b){
+
+      filteredDatasets.sort(function(a, b) {
         var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
         var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
-        return (dateSort==='desc' ? tb-ta : ta-tb);
+        return (dateSort === 'desc' ? tb - ta : ta - tb);
       });
-      
-      currentPage = 1; // Reset to first page when filtering
+
+      currentPage = 1;
     }
 
     function renderPagination() {
-      var totalItems = filteredDatasets.length;
-      var totalPages = Math.ceil(totalItems / itemsPerPage);
-      var startItem = (currentPage - 1) * itemsPerPage + 1;
-      var endItem = Math.min(currentPage * itemsPerPage, totalItems);
-      
-      // Pagination info
-      var infoText = totalItems === 0 ? 
-        "Gösterilecek kayıt yok" : 
-        `${startItem}-${endItem} / ${totalItems} kayıt`;
-      document.getElementById('paginationInfo').textContent = infoText;
-      
-      // Pagination buttons
-      var buttonsContainer = document.getElementById('paginationButtons');
-      buttonsContainer.innerHTML = '';
-      
-      if (totalPages <= 1) return;
-      
-      // Previous button
-      var prevBtn = document.createElement('button');
-      prevBtn.className = 'pagination-btn';
-      prevBtn.textContent = '‹ Önceki';
-      prevBtn.disabled = currentPage === 1;
-      prevBtn.onclick = function() {
-        if (currentPage > 1) {
-          currentPage--;
-          renderTable();
-        }
-      };
-      buttonsContainer.appendChild(prevBtn);
-      
-      // Page number buttons
-      var startPage = Math.max(1, currentPage - 2);
-      var endPage = Math.min(totalPages, currentPage + 2);
-      
-      if (startPage > 1) {
-        var firstBtn = document.createElement('button');
-        firstBtn.className = 'pagination-btn';
-        firstBtn.textContent = '1';
-        firstBtn.onclick = function() {
-          currentPage = 1;
-          renderTable();
+        // Bu fonksiyon orijinal haliyle korunmuştur.
+        var totalItems = filteredDatasets.length;
+        var totalPages = Math.ceil(totalItems / itemsPerPage);
+        var startItem = (currentPage - 1) * itemsPerPage + 1;
+        var endItem = Math.min(currentPage * itemsPerPage, totalItems);
+        document.getElementById('paginationInfo').textContent = totalItems === 0 ? "Gösterilecek kayıt yok" : `${startItem}-${endItem} / ${totalItems} kayıt`;
+        var buttonsContainer = document.getElementById('paginationButtons');
+        buttonsContainer.innerHTML = '';
+        if (totalPages <= 1) return;
+        var createBtn = (text, page, isDisabled = false, isActive = false) => {
+            const btn = document.createElement('button');
+            btn.className = 'pagination-btn' + (isActive ? ' active' : '');
+            btn.textContent = text;
+            btn.disabled = isDisabled;
+            if (page) btn.onclick = () => { currentPage = page; renderTable(); };
+            return btn;
         };
-        buttonsContainer.appendChild(firstBtn);
-        
-        if (startPage > 2) {
-          var dotsBtn = document.createElement('button');
-          dotsBtn.className = 'pagination-btn';
-          dotsBtn.textContent = '...';
-          dotsBtn.disabled = true;
-          buttonsContainer.appendChild(dotsBtn);
-        }
-      }
-      
-      for (var i = startPage; i <= endPage; i++) {
-        var pageBtn = document.createElement('button');
-        pageBtn.className = 'pagination-btn' + (i === currentPage ? ' active' : '');
-        pageBtn.textContent = i;
-        pageBtn.onclick = (function(page) {
-          return function() {
-            currentPage = page;
-            renderTable();
-          };
-        })(i);
-        buttonsContainer.appendChild(pageBtn);
-      }
-      
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          var dotsBtn = document.createElement('button');
-          dotsBtn.className = 'pagination-btn';
-          dotsBtn.textContent = '...';
-          dotsBtn.disabled = true;
-          buttonsContainer.appendChild(dotsBtn);
-        }
-        
-        var lastBtn = document.createElement('button');
-        lastBtn.className = 'pagination-btn';
-        lastBtn.textContent = totalPages;
-        lastBtn.onclick = function() {
-          currentPage = totalPages;
-          renderTable();
-        };
-        buttonsContainer.appendChild(lastBtn);
-      }
-      
-      // Next button
-      var nextBtn = document.createElement('button');
-      nextBtn.className = 'pagination-btn';
-      nextBtn.textContent = 'Sonraki ›';
-      nextBtn.disabled = currentPage === totalPages;
-      nextBtn.onclick = function() {
-        if (currentPage < totalPages) {
-          currentPage++;
-          renderTable();
-        }
-      };
-      buttonsContainer.appendChild(nextBtn);
+        buttonsContainer.appendChild(createBtn('‹ Önceki', currentPage - 1, currentPage === 1));
+        var startPage = Math.max(1, currentPage - 2), endPage = Math.min(totalPages, currentPage + 2);
+        if (startPage > 1) { buttonsContainer.appendChild(createBtn('1', 1)); if (startPage > 2) buttonsContainer.appendChild(createBtn('...', null, true)); }
+        for (let i = startPage; i <= endPage; i++) buttonsContainer.appendChild(createBtn(i, i, false, i === currentPage));
+        if (endPage < totalPages) { if (endPage < totalPages - 1) buttonsContainer.appendChild(createBtn('...', null, true)); buttonsContainer.appendChild(createBtn(totalPages, totalPages)); }
+        buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
     }
-
+    
+    // renderTable fonksiyonu yeni Etiketler sütunu için güncellendi
     function renderTable() {
       filterDatasets();
       renderPagination();
       
       var startIndex = (currentPage - 1) * itemsPerPage;
-      var endIndex = startIndex + itemsPerPage;
-      var pageDatasets = filteredDatasets.slice(startIndex, endIndex);
+      var pageDatasets = filteredDatasets.slice(startIndex, startIndex + itemsPerPage);
       
-      var rows = '';
-      pageDatasets.forEach(function(pkg) {
+      var rows = pageDatasets.map(function(pkg) {
         var title = pkg.title || pkg.name || '';
         var link = '/dataset/' + encodeURIComponent(pkg.name);
-        var desc = pkg.notes ? pkg.notes.replace(/\n/g,' ') : '';
-        if(desc.length > 150) desc = desc.slice(0,150) + '...';
-        desc = desc ? desc : `<span class="empty-cell">Yok</span>`;
-        var org = pkg.orgTitle ? pkg.orgTitle : `<span class="empty-cell">Yok</span>`;
-        var user = pkg.creatorUsername ? `<span class="user-tag">${pkg.creatorUsername}</span>` : `<span class="empty-cell">Bilinmiyor</span>`;
+        var desc = pkg.notes ? pkg.notes.replace(/\n/g, ' ').substring(0, 150) + (pkg.notes.length > 150 ? '...' : '') : '<span class="empty-cell">Yok</span>';
+        var org = pkg.orgTitle || '<span class="empty-cell">Yok</span>';
+        var user = pkg.creatorUsername ? `<span class="user-tag">${pkg.creatorUsername}</span>` : '<span class="empty-cell">Bilinmiyor</span>';
+        var groups = pkg.groupTitles.length ? pkg.groupTitles.map(g => `<span class="group-tag">${g}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
+        var tags = pkg.tagNames.length ? pkg.tagNames.map(t => `<span class="tag-tag">${t}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
+        var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
+        var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
         
-        // Groups/Categories column
-        var groups = '';
-        if (pkg.groupTitles && pkg.groupTitles.length > 0) {
-          groups = pkg.groupTitles.map(function(groupTitle) {
-            return `<span class="group-tag">${groupTitle}</span>`;
-          }).join(' ');
-        } else {
-          groups = `<span class="empty-cell">Yok</span>`;
-        }
-        
-        var upd = pkg.metadata_modified ? pkg.metadata_modified.split('T')[0].split('-').reverse().join('.') : '';
-        upd = upd ? upd : `<span class="empty-cell">–</span>`;
-        var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(function(f){
-          return `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`;
-        }).join(' ') : `<span class="empty-cell">–</span>`;
-        
-        rows += `<tr>
-          <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private?'<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>':''}</td>
+        return `<tr>
+          <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
           <td class="t-desc">${desc}</td>
           <td class="t-org">${org}</td>
           <td class="t-user">${user}</td>
           <td class="t-groups">${groups}</td>
+          <td class="t-tags">${tags}</td>
           <td class="t-upd">${upd}</td>
           <td class="t-formats">${formats}</td>
         </tr>`;
-      });
+      }).join('');
       
-      document.getElementById('dataset-table-body').innerHTML = rows || 
-        `<tr><td colspan="7" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
+      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="8" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
     }
-
-    // User path için dataset filtreleme
+    
     async function filterByUserPath() {
-      var pathInfo = getPathInfo();
-      if (pathInfo.type === 'user' && pathInfo.name) {
-        try {
-          // User bilgisini al
-          const userResponse = await fetch('/api/3/action/user_show', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({ id: pathInfo.name })
-          });
-
-          const userData = await userResponse.json();
-          if (userData.success && userData.result) {
-            const userId = userData.result.id;
-            console.log('🔍 User path filtreleme:', pathInfo.name, '→', userId);
-            
-            // Dataset'leri user ID'ye göre filtrele
-            allDatasets = allDatasets.filter(function(pkg) {
-              return pkg.creator_user_id === userId;
-            });
-            
-            console.log('📊 User\'ın dataset sayısı:', allDatasets.length);
-            renderTable();
-          }
-        } catch (error) {
-          console.error('User path filtreleme hatası:', error);
+        // Bu fonksiyon orijinal haliyle korunmuştur.
+        var pathInfo = getPathInfo();
+        if (pathInfo.type === 'user' && pathInfo.name) {
+            try {
+                const userResponse = await fetch('/api/3/action/user_show', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include', body: JSON.stringify({ id: pathInfo.name })
+                });
+                const userData = await userResponse.json();
+                if (userData.success && userData.result) {
+                    const userId = userData.result.id;
+                    console.log('🔍 User path filtreleme:', pathInfo.name, '→', userId);
+                    allDatasets = allDatasets.filter(pkg => pkg.creator_user_id === userId);
+                    console.log('📊 User\'ın dataset sayısı:', allDatasets.length);
+                }
+            } catch (error) { console.error('User path filtreleme hatası:', error); }
         }
-      }
     }
 
-    // Grup facet verilerini yükle
-    async function loadGroupFacets() {
-      try {
-        const response = await fetch('/api/3/action/package_search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            'q': '*:*',
-            'rows': 0,
-            'facet.field': ['groups'],
-            'facet': 'true'
-          })
-        });
-
-        const data = await response.json();
-        if (data.success && data.result && data.result.search_facets && data.result.search_facets.groups) {
-          const groupFacets = data.result.search_facets.groups.items;
-          console.log('📊 Grup facets yüklendi:', groupFacets.length);
-          
-          // Grup listesini count'a göre sırala (en çok kullanılan önce)
-          allGroups = groupFacets.sort(function(a, b) {
-            return b.count - a.count;
-          });
-          
-          renderMultiSelect("groupSelect", allGroups, selectedGroups, renderTable);
-        }
-      } catch (error) {
-        console.error('Grup facets yüklenirken hata:', error);
-      }
-    }
-
-    // Sayfa yüklendiğinde duplicate elementleri gizle
-    document.addEventListener('DOMContentLoaded', function() {
-      hideDuplicateElements();
-    });
-
-    // Profil bilgilerini yükle
+    // --- Sayfa Yükleme ve Başlatma Mantığı ---
+    document.addEventListener('DOMContentLoaded', hideDuplicateElements);
     loadProfileData();
 
-    // URL'ye göre API query oluştur ve veri çek
     var apiQuery = buildApiQuery();
-    fetch('/api/3/action/package_search?' + apiQuery, {
-      credentials: 'include'
-    })
-      .then(function(r){return r.json()})
-      .then(function(data){
-        if(!data.result || !data.result.results) return;
-        var results = data.result.results;
-        var orgSet = new Set();
-        var fmtSet = new Set();
+    fetch('/api/3/action/package_search?' + apiQuery, { credentials: 'include' })
+      .then(r => r.json())
+      .then(async data => { // async eklendi
+        if (!data.result || !data.result.results) return;
         
-        allDatasets = results.map(function(pkg) {
-          var orgTitle = (pkg.organization && pkg.organization.title) ? pkg.organization.title : "";
-          orgSet.add(orgTitle);
+        var orgSet = new Set(), fmtSet = new Set(), groupSet = new Set(), tagSet = new Set();
+        
+        allDatasets = data.result.results.map(function(pkg) {
+          var orgTitle = pkg.organization?.title || "";
+          if (orgTitle) orgSet.add(orgTitle);
+          
           var fmts = {};
-          if(pkg.resources && pkg.resources.length){
-            pkg.resources.forEach(function(r){
-              if(r.format) fmtSet.add(r.format.toLowerCase());
-              if(r.format) fmts[r.format.toLowerCase()] = true;
-            });
-          }
-          
-          // Creator username cache'den al
-          var creatorUsername = userCache[pkg.creator_user_id] || 'Yükleniyor...';
-          
-          // Groups bilgilerini işle
-          var groupNames = [];
-          var groupTitles = [];
-          if (pkg.groups && pkg.groups.length > 0) {
-            pkg.groups.forEach(function(group) {
-              groupNames.push(group.name);
-              groupTitles.push(group.title || group.display_name || group.name);
-            });
-          }
-          
-          return Object.assign({}, pkg, {
-            orgTitle: orgTitle, 
-            fmts: fmts,
-            creatorUsername: creatorUsername,
-            groupNames: groupNames,
-            groupTitles: groupTitles
+          pkg.resources?.forEach(r => {
+            if (r.format) { fmtSet.add(r.format.toLowerCase()); fmts[r.format.toLowerCase()] = true; }
           });
+          
+          var groupTitles = pkg.groups?.map(g => g.display_name || g.title || g.name) || [];
+          groupTitles.forEach(g => groupSet.add(g));
+          
+          var tagNames = pkg.tags?.map(t => t.display_name || t.name) || [];
+          tagNames.forEach(t => tagSet.add(t));
+          
+          return {
+            ...pkg,
+            orgTitle: orgTitle,
+            fmts: fmts,
+            creatorUsername: userCache[pkg.creator_user_id] || 'Yükleniyor...',
+            groupTitles: groupTitles,
+            tagNames: tagNames
+          };
         });
         
-        allOrgs = Array.from(orgSet).filter(Boolean).sort();
-        allFormats = Array.from(fmtSet).filter(Boolean).sort();
+        // Eğer user sayfasındaysak, veriyi ana dizi üzerinden filtrele
+        await filterByUserPath();
 
+        // Filtre listelerini DOLDUR (artık veriden türetiliyor)
+        allOrgs = [...orgSet].filter(Boolean).sort();
+        allFormats = [...fmtSet].filter(Boolean).sort();
+        allGroups = [...groupSet].filter(Boolean).sort();
+        allTags = [...tagSet].filter(Boolean).sort();
+
+        // Filtreleri RENDER ET
         renderMultiSelect("orgSelect", allOrgs, selectedOrgs, renderTable);
         renderMultiSelect("fmtSelect", allFormats, selectedFormats, renderTable);
+        renderMultiSelect("groupSelect", allGroups, selectedGroups, renderTable);
+        renderMultiSelect("tagSelect", allTags, selectedTags, renderTable);
 
+        // Olay dinleyicilerini ata
         document.getElementById("searchTitle").oninput = renderTable;
         document.getElementById("sortDate").onchange = renderTable;
         document.getElementById("itemsPerPage").onchange = function() {
@@ -1261,43 +805,59 @@ display:none !important;
           renderTable();
         };
 
-        // Grup facets'ları yükle
-        loadGroupFacets();
+        // Eğer grup sayfasındaysak, grubu seçili yap
+        const pathInfo = getPathInfo();
+        if (pathInfo.type === 'group' && pathInfo.name) {
+            const groupInfo = allDatasets[0]?.groups.find(g => g.name === pathInfo.name);
+            if (groupInfo) {
+                const groupTitle = groupInfo.display_name || groupInfo.title || groupInfo.name;
+                if(allGroups.includes(groupTitle)) selectedGroups.add(groupTitle);
+            }
+        }
+            applyGlobalSearchAndFilter(); 
 
-        // User path kontrolü
-        filterByUserPath().then(function() {
-          // İlk render
-          renderTable();
-          hideDuplicateElements(); // Veri yüklendikten sonra da kontrol et
-          
-          // User bilgilerini async olarak yükle
-          loadUsernames().then(function() {
-            // User bilgileri yüklenince dataset'leri güncelle
-            allDatasets = allDatasets.map(function(pkg) {
-              return Object.assign({}, pkg, {
-                creatorUsername: userCache[pkg.creator_user_id] || 'Bilinmiyor'
-              });
-            });
-            renderTable(); // Tabloyu user bilgileriyle güncelle
-          });
+        // İlk render
+        renderTable();
+        hideDuplicateElements();
+        
+        // User bilgilerini asenkron olarak yükle ve tabloyu son haliyle güncelle
+        await loadUsernames();
+        allDatasets.forEach(pkg => {
+          pkg.creatorUsername = userCache[pkg.creator_user_id] || 'Bilinmiyor'
         });
+        renderTable();
       })
       .catch(function(error) {
         console.error('Veri yüklenirken hata:', error);
-        document.getElementById('dataset-table-body').innerHTML = 
-          `<tr><td colspan="7" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
       });
-
-    // Sayfa değişikliklerini dinle (dinamik içerik için)
+      
+    // Orijinal MutationObserver geri eklendi
     var observer = new MutationObserver(function(mutations) {
       hideDuplicateElements();
     });
-    
-    observer.observe(document.body, {
-      childList: true,
-      subtree: true
-    });
-  </script>
-  
+    observer.observe(document.body, { childList: true, subtree: true });
+
+
+
+
+    // YENİ EKLENEN FONKSİYON
+function applyGlobalSearchAndFilter() {
+  // localStorage'dan arama terimini al
+  const searchTerm = localStorage.getItem('globalSearchTerm');
+
+  // Eğer bir terim varsa
+  if (searchTerm) {
+    const titleSearchInput = document.getElementById('searchTitle');
+    if (titleSearchInput) {
+      // 'Başlıkta Ara' input'una değeri yaz
+      titleSearchInput.value = searchTerm;
+      console.log(`'${searchTerm}' local storage'dan alınıp arama kutusuna yazıldı.`);
+    }
+    // İşlem bittiği için localStorage'dan veriyi sil
+    localStorage.removeItem('globalSearchTerm');
+  }
+}
+</script>
 </body>
 </html>

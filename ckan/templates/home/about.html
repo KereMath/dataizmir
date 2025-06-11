@@ -2,406 +2,321 @@
 
 {% block subtitle %}{{ _('About') }}{% endblock %}
 
-{% block header %}
-    {% include "header.html" %}
-    <style>
-      body { 
-        background: #f4f6fb !important; 
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
-      }
-      
-      /* Hero Section */
-      .about-hero {
-        width: 100%; 
-        min-height: 420px;
-        background: linear-gradient(110deg, #6045ea 0%, #6ed0fa 100%);
-        color: #fff; 
-        display: flex; 
-        align-items: center; 
-        justify-content: center; 
-        flex-direction: column; 
-        text-align: center; 
-        position: relative; 
+{% block primary %}
+{# 
+    Bu blok, sayfanın tüm özel stil ve içeriğini barındırır.
+#}
+<style>
+    :root {
+        --primary-color: #4A00E0;
+        --secondary-color: #8E2DE2;
+        --text-dark: #1a202c;
+        --text-light: #4a5568;
+        --bg-light: #f7fafc;
+        --border-light: #e2e8f0;
+    }
+
+    body {
+        background-color: var(--bg-light) !important;
+        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+    }
+    
+    .about-container * {
+        box-sizing: border-box;
+    }
+
+    /* --- Hero Section --- */
+    .about-hero {
+        padding: 80px 30px;
+        text-align: center;
+        position: relative;
         overflow: hidden;
-        background-attachment: fixed;
-      }
-      
-      .about-hero::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
-        opacity: 0.3;
-        animation: float 20s ease-in-out infinite;
-      }
-      
-      @keyframes float {
-        0%, 100% { transform: translateY(0px) rotate(0deg); }
-        50% { transform: translateY(-10px) rotate(1deg); }
-      }
-      
-      .about-hero > * {
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
+    }
+    .about-hero .hero-content {
         position: relative;
         z-index: 2;
-      }
-      
-      .about-hero h1 {
-        font-size: 3.2rem; 
-        font-weight: 800; 
-        letter-spacing: -0.5px; 
-        margin-bottom: 20px; 
-        margin-top: 40px;
-        background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        text-shadow: 0 2px 20px rgba(0,0,0,0.1);
-        animation: fadeInUp 0.8s ease-out;
-      }
-      
-      @keyframes fadeInUp {
-        from {
-          opacity: 0;
-          transform: translateY(30px);
-        }
-        to {
-          opacity: 1;
-          transform: translateY(0);
-        }
-      }
-      
-      .about-hero p {
-        font-size: 1.35rem; 
-        max-width: 750px; 
-        margin: 0 auto 30px auto; 
-        opacity: 0.95;
+    }
+    .about-hero h1 {
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin-top: 0;
+        margin-bottom: 1rem;
+        letter-spacing: -1.5px;
+        text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .about-hero p.hero-subtitle {
+        font-size: 1.5rem;
         font-weight: 400;
+        max-width: 800px;
+        margin: 0 auto;
+        opacity: 0.9;
         line-height: 1.6;
-        animation: fadeInUp 0.8s ease-out 0.2s both;
-      }
-      
-      /* Stats Section */
-      .about-quickstats {
-        display: flex; 
-        gap: 24px; 
-        justify-content: center; 
-        margin-top: 20px; 
-        flex-wrap: wrap;
-        animation: fadeInUp 0.8s ease-out 0.4s both;
-      }
-      
-      .about-statbox {
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        color: #fff;
-        min-width: 140px;
-        padding: 28px 20px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-        position: relative;
-        overflow: hidden;
-      }
-      
-      .about-statbox::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-        transition: left 0.5s;
-      }
-      
-      .about-statbox:hover::before {
-        left: 100%;
-      }
-      
-      .about-statbox:hover {
-        transform: translateY(-8px) scale(1.05);
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
-        background: rgba(255, 255, 255, 0.2);
-      }
-      
-      .about-statbox strong { 
-        font-size: 2.8rem; 
-        font-weight: 900; 
-        margin-bottom: 8px;
-        background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-      
-      .about-statbox .stat-icon {
-        font-size: 2.2rem;
-        margin-bottom: 12px;
-        animation: bounce 2s infinite;
-      }
-      
-      @keyframes bounce {
-        0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
-        40% { transform: translateY(-10px); }
-        60% { transform: translateY(-5px); }
-      }
-      
-      .about-hero-matrix { 
-        font-size: 1.15rem; 
-        opacity: 0.9; 
-        margin-top: 25px;
-        max-width: 600px;
-        animation: fadeInUp 0.8s ease-out 0.6s both;
-      }
-      
-      /* Main Content */
-      .about-rowflex {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-        margin-top: 60px;
-        align-items: start;
-      }
-      
-      .about-col {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 24px;
-        box-shadow: 0 10px 40px rgba(52, 62, 120, 0.08);
-        padding: 40px 35px;
-        font-size: 1.15rem;
-        color: #2c3e50;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        line-height: 1.7;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        position: relative;
-        overflow: hidden;
-      }
-      
-      .about-col::before {
-        content: '';
+    }
+
+    /* Animated background shapes */
+    .hero-shapes {
         position: absolute;
         top: 0;
         left: 0;
-        right: 0;
-        height: 4px;
-        background: linear-gradient(90deg, #6045ea, #6ed0fa);
-        transform: scaleX(0);
-        transform-origin: left;
-        transition: transform 0.3s ease;
-      }
-      
-      .about-col:hover::before {
-        transform: scaleX(1);
-      }
-      
-      .about-col:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 20px 60px rgba(52, 62, 120, 0.12);
-        background: rgba(255, 255, 255, 0.95);
-      }
-      
-      .about-col.video-col {
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        z-index: 1;
+    }
+    .hero-shapes li {
+        position: absolute;
+        display: block;
+        list-style: none;
+        width: 20px;
+        height: 20px;
+        background: rgba(255, 255, 255, 0.15);
+        animation: animate-shapes 25s linear infinite;
+        bottom: -150px;
+    }
+    .hero-shapes li:nth-child(1){ left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
+    .hero-shapes li:nth-child(2){ left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+    .hero-shapes li:nth-child(3){ left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
+    .hero-shapes li:nth-child(4){ left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
+    .hero-shapes li:nth-child(5){ left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
+    .hero-shapes li:nth-child(6){ left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
+    .hero-shapes li:nth-child(7){ left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
+    .hero-shapes li:nth-child(8){ left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
+    .hero-shapes li:nth-child(9){ left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+    .hero-shapes li:nth-child(10){ left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+    @keyframes animate-shapes {
+        0%{ transform: translateY(0) rotate(0deg); opacity: 1; border-radius: 0; }
+        100%{ transform: translateY(-1000px) rotate(720deg); opacity: 0; border-radius: 50%; }
+    }
+
+
+    /* --- Stats Section --- */
+    .stats-section {
+        padding: 80px 30px;
+        background-color: #ffffff;
+    }
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 30px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid var(--border-light);
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+    .stat-card .stat-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px auto;
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 20px;
-      }
-      
-      .video-container {
-        position: relative;
-        width: 100%;
-        max-width: 480px;
-        border-radius: 20px;
-        overflow: hidden;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-      
-      .video-container:hover {
-        transform: scale(1.02);
-        box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
-      }
-      
-      .video-container iframe {
-        width: 100%;
-        height: 280px;
-        border: none;
-        display: block;
-      }
-      
-      /* Article Container */
-      .about-section {
-        max-width: 1100px;
-        margin: 60px auto 0 auto;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        border-radius: 32px;
-        box-shadow: 0 20px 60px rgba(52, 62, 120, 0.08);
-        padding: 50px 40px 60px 40px;
-        position: relative;
-        overflow: hidden;
-      }
-      
-      .about-section::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at 20% 80%, rgba(96, 69, 234, 0.03) 0%, transparent 50%),
-                    radial-gradient(circle at 80% 20%, rgba(110, 208, 250, 0.03) 0%, transparent 50%);
-        pointer-events: none;
-      }
-      
-      .module-content {
-        position: relative;
-        z-index: 2;
-      }
-      
-      /* Responsive Design */
-      @media (max-width: 1024px) {
-        .about-hero h1 { font-size: 2.6rem; }
-        .about-quickstats { gap: 20px; }
-        .about-statbox { padding: 24px 18px; min-width: 120px; }
-        .about-rowflex { gap: 30px; }
-        .about-section { padding: 40px 30px 50px 30px; }
-      }
-      
-      @media (max-width: 768px) {
-        .about-hero {
-          min-height: 360px;
-          padding: 20px;
-        }
-        .about-hero h1 { 
-          font-size: 2.2rem;
-          margin-top: 20px;
-        }
-        .about-hero p { font-size: 1.1rem; }
-        .about-quickstats { 
-          gap: 15px;
-          margin-top: 15px;
-        }
-        .about-statbox { 
-          padding: 20px 15px; 
-          min-width: 100px; 
-          font-size: 0.95rem;
-        }
-        .about-statbox strong { font-size: 2.2rem; }
-        .about-rowflex { 
-          grid-template-columns: 1fr;
-          gap: 25px;
-          margin-top: 40px;
-        }
-        .about-col { 
-          padding: 30px 25px;
-          font-size: 1.05rem;
-        }
-        .video-container iframe { height: 220px; }
-        .about-section {
-          margin-top: 40px;
-          padding: 30px 20px 40px 20px;
-          border-radius: 24px;
-        }
-      }
-      
-      @media (max-width: 480px) {
-        .about-hero h1 { font-size: 1.9rem; }
-        .about-hero p { font-size: 1rem; }
-        .about-quickstats { flex-direction: column; align-items: center; }
-        .about-statbox { min-width: 200px; }
-        .about-col { padding: 25px 20px; }
-        .video-container iframe { height: 180px; }
-      }
-      
-      /* Scroll Animations */
-      @media (prefers-reduced-motion: no-preference) {
-        .about-col {
-          opacity: 0;
-          transform: translateY(30px);
-          animation: slideInUp 0.6s ease-out forwards;
-        }
-        
-        .about-col:nth-child(2) {
-          animation-delay: 0.2s;
-        }
-        
-        @keyframes slideInUp {
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      }
-    </style>
-    <div class="about-hero">
-      <h1>Data İzmir Platformu</h1>
-      <p>İzmir için kanıta dayalı politika ve araştırma süreçlerini güçlendiren, herkesin kolayca keşfedebileceği kapsamlı bir veri platformu.</p>
-      <div class="about-quickstats">
-        <div class="about-statbox">
-          <div class="stat-icon">📊</div>
-          <strong>363</strong>
-          <div>Veri Seti</div>
-        </div>
-        <div class="about-statbox">
-          <div class="stat-icon">🗂️</div>
-          <strong>20+</strong>
-          <div>Veri Paydaşı</div>
-        </div>
-        <div class="about-statbox">
-          <div class="stat-icon">🔎</div>
-          <div>Sürekli Genişleyen<br>Kategoriler</div>
-        </div>
-      </div>
-      <div class="about-hero-matrix">
-        <span>Veri kategorilerimizi keşfet, İzmir'e dair en güncel ve güvenilir verilere tek noktadan ulaş!</span>
-      </div>
-    </div>
-{% endblock %}
-
-{% block breadcrumb_content %}
-  <li class="active">{% link_for _('About'), 'home.about' %}</li>
-{% endblock %}
-
-{% block primary %}
-  <style>
-    .wrapper {
-        border: none !important;
-        border-radius: 0 !important;
-        -webkit-box-shadow: none !important;
-        box-shadow: none !important;
-        background: none !important;
-        background-color: transparent !important;
-        position: relative;
-        min-height: 300px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+        color: white;
     }
-  </style>
-  <article class="about-section module" role="main">
-    <div class="module-content">
-      <div class="about-rowflex">
-        <div class="about-col">
-          İzmir Kalkınma Ajansı, İzmir'in sürdürülebilir kalkınması için bütüncül bir yaklaşım ile yerel potansiyeli harekete geçirecek katılımcı araçlar geliştirmekte ve uygulamaktadır.<br><br>
-          Bu kapsamda Data İzmir Platformu, yerel, bölgesel, ulusal ve uluslararası ölçekte İzmir'i konu edinen her türlü politika, tasarım, karar alma ve araştırma süreçlerinde İzmir için kanıta dayalı bir çalışma pratiğinin hayata geçirilmesine yönelik ihtiyaç duyulan veri setlerini içeren bir portaldır.
+    .stat-card .stat-icon svg {
+        width: 32px;
+        height: 32px;
+    }
+    .stat-card .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        line-height: 1;
+        margin-bottom: 10px;
+        min-height: 58px; /* Animasyon sırasında zıplamayı önler */
+    }
+    .stat-card .stat-label {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: var(--text-light);
+    }
+
+    /* --- Main Content Section --- */
+    .main-content-section {
+        padding: 0 30px 80px 30px;
+    }
+    .main-content-wrapper {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 40px;
+        max-width: 1200px;
+        margin: 0 auto;
+        align-items: center;
+    }
+    .content-col, .video-col {
+        background: #ffffff;
+        padding: 40px;
+        border-radius: 16px;
+        font-size: 1.5rem;
+        line-height: 1.8;
+        color: var(--text-light);
+        border: 1px solid var(--border-light);
+    }
+    .video-col {
+        padding: 0;
+        overflow: hidden;
+    }
+    .video-col iframe {
+        width: 100%;
+        height: 350px;
+        display: block;
+        border: none;
+    }
+    
+    @media (max-width: 992px) {
+        .about-hero h1 { font-size: 2.8rem; }
+        .about-hero p.hero-subtitle { font-size: 1.25rem; }
+        .stats-container { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    }
+
+    @media (max-width: 768px) {
+        .about-hero h1 { font-size: 2.2rem; }
+        .about-hero p.hero-subtitle { font-size: 1.5rem; }
+        .stats-container { grid-template-columns: repeat(2, 1fr); }
+        .stat-card .stat-number { font-size: 2.5rem; }
+    }
+</style>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+
+<div class="about-container">
+    <section class="about-hero">
+        <div class="hero-content">
+            <h1>Data İzmir Platformu</h1>
+            <p class="hero-subtitle">İzmir için kanıta dayalı politika ve araştırma süreçlerini güçlendiren, herkesin kolayca keşfedebileceği kapsamlı bir veri platformu.</p>
         </div>
-        <div class="about-col video-col">
-          <div class="video-container">
-            <iframe width="448" height="280" src="https://www.youtube.com/embed/MXWNIhQ1AnA" title="Data İzmir Kullanım Videosu" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-          </div>
+        <ul class="hero-shapes"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>
+    </section>
+
+    <section class="stats-section">
+        <div class="stats-container">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" /></svg>
+                </div>
+                <div id="stat-datasets" class="stat-number">...</div>
+                <div class="stat-label">Veri Seti</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21" /></svg>
+                </div>
+                <div id="stat-orgs" class="stat-number">...</div>
+                <div class="stat-label">Veri Paydaşı</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
+                </div>
+                <div id="stat-groups" class="stat-number">...</div>
+                <div class="stat-label">Kategori</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                </div>
+                <div id="stat-tags" class="stat-number">...</div>
+                <div class="stat-label">Etiket</div>
+            </div>
+             <div class="stat-card">
+                <div class="stat-icon">
+                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.28a4.5 4.5 0 01.004-6.364 4.5 4.5 0 016.364-.004m-6.364 6.364l10.94-10.94M3.75 12.565c0-1.01.378-2.017 1.07-2.815a4.505 4.505 0 015.29-1.074m6.364 6.364a4.5 4.5 0 01-6.364-.004m-6.364-6.364a4.5 4.5 0 01.004-6.364A4.5 4.5 0 019.75 3.75m-6 8.815c0-1.01.378-2.017 1.07-2.815a4.505 4.505 0 015.29-1.074m0 0a4.5 4.5 0 016.364-.004" /></svg>
+                </div>
+                <div id="stat-licenses" class="stat-number">...</div>
+                <div class="stat-label">Lisans Tipi</div>
+            </div>
         </div>
-      </div>
-    </div>
-  </article>
+    </section>
+    
+    <section class="main-content-section">
+        <div class="main-content-wrapper">
+             <div class="content-col">
+                İzmir Kalkınma Ajansı, İzmir'in sürdürülebilir kalkınması için bütüncül bir yaklaşım ile yerel potansiyeli harekete geçirecek katılımcı araçlar geliştirmekte ve uygulamaktadır.<br><br>
+                Bu kapsamda Data İzmir Platformu, yerel, bölgesel, ulusal ve uluslararası ölçekte İzmir'i konu edinen her türlü politika, tasarım, karar alma ve araştırma süreçlerinde İzmir için kanıta dayalı bir çalışma pratiğinin hayata geçirilmesine yönelik ihtiyaç duyulan veri setlerini içeren bir portaldır.
+             </div>
+             <div class="video-col">
+                 <iframe width="448" height="280" src="https://www.youtube.com/embed/MXWNIhQ1AnA" title="Data İzmir Kullanım Videosu" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+             </div>
+        </div>
+    </section>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // API'den veri çekmek için yardımcı fonksiyon
+    const fetchAPI = (action, params = '') => {
+        const url = `/api/3/action/${action}${params ? '?' + params : ''}`;
+        return fetch(url, { 
+            method: 'POST',
+            credentials: 'include' 
+        })
+        .then(response => {
+            if (!response.ok) throw new Error(`Network response was not ok for ${action}`);
+            return response.json();
+        })
+        .then(data => {
+            if (!data.success) throw new Error(`API error for ${action}: ${data.error?.message || 'Unknown error'}`);
+            return data.result;
+        })
+        .catch(error => {
+            console.error(`Error fetching ${action}:`, error);
+            return null; // Hata durumunda null dön
+        });
+    };
+
+    // Sayı sayma animasyonu
+    const animateCount = (element, finalCount) => {
+        if (finalCount === null || typeof finalCount === 'undefined') {
+            element.textContent = 'N/A';
+            return;
+        }
+        let start = 0;
+        const duration = 1500;
+        const stepTime = Math.max(1, Math.floor(duration / finalCount));
+        
+        const timer = setInterval(() => {
+            start++;
+            element.textContent = start;
+            if (start >= finalCount) {
+                element.textContent = finalCount; // Tam sayıda bitir
+                clearInterval(timer);
+            }
+        }, stepTime);
+    };
+
+    // Tüm API isteklerini aynı anda başlat
+    Promise.all([
+        fetchAPI('package_search', 'rows=0&include_private=true'),
+        fetchAPI('organization_list'),
+        fetchAPI('group_list'),
+        fetchAPI('tag_list'),
+        fetchAPI('license_list'),
+    ])
+    .then(([datasets, orgs, groups, tags, licenses]) => {
+        // Sonuçları ilgili HTML elementlerine yazdır
+        animateCount(document.getElementById('stat-datasets'), datasets ? datasets.count : null);
+        animateCount(document.getElementById('stat-orgs'), orgs ? orgs.length : null);
+        animateCount(document.getElementById('stat-groups'), groups ? groups.length : null);
+        animateCount(document.getElementById('stat-tags'), tags ? tags.length : null);
+        animateCount(document.getElementById('stat-licenses'), licenses ? licenses.length : null);
+    });
+});
+</script>
 {% endblock %}

@@ -1,40 +1,405 @@
 {% extends "organization/base_form_page.html" %}
 
-{% block subtitle %}{{ _('Create an Organization') }}{% endblock %}
-
-{% block breadcrumb_link %}{{ h.nav_link(_('Create an Organization'), named_route=group_type+'.new') }}{% endblock %}
-
-{% block page_heading %}
-<div class="modern-header">
-  <i class="fa fa-plus-circle"></i>
-  <h1>{{ _('Create an Organization') }}</h1>
-</div>
-{% endblock %}
-
+{# --- Eski blokları temizleyerek tüm kontrolü ele alıyoruz --- #}
+{% block subtitle %}{% endblock %}
+{% block breadcrumb_link %}{% endblock %}
+{% block page_heading %}{% endblock %}
 {% block page_header %}{% endblock %}
+{% block form %}{% endblock %}
+{% block secondary_content %}{% endblock %}
 
-{% block secondary_content %}
-  {% snippet "organization/snippets/helper.html" %}
-{% endblock %}
-
+{# --- Tüm sayfa içeriğini bu ana blok içinde oluşturuyoruz --- #}
+{% block primary_content_inner %}
 <style>
-.modern-header {
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
-  color: white;
-  padding: 2rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.modern-header i {
-  font-size: 2.5rem;
-}
-
-.modern-header h1 {
-  margin: 0;
-  font-size: 1.8rem;
-}
+  /* === Stil kodları new_group sayfasıyla birebir aynı === */
+  .modern-form-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  .form-header {
+    text-align: center;
+    margin-bottom: 50px;
+  }
+  .form-header h1 {
+    font-size: 36px;
+    color: #1a1a1a;
+    margin-bottom: 10px;
+    font-weight: 700;
+  }
+  .form-header p {
+    font-size: 18px;
+    color: #666;
+  }
+  .modern-form {
+    background: #fff;
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.08);
+    border: 1px solid #f0f0f0;
+  }
+  .form-group {
+    margin-bottom: 30px;
+  }
+  .form-label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+    font-size: 15px;
+  }
+  .form-label span {
+    color: #e74c3c;
+  }
+  .form-input {
+    width: 100%;
+    padding: 14px 18px;
+    border: 2px solid #e1e8ed;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: all 0.3s ease;
+    background: #fafbfc;
+  }
+  .form-input:focus {
+    outline: none;
+    border-color: #8B3FFD;
+    background: #fff;
+    box-shadow: 0 0 0 4px rgba(139, 63, 253, 0.1);
+  }
+  .form-textarea {
+    min-height: 120px;
+    resize: vertical;
+  }
+  .url-preview {
+    display: flex;
+    align-items: center;
+    background: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 6px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666;
+  }
+  .url-preview strong {
+    color: #8B3FFD;
+    margin: 0 4px;
+  }
+  .image-upload-container {
+    border: 2px dashed #e1e8ed;
+    border-radius: 12px;
+    padding: 30px;
+    text-align: center;
+    background: #fafbfc;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    position: relative;
+  }
+  .image-upload-container:hover {
+    border-color: #8B3FFD;
+    background: #f8f3ff;
+  }
+  .image-upload-container.has-image {
+    border-style: solid;
+    background: #fff;
+  }
+  .upload-icon {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 15px;
+    background: #8B3FFD;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+  }
+  .upload-text {
+    color: #666;
+    margin-bottom: 10px;
+  }
+  .upload-hint {
+    font-size: 13px;
+    color: #999;
+  }
+  .image-preview {
+    max-width: 200px;
+    max-height: 200px;
+    margin: 0 auto;
+    display: none;
+  }
+  .image-preview img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  .form-actions {
+    display: flex;
+    gap: 15px;
+    margin-top: 40px;
+    padding-top: 30px;
+    border-top: 1px solid #f0f0f0;
+  }
+  .btn {
+    padding: 14px 32px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary {
+    background: #8B3FFD;
+    color: white;
+    flex: 1;
+    justify-content: center;
+  }
+  .btn-primary:hover {
+    background: #6924bd;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(139, 63, 253, 0.3);
+  }
+  .btn-secondary {
+    background: #f0f2f5;
+    color: #666;
+  }
+  .btn-secondary:hover {
+    background: #e4e6e9;
+  }
+  .help-text {
+    font-size: 13px;
+    color: #999;
+    margin-top: 6px;
+  }
+  .char-counter {
+    text-align: right;
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .modern-form {
+    animation: fadeIn 0.6s ease;
+  }
+  .form-group {
+    animation: fadeIn 0.6s ease;
+    animation-fill-mode: both;
+  }
+  .form-group:nth-child(1) { animation-delay: 0.1s; }
+  .form-group:nth-child(2) { animation-delay: 0.2s; }
+  .form-group:nth-child(3) { animation-delay: 0.3s; }
+  .form-group:nth-child(4) { animation-delay: 0.4s; }
+  @media (max-width: 768px) {
+    .modern-form-container {
+      padding: 20px 10px;
+    }
+    .modern-form {
+      padding: 25px 20px;
+    }
+    .form-header h1 {
+      font-size: 28px;
+    }
+    .form-actions {
+      flex-direction: column;
+    }
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
 </style>
+
+<div class="modern-form-container">
+  <div class="form-header">
+    {# --- Başlık ve açıklama "Kurum" için güncellendi --- #}
+    <h1>🏢 Yeni Veri Paydaşı Oluştur</h1>
+    <p>Veri setlerinizi yayınlamak ve yönetmek için yeni bir veri paydaşı oluşturun</p>
+  </div>
+  
+  {# --- CKAN'ın standart form ID'si 'organization-edit-form' kullanılır --- #}
+  {# --- Ancak JS uyumluluğu için 'organization-edit' olarak değiştirdik --- #}
+  <form id="organization-edit" class="modern-form" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+      <label class="form-label" for="field-title">
+        Kurum Adı <span>*</span>
+      </label>
+      <input 
+        type="text" 
+        id="field-title" 
+        name="title" 
+        class="form-input"
+        placeholder="Örn: İzmir Büyükşehir Belediyesi"
+        required
+        data-module="slug-preview-target"
+      />
+      <p class="help-text">Kurum için tam ve resmi bir isim seçin</p>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label" for="field-name">
+        URL Adresi <span>*</span>
+      </label>
+      <input 
+        type="text" 
+        id="field-name" 
+        name="name" 
+        class="form-input"
+        placeholder="izmir-buyuksehir-belediyesi"
+        required
+        pattern="[a-z0-9-]+"
+        data-module="slug-preview-slug"
+      />
+      <div class="url-preview">
+        <span>Kurum adresi:</span>
+        {# --- URL hedefi 'organization.read' olarak güncellendi --- #}
+        <strong>{{ h.url_for('organization.read', id='', qualified=true) }}<span id="url-slug">kurum-adi</span></strong>
+      </div>
+      <p class="help-text">Sadece küçük harf, rakam ve tire (-) kullanın</p>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label" for="field-description">
+        Açıklama
+      </label>
+      <textarea 
+        id="field-description" 
+        name="description" 
+        class="form-input form-textarea"
+        placeholder="Bu kurum hakkında detaylı bilgi verin..."
+        maxlength="500"
+      ></textarea>
+      <div class="char-counter">
+        <span id="char-count">0</span> / 500 karakter
+      </div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Kurum Logosu</label>
+      <div class="image-upload-container" id="image-container">
+        <input 
+          type="file" 
+          id="field-image-upload" 
+          name="image_upload" 
+          accept="image/*"
+          style="display: none;"
+        />
+        <div class="upload-content">
+          <div class="upload-icon">📷</div>
+          <p class="upload-text">Logo yüklemek için tıklayın</p>
+          <p class="upload-hint">PNG, JPG veya GIF (Maks. 2MB)</p>
+        </div>
+        <div class="image-preview" id="image-preview">
+          <img src="" alt="Önizleme" />
+        </div>
+      </div>
+      <input type="hidden" name="image_url" id="field-image-url" />
+    </div>
+    
+    <div class="form-actions">
+      {# --- İptal linki 'organization.index' olarak güncellendi --- #}
+      <a href="{{ h.url_for('organization.index') }}" class="btn btn-secondary">
+        ← İptal
+      </a>
+      <button type="submit" name="save" class="btn btn-primary">
+        <span>✨</span> Kurum Oluştur
+      </button>
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // === JavaScript kodları new_group sayfasıyla neredeyse aynı ===
+  // Sadece ufak metin ve ID güncellemeleri yapıldı.
+
+  // URL slug oluşturma
+  const titleInput = document.getElementById('field-title');
+  const nameInput = document.getElementById('field-name');
+  const urlSlug = document.getElementById('url-slug');
+  
+  function createSlug(text) {
+    const trMap = {
+      'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+      'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u'
+    };
+    
+    return text
+      .toLowerCase()
+      .replace(/[çğıöşüÇĞİÖŞÜ]/g, letter => trMap[letter])
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .substring(0, 50);
+  }
+  
+  titleInput.addEventListener('input', function() {
+    if (!nameInput.dataset.manual) {
+      const slug = createSlug(this.value);
+      nameInput.value = slug;
+      // Varsayılan metin "kurum-adi" olarak güncellendi
+      urlSlug.textContent = slug || 'kurum-adi';
+    }
+  });
+  
+  nameInput.addEventListener('input', function() {
+    nameInput.dataset.manual = true;
+    // Varsayılan metin "kurum-adi" olarak güncellendi
+    urlSlug.textContent = this.value || 'kurum-adi';
+  });
+  
+  // Karakter sayacı
+  const descInput = document.getElementById('field-description');
+  const charCount = document.getElementById('char-count');
+  
+  if (descInput && charCount) {
+    descInput.addEventListener('input', function() {
+      charCount.textContent = this.value.length;
+    });
+  }
+  
+  // Resim yükleme
+  const imageUpload = document.getElementById('field-image-upload');
+  const imageContainer = document.getElementById('image-container');
+  const imagePreview = document.getElementById('image-preview');
+  const uploadContent = imageContainer.querySelector('.upload-content');
+  
+  imageContainer.addEventListener('click', () => imageUpload.click());
+  
+  imageUpload.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        imagePreview.querySelector('img').src = e.target.result;
+        imagePreview.style.display = 'block';
+        uploadContent.style.display = 'none';
+        imageContainer.classList.add('has-image');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  
+  // Form validation
+  // Form ID'si 'organization-edit' olarak güncellendi
+  const form = document.getElementById('organization-edit');
+  form.addEventListener('submit', function(e) {
+    const title = titleInput.value.trim();
+    const name = nameInput.value.trim();
+    
+    if (!title || !name) {
+      e.preventDefault();
+      alert('Lütfen zorunlu alanları doldurun!');
+    }
+  });
+});
+</script>
+{% endblock %}

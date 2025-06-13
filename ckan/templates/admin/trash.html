@@ -1,36 +1,273 @@
 {% extends "admin/base.html" %}
 
 {% block primary_content_inner %}
-<form method="POST" action="{{ h.url_for('admin.trash') }}" id="form-purge-all">
-  <div class="form-actions">
-    <input type="hidden" name="action" value="all">
-    <a class="btn btn-danger purge-all"
-       type="submit"
-       href="{{ h.url_for('admin.trash', name='all') }}"
-       data-module="confirm-action"
-       data-module-with-data=true
-       data-module-content="{{ _('Are you sure you want to purge everything?') }}">
-      {{ _('Purge all') }}
-    </a>
-  </div>
-</form>
+<style>
+  /* Temiz ve Modern Stil */
+  .trash-container {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 2rem;
+  }
 
-{% for ent_type, entities in data.items() %}
-  {% snippet "admin/snippets/data_type.html", ent_type=ent_type, entities=entities, messages=messages %}
-{% endfor %}
+  .trash-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .trash-title {
+    font-size: 2.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+  }
+
+  .trash-subtitle {
+    color: #7f8c8d;
+    font-size: 1.1rem;
+  }
+
+  .purge-all-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 3rem;
+  }
+
+  #form-purge-all {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+
+  .btn-danger.purge-all {
+    background: #e74c3c;
+    border: none;
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .btn-danger.purge-all:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+  }
+
+  .entity-section {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  }
+
+  .entity-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #ecf0f1;
+  }
+
+  .entity-header i {
+    font-size: 1.5rem;
+    color: #3498db;
+  }
+
+  .entity-header h3 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #2c3e50;
+    font-weight: 600;
+  }
+
+  .entity-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .entity-list li {
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 3px solid #3498db;
+    transition: all 0.2s ease;
+  }
+
+  .entity-list li:hover {
+    background: #ecf0f1;
+    border-left-color: #2980b9;
+  }
+
+  .entity-list li a {
+    color: #34495e;
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .entity-list li a:hover {
+    color: #2c3e50;
+  }
+
+  .empty-message {
+    color: #95a5a6;
+    text-align: center;
+    padding: 2rem;
+    font-style: italic;
+  }
+
+  .entity-actions {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #ecf0f1;
+  }
+
+  .entity-actions .btn-danger {
+    background: #e74c3c;
+    border: none;
+    padding: 0.6rem 1.5rem;
+    font-size: 0.95rem;
+    font-weight: 500;
+    border-radius: 6px;
+    color: white;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.2s ease;
+  }
+
+  .entity-actions .btn-danger:hover {
+    background: #c0392b;
+    transform: translateY(-1px);
+    box-shadow: 0 3px 8px rgba(231, 76, 60, 0.3);
+  }
+
+  /* Secondary content stil güncellemeleri */
+  .module {
+    background: white !important;
+    border-radius: 12px !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08) !important;
+    border: none !important;
+  }
+
+  .module-heading {
+    color: #2c3e50 !important;
+    border-bottom: 2px solid #ecf0f1 !important;
+    font-weight: 600 !important;
+  }
+
+  .module-content {
+    color: #7f8c8d !important;
+  }
+
+  .module-content strong {
+    color: #e74c3c;
+  }
+</style>
+
+<div class="trash-container">
+  <div class="trash-header">
+    <h1 class="trash-title">🗑️ Çöp Kutusu</h1>
+    <p class="trash-subtitle">Kalıcı olarak silmek istediğiniz öğeleri yönetin</p>
+  </div>
+
+  <div class="purge-all-container">
+    <form method="POST" action="{{ h.url_for('admin.trash') }}" id="form-purge-all">
+      <div class="form-actions">
+        <input type="hidden" name="action" value="all">
+        <a class="btn btn-danger purge-all"
+           type="submit"
+           href="{{ h.url_for('admin.trash', name='all') }}"
+           data-module="confirm-action"
+           data-module-with-data=true
+           data-module-content="Her şeyi kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!">
+          <i class="fa fa-trash"></i>
+          TÜM HER ŞEYİ TEMİZLE
+        </a>
+      </div>
+    </form>
+  </div>
+
+  <div class="entities-container">
+    {% for ent_type, entities in data.items() %}
+      <div class="entity-section">
+        <div class="entity-header">
+          {% if ent_type == "package" %} 
+            <i class='fa fa-sitemap'></i>
+            <h3>Silinmiş Veri Setleri</h3>
+          {% elif ent_type == 'group' %} 
+            <i class='fa fa-group'></i>
+            <h3>Silinmiş Gruplar</h3>
+          {% else %} 
+            <i class="fa fa-building-o"></i>
+            <h3>Silinmiş Organizasyonlar</h3>
+          {% endif %}
+        </div>
+
+        <ul class="entity-list">
+          {% for entity in entities %}
+            {% set title = entity.title or entity.name %}
+            <li>
+              {{ h.link_to(h.truncate(title, 80), h.url_for(entity.type + '.read', id=entity.name)) }}
+            </li>
+          {% else %}
+            <p class="empty-message">
+              {% if ent_type == 'package' %}
+                Silinmiş veri seti bulunmuyor.
+              {% elif ent_type == 'organization' %}
+                Silinmiş organizasyon bulunmuyor.
+              {% elif ent_type == 'group' %}
+                Silinmiş grup bulunmuyor.
+              {% endif %}
+            </p>
+          {% endfor %}
+        </ul>
+
+        {% if entities.first() %}
+          <div class="entity-actions">
+            <form method="POST" action="{{ h.url_for('admin.trash') }}" id="form-purge-{{ ent_type }}">
+              <input type="hidden" name="action" value="{{ent_type}}">
+              <a href="{{ h.url_for('admin.trash', name=ent_type) }}" 
+                 class="btn btn-danger"
+                 data-module="confirm-action"
+                 data-module-with-data=true
+                 data-module-content="{% if ent_type == 'package' %}Tüm silinmiş veri setlerini kalıcı olarak temizlemek istediğinizden emin misiniz?{% elif ent_type == 'organization' %}Tüm silinmiş organizasyonları kalıcı olarak temizlemek istediğinizden emin misiniz?{% elif ent_type == 'group' %}Tüm silinmiş grupları kalıcı olarak temizlemek istediğinizden emin misiniz?{% endif %}">
+                <i class="fa fa-trash"></i>
+                TEMİZLE
+              </a>
+            </form>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</div>
+
 {% endblock %}
 
 {% block secondary_content %}
 <div class="module module-narrow module-shallow">
   <h2 class="module-heading">
     <i class="fa fa-info-circle"></i>
-    {{ _("Trash") }}
+    Çöp Kutusu Hakkında
   </h2>
   <div class="module-content">
     <p>
-      {% trans %}
-      Purge deleted datasets, organizations or groups forever and irreversibly.
-      {% endtrans %}
+      Silinmiş veri setlerini, organizasyonları veya grupları kalıcı ve geri dönüşümsüz olarak temizleyin.
+    </p>
+    <p style="margin-top: 1rem;">
+      <i class="fa fa-warning"></i> <strong>Dikkat:</strong> Bu işlemler geri alınamaz!
     </p>
   </div>
 </div>

@@ -1,67 +1,217 @@
-{% import 'macros/autoform.html' as autoform %}
-
 {% extends "admin/base.html" %}
 
-{% import 'macros/form.html' as form %}
-
 {% block primary_content_inner %}
+<div class="pro-config-page">
 
-  {{ form.errors(error_summary) }}
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1><i class="fa fa-sliders"></i> Site Yapılandırması</h1>
+      <p>CKAN sitenizin ana ayarlarını ve görünümünü yönetin.</p>
+    </div>
+  </header>
 
   <form method='post' action="" id="admin-config-form" enctype="multipart/form-data">
-    {% block admin_form %}
 
-      {{ form.input('ckan.site_title', id='field-ckan-site-title', label=_('Site Title'), value=data['ckan.site_title'], error=error, classes=['control-medium']) }}
+    <div class="pro-grid">
 
-      {% set field_url = 'ckan.site_logo' %}
-      {% set is_upload = data[field_url] and not data[field_url].startswith('http') %}
-      {% set is_url = data[field_url] and data[field_url].startswith('http') %}
-      {{ form.image_upload(data, errors, is_upload_enabled=h.uploads_enabled(), is_url=is_url, is_upload=is_upload, upload_label = _('Site logo'), url_label=_('Site logo'),  field_url=field_url, field_upload='logo_upload', field_clear='clear_logo_upload' )}}
+      {# ──────────────── SOL SÜTUN - KİMLİK VE ÖZELLEŞTİRME ──────────────── #}
+      <div class="pro-column">
+        
+        <div class="pro-card">
+          <h3 class="pro-heading"><i class="fa fa-paint-brush"></i> Site Kimliği ve Görünüm</h3>
 
-      {{ form.markdown('ckan.site_about', id='field-ckan-site-about', label='Ana Sayfa Kayar Yazı 1', value=data['ckan.site_about'], error=error, placeholder=_('About page text')) }}
+          <div class="pro-field {% if errors['ckan.site_title'] %}is-invalid{% endif %}">
+            <label for="field-ckan-site-title">Site Başlığı</label>
+            <input id="field-ckan-site-title" type="text" name="ckan.site_title" value="{{ data['ckan.site_title'] }}">
+            <p class="pro-helper">Sitenizin ana başlığı, üst bilgi gibi alanlarda görünür.</p>
+            {% if errors['ckan.site_title'] %}<p class="pro-error">{{ errors['ckan.site_title'][0] }}</p>{% endif %}
+          </div>
 
-      {{ form.markdown('ckan.site_intro_text', id='field-ckan-site-intro-text', label='Ana Sayfa Kayar Yazı 2', value=data['ckan.site_intro_text'], error=error, placeholder=_('Text on home page')) }}
+          <div class="pro-field">
+             <label for="image_upload_file">Site Logosu</label>
+             <div class="pro-uploader {% if errors.image_url or errors.image_upload %}is-invalid{% endif %}">
+                <input type="file" name="logo_upload" id="image_upload_file" accept="image/png, image/jpeg, image/gif, image/svg+xml">
+                <figure id="image_preview" style="background-image:url('{{ h.url_for_static_or_external(data['ckan.site_logo']) if data['ckan.site_logo'] else '' }}')">
+                  <div id="image_placeholder" {% if data['ckan.site_logo'] %}class="has-image"{% endif %}>
+                    <i class="fa fa-image"></i>
+                    <span>Yeni logo seçin</span>
+                  </div>
+                </figure>
+                <button type="button" id="remove_image_btn" name="clear_logo_upload" class="pro-btn-remove-img {% if not data['ckan.site_logo'] %}hidden{% endif %}" title="Logoyu Kaldır">&times;</button>
+             </div>
+             <div class="pro-field {% if errors['ckan.site_logo'] %}is-invalid{% endif %}" style="margin-top:1rem; margin-bottom:0;">
+                <label for="field-ckan-site-logo">veya URL ile</label>
+                <input id="field-ckan-site-logo" type="text" name="ckan.site_logo" value="{{ data['ckan.site_logo'] if data['ckan.site_logo'] and data['ckan.site_logo'].startswith('http') else '' }}" placeholder="https://ornek.com/logo.png">
+             </div>
+             {% if errors.logo_upload %}<p class="pro-error">{{ errors.logo_upload[0] }}</p>{% endif %}
+             {% if errors['ckan.site_logo'] %}<p class="pro-error">{{ errors['ckan.site_logo'][0] }}</p>{% endif %}
+          </div>
+        </div>
 
-      {{ form.textarea('ckan.site_custom_css', id='field-ckan-site-custom-css', label=_('Custom CSS'), value=data['ckan.site_custom_css'], error=error, placeholder=_('Customisable css inserted into the page header')) }}
-
-
-      {% endblock %}
-      <div class="form-actions">
-        <a href="{% url_for 'admin.reset_config' %}" class="btn btn-danger pull-left" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to reset the config?') }}">{{ _('Reset') }}</a>
-        <button type="submit" class="btn btn-primary" name="save">{{ _('Update Config') }}</button>
+        <!-- <div class="pro-card">
+          <h3 class="pro-heading"><i class="fa fa-code"></i> Gelişmiş Özelleştirme</h3>
+          <div class="pro-field {% if errors['ckan.site_custom_css'] %}is-invalid{% endif %}">
+            <label for="field-ckan-site-custom-css">Özel CSS</label>
+            <textarea id="field-ckan-site-custom-css" class="code-editor" name="ckan.site_custom_css" rows="15" placeholder=" örn: body { background: #000; }">{{ data['ckan.site_custom_css'] }}</textarea>
+            <p class="pro-helper">Bu CSS kodları her sayfanın başlığına eklenecektir.</p>
+            {% if errors['ckan.site_custom_css'] %}<p class="pro-error">{{ errors['ckan.site_custom_css'][0] }}</p>{% endif %}
+          </div>
+        </div> -->
       </div>
+
+      {# ──────────────── SAĞ SÜTUN - İÇERİK ──────────────── #}
+      <div class="pro-column">
+        <div class="pro-card">
+            <h3 class="pro-heading"><i class="fa fa-file-text-o"></i> Ana Sayfa İçerikleri</h3>
+            
+            <div class="pro-field {% if errors['ckan.site_about'] %}is-invalid{% endif %}">
+                <label for="field-ckan-site-about">Ana Sayfa Tanıtım Metni 1</label>
+                <textarea id="field-ckan-site-about" name="ckan.site_about" rows="6">{{ data['ckan.site_about'] }}</textarea>
+                <p class="pro-helper">Bu metin ana sayfadaki kayan alanda görünecektir.</p>
+                {% if errors['ckan.site_about'] %}<p class="pro-error">{{ errors['ckan.site_about'][0] }}</p>{% endif %}
+            </div>
+
+            <div class="pro-field {% if errors['ckan.site_intro_text'] %}is-invalid{% endif %}">
+                <label for="field-ckan-site-intro-text">Ana Sayfa Tanıtım Metni 2</label>
+                <textarea id="field-ckan-site-intro-text" name="ckan.site_intro_text" rows="6">{{ data['ckan.site_intro_text'] }}</textarea>
+                {% if errors['ckan.site_intro_text'] %}<p class="pro-error">{{ errors['ckan.site_intro_text'][0] }}</p>{% endif %}
+            </div>
+        </div>
+      </div>
+    </div>
+
+    <footer class="pro-actions">
+      <a href="{% url_for 'admin.reset_config' %}" class="pro-btn pro-btn-danger" data-module="confirm-action" data-module-content="{{ _('Tüm ayarları sıfırlamak istediğinizden emin misiniz?') }}"><i class="fa fa-refresh"></i> Varsayılana Sıfırla</a>
+      <button type="submit" class="pro-btn pro-btn-primary" name="save"><i class="fa fa-save"></i> Ayarları Güncelle</button>
+    </footer>
+
   </form>
+</div>
+
+<style>
+  :root {
+    --font-family-sans: 'Poppins', sans-serif; --bg-main: #f8f9fc; --bg-card: #ffffff;
+    --border-color: #e2e8f0; --text-dark: #1e293b; --text-light: #64748b;
+    --accent-color: #4f46e5; --danger-color: #ef4444; --radius: 12px;
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,.05), 0 2px 4px -1px rgba(0,0,0,.04);
+  }
+  .pro-config-page { font-family: var(--font-family-sans) !important; padding: 1rem 0 !important; }
+  .dashboard-header h1 { font-size: 2.25rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; }
+  .dashboard-header p { font-size: 1.1rem; color: var(--text-light); }
+  .dashboard-header { margin-bottom: 2.5rem; }
+  
+  .pro-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 2rem !important; align-items: flex-start; }
+  .pro-column { display: flex !important; flex-direction: column !important; gap: 2rem !important; }
+  .pro-card { background: var(--card-bg) !important; padding: 2rem !important; border-radius: var(--radius) !important; border: 1px solid var(--border-color) !important; box-shadow: var(--shadow-md) !important; }
+  .pro-heading {
+    font-size: 1.25rem !important; font-weight: 600 !important; color: var(--text-dark) !important;
+    margin-bottom: 2rem !important; display: flex !important; align-items: center !important; gap: 0.75rem !important;
+    padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);
+  }
+  .pro-heading i { color: var(--accent-color); }
+  
+  .pro-field { margin-bottom: 1.5rem !important; }
+  .pro-field:last-of-type { margin-bottom: 0 !important; }
+  .pro-field label { display: block !important; font-size: 0.875rem !important; font-weight: 500 !important; color: var(--text-dark) !important; margin-bottom: 0.5rem !important; }
+  .pro-field input, .pro-field textarea {
+    width: 100% !important; border: 1px solid var(--border-color) !important; border-radius: 8px !important;
+    padding: 0.75rem 1rem !important; font-size: 1rem !important; color: var(--text-dark) !important;
+    background: #fff !important; transition: border-color .2s, box-shadow .2s !important;
+  }
+  .pro-field input:focus, .pro-field textarea:focus {
+    outline: none !important; border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+  }
+  .pro-field.is-invalid input, .pro-field.is-invalid textarea { border-color: var(--danger-color) !important; }
+  .pro-helper { font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem; }
+  .pro-error { font-size: 0.8rem; color: var(--danger-color); margin-top: 0.5rem; }
+  .code-editor { font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace !important; font-size: 0.9rem !important; background: #f1f3f7 !important; }
+  
+  .pro-uploader { position: relative; border: 2px dashed var(--border-color); border-radius: var(--radius); transition: all .25s; }
+  .pro-uploader.is-invalid { border-color: var(--danger-color) !important; }
+  .pro-uploader:hover { border-color: var(--accent-color); }
+  .pro-uploader input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .pro-uploader figure { height: 120px; display: flex; align-items: center; justify-content: center; background-size: contain; background-repeat: no-repeat; background-position: center; border-radius: 10px; margin: 0; }
+  #image_placeholder { text-align: center; color: var(--text-light); transition: opacity .25s, background .25s; border-radius: 10px; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;}
+  #image_placeholder i { font-size: 2rem; display: block; margin-bottom: 0.5rem; }
+  #image_placeholder.has-image { opacity: 0; }
+  .pro-uploader:hover #image_placeholder.has-image { opacity: 1; background: rgba(0,0,0,0.5); color: #fff; }
+  .pro-btn-remove-img {
+    position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; background: rgba(0,0,0,0.6); color: #fff; border: none;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    cursor: pointer; transition: all .25s; opacity: 0;
+  }
+  .pro-uploader:hover .pro-btn-remove-img, .pro-btn-remove-img:not(.hidden) { opacity: 1; }
+  .pro-btn-remove-img.hidden { display: none; }
+
+  .pro-actions { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:1rem;}
+  .pro-actions-main { display: flex; gap: 1rem; }
+  .pro-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 8px; text-decoration: none; transition: all .2s; border: 1px solid transparent; color: #fff; cursor: pointer; }
+  .pro-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .pro-btn.pro-btn-primary { background: var(--accent-color); }
+  .pro-btn.pro-btn-danger { background: var(--danger-color); }
+  
+  @media(max-width:992px){.pro-grid{grid-template-columns:1fr}}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const fileInput = document.getElementById('image_upload_file');
+  const preview = document.getElementById('image_preview');
+  const placeholder = document.getElementById('image_placeholder');
+  const urlInput = document.getElementById('field-ckan-site-logo');
+  const removeBtn = document.getElementById('remove_image_btn');
+
+  function updatePreview(url) {
+    if (url) {
+      preview.style.backgroundImage = `url('${url}')`;
+      placeholder.classList.add('has-image');
+      removeBtn.classList.remove('hidden');
+    } else {
+      preview.style.backgroundImage = 'none';
+      placeholder.classList.remove('has-image');
+      removeBtn.classList.add('hidden');
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        urlInput.value = '';
+        updatePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  urlInput.addEventListener('input', () => {
+    if (urlInput.value && (urlInput.value.startsWith('http') || urlInput.value.startsWith('/'))) {
+      fileInput.value = '';
+      updatePreview(urlInput.value);
+    } else if (!fileInput.files.length) {
+      updatePreview(null);
+    }
+  });
+
+  removeBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      fileInput.value = '';
+      urlInput.value = '';
+      updatePreview(null);
+      const hiddenClearInput = document.createElement('input');
+      hiddenClearInput.type = 'hidden';
+      hiddenClearInput.name = 'clear_logo_upload';
+      hiddenClearInput.value = 'True';
+      fileInput.form.appendChild(hiddenClearInput);
+  });
+});
+</script>
+
 {% endblock %}
 
+
 {% block secondary_content %}
-  <div class="module module-narrow module-shallow">
-    <h2 class="module-heading">
-      <i class="fa fa-info-circle"></i>
-      {{ _('CKAN config options') }}
-    </h2>
-    <div class="module-content">
-      {% block admin_form_help %}
-        {% set about_url = h.url_for(controller='home', action='about') %}
-        {% set home_url = h.url_for(controller='home', action='index') %}
-        {% set docs_url = "http://docs.ckan.org/en/{0}/theming".format(g.ckan_doc_version) %}
-        {% trans %}
-          <p><strong>Site Title:</strong> This is the title of this CKAN instance
-            It appears in various places throughout CKAN.</p>
-          <p><strong>Custom Stylesheet:</strong> Define an alternative main CSS file.</p>
-          <p><strong>Site Tag Logo:</strong> This is the logo that appears in the
-            header of all the CKAN instance templates.</p>
-          <p><strong>About:</strong> This text will appear on this CKAN instances
-            <a href="{{ about_url }}">about page</a>.</p>
-          <p><strong>Intro Text:</strong> This text will appear on this CKAN instances
-            <a href="{{ home_url }}">home page</a> as a welcome to visitors.</p>
-          <p><strong>Custom CSS:</strong> This is a block of CSS that appears in
-            <code>&lt;head&gt;</code> tag of every page. If you wish to customize
-            the templates more fully we recommend
-            <a href="{{ docs_url }}" target="_blank" rel="noreferrer">reading the documentation</a>.</p>
-          <p><strong>Homepage:</strong> This is for choosing a predefined layout for
-            the modules that appear on your homepage.</p>
-      {% endtrans %}
-    {% endblock %}
-    </div>
-  </div>
+{# İlgili yardım metinleri kartların içine entegre edildiği için bu blok boş bırakılmıştır. #}
 {% endblock %}

@@ -1,61 +1,254 @@
 {% import 'macros/form.html' as form %}
 
-<form id="user-edit-form" class="dataset-form" method="post" action="{{ action }}" enctype="multipart/form-data">
-  {{ form.errors(error_summary) }}
+{#
+  USER EDIT FORM - V4 - BALANCED & PROFESSIONAL LAYOUT
+  This version rearranges the cards into two more evenly-sized columns
+  for a more professional and symmetrical dashboard look.
+#}
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <fieldset>
-    <legend>{{ _('Change details') }}</legend>
-    {{ form.input('name', label=_('Username'), id='field-username', value=data.name, error=errors.name, classes=['control-medium'], attrs={'readonly': '', 'class': 'form-control'}) }}
+<form id="user-edit-form" class="pro-form" method="post" action="{{ action }}" enctype="multipart/form-data">
+  <div class="pro-grid">
 
-    {{ form.input('fullname', label=_('Full name'), id='field-fullname', value=data.fullname, error=errors.fullname, placeholder=_('eg. Joe Bloggs'), classes=['control-medium']) }}
+    {# ──────────────── SOL SÜTUN - PROFİL & GÜVENLİK ──────────────── #}
+    <div class="pro-column">
+      
+      <div class="pro-card">
+        <h3 class="pro-heading"><i class="fa fa-id-badge"></i> Profil Bilgileri</h3>
 
-    {{ form.input('email', label=_('Email'), id='field-email', type='email', value=data.email, error=errors.email, placeholder=_('eg. joe@example.com'), classes=['control-medium'], is_required=true) }}
+        <div class="pro-field" title="Kullanıcı adı değiştirilemez.">
+          <label for="field-username">{{ _('Kullanıcı Adı') }}</label>
+          <input id="field-username" type="text" name="name" value="{{ data.name }}" readonly>
+          <p class="pro-helper">Bu alan değiştirilemez.</p>
+        </div>
 
-    {{ form.markdown('about', label=_('About'), id='field-about', value=data.about, error=errors.about, placeholder=_('A little information about yourself')) }}
+        <div class="pro-field {% if errors.fullname %}is-invalid{% endif %}">
+          <label for="field-fullname">{{ _('Tam Ad') }}</label>
+          <input id="field-fullname" type="text" name="fullname" value="{{ data.fullname }}" placeholder="Adınız Soyadınız">
+          {% if errors.fullname %}<p class="pro-error">{{ errors.fullname[0] }}</p>{% endif %}
+        </div>
 
-    {% if show_email_notifications %}
-      {% call form.checkbox('activity_streams_email_notifications', label=_('Subscribe to notification emails'), id='field-activity-streams-email-notifications', value=True, checked=g.userobj.activity_streams_email_notifications) %}
-      {% set helper_text = _("You will receive notification emails from {site_title}, e.g. when you have new activities on your dashboard."|string) %}
-      {{ form.info(helper_text.format(site_title=g.site_title), classes=['info-help-tight']) }}
-      {% endcall %}
-    {% endif %}
+        <div class="pro-field {% if errors.email %}is-invalid{% endif %}">
+          <label for="field-email">{{ _('E-posta') }}</label>
+          <input id="field-email" type="email" name="email" value="{{ data.email }}" placeholder="ornek@eposta.com" required>
+          {% if errors.email %}<p class="pro-error">{{ errors.email[0] }}</p>{% endif %}
+        </div>
+      </div>
 
-    {% set is_upload = data.image_url and not data.image_url.startswith('http') %}
-    {% set is_url = data.image_url and data.image_url.startswith('http') %}
+      <div class="pro-card">
+        <h3 class="pro-heading"><i class="fa fa-key"></i> Parola Değiştir</h3>
+        <input type="text" name="username" value="{{ data.name }}" style="display:none" autocomplete="username">
+        
+        <div class="pro-field {% if errors.oldpassword %}is-invalid{% endif %}">
+          <label for="field-password-old">{{ _('Mevcut Parola') }}</label>
+          <div class="password-wrapper">
+            <input id="field-password-old" type="password" name="old_password" autocomplete="current-password" placeholder="••••••••">
+            <i class="fa fa-eye-slash password-toggle"></i>
+          </div>
+          <p class="pro-helper">Değişiklik yapmak için mevcut parolanız gereklidir.</p>
+          {% if errors.oldpassword %}<p class="pro-error">{{ errors.oldpassword[0] }}</p>{% endif %}
+        </div>
 
-    {{ form.image_upload(data, errors, is_upload_enabled=h.uploads_enabled(), is_url=is_url, is_upload=is_upload, upload_label=_('Profile picture'), url_label=_('Profile picture URL') ) }}
+        <div class="pro-field {% if errors.password1 %}is-invalid{% endif %}">
+          <label for="field-password">{{ _('Yeni Parola') }}</label>
+           <div class="password-wrapper">
+            <input id="field-password" type="password" name="password1" autocomplete="new-password" placeholder="Değiştirmek istemiyorsanız boş bırakın">
+            <i class="fa fa-eye-slash password-toggle"></i>
+          </div>
+          {% if errors.password1 %}<p class="pro-error">{{ errors.password1[0] }}</p>{% endif %}
+        </div>
 
-  </fieldset>
+        <div class="pro-field {% if errors.password2 %}is-invalid{% endif %}">
+          <label for="field-password-confirm">{{ _('Yeni Parola (Tekrar)') }}</label>
+          <div class="password-wrapper">
+            <input id="field-password-confirm" type="password" name="password2" autocomplete="new-password" placeholder="Yeni parolanızı doğrulayın">
+            <i class="fa fa-eye-slash password-toggle"></i>
+          </div>
+          {% if errors.password2 %}<p class="pro-error">{{ errors.password2[0] }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
 
-  <fieldset>
-    <legend>{{ _('Change password') }}</legend>
-    {{ form.input('old_password',
-                  type='password',
-                  label=_('Sysadmin Password') if is_sysadmin else _('Old Password'),
-                  id='field-password-old',
-                  value=data.oldpassword,
-                  error=errors.oldpassword,
-                  classes=['control-medium'],
-                  attrs={'autocomplete': 'off', 'class': 'form-control'}
-                  ) }}
+    {# ──────────────── SAĞ SÜTUN - AVATAR & HAKKINDA ──────────────── #}
+    <div class="pro-column">
+      
+      <div class="pro-card">
+          <h3 class="pro-heading"><i class="fa fa-camera-retro"></i> Avatar</h3>
+          <div class="pro-uploader {% if errors.image_url or errors.image_upload %}is-invalid{% endif %}">
+            <input type="file" name="image_upload" id="image_upload_file" accept="image/png, image/jpeg, image/gif">
+            <figure id="image_preview" style="background-image:url('{{ data.image_display_url or '' }}')">
+              <div id="image_placeholder" {% if data.image_display_url %}class="has-image"{% endif %}>
+                <i class="fa fa-image"></i>
+                <span>Resim Seç</span>
+              </div>
+            </figure>
+            <button type="button" id="remove_image_btn" class="pro-btn-remove-img {% if not data.image_display_url %}hidden{% endif %}" title="Resmi Kaldır">&times;</button>
+          </div>
+          <div class="pro-field {% if errors.image_url %}is-invalid{% endif %}" style="margin-top:1rem; margin-bottom:0;">
+            <label for="field-image-url">{{ _('veya URL ile') }}</label>
+            <input id="field-image-url" type="text" name="image_url" value="{{ data.image_url if data.image_url and data.image_url.startswith('http') else '' }}" placeholder="https://ornek.com/resim.jpg">
+          </div>
+           {% if errors.image_upload %}<p class="pro-error">{{ errors.image_upload[0] }}</p>{% endif %}
+           {% if errors.image_url %}<p class="pro-error">{{ errors.image_url[0] }}</p>{% endif %}
+      </div>
 
-    {{ form.input('password1', type='password', label=_('Password'), id='field-password', value=data.password1, error=errors.password1, classes=['control-medium'], attrs={'autocomplete': 'off', 'class': 'form-control'} ) }}
+      <div class="pro-card">
+        <h3 class="pro-heading"><i class="fa fa-info-circle"></i> Hakkında</h3>
+        <div class="pro-field {% if errors.about %}is-invalid{% endif %}" style="margin-top:-12px !important;">
+          <textarea id="field-about" name="about" rows="8" placeholder="Kendinizi tanıtan kısa bir metin...">{{ data.about }}</textarea>
+          {% if errors.about %}<p class="pro-error">{{ errors.about[0] }}</p>{% endif %}
+        </div>
+      </div>
 
-    {{ form.input('password2', type='password', label=_('Confirm Password'), id='field-password-confirm', value=data.password2, error=errors.password2, classes=['control-medium'], attrs={'autocomplete': 'off', 'class': 'form-control'}) }}
-  </fieldset>
-
-  <div class="form-actions">
-    {% block delete_button %}
-      {% if h.check_access('user_delete', {'id': data.id})  %}
-        <a class="btn btn-danger pull-left" href="{% url_for 'user_delete', id=data.id %}" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this User?') }}">{% block delete_button_text %}{{ _('Delete') }}{% endblock %}</a>
-      {% endif %}
-    {% endblock %}
-    {% block generate_button %}
-      {% if h.check_access('user_generate_apikey', {'id': data.id})  %}
-        <a class="btn btn-warning" href="{% url_for 'user.generate_apikey', id=data.id %}" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to regenerate the API key?') }}">{% block generate_button_text %}{{ _('Regenerate API Key') }}{% endblock %}</a>
-      {% endif %}
-    {% endblock %}
-    {{ form.required_message() }}
-    <button class="btn btn-primary" type="submit" name="save">{{ _('Update Profile') }}</button>
+    </div>
   </div>
+
+  <footer class="pro-actions">
+    {% if h.check_access('user_delete', {'id': data.id}) %}
+      <a class="pro-btn pro-btn-danger" href="{% url_for 'user_delete', id=data.id %}" data-module="confirm-action" data-module-content="{{ _('Bu kullanıcıyı kalıcı olarak silmek istediğinizden emin misiniz?') }}"><i class="fa fa-trash-alt"></i> {{ _('Hesabı Sil') }}</a>
+    {% endif %}
+    <div class="pro-actions-main">
+      {% if h.check_access('user_generate_apikey', {'id': data.id}) %}
+        <a class="pro-btn pro-btn-secondary" href="{% url_for 'user.generate_apikey', id=data.id %}" data-module="confirm-action" data-module-content="{{ _('API anahtarını yeniden oluşturmak istediğinizden emin misiniz? Bu işlem eskisini geçersiz kılacaktır.') }}"><i class="fa fa-key"></i> {{ _('API Anahtarı Oluştur') }}</a>
+      {% endif %}
+      <button class="pro-btn pro-btn-primary" type="submit" name="save"><i class="fa fa-check-circle"></i> {{ _('Profili Güncelle') }}</button>
+    </div>
+  </footer>
 </form>
+
+<style>
+  :root {
+    --font-family: 'Poppins', sans-serif; --bg-color: #f7f8fc; --card-bg: #ffffff;
+    --border-color: #e5e7f0; --text-dark: #334155; --text-light: #64748b;
+    --accent-color: #4f46e5; --danger-color: #ef4444; --warning-color: #f59e0b;
+    --secondary-color: #334155; --radius: 12px;
+  }
+  .pro-form { font-family: var(--font-family) !important; background: var(--bg-color) !important; padding: 1.5rem !important; }
+  .pro-grid { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 2rem !important; }
+  .pro-column { display: flex !important; flex-direction: column !important; gap: 2rem !important; }
+  .pro-card {
+    background: var(--card-bg) !important; padding: 2rem !important; border-radius: var(--radius) !important;
+    border: 1px solid var(--border-color) !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03) !important;
+    transition: box-shadow .3s ease;
+  }
+  .pro-card:hover { box-shadow: 0 10px 15px -3px rgba(0,0,0,0.07), 0 4px 6px -2px rgba(0,0,0,0.05) !important; }
+  .pro-heading {
+    font-size: 1.25rem !important; font-weight: 600 !important; color: var(--text-dark) !important;
+    margin-bottom: 2rem !important; display: flex !important; align-items: center !important; gap: 0.75rem !important;
+    padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);
+  }
+  .pro-heading i { color: var(--accent-color); }
+  
+  .pro-field { margin-bottom: 1.5rem !important; }
+  .pro-field:last-of-type { margin-bottom: 0 !important; }
+  .pro-field label { display: block !important; font-size: 0.875rem !important; font-weight: 500 !important; color: var(--text-dark) !important; margin-bottom: 0.5rem !important; }
+  .pro-field input, .pro-field textarea {
+    width: 100% !important; border: 1px solid var(--border-color) !important; border-radius: 8px !important;
+    padding: 0.75rem 1rem !important; font-size: 1rem !important; color: var(--text-dark) !important;
+    background: #fff !important; transition: border-color .2s, box-shadow .2s !important;
+  }
+  .pro-field input:focus, .pro-field textarea:focus {
+    outline: none !important; border-color: var(--accent-color) !important;
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15) !important;
+  }
+  .pro-field.is-invalid input, .pro-field.is-invalid textarea { border-color: var(--danger-color) !important; }
+  .pro-field input[readonly] { background: #f8f9fa !important; color: var(--text-light) !important; cursor: not-allowed; }
+  .pro-helper { font-size: 0.8rem; color: var(--text-light); margin-top: 0.5rem; }
+  .pro-error { font-size: 0.8rem; color: var(--danger-color); margin-top: 0.5rem; }
+
+  .password-wrapper { position: relative; }
+  .password-toggle { position: absolute !important; top: 50%; right: 1rem; transform: translateY(-50%); cursor: pointer; color: var(--text-light); }
+  
+  .pro-uploader { position: relative; border: 2px dashed var(--border-color); border-radius: var(--radius); transition: all .25s; }
+  .pro-uploader.is-invalid { border-color: var(--danger-color) !important; }
+  .pro-uploader:hover { border-color: var(--accent-color); }
+  .pro-uploader input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+  .pro-uploader figure { height: 200px; display: flex; align-items: center; justify-content: center; background-size: cover; background-position: center; border-radius: 10px; margin: 0; }
+  #image_placeholder { text-align: center; color: var(--text-light); transition: opacity .25s, background .25s; border-radius: 10px; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;}
+  #image_placeholder i { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+  #image_placeholder.has-image { opacity: 0; }
+  .pro-uploader:hover #image_placeholder.has-image { opacity: 1; background: rgba(0,0,0,0.5); color: #fff; }
+  
+  .pro-btn-remove-img {
+    position: absolute; top: 10px; right: 10px; width: 30px; height: 30px;
+    background: rgba(0,0,0,0.6); color: #fff; border: none; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    cursor: pointer; transition: opacity .25s; opacity: 0;
+  }
+  .pro-uploader:hover .pro-btn-remove-img, .pro-btn-remove-img:not(.hidden) { opacity: 1; }
+  .pro-btn-remove-img.hidden { display: none; }
+
+  .pro-actions { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:1rem;}
+  .pro-actions-main { display: flex; gap: 1rem; }
+  .pro-btn {
+    display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem;
+    font-weight: 600; border-radius: 8px; text-decoration: none; transition: all .2s;
+    border: 1px solid transparent; color: #fff; cursor: pointer;
+  }
+  .pro-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .pro-btn.pro-btn-primary { background: var(--accent-color); }
+  .pro-btn.pro-btn-secondary { background: var(--secondary-color); color: #fff; }
+  .pro-btn.pro-btn-danger { background: var(--danger-color); }
+
+  @media(max-width:992px){.pro-grid{grid-template-columns:1fr}}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.password-toggle').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const input = toggle.parentElement.querySelector('input');
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      toggle.classList.toggle('fa-eye-slash', !isPassword);
+      toggle.classList.toggle('fa-eye', isPassword);
+    });
+  });
+
+  const fileInput = document.getElementById('image_upload_file');
+  const preview = document.getElementById('image_preview');
+  const placeholder = document.getElementById('image_placeholder');
+  const urlInput = document.getElementById('field-image-url');
+  const removeBtn = document.getElementById('remove_image_btn');
+
+  function updatePreview(url) {
+    if (url) {
+      preview.style.backgroundImage = `url('${url}')`;
+      placeholder.classList.add('has-image');
+      removeBtn.classList.remove('hidden');
+    } else {
+      preview.style.backgroundImage = 'none';
+      placeholder.classList.remove('has-image');
+      removeBtn.classList.add('hidden');
+    }
+  }
+
+  fileInput.addEventListener('change', () => {
+    const file = fileInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        urlInput.value = '';
+        updatePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  urlInput.addEventListener('input', () => {
+    if (urlInput.value && (urlInput.value.startsWith('http') || urlInput.value.startsWith('/'))) {
+      fileInput.value = '';
+      updatePreview(urlInput.value);
+    } else if (!fileInput.files.length) {
+      updatePreview(null);
+    }
+  });
+
+  removeBtn.addEventListener('click', () => {
+      fileInput.value = '';
+      urlInput.value = '';
+      updatePreview(null);
+  });
+});
+</script>

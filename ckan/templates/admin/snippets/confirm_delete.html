@@ -1,23 +1,225 @@
 {% extends "page.html" %}
 
-{% block subtitle %}{{ _("Confirm Delete") }}{% endblock %}
+{% block subtitle %}Silme İşlemini Onayla{% endblock %}
 
 {% block maintag %}<div class="row" role="main">{% endblock %}
 
 {% block main_content %}
+<style>
+  .confirm-delete-container {
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f5f6fa;
+    padding: 2rem 0;
+  }
+
+  .confirm-delete-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    padding: 3rem;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .confirm-delete-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+    background: linear-gradient(90deg, #e74c3c, #c0392b);
+  }
+
+  .warning-icon {
+    width: 80px;
+    height: 80px;
+    background: #fee;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 2rem;
+    position: relative;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 20px rgba(231, 76, 60, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(231, 76, 60, 0);
+    }
+  }
+
+  .warning-icon i {
+    font-size: 2.5rem;
+    color: #e74c3c;
+  }
+
+  .confirm-title {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+  }
+
+  .confirm-message {
+    font-size: 1.1rem;
+    color: #7f8c8d;
+    line-height: 1.6;
+    margin-bottom: 2.5rem;
+  }
+
+  .confirm-type-badge {
+    display: inline-block;
+    background: #ecf0f1;
+    color: #34495e;
+    padding: 0.3rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+  }
+
+  #{{ ent_type }}-confirm-delete-form {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+  }
+
+  .btn {
+    padding: 0.8rem 2rem;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-danger {
+    background: #e74c3c;
+    color: white;
+  }
+
+  .btn-danger:hover {
+    background: #c0392b;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+  }
+
+  .btn-primary {
+    background: #95a5a6;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #7f8c8d;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(149, 165, 166, 0.3);
+  }
+
+  .warning-note {
+    background: #fff5f5;
+    border: 1px solid #ffdddd;
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 2rem;
+    color: #c0392b;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .warning-note i {
+    color: #e74c3c;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .confirm-delete-card {
+      padding: 2rem 1.5rem;
+    }
+    
+    #{{ ent_type }}-confirm-delete-form {
+      flex-direction: column-reverse;
+    }
+    
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+</style>
+
+<div class="confirm-delete-container">
   <section class="module col-md-6 col-md-offset-3">
-    <div class="module-content">
+    <div class="confirm-delete-card">
+      <div class="warning-icon">
+        <i class="fa fa-exclamation-triangle"></i>
+      </div>
+      
+      <h2 class="confirm-title">Silme İşlemini Onayla</h2>
+      
+      <div class="confirm-type-badge">
+        {% if ent_type == 'package' %}
+          <i class="fa fa-sitemap"></i> Veri Seti
+        {% elif ent_type == 'organization' %}
+          <i class="fa fa-building-o"></i> Organizasyon
+        {% elif ent_type == 'group' %}
+          <i class="fa fa-group"></i> Grup
+        {% endif %}
+      </div>
+      
       {% block form %}
-      <p>
-        {{ _(messages.confirm[ent_type]) }}
+      <p class="confirm-message">
+        {% if ent_type == 'package' %}
+          Tüm silinmiş veri setlerini kalıcı olarak temizlemek üzeresiniz. Bu işlem geri alınamaz ve tüm ilişkili veriler kaybolacaktır.
+        {% elif ent_type == 'organization' %}
+          Tüm silinmiş organizasyonları kalıcı olarak temizlemek üzeresiniz. Bu işlem geri alınamaz ve tüm ilişkili veriler kaybolacaktır.
+        {% elif ent_type == 'group' %}
+          Tüm silinmiş grupları kalıcı olarak temizlemek üzeresiniz. Bu işlem geri alınamaz ve tüm ilişkili veriler kaybolacaktır.
+        {% else %}
+          {{ _(messages.confirm[ent_type]) }}
+        {% endif %}
       </p>
-        <p class="form-actions">
-          <form id="{{ ent_type }}-confirm-delete-form" action="{{ h.url_for('admin.trash') }}" method="POST">
-            <button class="btn btn-danger" type="submit" name="cancel">Cancel</button>
-            <button class="btn btn-primary" type="submit" name="action" value="{{ ent_type }}">{{ _('Confirm Delete') }}</button>
-          </form>
-        </p>
+      
+      <p class="form-actions">
+        <form id="{{ ent_type }}-confirm-delete-form" action="{{ h.url_for('admin.trash') }}" method="POST">
+          <button class="btn btn-primary" type="submit" name="cancel">
+            <i class="fa fa-arrow-left"></i>
+            İPTAL
+          </button>
+          <button class="btn btn-danger" type="submit" name="action" value="{{ ent_type }}">
+            <i class="fa fa-trash"></i>
+            KALICI OLARAK SİL
+          </button>
+        </form>
+      </p>
+      
+      <div class="warning-note">
+        <i class="fa fa-info-circle"></i>
+        <span>Bu işlem geri alınamaz. Lütfen dikkatli olun!</span>
+      </div>
       {% endblock %}
     </div>
   </section>
+</div>
 {% endblock %}

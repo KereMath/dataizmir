@@ -1,27 +1,194 @@
 {% extends "admin/base.html" %}
 
 {% block primary_content_inner %}
-  <ul class="user-list">
-    {% for user in sysadmins %}
-      <li>{{ h.linked_user(user) }}</li>
-    {% endfor %}
-  </ul>
+<div class="admin-dashboard-pro">
+
+  <header class="dashboard-header">
+    <div class="header-content">
+      <h1><i class="fa fa-users"></i> Kullanıcı Kontrol Paneli</h1>
+      <p>Sistemdeki tüm kullanıcıları ve rollerini görüntüleyin, arayın ve analiz edin.</p>
+    </div>
+    <form class="search-form" onsubmit="return false;">
+      <i class="fa fa-search"></i>
+      <input type="text" id="user-search-input" placeholder="Kullanıcıları ara (isim, e-posta)...">
+      <button type="submit">Ara</button>
+    </form>
+  </header>
+
+  <div class="user-grid" id="user-grid">
+    <div class="loading-placeholder">
+      <div class="spinner"></div>
+      <p>Kullanıcı verileri yükleniyor, lütfen bekleyin...</p>
+    </div>
+  </div>
+
+</div>
+
+
+<style>
+  :root {
+    --font-family-sans: 'Poppins', sans-serif; --bg-main: #f8f9fc; --bg-card: #ffffff;
+    --border-color: #e2e8f0; --text-dark: #1e293b; --text-light: #64748b;
+    --accent-primary: #4338ca; --accent-secondary: #7e22ce; --accent-gradient: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    --admin-star: #ffc107; --radius-md: 16px; --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -1px rgba(0,0,0,.04);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.07), 0 4px 6px -4px rgba(0,0,0,.07);
+  }
+  .admin-dashboard-pro { font-family: var(--font-family-sans) !important; padding: 1rem 0 !important; background: var(--bg-main) !important; }
+  
+  .dashboard-header { margin-bottom: 2.5rem; }
+  .dashboard-header h1 { font-size: 2.25rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; }
+  .dashboard-header h1 i { color: var(--accent-primary); }
+  .dashboard-header p { font-size: 1.1rem; color: var(--text-light); }
+  .search-form { display: flex; margin-top: 1.5rem; position: relative; }
+  .search-form i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-light); }
+  .search-form input { 
+    width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-md); 
+    padding: .9rem 1rem .9rem 3rem; font-size: 1rem; outline: none; 
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-form input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.2); }
+  .search-form button { background: var(--accent-primary); color: #fff; border: none; padding: .75rem 1.5rem; font-weight: 600; border-radius: 0 var(--radius-md) var(--radius-md) 0; cursor: pointer; transition: background .2s; }
+  .search-form button:hover { background: var(--accent-secondary); }
+
+  .user-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; gap: 2rem !important; }
+  
+  .user-profile-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-md); display: flex; flex-direction: column; overflow: hidden; transition: transform .2s, box-shadow .2s; }
+  .user-profile-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
+  
+  .card-header-pro { position: relative; height: 100px; background: #475569; background-image: linear-gradient(45deg, #3d4a5f, #5b6b82); }
+  .card-avatar-pro {
+    position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%);
+    width: 80px; height: 80px; border-radius: 50%; background-size: cover; background-position: center;
+    border: 4px solid #fff; box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+  }
+  .sysadmin-badge-pro {
+    position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
+    color: #fff; padding: .3rem .7rem; border-radius: 20px; font-size: .75rem; font-weight: 600; display: flex; align-items: center; gap: .3rem;
+  }
+  .sysadmin-badge-pro i { color: var(--admin-star); }
+
+  .card-body-pro { padding: 50px 1.5rem 1.5rem 1.5rem; text-align: center; flex-grow: 1; display: flex; flex-direction: column; }
+  .user-name-pro { font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin: 0; }
+  .user-handle-pro { color: var(--text-light); font-size: .9rem; margin-bottom: 1rem; }
+  
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem 0; border-top: 1px solid var(--border-color); margin-bottom: 1rem; }
+  .info-item { text-align: center; }
+  .info-item .value { font-size: 1.5rem; font-weight: 700; color: var(--accent-primary); }
+  .info-item .label { font-size: .75rem; color: var(--text-light); text-transform: uppercase; }
+  
+  .roles-section h4 { font-size: .8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; margin-bottom: .75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;}
+  .roles-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .5rem; max-height: 120px; overflow-y: auto; padding-right: 5px; }
+  .roles-list li { display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: .5rem .75rem; border-radius: 6px; }
+  .role-org-name { font-weight: 500; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
+  .role-capacity-pro { font-size: .8rem; font-weight: 600; padding: .2rem .5rem; border-radius: 5px; color: #fff; text-transform: capitalize; }
+  .role-capacity-pro.admin { background: #c81e1e; }
+  .role-capacity-pro.editor { background: #d97706; }
+  .role-capacity-pro.member { background: #4a5568; }
+
+  .card-footer-pro { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: #fcfdff; margin-top: auto;}
+  .profile-btn-pro { text-decoration: none; padding: .6rem 1.2rem; border-radius: 8px; font-weight: 600; transition: all .2s; }
+  .profile-btn-pro.primary { background: var(--accent-primary); color: #fff; }
+  .profile-btn-pro.primary:hover { background: var(--accent-secondary); }
+  .profile-btn-pro.secondary { background: #e2e8f0; color: var(--text-dark); }
+  .profile-btn-pro.secondary:hover { background: #cbd5e1; }
+
+  .loading-placeholder { text-align: center; padding: 4rem; color: var(--text-light); grid-column: 1 / -1; }
+  .spinner { width: 48px; height: 48px; border: 5px solid #f3f3f3; border-top: 5px solid var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem auto; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+
+  const grid = document.getElementById('user-grid');
+  const searchInput = document.getElementById('user-search-input');
+  let allUsers = [];
+
+  async function fetchWithCredentials(url) {
+    const response = await fetch(url, { credentials: 'include' });
+    if (!response.ok) throw new Error(`API çağrısı başarısız: ${response.status}`);
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error?.message || 'API çağrısı başarılı olmadı');
+    return data.result;
+  }
+
+  function renderCards(usersToRender) {
+    if (usersToRender.length === 0) {
+      grid.innerHTML = `<div class="loading-placeholder"><p>Arama kriterlerinize uygun kullanıcı bulunamadı.</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = usersToRender.map(user => {
+      const name = user.display_name || 'İsimsiz';
+      const handle = user.name || 'kullanici';
+      const avatar = user.image_display_url || '{{ h.url_for_static('/base/images/placeholder-user.png') }}';
+      const datasetCount = user.number_created_packages || 0;
+      const followers = user.num_followers || 0;
+      const orgs = user.organizations || [];
+      
+      let rolesHTML = '<p style="font-size:0.9rem; color:#999; text-align:center; padding:1rem;">Kullanıcının bir organizasyonda rolü bulunmuyor.</p>';
+      if (orgs.length > 0) {
+        rolesHTML = `<div class="roles-section"><h4>Roller</h4><ul class="roles-list">` +
+          orgs.map(org => `
+            <li>
+              <span class="role-org-name" title="${org.title}">${org.title}</span>
+              <span class="role-capacity-pro ${org.capacity}">${org.capacity.replace('_', ' ')}</span>
+            </li>
+          `).join('') + `</ul></div>`;
+      }
+
+      return `
+        <div class="user-profile-card">
+          <div class="card-header-pro">
+            <img src="${avatar}" alt="Avatar" class="card-avatar-pro"/>
+            ${user.sysadmin ? `<span class="sysadmin-badge-pro" title="Sistem Yöneticisi"><i class="fa fa-star"></i> Yönetici</span>` : ''}
+          </div>
+          <div class="card-body-pro">
+            <h3 class="user-name-pro">${name}</h3>
+            <p class="user-handle-pro">@${handle}</p>
+            <div class="info-grid">
+              <div class="info-item"><span class="value">${datasetCount}</span><span class="label">Veri Seti</span></div>
+              <div class="info-item"><span class="value">${followers}</span><span class="label">Takipçi</span></div>
+            </div>
+            ${rolesHTML}
+          </div>
+          <div class="card-footer-pro">
+            <a href="/user/${handle}" class="profile-btn-pro primary">Profili Görüntüle</a>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  async function main() {
+    try {
+      const userList = await fetchWithCredentials('/api/3/action/user_list?all_fields=true&include_site_user=true');
+      const userDetailPromises = userList.map(user => 
+        fetchWithCredentials(`/api/3/action/user_show?id=${user.id}&include_num_followers=true`)
+      );
+      allUsers = await Promise.all(userDetailPromises);
+      renderCards(allUsers);
+    } catch (error) {
+      console.error('Kullanıcı verileri alınırken bir hata oluştu:', error);
+      grid.innerHTML = `<div class="loading-placeholder"><p>Kullanıcılar yüklenemedi. Bir hata oluştu.</p></div>`;
+    }
+  }
+
+  searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const filteredUsers = allUsers.filter(user => 
+      (user.display_name && user.display_name.toLowerCase().includes(searchTerm)) ||
+      (user.name && user.name.toLowerCase().includes(searchTerm)) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm))
+    );
+    renderCards(filteredUsers);
+  });
+
+  main();
+});
+</script>
 {% endblock %}
 
 {% block secondary_content %}
-  <div class="module module-narrow module-shallow">
-    <h2 class="module-heading">
-      <i class="fa fa-info-circle"></i>
-      {{ _('Administer CKAN') }}
-    </h2>
-    <div class="module-content">
-
-      {% set docs_url = "http://docs.ckan.org/en/{0}/sysadmin-guide.html".format(g.ckan_doc_version) %}
-      {% trans %}
-        <p>As a sysadmin user you have full control over this CKAN instance. Proceed with care!</p>
-        <p>For guidance on using sysadmin features, see the CKAN  <a href="{{ docs_url }}" target="_blank" rel="noreferrer">sysadmin guide</a></p> 
-
-      {% endtrans %}
-    </div>
-  </div>
+{# Bu sayfa tam genişlik kullandığı için yan blok boş bırakıldı #}
 {% endblock %}

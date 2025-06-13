@@ -2,11 +2,7 @@
 
 {% block dashboard_activity_stream_context %}{% endblock %}
 
-{% block page_primary_action %}
-  {% if h.check_access('package_create') %}
-    {% snippet 'snippets/add_dataset.html' %}
-  {% endif %}
-{% endblock %}
+{# Orijinal 'Add Dataset' butonu ve alanı isteğiniz üzerine tamamen kaldırıldı. #}
 
 {% block primary_content_inner %}
   <h2 class="hide-heading">{{ _('My Datasets') }}</h2>
@@ -16,8 +12,72 @@
     <p class="empty">
       {{ _('You haven\'t created any datasets.') }}
       {% if h.check_access('package_create') %}
+        {# Bu yazıdaki link, buton olmadığı için bir fallback olarak kalabilir. #}
         {% link_for _('Create one now?'), named_route='dataset.new' %}
       {% endif %}
     </p>
   {% endif %}
+
+  {# YENİ FÜTÜRİSTİK BUTON #}
+  {% if h.check_access('package_create') %}
+    <a href="{{ h.url_for('dataset.new') }}" class="add-dataset-fab-futuristic" title="{{ _('Add Dataset') }}">
+      <span class="fab-icon">
+        <i class="fa fa-plus"></i>
+      </span>
+      <span class="fab-text">{{ _('Add Dataset') }}</span>
+    </a>
+  {% endif %}
+
+  {# Yeni fütüristik buton için CSS stilleri #}
+  <style>
+    .add-dataset-fab-futuristic {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important; /* İkonun solda kalmasını sağlar */
+      
+      position: fixed !important;
+      bottom: 30px !important;
+      right: 30px !important;
+      z-index: 1100 !important;
+      
+      width: 60px !important; /* Başlangıç genişliği (dairesel) */
+      height: 60px !important;
+      padding: 0 21px !important; /* İkonun kenardan uzaklığı için */
+      
+      background: linear-gradient(45deg, #0d6efd, #8f00ff) !important; /* Fütüristik gradient */
+      color: #fff !important;
+      
+      border-radius: 30px !important; /* Dairesel/hap şeklinde olması için */
+      box-shadow: 0 5px 15px rgba(50, 50, 93, 0.25), 0 5px 10px rgba(0, 0, 0, 0.22) !important;
+      text-decoration: none !important;
+      white-space: nowrap !important; /* Yazının alt satıra inmesini engeller */
+      overflow: hidden !important; /* Genişlemeden önce yazıyı gizler */
+      
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important; /* Akıcı animasyon */
+    }
+
+    .add-dataset-fab-futuristic:hover {
+      width: 210px !important; /* Üzerine gelince genişleyeceği boyut */
+      box-shadow: 0 10px 25px rgba(50, 50, 93, 0.35), 0 8px 15px rgba(0, 0, 0, 0.28) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    .add-dataset-fab-futuristic .fab-icon {
+      font-size: 22px !important;
+      line-height: 1 !important;
+    }
+    
+    .add-dataset-fab-futuristic .fab-text {
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      margin-left: 12px !important;
+      opacity: 0; /* Başlangıçta yazı gizli */
+      transition: opacity 0.3s ease-in-out 0.1s !important; /* Genişleme bittikten sonra yazı belirir */
+    }
+
+    .add-dataset-fab-futuristic:hover .fab-text {
+      opacity: 1; /* Üzerine gelince yazı görünür hale gelir */
+    }
+  </style>
+
 {% endblock %}

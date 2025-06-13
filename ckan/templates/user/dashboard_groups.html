@@ -2,25 +2,299 @@
 
 {% block dashboard_activity_stream_context %}{% endblock %}
 
+{# İsteğiniz üzerine bu alan standart butonu kaldırmak için tamamen boş bırakıldı. #}
 {% block page_primary_action %}
-  {% if h.check_access('group_create') %}
-    {% link_for _('Add Group'), controller='group', action='new', class_="btn btn-primary", icon="plus-square" %}
-  {% endif %}
 {% endblock %}
 
+{# Sayfanın ana içerik alanı #}
 {% block primary_content_inner %}
   <h2 class="hide-heading">{{ _('My Groups') }}</h2>
-  {% set groups = h.groups_available(am_member=True) %}
-  {% if groups %}
-    <div class="wide">
-      {% snippet "group/snippets/group_list.html", groups=groups %}
+
+  {# YENİ FÜTÜRİSTİK GRUP EKLEME BUTONU #}
+  {% if h.check_access('group_create') %}
+    <a href="{{ h.url_for('group.new') }}" class="add-group-fab-futuristic" title="{{ _('Add Group') }}">
+      <span class="fab-icon">
+        <i class="fa fa-plus"></i>
+      </span>
+      <span class="fab-text">Yeni Kategori Ekle</span>
+    </a>
+  {% endif %}
+
+  <div class="search-and-filters" style="display: none; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f9f9f9; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; box-shadow: 0 1px 4px rgba(0,0,0,0.04);">
+    <div style="flex: 2; min-width: 250px;">
+      <input type="text"
+             class="form-control"
+             placeholder="Grup ismi ile arayın..."
+             id="search-input"
+             style="width: 100%; border: 1px solid #ccc; border-radius: 6px; background-image: url('data:image/svg+xml;utf8,<svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;16&quot; height=&quot;16&quot; fill=&quot;%23666&quot; viewBox=&quot;0 0 16 16&quot;><path d=&quot;M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z&quot;/></svg>'); background-repeat: no-repeat; background-position: right 12px center; padding-right: 40px;">
     </div>
-  {% else %}
-    <p class="empty">
+
+    <div style="flex: 1; min-width: 180px;">
+      <select class="form-control" id="sort-select" style="border: 1px solid #ccc; border-radius: 6px;">
+        <option value="name-asc">İsim (A-Z)</option>
+        <option value="name-desc">İsim (Z-A)</option>
+        <option value="count-desc">En Çok Veri Seti</option>
+        <option value="count-asc">En Az Veri Seti</option>
+      </select>
+    </div>
+
+    <div style="flex: 1; min-width: 120px;">
+      <select class="form-control" id="limit-select" style="border: 1px solid #ccc; border-radius: 6px;">
+        <option value="5">5'li Göster</option>
+        <option value="10" selected>10'lu Göster</option>
+        <option value="25">25'li Göster</option>
+        <option value="50">50'li Göster</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="groups-wrapper">
+    <div id="loading-message" style="text-align: center; padding: 40px;">
+      <i class="fa fa-spinner fa-spin fa-2x"></i>
+      <p style="margin-top: 15px; font-size: 16px; color: #555;">Gruplarınız yükleniyor...</p>
+    </div>
+
+    <div id="groups-content" style="display: none;">
+      <ul class="media-grid" id="groups-list" style="padding: 0; margin: 0; list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; min-height: 240px; border: none; background: none;">
+        </ul>
+      <div id="pagination-container" style="text-align: center; margin-top: 30px;"></div>
+    </div>
+
+    <p id="empty-message" class="empty" style="display: none;">
       {{ _('You are not a member of any groups.') }}
       {% if h.check_access('group_create') %}
         {% link_for _('Create one now?'), controller='group', action='new' %}
       {% endif %}
     </p>
-  {% endif %}
+    
+    <p id="no-results-message" class="empty" style="display: none; text-align: center; padding: 40px; color: #666;">
+        Arama kriterlerinize uygun grup bulunamadı.
+    </p>
+  </div>
+
+{# Mobil uyumluluk ve yeni buton için stil blokları #}
+<style>
+  /* Responsive grid stilleri */
+  @media (max-width: 1200px) {
+    #groups-list {
+      grid-template-columns: repeat(4, 1fr) !important;
+    }
+  }
+  @media (max-width: 992px) {
+    #groups-list {
+      grid-template-columns: repeat(3, 1fr) !important;
+    }
+  }
+  @media (max-width: 768px) {
+    #groups-list {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+  }
+  @media (max-width: 576px) {
+    #groups-list {
+      grid-template-columns: 1fr !important;
+    }
+  }
+
+  /* Yeni "Grup/Kategori Ekle" butonu için stiller */
+  .add-group-fab-futuristic {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    
+    position: fixed !important;
+    bottom: 30px !important;
+    right: 30px !important;
+    z-index: 1100 !important;
+    
+    width: 62px !important; /* Başlangıç genişliği (dairesel) */
+    height: 60px !important;
+    padding: 0 21px !important; /* İsteğiniz üzerine güncellenen padding */
+    
+    background: linear-gradient(45deg, #8A2BE2, #C71585) !important; /* Mor/Pembe Gradient */
+    color: #fff !important;
+    
+    border-radius: 30px !important;
+    box-shadow: 0 5px 15px rgba(80, 50, 93, 0.3) !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
+  }
+
+  .add-group-fab-futuristic:hover {
+    width: 240px !important; /* "Yeni Kategori Ekle" yazısına uygun genişlik */
+    box-shadow: 0 10px 25px rgba(80, 50, 93, 0.4) !important;
+    transform: translateY(-2px) !important;
+  }
+
+  .add-group-fab-futuristic .fab-icon {
+    font-size: 22px !important;
+    line-height: 1 !important;
+  }
+  
+  .add-group-fab-futuristic .fab-text {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    margin-left: 12px !important;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out 0.1s !important;
+  }
+
+  .add-group-fab-futuristic:hover .fab-text {
+    opacity: 1;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  let allMyGroups = [];
+  let filteredGroups = [];
+  let currentPage = 1;
+  let itemsPerPage = parseInt(document.getElementById('limit-select').value) || 10;
+
+  const elements = {
+    loading: document.getElementById('loading-message'),
+    content: document.getElementById('groups-content'),
+    list: document.getElementById('groups-list'),
+    pagination: document.getElementById('pagination-container'),
+    emptyMessage: document.getElementById('empty-message'),
+    noResultsMessage: document.getElementById('no-results-message'),
+    filterBar: document.querySelector('.search-and-filters'),
+    searchInput: document.getElementById('search-input'),
+    sortSelect: document.getElementById('sort-select'),
+    limitSelect: document.getElementById('limit-select')
+  };
+
+  loadMyGroups();
+
+  async function loadMyGroups() {
+    try {
+      const response = await fetch(`/api/3/action/group_list_authz?all_fields=true&include_dataset_count=true`);
+      if (!response.ok) throw new Error(`API Error: ${response.status}`);
+      const data = await response.json();
+
+      elements.loading.style.display = 'none';
+
+      if (data.success && data.result && data.result.length > 0) {
+        allMyGroups = data.result.map(group => ({
+          name: group.name || '',
+          display_name: group.display_name || group.title || group.name || '',
+          package_count: parseInt(group.package_count) || 0,
+          image_url: group.image_display_url || '{{ h.url_for_static("/base/images/placeholder-group.png") }}',
+          url: `{{ h.url_for('group.read', id='DUMMY_ID') }}`.replace('DUMMY_ID', group.name)
+        }));
+
+        filteredGroups = [...allMyGroups];
+        elements.filterBar.style.display = 'flex';
+        elements.content.style.display = 'block';
+        setupEventListeners();
+        sortAndRender();
+      } else {
+        elements.emptyMessage.style.display = 'block';
+      }
+    } catch (error) {
+      console.error('Gruplar yüklenirken bir hata oluştu:', error);
+      elements.loading.innerHTML = '<p style="color: red; text-align:center; padding: 40px;">Gruplar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>';
+    }
+  }
+
+  function setupEventListeners() {
+    elements.searchInput.addEventListener('input', sortAndRender);
+    elements.sortSelect.addEventListener('change', sortAndRender);
+    elements.limitSelect.addEventListener('change', () => {
+      itemsPerPage = parseInt(elements.limitSelect.value);
+      currentPage = 1;
+      renderAll();
+    });
+  }
+
+  function sortAndRender() {
+    const searchTerm = elements.searchInput.value.toLowerCase().trim();
+    const sortBy = elements.sortSelect.value;
+    filteredGroups = allMyGroups.filter(group =>
+      group.display_name.toLowerCase().includes(searchTerm)
+    );
+    filteredGroups.sort((a, b) => {
+      switch (sortBy) {
+        case 'name-asc':   return a.display_name.localeCompare(b.display_name, 'tr');
+        case 'name-desc':  return b.display_name.localeCompare(a.display_name, 'tr');
+        case 'count-desc': return b.package_count - a.package_count;
+        case 'count-asc':  return a.package_count - b.package_count;
+        default: return 0;
+      }
+    });
+    currentPage = 1;
+    renderAll();
+  }
+  
+  function renderAll() {
+    renderGroups();
+    renderPagination();
+  }
+
+  function renderGroups() {
+    elements.list.innerHTML = '';
+    elements.noResultsMessage.style.display = 'none';
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const currentGroups = filteredGroups.slice(startIndex, endIndex);
+
+    if (currentGroups.length === 0 && allMyGroups.length > 0) {
+        elements.noResultsMessage.style.display = 'block';
+        return;
+    }
+
+    const groupsHTML = currentGroups.map(group => `
+      <li style="background: white; border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between;"
+          onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.1)'"
+          onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 5px rgba(0,0,0,0.05)'">
+        <div>
+          <img src="${group.image_url}" alt="${group.name}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin: 0 auto 15px; display: block; border: 3px solid #f0f0f0;">
+          <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 10px; color: #333; height: 40px; overflow: hidden;">${group.display_name}</h3>
+          <strong style="display: block; margin-bottom: 15px; color: #007bff; font-size: 14px;">${group.package_count} {{ _('Datasets') }}</strong>
+        </div>
+        <a href="${group.url}" style="display: block; background: #007bff; color: white !important; text-decoration: none; border-radius: 5px; transition: background 0.2s; margin-top: auto; padding: 8px 16px; font-weight: 500;"
+           onmouseover="this.style.background='#0056b3'"
+           onmouseout="this.style.background='#007bff'">
+          {{ _('View') }}
+        </a>
+      </li>
+    `).join('');
+    elements.list.innerHTML = groupsHTML;
+  }
+  
+  function renderPagination() {
+    const totalPages = Math.ceil(filteredGroups.length / itemsPerPage);
+    elements.pagination.innerHTML = '';
+    if (totalPages <= 1) return;
+    let paginationHTML = '<ul class="pagination" style="margin: 0;">';
+    paginationHTML += `<li class="${currentPage === 1 ? 'disabled' : ''}"><a href="#" data-page="${currentPage - 1}">&laquo;</a></li>`;
+    for (let i = 1; i <= totalPages; i++) {
+        paginationHTML += `<li class="${currentPage === i ? 'active' : ''}"><a href="#" data-page="${i}">${i}</a></li>`;
+    }
+    paginationHTML += `<li class="${currentPage === totalPages ? 'disabled' : ''}"><a href="#" data-page="${currentPage + 1}">&raquo;</a></li>`;
+    paginationHTML += '</ul>';
+    elements.pagination.innerHTML = paginationHTML;
+  }
+  
+  elements.pagination.addEventListener('click', e => {
+    e.preventDefault();
+    if (e.target.tagName === 'A' && e.target.dataset.page) {
+      const page = parseInt(e.target.dataset.page);
+      if (page > 0 && page <= Math.ceil(filteredGroups.length / itemsPerPage)) {
+        goToPage(page);
+      }
+    }
+  });
+
+  function goToPage(page) {
+    currentPage = page;
+    renderAll();
+    window.scrollTo({ top: elements.filterBar.offsetTop - 20, behavior: 'smooth' });
+  }
+});
+</script>
+
 {% endblock %}

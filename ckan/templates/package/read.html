@@ -2,8 +2,6 @@
 
 {% block primary_content_inner %}
   
-
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -11,6 +9,46 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Modern Dataset Sayfası</title>
     <style>
+      /* --- FAB Buton Stilleri --- */
+      .fab-container {
+        position: fixed !important; bottom: 30px !important; right: 30px !important;
+        z-index: 1100 !important; display: flex !important; flex-direction: column-reverse;
+        align-items: flex-end; gap: 15px;
+      }
+      .edit-fab-futuristic, .activity-fab-futuristic, .groups-fab-futuristic {
+        display: flex !important; align-items: center !important; justify-content: flex-start !important;
+        width: 62px !important; height: 60px !important; padding: 0 21px !important;
+        color: #fff !important; border-radius: 30px !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+        text-decoration: none !important; white-space: nowrap !important;
+        overflow: hidden !important;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
+      }
+      .edit-fab-futuristic .fab-icon, .activity-fab-futuristic .fab-icon, .groups-fab-futuristic .fab-icon {
+        font-size: 22px !important; line-height: 1 !important; transition: transform 0.5s ease !important;
+      }
+      .edit-fab-futuristic .fab-text, .activity-fab-futuristic .fab-text, .groups-fab-futuristic .fab-text {
+        font-size: 16px !important; font-weight: 600 !important; margin-left: 12px !important;
+        opacity: 0; transition: opacity 0.3s ease-in-out 0.1s !important;
+      }
+      .edit-fab-futuristic:hover .fab-text, 
+      .activity-fab-futuristic:hover .fab-text, 
+      .groups-fab-futuristic:hover .fab-text {
+        opacity: 1;
+      }
+      .edit-fab-futuristic { background: linear-gradient(45deg, #455A64, #263238) !important; }
+      .edit-fab-futuristic:hover {
+        width: 250px !important; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important; transform: translateY(-2px) !important;
+      }
+      .edit-fab-futuristic:hover .fab-icon { transform: rotate(180deg); }
+      .activity-fab-futuristic { background: linear-gradient(45deg, #FF9800, #FFC107) !important; }
+      .activity-fab-futuristic:hover {
+        width: 200px !important; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important; transform: translateY(-2px) !important;
+      }
+      .groups-fab-futuristic { background: linear-gradient(45deg, #8A2BE2, #C71585) !important; }
+      .groups-fab-futuristic:hover {
+        width: 230px !important; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important; transform: translateY(-2px) !important;
+      }
         * {
             margin: 0;
             padding: 0;
@@ -514,6 +552,42 @@ h1, .h1, h2, .h2, h3, .h3 {
     </style>
 </head>
 <body>
+    
+{# YENİ FÜTÜRİSTİK ÇOKLU EYLEM BUTONLARI #}
+    <div class="fab-container">
+
+      {# GRUPLARI DÜZENLE BUTONU #}
+      {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
+        <a href="{{ h.url_for('dataset.groups', id=pkg_dict.name) }}" class="groups-fab-futuristic" title="{{ _('Manage Groups') }}">
+          <span class="fab-icon">
+            <i class="fa fa-sitemap"></i>
+          </span>
+          <span class="fab-text">Kategorileri Düzenle</span>
+        </a>
+      {% endif %}
+
+      {# AKTİVİTE AKIŞI BUTONU #}
+      {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
+        <a href="{{ h.url_for('dataset.activity', id=pkg_dict.name) }}" class="activity-fab-futuristic" title="{{ _('Activity Stream') }}">
+          <span class="fab-icon">
+            <i class="fa fa-history"></i>
+          </span>
+          <span class="fab-text">Aktivite Akışı</span>
+        </a>
+      {% endif %}
+      
+      {# VERİ SETİNİ DÜZENLE BUTONU #}
+      {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
+        <a href="{{ h.url_for('dataset.edit', id=pkg_dict.name) }}" class="edit-fab-futuristic" title="{{ _('Edit Dataset') }}">
+          <span class="fab-icon">
+            <i class="fa fa-cog"></i>
+          </span>
+          <span class="fab-text">Veri Setini Düzenle</span>
+        </a>
+      {% endif %}
+
+    </div>
+
     <div class="modern-container">
         <!-- Header -->
         <div class="header-section">
@@ -544,11 +618,9 @@ h1, .h1, h2, .h2, h3, .h3 {
                             📁 Kaynaklar
                         </a>
                         <a href="#" class="nav-tab" onclick="showTab('groups')">
-                            👥 Gruplar
+                            👥 Kategoriler
                         </a>
-                        <a href="#" class="nav-tab" onclick="showTab('activity')">
-                            ⏰ Etkinlik Akışı
-                        </a>
+
                     </div>
 
                     <div class="content-area">
@@ -564,13 +636,11 @@ h1, .h1, h2, .h2, h3, .h3 {
 
                         <!-- Groups Tab -->
                         <div id="groups-content" class="tab-content">
-                            <div class="loading">Gruplar yükleniyor...</div>
+                            <div class="loading">Kategoriler yükleniyor...</div>
                         </div>
 
                         <!-- Activity Tab -->
-                        <div id="activity-content" class="tab-content">
-                            <div class="loading">Etkinlik akışı yükleniyor...</div>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -590,7 +660,6 @@ h1, .h1, h2, .h2, h3, .h3 {
                 this.dataset = null;
                 this.organization = null;
                 this.stats = {};
-                this.activities = [];
                 
                 this.init();
             }
@@ -611,14 +680,12 @@ h1, .h1, h2, .h2, h3, .h3 {
                 try {
                     await this.loadDataset();
                     await this.loadStats();
-                    await this.loadActivities();
                     
                     this.renderHeader();
                     this.renderActionButtons();
                     this.renderDatasetContent();
                     this.renderResourcesContent();
                     this.renderGroupsContent();
-                    this.renderActivityContent();
                     this.renderSidebar();
                 } catch (error) {
                     console.error('Error loading dataset:', error);
@@ -673,19 +740,6 @@ h1, .h1, h2, .h2, h3, .h3 {
                     this.stats.followers = 0;
                 }
             }
-
-            async loadActivities() {
-                try {
-                    this.activities = await this.apiCall('package_activity_list', {
-                        id: this.datasetId,
-                        limit: 10
-                    });
-                } catch (error) {
-                    console.warn('Activities could not be loaded:', error);
-                    this.activities = [];
-                }
-            }
-
             renderHeader() {
                 // Breadcrumb
                 const breadcrumbNav = document.getElementById('breadcrumb-nav');
@@ -718,13 +772,13 @@ h1, .h1, h2, .h2, h3, .h3 {
                 let buttonsHTML = '';
 
                 // Yönet butonu (sadece yetkili kullanıcılara)
-                if (this.dataset.state === 'active') {
-                    buttonsHTML += `
-                        <a href="/dataset/edit/${this.dataset.name}" class="action-btn btn-manage">
-                            <span>🔧</span> Yönet
-                        </a>
-                    `;
-                }
+                // if (this.dataset.state === 'active') {
+                //     buttonsHTML += `
+                //         <a href="/dataset/edit/${this.dataset.name}" class="action-btn btn-manage">
+                //             <span>🔧</span> Yönet
+                //         </a>
+                //     `;
+                // }
 
                 // Etiketler widget'ı (inline)
                 if (this.dataset.tags && this.dataset.tags.length > 0) {

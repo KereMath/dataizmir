@@ -7,6 +7,43 @@
 {% endblock %}
 
 {% block primary_content_inner %}
+
+    {# YENİ FÜTÜRİSTİK ÇOKLU EYLEM BUTONLARI #}
+    <div class="fab-container">
+
+      {# ÜYELERİ YÖNET BUTONU #}
+      {% if h.check_access('organization_update', {'id': group_dict.id}) %}
+        <a href="{{ h.url_for('organization.members', id=group_dict.name) }}" class="members-fab-futuristic" title="{{ _('Manage Members') }}">
+          <span class="fab-icon">
+            <i class="fa fa-users"></i>
+          </span>
+          <span class="fab-text">Üyeleri Yönet</span>
+        </a>
+      {% endif %}
+
+      {# AKTİVİTE AKIŞI BUTONU #}
+      {% if h.check_access('organization_update', {'id': group_dict.id}) %}
+        <a href="{{ h.url_for('organization.activity', id=group_dict.name) }}" class="activity-fab-futuristic" title="{{ _('Activity Stream') }}">
+          <span class="fab-icon">
+            <i class="fa fa-history"></i>
+          </span>
+          <span class="fab-text">Aktivite Akışı</span>
+        </a>
+      {% endif %}
+
+      {# VERİ PAYDAŞI DÜZENLE BUTONU #}
+      {% if h.check_access('organization_update', {'id': group_dict.id}) %}
+        <a href="{{ h.url_for('organization.edit', id=group_dict.id) }}" class="edit-fab-futuristic" title="{{ _('Edit Organization') }}">
+          <span class="fab-icon">
+            <i class="fa fa-cog"></i>
+          </span>
+          <span class="fab-text">Veri Paydaşı Düzenle</span>
+        </a>
+      {% endif %}
+
+    </div>
+
+
     {% block groups_search_form %}
       {% set facets = {
         'fields': fields_grouped,
@@ -24,14 +61,93 @@
       %}
       {% snippet 'snippets/search_form.html', form_id='organization-datasets-search-form', type='dataset', query=q, sorting=sorting, sorting_selected=sort_by_selected, count=page.item_count, facets=facets, placeholder=_('Search datasets...'), show_empty=request.params, fields=fields %}
     {% endblock %}
-  {% block packages_list %}
-    {% if page.items %}
-      {{ h.snippet('snippets/package_list.html', packages=page.items) }}
-    {% endif %}
-  {% endblock %}
-  {% block page_pagination %}
-    {{ page.pager(q=q) }}
-  {% endblock %}
+
+    {% block packages_list %}
+      {% if page.items %}
+        {{ h.snippet('snippets/package_list.html', packages=page.items) }}
+      {% endif %}
+    {% endblock %}
+
+    {% block page_pagination %}
+      {{ page.pager(q=q) }}
+    {% endblock %}
+
+    {# Yeni butonlar için özel CSS stilleri #}
+    <style>
+      .fab-container {
+        position: fixed !important;
+        bottom: 30px !important;
+        right: 30px !important;
+        z-index: 1100 !important;
+        display: flex !important;
+        flex-direction: column-reverse; /* Butonların yukarı doğru açılması için */
+        align-items: flex-end;
+        gap: 15px;
+      }
+
+      /* Tüm fütüristik butonlar için ortak temel stil */
+      .edit-fab-futuristic, .activity-fab-futuristic, .members-fab-futuristic {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 62px !important;
+        height: 60px !important;
+        padding: 0 21px !important;
+        color: #fff !important;
+        border-radius: 30px !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+        text-decoration: none !important;
+        white-space: nowrap !important;
+        overflow: hidden !important;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
+      }
+
+      .edit-fab-futuristic .fab-icon, .activity-fab-futuristic .fab-icon, .members-fab-futuristic .fab-icon {
+        font-size: 22px !important;
+        line-height: 1 !important;
+        transition: transform 0.5s ease !important;
+      }
+
+      .edit-fab-futuristic .fab-text, .activity-fab-futuristic .fab-text, .members-fab-futuristic .fab-text {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        margin-left: 12px !important;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out 0.1s !important;
+      }
+      
+      .edit-fab-futuristic:hover .fab-text, 
+      .activity-fab-futuristic:hover .fab-text, 
+      .members-fab-futuristic:hover .fab-text {
+        opacity: 1;
+      }
+
+      /* Düzenle Butonu Stili */
+      .edit-fab-futuristic { background: linear-gradient(45deg, #455A64, #263238) !important; }
+      .edit-fab-futuristic:hover {
+        width: 265px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+        transform: translateY(-2px) !important;
+      }
+      .edit-fab-futuristic:hover .fab-icon { transform: rotate(180deg); }
+
+      /* Aktivite Butonu Stili */
+      .activity-fab-futuristic { background: linear-gradient(45deg, #FF9800, #FFC107) !important; }
+      .activity-fab-futuristic:hover {
+        width: 200px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+        transform: translateY(-2px) !important;
+      }
+
+      /* Üyeler Butonu Stili */
+      .members-fab-futuristic { background: linear-gradient(45deg, #1976D2, #00BCD4) !important; }
+      .members-fab-futuristic:hover {
+        width: 200px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+        transform: translateY(-2px) !important;
+      }
+
+    </style>
 {% endblock %}
 
 {% block organization_facets %}

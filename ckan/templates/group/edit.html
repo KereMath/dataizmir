@@ -1,12 +1,162 @@
 {% extends "group/base_form_page.html" %}
 
-{% block breadcrumb_content %}
-  <li>{% link_for _('Groups'), named_route=group_type+'.index' %}</li>
-  {% block breadcrumb_content_inner %}
-    <li>{% link_for group.display_name|truncate(35), named_route=group_type+'.read', id=group.name %}</li>
-    <li class="active">{% link_for _('Manage'), named_route=group_type+'.edit', id=group.name %}</li>
-  {% endblock %}
-{% endblock %}
+{# --- Eski ve istenmeyen blokları boşaltarak kontrolü ele alıyoruz --- #}
+{% block subtitle %}{% endblock %}
+{% block breadcrumb_content %}{% endblock %}
+{% block page_heading_class %}{% endblock %}
+{% block page_heading %}{% endblock %}
+{% block form %}{% endblock %}
+{% block secondary_content %}{% endblock %}
+{% block content_primary_nav %}{% endblock %}
+{% block content_action %}{% endblock %}
 
-{% block page_heading_class %}hide-heading{% endblock %}
-{% block page_heading %}{{ _('Edit Group') }}{% endblock %}
+{# --- Sayfanın tüm içeriğini bu modern yapı içinde yeniden oluşturuyoruz --- #}
+{% block primary_content_inner %}
+<style>
+  /* === Stil kodları new_group sayfasıyla birebir aynı === */
+  .modern-form-container { max-width: 800px; margin: 0 auto; padding: 40px 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+  .form-header { text-align: center; margin-bottom: 50px; }
+  .form-header h1 { font-size: 36px; color: #1a1a1a; margin-bottom: 10px; font-weight: 700; }
+  .form-header p { font-size: 18px; color: #666; }
+  .modern-form { background: #fff; border-radius: 20px; padding: 40px; box-shadow: 0 10px 40px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; }
+  .form-group { margin-bottom: 30px; }
+  .form-label { display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 15px; }
+  .form-label span { color: #e74c3c; }
+  .form-input, .form-input[readonly] { width: 100%; padding: 14px 18px; border: 2px solid #e1e8ed; border-radius: 10px; font-size: 16px; transition: all 0.3s ease; background: #fafbfc; }
+  .form-input[readonly] { background-color: #f0f2f5; cursor: not-allowed; color: #666; }
+  .form-input:focus { outline: none; border-color: #8B3FFD; background: #fff; box-shadow: 0 0 0 4px rgba(139, 63, 253, 0.1); }
+  .form-textarea { min-height: 120px; resize: vertical; }
+  .image-upload-container { border: 2px dashed #e1e8ed; border-radius: 12px; padding: 30px; text-align: center; background: #fafbfc; transition: all 0.3s ease; cursor: pointer; position: relative; }
+  .image-upload-container:hover { border-color: #8B3FFD; background: #f8f3ff; }
+  .image-upload-container.has-image { border-style: solid; background: #fff; padding: 20px; }
+  .upload-icon { width: 60px; height: 60px; margin: 0 auto 15px; background: #8B3FFD; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 24px; }
+  .upload-text { color: #666; margin-bottom: 10px; }
+  .upload-hint { font-size: 13px; color: #999; }
+  .image-preview { max-width: 200px; max-height: 200px; margin: 0 auto; position: relative; }
+  .image-preview img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; }
+  .remove-image-btn { position: absolute; top: -10px; right: -10px; background: #e74c3c; color: white; border: 2px solid white; border-radius: 50%; width: 28px; height: 28px; font-size: 16px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: all 0.2s ease; }
+  .remove-image-btn:hover { transform: scale(1.1); background: #c0392b; }
+  .form-actions { display: flex; flex-wrap: wrap; gap: 15px; margin-top: 40px; padding-top: 30px; border-top: 1px solid #f0f0f0; }
+  .btn { padding: 14px 32px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-primary { background: #8B3FFD; color: white; flex-grow: 1; }
+  .btn-primary:hover { background: #6924bd; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(139, 63, 253, 0.3); }
+  .btn-secondary { background: #f0f2f5; color: #666; flex-grow: 1; }
+  .btn-secondary:hover { background: #e4e6e9; }
+  .btn-danger { background: #e74c3c; color: white; flex-grow: 0; }
+  .btn-danger:hover { background: #c0392b; }
+  .help-text { font-size: 13px; color: #999; margin-top: 6px; }
+  .char-counter { text-align: right; font-size: 12px; color: #999; margin-top: 5px; }
+  @media (max-width: 768px) { .modern-form-container { padding: 20px 10px; } .modern-form { padding: 25px 20px; } .form-header h1 { font-size: 28px; } }
+</style>
+
+{# --- Düzenleme sayfası için veri ayıklama --- #}
+{% set image_url = data.image_display_url or group.image_display_url %}
+
+<div class="modern-form-container">
+  <div class="form-header">
+    <h1>🎨 Kategoriyi Düzenle</h1>
+    <p>"{{ group.display_name }}" kategorisinin bilgilerini güncelleyin.</p>
+  </div>
+  
+  <form class="modern-form" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+      <label class="form-label" for="field-title">Kategori Adı <span>*</span></label>
+      <input type="text" id="field-title" name="title" class="form-input" required value="{{ data.title or group.title }}">
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label" for="field-name">URL Adresi</label>
+      <input type="text" id="field-name" name="name" class="form-input" readonly value="{{ data.name or group.name }}">
+      <p class="help-text">Kategori URL'si oluşturulduktan sonra değiştirilemez.</p>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label" for="field-description">Açıklama</label>
+      <textarea id="field-description" name="description" class="form-input form-textarea" placeholder="Bu kategori hakkında detaylı bilgi verin..." maxlength="500">{{ data.description or group.description }}</textarea>
+      <div class="char-counter"><span id="char-count">0</span> / 500 karakter</div>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">Kategori Görseli</label>
+      <div class="image-upload-container {% if image_url %}has-image{% endif %}" id="image-container">
+        <input type="file" id="field-image-upload" name="image_upload" accept="image/*" style="display: none;">
+        <input type="checkbox" id="clear-image" name="clear_image" value="true" style="display: none;">
+        
+        <div class="upload-content" style="display: {% if image_url %}none{% else %}block{% endif %};">
+          <div class="upload-icon">📷</div>
+          <p class="upload-text">Görseli değiştirmek için tıklayın</p>
+          <p class="upload-hint">PNG, JPG veya GIF (Maks. 2MB)</p>
+        </div>
+        
+        <div class="image-preview" id="image-preview" style="display: {% if image_url %}block{% else %}none{% endif %};">
+          <img src="{{ image_url if image_url else '' }}" alt="Önizleme" id="image-preview-img">
+          <button type="button" class="remove-image-btn" id="remove-image" title="Görseli Kaldır">&times;</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="form-actions">
+      <a href="{{ h.url_for(group_type+'.read', id=group.name) }}" class="btn btn-secondary">← İptal</a>
+      <button type="submit" name="save" class="btn btn-primary">✨ Değişiklikleri Kaydet</button>
+      {# Sadece yöneticilerin görebileceği silme butonu #}
+      {% if h.check_access('group_delete', {'id': group.id}) %}
+        <a href="{{ h.url_for(group_type+'.delete', id=group.id) }}" class="btn btn-danger" onclick="return confirm('Bu kategoriyi kalıcı olarak silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.')">🗑️ Sil</a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Karakter sayacı
+  const descInput = document.getElementById('field-description');
+  const charCount = document.getElementById('char-count');
+  
+  function updateCharCount() {
+    charCount.textContent = descInput.value.length;
+  }
+  updateCharCount(); // Sayfa yüklendiğinde mevcut karakter sayısını göster
+  descInput.addEventListener('input', updateCharCount);
+
+  // Resim yükleme ve kaldırma
+  const imageUploadInput = document.getElementById('field-image-upload');
+  const imageContainer = document.getElementById('image-container');
+  const imagePreview = document.getElementById('image-preview');
+  const imagePreviewImg = document.getElementById('image-preview-img');
+  const uploadContent = imageContainer.querySelector('.upload-content');
+  const removeImageBtn = document.getElementById('remove-image');
+  const clearImageCheckbox = document.getElementById('clear-image');
+
+  imageContainer.addEventListener('click', (e) => {
+    if (e.target.id !== 'remove-image') {
+      imageUploadInput.click();
+    }
+  });
+
+  imageUploadInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        imagePreviewImg.src = e.target.result;
+        imagePreview.style.display = 'block';
+        uploadContent.style.display = 'none';
+        imageContainer.classList.add('has-image');
+        clearImageCheckbox.checked = false; // Yeni resim seçilirse, 'temizle' işaretini kaldır
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+  
+  removeImageBtn.addEventListener('click', function(e) {
+    e.stopPropagation(); // Container'ın click event'ini tetiklemesini engelle
+    imagePreviewImg.src = '';
+    imagePreview.style.display = 'none';
+    uploadContent.style.display = 'block';
+    imageContainer.classList.remove('has-image');
+    imageUploadInput.value = ''; // Seçili dosyayı temizle
+    clearImageCheckbox.checked = true; // Sunucuya görseli silmesi için işaret gönder
+  });
+});
+</script>
+{% endblock %}

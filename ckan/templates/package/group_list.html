@@ -1,26 +1,215 @@
+<head>
+  {# ... diğer head etiketleri ... #}
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  {# ... diğer head etiketleri ... #}
+</head>
 {% extends "package/read_base.html" %}
 {% import 'macros/form.html' as form %}
 
 {% block primary_content_inner %}
-  <h2 class="hide-heading">{{ _('Groups') }}</h2>
+  <style>
+    /* --- FÜTÜRİSTİK KART TASARIMI --- */
+    .futuristic-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      padding: 1rem 0;
+    }
+    .futuristic-card {
+      background: #1d1d33; /* Koyu lacivert/mor arka plan */
+      border-radius: 1rem;
+      border: 1px solid #3a3a5a;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+      transform-style: preserve-3d;
+    }
+    .futuristic-card:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+    }
+    .futuristic-card .card-content {
+      padding: 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
+    .futuristic-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+    }
+    .futuristic-card-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+      line-height: 1.2;
+    }
+    .futuristic-card-remove-btn {
+      background: transparent;
+      border: 1px solid #ff4d4d;
+      color: #ff4d4d;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex-shrink: 0;
+      margin-left: 1rem;
+    }
+    .futuristic-card-remove-btn:hover {
+      background: #ff4d4d;
+      color: #1d1d33;
+      box-shadow: 0 0 15px #ff4d4d;
+    }
+    .futuristic-card-image-link {
+      display: block;
+      margin: 0 auto;
+      text-decoration: none;
+    }
+    .futuristic-card-image-container {
+      background: #fff; /* Beyaz arka plan */
+      border-radius: 0.75rem;
+      padding: 1rem;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.3s ease;
+    }
+    .futuristic-card-image-link:hover .futuristic-card-image-container {
+      transform: scale(1.05);
+    }
+    .futuristic-card-image {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain; /* Fotoğrafı sığdırır, kesmez */
+    }
+    .futuristic-card-description {
+      font-size: 0.95rem;
+      color: #b0b0d0;
+      margin-top: 1.5rem;
+      line-height: 1.6;
+      border-top: 1px solid #3a3a5a;
+      padding-top: 1.5rem;
+    }
 
-  {% if group_dropdown %}
-    <form class="add-to-group" method="post">
-      <select id="field-add_group" name="group_added" data-module="autocomplete">
-        {% for option in group_dropdown %}
-          <option value="{{ option[0] }}"> {{ option[1] }}</option>
-        {% endfor %}
-      </select>
-      <button type="submit" class="btn btn-primary" title="{{ _('Associate this group with this dataset') }}">{{ _('Add to group') }}</button>
-    </form>
-  {% endif %}
+    /* --- IZGARA DROPDOWN STİLLERİ (ÖNCEKİ VERSİYONLA AYNI) --- */
+    .futuristic-select-wrapper { position: relative; }
+    .futuristic-select-trigger { display: flex; justify-content: space-between; align-items: center; padding: 0.8rem 1.5rem; font-size: 1rem; font-weight: 500; color: #e0e0e0; background-color: #1e1e2f; border: 2px solid #4a4a68; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s ease-in-out; }
+    .futuristic-select-trigger:hover, .futuristic-select-trigger.open { border-color: #8B3FFD; box-shadow: 0 0 15px rgba(139, 63, 253, 0.5); }
+    .futuristic-select-trigger .trigger-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .futuristic-select-trigger::after { content: '\f078'; font-family: 'Font Awesome 5 Free'; font-weight: 900; transition: transform 0.2s ease-in-out; margin-left: 1rem; }
+    .futuristic-select-trigger.open::after { transform: rotate(180deg); }
+    .futuristic-select-panel { position: absolute; top: 100%; left: 0; right: 0; background-color: rgba(30, 30, 47, 0.95); backdrop-filter: blur(10px); border: 2px solid #4a4a68; border-radius: 0.5rem; margin-top: 0.5rem; z-index: 100; padding: 1rem; opacity: 0; visibility: hidden; transform: translateY(-10px); transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1); }
+    .futuristic-select-panel.open { opacity: 1; visibility: visible; transform: translateY(0); }
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; max-height: 300px; overflow-y: auto; }
+    .option-card { background: rgba(255, 255, 255, 0.05); border: 1px solid #4a4a68; border-radius: 0.5rem; padding: 1rem; text-align: center; cursor: pointer; transition: all 0.2s ease-in-out; color: #e0e0e0; }
+    .option-card:hover { background: rgba(139, 63, 253, 0.2); border-color: #8B3FFD; transform: scale(1.05); }
+    .option-card.selected { background: #8B3FFD; border-color: #8B3FFD; color: #fff; font-weight: 700; }
+    .option-card i { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+  </style>
 
-  {% if pkg_dict.groups %}
-    <form method="post">
-      {% snippet 'group/snippets/group_list.html', groups=pkg_dict.groups %}
-    </form>
-  {% else %}
-    <p class="empty">{{ _('There are no groups associated with this dataset') }}</p>
-  {% endif %}
+  <div class="card shadow-sm mb-4 bg-dark text-white">
+    <div class="card-header bg-dark border-bottom border-secondary p-3">
+      <h2 class="h5 mb-0 d-flex align-items-center">
+        <i class="fa fa-folder-open me-2" style="color: #8B3FFD;"></i>
+        {{ _('Kategoriler') }}
+      </h2>
+    </div>
+    <div class="card-body">
+      {% if group_dropdown %}
+        <div class="add-to-group-form mb-5 p-3 bg-darker rounded-3 border border-secondary">
+          <form method="post">
+            <label class="form-label fw-semibold mb-2">{{ _('Bu Veri Setini Bir Kategoriye Ekle') }}</label>
+            <div class="d-flex flex-column flex-sm-row gap-2">
+              <div class="flex-grow-1">
+                <div class="futuristic-select-wrapper">
+                  <div class="futuristic-select-trigger"><span class="trigger-text">{{ _('Bir kategori seç...') }}</span></div>
+                  <div class="futuristic-select-panel">
+                    <div class="options-grid">
+                      {% for option in group_dropdown %}
+                        <div class="option-card" data-value="{{ option[0] }}"><i class="fa fa-folder"></i><span>{{ option[1] }}</span></div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                  <select name="group_added" style="display: none;">
+                    {% for option in group_dropdown %} <option value="{{ option[0] }}">{{ option[1] }}</option> {% endfor %}
+                  </select>
+                </div>
+              </div>
+              <div class="add-button-wrapper" style="margin-top:6px !important;">
+                <button type="submit" class="btn btn-futuristic w-100">
+                  <i class="fa fa-plus me-1"></i> <span>{{ _('Ekle') }}</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      {% endif %}
 
+      {% if pkg_dict.groups %}
+        <form method="post">
+          {% snippet 'group/snippets/group_list.html', groups=pkg_dict.groups %}
+        </form>
+      {% else %}
+        <div class="text-center p-4">
+          <p class="text-muted">{{ _('Bu veri setiyle ilişkilendirilmiş hiç kategori bulunmuyor.') }}</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Izgara Dropdown JS (Otomatik kapanma düzeltildi)
+      const wrapper = document.querySelector('.futuristic-select-wrapper');
+      if (wrapper) {
+        const trigger = wrapper.querySelector('.futuristic-select-trigger');
+        const panel = wrapper.querySelector('.futuristic-select-panel');
+        const optionsGrid = wrapper.querySelector('.options-grid');
+        const nativeSelect = wrapper.querySelector('select[name="group_added"]');
+        const triggerText = trigger.querySelector('.trigger-text');
+        trigger.addEventListener('click', (e) => { e.stopPropagation(); togglePanel(); });
+        function togglePanel() {
+          const isOpen = panel.classList.toggle('open');
+          trigger.classList.toggle('open', isOpen);
+        }
+        optionsGrid.addEventListener('click', function(e) {
+          const card = e.target.closest('.option-card');
+          if (card) {
+            const currentlySelected = optionsGrid.querySelector('.selected');
+            if (currentlySelected) currentlySelected.classList.remove('selected');
+            card.classList.add('selected');
+            triggerText.textContent = card.querySelector('span').textContent;
+            nativeSelect.value = card.dataset.value;
+            togglePanel(); // DÜZELTME: Seçim yapıldığında anında kapatır.
+          }
+        });
+        window.addEventListener('click', function() { if (panel.classList.contains('open')) togglePanel(); });
+      }
+
+      // 3D Kart Efekti JS
+      const cards = document.querySelectorAll('.futuristic-card');
+      cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left - rect.width / 2;
+          const y = e.clientY - rect.top - rect.height / 2;
+          const rotateX = -y / 20;
+          const rotateY = x / 20;
+          card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+        });
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)';
+        });
+      });
+    });
+  </script>
 {% endblock %}

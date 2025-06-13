@@ -1,7 +1,123 @@
 {% extends 'package/edit_base.html' %}
 
+{# --- Önceki tüm stillendirme bloklarını boşaltıyoruz --- #}
+{% block subtitle %}{% endblock %}
+{% block page_heading_class %}{% endblock %}
+{% block page_heading %}{% endblock %}
+
+{# --- Ana içerik bloğunda modernizasyonu yapıyoruz --- #}
 {% block primary_content_inner %}
-    {% block form %}
-	{{- h.snippet(form_snippet, pkg_dict=pkg_dict, **form_vars) -}}
-  {% endblock %}
+  
+  <style>
+    /* --- Temel Modern Stil Kodları --- */
+    .modern-form-wrapper { max-width: 960px; margin: 40px auto; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .modern-form-wrapper .form-group { margin-bottom: 30px !important; }
+    .modern-form-wrapper .control-required { color: #e74c3c !important; margin-left: 3px; }
+    .modern-form-wrapper .form-control, .modern-form-wrapper .form-control-xl, .modern-form-wrapper input[type=text], .modern-form-wrapper input[type=url], .modern-form-wrapper textarea, .modern-form-wrapper select { width: 100% !important; padding: 14px 18px !important; border: 2px solid #e1e8ed !important; border-radius: 10px !important; font-size: 16px !important; transition: all 0.3s ease !important; background: #fafbfc !important; color: #333 !important; box-shadow: none !important; }
+    .modern-form-wrapper .form-control:focus, .modern-form-wrapper input[type=text]:focus, .modern-form-wrapper textarea:focus, .modern-form-wrapper select:focus { outline: none !important; border-color: #8B3FFD !important; background: #fff !important; box-shadow: 0 0 0 4px rgba(139, 63, 253, 0.1) !important; }
+    .modern-form-wrapper textarea.form-control { min-height: 150px !important; resize: vertical; }
+    .modern-form-wrapper .help-block { font-size: 13px !important; color: #999 !important; margin-top: 8px !important; }
+    .modern-form-wrapper ul.tagit { border-radius: 10px !important; background: #fafbfc !important; border: 2px solid #e1e8ed !important; padding: 5px 8px !important; }
+    .modern-form-wrapper ul.tagit.ui-widget-content-active { border-color: #8B3FFD !important; box-shadow: 0 0 0 4px rgba(139, 63, 253, 0.1) !important; }
+    .modern-form-wrapper .tagit-choice { background-color: #8B3FFD !important; border-color: #6924bd !important; border-radius: 6px !important; color: white !important; }
+    .modern-form-wrapper .tagit-new input { font-size: 16px !important; background: transparent !important; }
+    .modern-form-wrapper .form-actions { border-top: 1px solid #f0f0f0 !important; margin-top: 40px !important; padding-top: 30px !important; background: transparent !important; }
+    .modern-form-wrapper .form-actions .btn { padding: 14px 32px !important; border: none !important; border-radius: 10px !important; font-size: 16px !important; font-weight: 600 !important; cursor: pointer !important; transition: all 0.3s ease !important; text-decoration: none !important; }
+    .modern-form-wrapper .form-actions .btn-primary { background: #8B3FFD !important; color: white !important; }
+    .modern-form-wrapper .form-actions .btn-primary:hover { background: #6924bd !important; transform: translateY(-2px); box-shadow: 0 10px 25px rgba(139, 63, 253, 0.3); }
+    .modern-form-wrapper .form-actions .btn-danger { background: #e74c3c !important; color: white !important; }
+
+    /* --- YENİ: SİLİNEN ALAN İÇİN KIRMIZI ÇARPI EFEKTİ --- */
+    .modern-form-wrapper .form-group {
+        position: relative; /* Çarpı işaretini konumlandırmak için */
+        transition: opacity 0.4s ease;
+    }
+    .modern-form-wrapper .form-group.field-is-deleted {
+        opacity: 0.5;
+    }
+    .modern-form-wrapper .form-group.field-is-deleted::before,
+    .modern-form-wrapper .form-group.field-is-deleted::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 5%;
+        width: 90%;
+        height: 4px; /* Çizgi kalınlığı */
+        background-color: rgba(231, 76, 60, 0.7); /* Kırmızı, hafif şeffaf */
+        border-radius: 2px;
+        z-index: 10;
+        transform-origin: center;
+        animation: draw-cross 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+    }
+    .modern-form-wrapper .form-group.field-is-deleted::before {
+        transform: translateY(-50%) rotate(15deg);
+    }
+    .modern-form-wrapper .form-group.field-is-deleted::after {
+        transform: translateY(-50%) rotate(-15deg);
+    }
+    .modern-form-wrapper .field-is-deleted .form-control {
+        background-color: #ffeeee !important;
+    }
+    @keyframes draw-cross {
+      0% { transform: translateY(-50%) scaleX(0) rotate(0deg); }
+      100% { transform: translateY(-50%) scaleX(1) rotate(var(--final-rotation)); }
+    }
+    /* Animasyonun her bir çizgi için farklı dönme açısı almasını sağlarız */
+    .modern-form-wrapper .form-group.field-is-deleted::before { --final-rotation: 15deg; }
+    .modern-form-wrapper .form-group.field-is-deleted::after { --final-rotation: -15deg; }
+  </style>
+  
+  <div class="modern-form-wrapper">
+    <div class="form-header">
+        <h1>📝 {{ _('Veri Setini Düzenle') }}</h1>
+        <p>"{{ pkg_dict.title or _('Yeni Veri Seti') }}"</p>
+    </div>
+    <div class="modern-form" id="dataset-edit-form">
+        {% block form %}
+            {{- h.snippet(form_snippet, pkg_dict=pkg_dict, **form_vars) -}}
+        {% endblock %}
+    </div>
+  </div>
+
+  {# --- YENİ: Alanların 'disabled' durumunu izleyip efekti tetikleyen Akıllı Script --- #}
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('dataset-edit-form');
+        if (!form) return;
+
+        // MutationObserver: DOM'daki değişiklikleri (özellikle attribute değişikliklerini)
+        // izlemek için kullanılan modern ve performanslı bir yöntemdir.
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                // Sadece 'disabled' attribute'u değiştiğinde ilgileniyoruz.
+                if (mutation.type === 'attributes' && mutation.attributeName === 'disabled') {
+                    const targetElement = mutation.target;
+                    
+                    // Değişikliğin olduğu input/textarea'nın ait olduğu form grubunu bul
+                    const formGroup = targetElement.closest('.form-group');
+                    if (!formGroup) return;
+
+                    // Eğer element 'disabled' hale geldiyse, görsel efekti ekle
+                    if (targetElement.disabled) {
+                        formGroup.classList.add('field-is-deleted');
+                    } else {
+                        // Eğer 'disabled' durumu kaldırıldıysa (CKAN'ın bir geri alma mekanizması varsa),
+                        // görsel efekti de kaldır.
+                        formGroup.classList.remove('field-is-deleted');
+                    }
+                }
+            });
+        });
+
+        // Gözlemciyi başlat: formun içindeki tüm elementleri ve onların
+        // attribute değişikliklerini izle.
+        observer.observe(form, {
+            attributes: true, // attribute değişikliklerini izle
+            childList: true,  // alt element eklenip çıkarılmasını izle
+            subtree: true,    // tüm alt ağacı izle
+            attributeFilter: ['disabled'] // sadece 'disabled' attribute'u ile ilgilen
+        });
+    });
+  </script>
+
 {% endblock %}

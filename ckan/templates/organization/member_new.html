@@ -6,6 +6,174 @@
 
 {% block subtitle %}{{ _('Edit Member') if user else _('Add Member') }} {{ g.template_title_delimiter }} {{ super() }}{% endblock %}
 
+{# ---------- REFINED FUTURISTIC STYLES ---------- #}
+{% block styles %}
+  {{ super() }}
+  <style>
+    :root {
+      --clr-panel-bg: #1c2b3a;
+      --clr-accent: #4a90e2;
+      --clr-text-light: #f5f7fa;
+      --clr-text-med: #a0b3c4;
+      --clr-danger: #e74c3c;
+      --clr-border-subtle: rgba(74, 144, 226, 0.2);
+    }
+
+    /* ─── GLOBAL TYPOGRAPHY ─────────────────────────────────────── */
+    body, label, .page-heading, .btn, input, select, .module-content p {
+      font-family: 'Orbitron', sans-serif !important;
+    }
+
+    /* ─── PAGE HEADING ─────────────────────────────────────────── */
+    .page-heading {
+      font-size: 26px !important;
+      font-weight: 600 !important;
+      color: #333 !important; /* Assuming light page background */
+      position: relative;
+      padding-bottom: 15px !important;
+      margin-bottom: 35px !important;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    /* ─── FORM PANEL DESIGN ────────────────────────────────────── */
+    .dataset-form {
+      background: var(--clr-panel-bg) !important;
+      padding: 40px 45px !important;
+      border-radius: 10px !important;
+      position: relative;
+      border: 1px solid var(--clr-border-subtle) !important;
+      box-shadow: 0 10px 30px rgba(28, 43, 58, 0.3) !important;
+      clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 0 100%);
+    }
+    
+    /* Accent line on the left */
+    .dataset-form::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: var(--clr-accent);
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+      box-shadow: 0 0 8px var(--clr-accent);
+    }
+
+    /* ─── INPUTS & SELECT ─────────────────────────────────────── */
+    .dataset-form input[type="text"],
+    .dataset-form input[type="email"],
+    .dataset-form select {
+      background: rgba(0, 0, 0, 0.3) !important;
+      border: 1px solid var(--clr-border-subtle) !important;
+      border-radius: 8px !important;
+      padding: 14px 18px !important;
+      color: var(--clr-text-light) !important;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
+      width: 100% !important; /* Ensure inputs are full-width */
+    }
+    .dataset-form input:focus,
+    .dataset-form input[type="email"]:focus,
+    .dataset-form select:focus {
+      outline: none !important;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.4) !important;
+      border-color: var(--clr-accent) !important;
+    }
+    .dataset-form p {
+      color: var(--clr-text-med) !important;
+      font-size: 14px !important;
+    }
+    label.control-label {
+      color: var(--clr-accent) !important;
+      font-weight: 600 !important;
+      text-transform: uppercase;
+      font-size: 12px !important;
+      letter-spacing: 1px;
+    }
+
+    /* ─── DIVIDER "OR" ─────────────────────────────────────────── */
+    .add-member-or-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      min-height: 150px;
+    }
+    .add-member-or {
+      color: var(--clr-text-med);
+      font-weight: bold;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .add-member-or::before,
+    .add-member-or::after {
+      content: '';
+      flex-grow: 1;
+      height: 1px;
+      background: var(--clr-border-subtle);
+      margin: 0 10px;
+    }
+
+    /* ─── BUTTONS ──────────────────────────────────────────────── */
+    .btn {
+      border: none !important;
+      padding: 12px 25px !important;
+      font-weight: 600 !important;
+      border-radius: 8px !important;
+      transition: all 0.2s ease !important;
+      text-transform: uppercase;
+      font-size: 13px !important;
+      letter-spacing: 0.5px;
+    }
+    .btn-primary {
+      background: var(--clr-accent) !important;
+      color: #fff !important;
+    }
+    .btn-default {
+      background: transparent !important;
+      border: 1px solid #ccc !important;
+      color: #555 !important;
+    }
+    .pull-left.btn-danger {
+      background: transparent !important;
+      border: 1px solid var(--clr-danger) !important;
+      color: var(--clr-danger) !important;
+    }
+    .pull-left.btn-danger:hover {
+        background: var(--clr-danger) !important;
+        color: #fff !important;
+    }
+    .btn:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+    }
+
+    /* ─── INFO BOX MODULE ─────────────────────────────────────── */
+    .module.module-narrow {
+      background: #f5f7fa !important;
+      border: 1px solid #e0e0e0 !important;
+      border-left: 4px solid var(--clr-accent) !important;
+      padding: 25px 22px !important;
+      border-radius: 8px !important;
+    }
+    .module-heading {
+      color: #333 !important;
+      font-weight: bold;
+    }
+    .module-content p {
+      color: #555 !important;
+      font-family: sans-serif !important;
+    }
+    .module-content strong {
+      color: #333 !important;
+      font-family: sans-serif !important;
+      font-weight: bold;
+    }
+  </style>
+{% endblock %}
+
 {% block primary_content_inner %}
   {% link_for _('Back to all members'), named_route=group_type+'.members', id=organization.name, class_='btn btn-default pull-right', icon='arrow-left' %}
   <h1 class="page-heading">
@@ -30,9 +198,9 @@
               <input id="username" name="username" type="text" value="{{ user.name }}"
               disabled="True" class="form-control">
             {% else %}
-                <input id="username" type="text" name="username" placeholder="{{ _('Username') }}"
-                value="" class="control-medium" data-module="autocomplete"
-                data-module-source="/api/2/util/user/autocomplete?ignore_self=true&q=?">
+              <input id="username" type="text" name="username" placeholder="{{ _('Username') }}"
+              value="" class="form-control" data-module="autocomplete"
+              data-module-source="/api/2/util/user/autocomplete?ignore_self=true&q=?">
             {% endif %}
           </div>
         </div>
@@ -59,6 +227,7 @@
       {% endif %}
     </div>
 
+    <div style="margin-top: 20px;">
     {% if user and user.name == c.user and user_role == 'admin' %}
       {% set format_attrs = {'data-module': 'autocomplete', 'disabled': 'disabled'} %}
       {{ form.select('role', label=_('Role'), options=roles, selected=user_role, error='', attrs=format_attrs) }}
@@ -67,15 +236,16 @@
       {% set format_attrs = {'data-module': 'autocomplete'} %}
       {{ form.select('role', label=_('Role'), options=roles, selected=user_role, error='', attrs=format_attrs) }}
     {% endif %}
+    </div>
 
-    <div class="form-actions">
+    <div class="form-actions" style="border-top: 1px solid var(--clr-border-subtle); margin-top: 40px; padding-top: 30px;">
       {% if user %}
         <a href="{{ h.url_for(group_type + '.member_delete', id=group_dict.id, user=user.id) }}" class="btn btn-danger pull-left" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this member?') }}">{{ _('Delete') }}</a>
-        <button class="btn btn-primary" type="submit" name="submit" >
+        <button class="btn btn-primary pull-right" type="submit" name="submit" >
           {{ _('Update Member') }}
         </button>
       {% else %}
-        <button class="btn btn-primary" type="submit" name="submit" >
+        <button class="btn btn-primary pull-right" type="submit" name="submit" >
           {{ _('Add Member') }}
         </button>
       {% endif %}

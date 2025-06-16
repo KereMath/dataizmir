@@ -171,7 +171,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const datasetCount = user.number_created_packages || 0;
       const followers = user.num_followers || 0;
       
-      // --- DÜZELTME: Hem organizasyon hem de grup üyeliklerini birleştir.
       const userOrgsAndGroups = [...(user.organizations || []), ...(user.groups || [])];
 
       let rolesHTML = '<p style="font-size:0.9rem; color:#999; text-align:center; padding:1rem;">Kullanıcının üyelik rolü bulunmuyor.</p>';
@@ -216,11 +215,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     modalTitle.textContent = `${user.display_name} Üyeliklerini Yönet`;
     
-    // --- DÜZELTME: Tanımsız olma ihtimaline karşı boş dizi ata `|| []`.
     const userOrgNames = new Set((user.organizations || []).map(org => org.name));
     const userGroupNames = new Set((user.groups || []).map(g => g.name));
 
-    // --- İYİLEŞTİRME: Listeleri `display_name`'e göre alfabetik sırala.
     allOrgs.sort((a, b) => a.display_name.localeCompare(b.display_name));
     allGroups.sort((a, b) => a.display_name.localeCompare(b.display_name));
 
@@ -273,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const promises = [];
 
       checkboxes.forEach(cb => {
-          const name = cb.dataset.id; // --- İYİLEŞTİRME: Artık bu 'id' değil, 'name' (slug).
+          const name = cb.dataset.id;
           const type = cb.dataset.type;
           const isChecked = cb.checked;
           const wasMember = type === 'organization' ? originalOrgNames.has(name) : originalGroupNames.has(name);
@@ -308,7 +305,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         modalSaveBtn.disabled = false;
         modalSaveBtn.textContent = 'Değişiklikleri Kaydet';
         closeModal();
-        // Değişiklikler sonrası veriyi yeniden yükle
         main(); 
       }
   }
@@ -326,7 +322,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       allOrgs = orgList;
       allGroups = groupList;
 
-      // --- DÜZELTME: API çağrısına `include_organizations=true` eklendi.
       const userDetailPromises = userList.map(user => 
         fetchWithCredentials(`/api/3/action/user_show?id=${user.id}&include_num_followers=true&include_groups=true&include_organizations=true`)
       );
@@ -374,5 +369,5 @@ document.addEventListener('DOMContentLoaded', async () => {
 {% endblock %}
 
 {% block secondary_content %}
-{# This page tam genişlik kullandığı için yan blok boş bırakıldı #}
+{# Bu sayfa tam genişlik kullandığı için yan blok boş bırakıldı #}
 {% endblock %}

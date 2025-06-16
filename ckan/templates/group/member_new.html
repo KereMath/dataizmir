@@ -1,139 +1,180 @@
+{# === member_new.html (fütüristik stil) === #}
 {% extends "group/edit_base.html" %}
+{% import 'macros/form.html' as form %}
+{% set user = user_dict %}
 
-{# --- JINJA BLOKLARI: Standart yapı korunuyor, içleri manuel dolduruluyor --- #}
+{% block styles %}
+  {{ super() }}
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
 
-{% block subtitle %}
-  {% if user_dict %}
-    {{ _('Edit Member') }} - {{ user_dict.display_name }}
-  {% else %}
-    {{ _('Add Member') }}
-  {% endif %}
-   {{ g.template_title_delimiter }} {{ group_dict.display_name }}
+    body,
+    label,
+    .page-heading,
+    .btn,
+    input,
+    select {
+      font-family: 'Orbitron', sans-serif !important;
+    }
+
+    /* Sayfa başlığı */
+    .page-heading {
+      font-size: 26px !important;
+      font-weight: 600 !important;
+      color: #00eaff !important;
+      text-shadow: 0 0 6px #00eaff !important;
+      margin-bottom: 30px !important;
+    }
+
+    /* Form kapsayıcı */
+    .dataset-form {
+      background: rgba(3, 22, 38, 0.85) !important;
+      padding: 40px !important;
+      border-radius: 22px !important;
+      box-shadow: 0 0 18px #00eaff !important;
+    }
+
+    /* Etiketler */
+    .dataset-form label {
+      color: #00eaff !important;
+      font-weight: 600 !important;
+      letter-spacing: 0.4px !important;
+    }
+
+    /* Metin alanı & select */
+    .dataset-form input[type="text"],
+    .dataset-form input[type="email"],
+    .dataset-form select {
+      background: rgba(0, 0, 0, 0.45) !important;
+      border: 1px solid #00eaff !important;
+      border-radius: 10px !important;
+      padding: 12px 16px !important;
+      color: #e0f7ff !important;
+      transition: box-shadow 0.25s ease !important;
+    }
+    .dataset-form input[type="text"]:focus,
+    .dataset-form input[type="email"]:focus,
+    .dataset-form select:focus {
+      outline: none !important;
+      box-shadow: 0 0 12px #00eaff !important;
+    }
+
+    /* "or" bölümü */
+    .add-member-or-wrap .add-member-or {
+      background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%) !important;
+      color: #fff !important;
+      font-weight: 600 !important;
+      border-radius: 50px !important;
+      padding: 6px 20px !important;
+      margin: 32px auto !important;
+      box-shadow: 0 0 12px rgba(0, 238, 255, 0.6) !important;
+    }
+
+    /* Form Eylem Butonları */
+    .btn-primary {
+      background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%) !important;
+      border: none !important;
+      color: #fff !important;
+    }
+    .btn-danger {
+      background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%) !important;
+      border: none !important;
+      color: #fff !important;
+    }
+    .btn-default {
+      background: rgba(255, 255, 255, 0.08) !important;
+      border: 1px solid #00eaff !important;
+      color: #00eaff !important;
+    }
+    .btn {
+      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+    }
+    .btn:hover {
+      transform: translateY(-2px) !important;
+      box-shadow: 0 8px 18px rgba(0, 238, 255, 0.35) !important;
+    }
+  </style>
 {% endblock %}
 
 {% block primary_content_inner %}
-<div class="member-form-page">
-  <div class="back-link-wrapper">
-    {# `h.url_for` veya `link_for` yerine manuel URL oluşturma #}
-    <a href="/group/members/{{ group.name }}" class="btn-back">
-      <i class="fa fa-arrow-left"></i> {{ _('Back to Members') }}
-    </a>
-  </div>
-
-  <div class="form-container-card">
-    <div class="form-header">
-      <div class="form-icon">
-        <i class="fa {% if user_dict %}fa-user-pen{% else %}fa-user-plus{% endif %}"></i>
+  {% link_for _('Back to all members'), named_route=group_type+'.members', id=group.name, class_='btn btn-default pull-right', icon='arrow-left' %}
+  <h1 class="page-heading">
+    {% block page_heading %}{{ _('Edit Member') if user else _('Add Member') }}{% endblock %}
+  </h1>
+  {% block form %}
+  <form class="dataset-form add-member-form" method="post" id="add-member-form">
+    <div class="row">
+      <div class="col-md-5">
+        <div class="form-group control-medium">
+          {% if not user %}
+            <label class="control-label" for="username">
+              {{ _('Existing User') }}
+            </label>
+            <p>
+              {{ _('If you wish to add an existing user, search for their username below.') }}
+            </p>
+          {% endif %}
+          <div class="controls">
+            {% if user %}
+              <input type="hidden" name="username" value="{{ user.name }}" />
+              <input id="username" name="username" type="text" value="{{ user.name }}"
+              disabled="True" class="form-control control-medium">
+            {% else %}
+              <input id="username" type="text" name="username" placeholder="Username"
+              value="" class="control-medium" data-module="autocomplete"
+              data-module-source="/api/2/util/user/autocomplete?ignore_self=true&q=?">
+            {% endif %}
+          </div>
+        </div>
       </div>
-      <h1 class="page-heading">
-        {{ _('Edit Member') if user_dict else _('Add Member') }}
-      </h1>
-      <p class="page-subheading">{{ _('Manage user roles and permissions for this group.') }}</p>
+
+      {% if not user %}
+      <div class="col-md-2 add-member-or-wrap">
+        <div class="add-member-or">
+          {{ _('or') }}
+        </div>
+      </div>
+      <div class="col-md-5">
+        <div class="form-group control-medium">
+          <label class="control-label" for="email">
+            {{ _('New User') }}
+          </label>
+          <p>
+            {{ _('If you wish to invite a new user, enter their email address.') }}
+          </p>
+          <div class="controls">
+            <input id="email" type="text" name="email" placeholder="Email address" class="form-control">
+          </div>
+        </div>
+      </div>
+      {% endif %}
     </div>
 
-    {# Formun başlangıcı. Action boş bırakılır, mevcut sayfaya post eder. #}
-    <form class="futuristic-form" method="post">
+    {% if user and user.name == c.user and user_role == 'admin' %}
+      {% set format_attrs = {'data-module': 'autocomplete', 'disabled': 'disabled'} %}
+      {{ form.select('role', label=_('Role'), options=roles, selected=user_role, error='', attrs=format_attrs) }}
+      {{ form.hidden('role', value=user_role) }}
+    {% else %}
+      {% set format_attrs = {'data-module': 'autocomplete'} %}
+      {{ form.select('role', label=_('Role'), options=roles, selected=user_role, error='', attrs=format_attrs) }}
+    {% endif %}
 
-      {# ============================================= #}
-      {# == KULLANICI BİLGİSİ BÖLÜMÜ == #}
-      {# ============================================= #}
-
-      {# Mevcut kullanıcıyı DÜZENLEME modu #}
-      {% if user_dict %}
-        <div class="form-section">
-          <label for="username" class="form-label">{{ _('User') }}</label>
-          <div class="input-group">
-            <span class="input-group-icon"><i class="fa fa-user"></i></span>
-            <input type="text" value="{{ user_dict.display_name }} (@{{ user_dict.name }})" disabled class="form-control">
-            <input type="hidden" name="username" value="{{ user_dict.name }}">
-          </div>
-        </div>
-
-      {# Yeni kullanıcı EKLEME modu (Sekmeli arayüz) #}
+    <div class="form-actions">
+      {% if user %}
+        <a href="{{ h.url_for(group_type + '.member_delete', id=group_dict.id, user=user.id) }}" class="btn btn-danger pull-left" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this member?') }}">{{ _('Delete') }}</a>
+        <button class="btn btn-primary" type="submit" name="submit">
+          {{ _('Save') }}
+        </button>
       {% else %}
-        <div class="tab-container">
-          <div class="tab-list" role="tablist">
-            <button type="button" class="tab-btn active" role="tab" aria-selected="true" data-tab="existing-user">{{ _('Existing User') }}</button>
-            <button type="button" class="tab-btn" role="tab" aria-selected="false" data-tab="new-user">{{ _('Invite New User') }}</button>
-          </div>
-
-          <div id="existing-user" class="tab-pane active" role="tabpanel">
-            <p class="tab-description">{{ _('Search for an existing user by their username.') }}</p>
-            <div class="form-section">
-              <label for="username-ac" class="form-label sr-only">{{ _('Username') }}</label>
-              <div class="input-group">
-                <span class="input-group-icon"><i class="fa fa-at"></i></span>
-                {# Autocomplete API'si manuel olarak yazıldı #}
-                <input id="username-ac" type="text" name="username" placeholder="{{ _('Search by username...') }}"
-                     class="form-control" data-module="autocomplete"
-                     data-module-source="/api/2/util/user/autocomplete?ignore_self=true&q=?">
-              </div>
-            </div>
-          </div>
-          <div id="new-user" class="tab-pane" role="tabpanel">
-            <p class="tab-description">{{ _('Invite a new user by entering their email address.') }}</p>
-            <div class="form-section">
-              <label for="email" class="form-label sr-only">{{ _('Email') }}</label>
-              <div class="input-group">
-                <span class="input-group-icon"><i class="fa fa-envelope"></i></span>
-                <input id="email" type="email" name="email" placeholder="{{ _('user@example.com') }}" class="form-control">
-              </div>
-            </div>
-          </div>
-        </div>
+        <button class="btn btn-primary" type="submit" name="submit">
+          {{ _('Add Member') }}
+        </button>
       {% endif %}
-
-      {# ============================================= #}
-      {# == ROL SEÇİMİ BÖLÜMÜ (MANUEL OLUŞTURMA) == #}
-      {# ============================================= #}
-      <div class="form-section">
-        <label for="role" class="form-label">{{ _('Role') }}</label>
-        <div class="input-group">
-          <span class="input-group-icon"><i class="fa fa-user-shield"></i></span>
-          
-          {# `form.select` makrosu yerine standart HTML <select> döngüsü #}
-          <select name="role" id="role" class="form-control"
-            {% if user_dict and user_dict.name == c.user and user_role == 'admin' %}disabled="disabled"{% endif %}>
-            
-            {% for r in roles %}
-              <option value="{{ r.value }}" {% if r.value == user_role %}selected="selected"{% endif %}>
-                {{ r.text }}
-              </option>
-            {% endfor %}
-          </select>
-
-          {# Kullanıcı kendi admin rolünü değiştiremesin diye gizli input #}
-          {% if user_dict and user_dict.name == c.user and user_role == 'admin' %}
-            <input type="hidden" name="role" value="{{ user_role }}">
-          {% endif %}
-        </div>
-      </div>
-
-      {# ============================================= #}
-      {# == BUTONLAR BÖLÜMÜ == #}
-      {# ============================================= #}
-      <div class="form-actions">
-        {% if user_dict %}
-          {# Silme linki manuel olarak oluşturuldu #}
-          <a href="/group/member_delete/{{ group_dict.id }}?user={{ user_dict.id }}" class="btn btn-danger" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to remove this member?') }}">
-            <i class="fa fa-trash-can"></i> {{ _('Remove Member') }}
-          </a>
-          <button class="btn btn-primary" type="submit" name="submit">
-            <i class="fa fa-save"></i> {{ _('Save Changes') }}
-          </button>
-        {% else %}
-          <button class="btn btn-primary" type="submit" name="submit">
-            <i class="fa fa-user-plus"></i> {{ _('Add Member') }}
-          </button>
-        {% endif %}
-      </div>
-    </form>
-  </div>
-</div>
+    </div>
+  </form>
+  {% endblock %}
 {% endblock %}
 
-
-{# İkincil içerik (sidebar) olduğu gibi kalıyor #}
 {% block secondary_content %}
   {{ super() }}
   <div class="module module-narrow module-shallow">
@@ -143,180 +184,10 @@
     </h2>
     <div class="module-content">
       {% trans %}
-       <p><strong>Admin:</strong> Can edit group information, as well as manage group members.</p>
-       <p><strong>Member:</strong> Can view the group's private datasets.</p>
+        <p><strong>Admin:</strong> Can edit group information, as well as
+          manage organization members.</p>
+        <p><strong>Member:</strong> Can add/remove datasets from groups</p>
       {% endtrans %}
     </div>
   </div>
-{% endblock %}
-
-
-{# Scriptler sayfaya inline olarak ekleniyor #}
-{% block scripts %}
-  {{ super() }}
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Sadece "Add Member" sayfasındaysak sekmeleri etkinleştir
-    const tabContainer = document.querySelector('.tab-container');
-    if (tabContainer) {
-      const tabList = tabContainer.querySelector('.tab-list');
-      const tabs = tabList.querySelectorAll('.tab-btn');
-      const panes = tabContainer.querySelectorAll('.tab-pane');
-      const usernameInput = document.getElementById('username-ac');
-      const emailInput = document.getElementById('email');
-
-      tabList.addEventListener('click', function(e) {
-        if (e.target.matches('.tab-btn')) {
-          e.preventDefault();
-
-          tabs.forEach(tab => {
-            tab.classList.remove('active');
-            tab.setAttribute('aria-selected', 'false');
-          });
-
-          e.target.classList.add('active');
-          e.target.setAttribute('aria-selected', 'true');
-
-          panes.forEach(pane => pane.classList.remove('active'));
-          document.getElementById(e.target.dataset.tab).classList.add('active');
-
-          // Aktif olmayan sekmenin input'unu boşalt ve devre dışı bırak
-          if (e.target.dataset.tab === 'existing-user') {
-            emailInput.value = '';
-            emailInput.disabled = true;
-            usernameInput.disabled = false;
-          } else {
-            usernameInput.value = '';
-            usernameInput.disabled = true;
-            emailInput.disabled = false;
-          }
-        }
-      });
-      // Başlangıçta email input'unu devre dışı bırak
-      emailInput.disabled = true;
-    }
-  });
-  </script>
-{% endblock %}
-
-
-{# Stiller sayfaya inline olarak ekleniyor #}
-{% block styles %}
-  {{ super() }}
-  <style>
-    :root {
-      --futuristic-bg: #111827;
-      --futuristic-card-bg: #1f2937;
-      --futuristic-border: #374151;
-      --futuristic-text: #d1d5db;
-      --futuristic-text-light: #9ca3af;
-      --futuristic-primary: #3b82f6;
-      --futuristic-primary-hover: #2563eb;
-      --futuristic-danger: #ef4444;
-      --futuristic-danger-hover: #dc2626;
-      --futuristic-radius: 12px;
-      --futuristic-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
-    }
-    .member-form-page { max-width: 700px; margin: 2rem auto; }
-    .back-link-wrapper { margin-bottom: 1.5rem; }
-    .btn-back { 
-      color: #6b7280; text-decoration: none; font-weight: 600;
-      transition: color 0.2s;
-    }
-    .btn-back:hover { color: var(--futuristic-primary); }
-    .btn-back i { margin-right: 0.5rem; }
-
-    .form-container-card {
-      background-color: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: var(--futuristic-radius);
-      box-shadow: var(--futuristic-shadow);
-      padding: 2.5rem;
-    }
-
-    .form-header { text-align: center; margin-bottom: 2rem; }
-    .form-icon {
-      width: 60px; height: 60px; margin: 0 auto 1rem;
-      background: linear-gradient(145deg, var(--futuristic-primary), #6d28d9);
-      color: #fff; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.75rem;
-    }
-    .page-heading { font-size: 1.875rem; font-weight: 700; color: var(--futuristic-bg); margin: 0; }
-    .page-subheading { font-size: 1rem; color: #6b7280; margin-top: 0.5rem; }
-
-    .form-section { margin-bottom: 1.5rem; }
-    .form-label { display: block; font-weight: 600; margin-bottom: 0.5rem; color: #374151; }
-    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
-
-    .input-group { position: relative; }
-    .input-group-icon {
-      position: absolute; left: 1rem; top: 50%;
-      transform: translateY(-50%);
-      color: #9ca3af;
-    }
-    .form-control {
-      width: 100%;
-      padding: 0.75rem 1rem 0.75rem 2.75rem;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      transition: border-color 0.2s, box-shadow 0.2s;
-    }
-    .form-control:focus {
-      outline: none;
-      border-color: var(--futuristic-primary);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-    .form-control[disabled] { background-color: #f3f4f6; cursor: not-allowed; }
-
-    /* Tab Styles */
-    .tab-list {
-      display: flex;
-      border-bottom: 1px solid #e5e7eb;
-      margin-bottom: 1.5rem;
-    }
-    .tab-btn {
-      padding: 0.75rem 1rem;
-      border: none;
-      background: none;
-      font-weight: 600;
-      color: #6b7280;
-      cursor: pointer;
-      position: relative;
-      border-bottom: 2px solid transparent;
-      margin-bottom: -1px;
-      transition: color 0.2s, border-color 0.2s;
-    }
-    .tab-btn:hover { color: var(--futuristic-primary); }
-    .tab-btn.active {
-      color: var(--futuristic-primary);
-      border-bottom-color: var(--futuristic-primary);
-    }
-    .tab-pane { display: none; }
-    .tab-pane.active { display: block; }
-    .tab-description { color: #6b7280; margin-bottom: 1rem; font-size: 0.9rem; }
-
-    /* Form Actions */
-    .form-actions {
-      margin-top: 2rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid #e5e7eb;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .btn {
-      padding: 0.75rem 1.5rem;
-      font-weight: 600;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s ease-in-out;
-    }
-    .btn-primary { background-color: var(--futuristic-primary); color: #fff; }
-    .btn-primary:hover { background-color: var(--futuristic-primary-hover); }
-    .btn-danger { background-color: var(--futuristic-danger); color: #fff; }
-    .btn-danger:hover { background-color: var(--futuristic-danger-hover); }
-    .btn i { margin-right: 0.5rem; }
-  </style>
 {% endblock %}

@@ -1,84 +1,4 @@
-{# === members.html (fütüristik stil) === #}
 {% extends "group/edit_base.html" %}
-
-{% block styles %}
-  {{ super() }}
-  <style>
-    /* Google Fonts */
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600&display=swap');
-    /* Genel yazı tipi */
-    body,
-    .page-heading,
-    .btn,
-    #member-table th,
-    #member-table td {
-      font-family: 'Orbitron', sans-serif !important;
-    }
-
-    /* Sayfa başlığı */
-    .page-heading {
-      font-size: 24px !important;
-      font-weight: 600 !important;
-      color: #00eaff !important;
-      text-shadow: 0 0 6px #00eaff !important;
-      margin-bottom: 25px !important;
-    }
-
-    /* Tablo stili */
-    #member-table {
-      width: 100% !important;
-      border-collapse: separate !important;
-      border-spacing: 0 12px !important;
-      background: transparent !important;
-    }
-    #member-table thead {
-      background: linear-gradient(90deg, #031626 0%, #052c4a 100%) !important;
-      color: #00eaff !important;
-    }
-    #member-table th {
-      border: none !important;
-      padding: 14px 18px !important;
-      text-transform: uppercase !important;
-      letter-spacing: 0.5px !important;
-    }
-    #member-table td {
-      background: rgba(3, 22, 38, 0.85) !important;
-      border: none !important;
-      padding: 16px 20px !important;
-      color: #e0f7ff !important;
-      vertical-align: middle !important;
-      transition: background 0.25s ease, box-shadow 0.25s ease !important;
-    }
-    #member-table tr:hover td {
-      background: rgba(0, 238, 255, 0.18) !important;
-      box-shadow: 0 0 10px #00eaff inset !important;
-    }
-
-    /* Butonlar */
-    .btn-primary {
-      background: linear-gradient(90deg, #00c6ff 0%, #0072ff 100%) !important;
-      border: none !important;
-      color: #fff !important;
-    }
-    .btn-danger {
-      background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%) !important;
-      border: none !important;
-      color: #fff !important;
-    }
-    .btn-default {
-      background: rgba(255, 255, 255, 0.08) !important;
-      border: 1px solid #00eaff !important;
-      color: #00eaff !important;
-    }
-    .btn {
-      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-    }
-    .btn:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 8px 18px rgba(0, 238, 255, 0.35) !important;
-    }
-  </style>
-{% endblock %}
 
 {% block subtitle %}{{ _('Members') }} {{ g.template_title_delimiter }} {{ group_dict.display_name }} {{ g.template_title_delimiter }} {{ _('Groups') }}{% endblock %}
 
@@ -87,6 +7,143 @@
 {% endblock %}
 
 {% block primary_content_inner %}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Roboto:wght@400;700&display=swap');
+
+  /* === FUTURISTIC THEME START === */
+
+  body, .primary-content, .content-wrapper {
+    background-color: #0a0f1e !important;
+    color: #e0e0e0 !important;
+    font-family: 'Roboto', sans-serif !important;
+  }
+
+  h3.page-heading, h1.page-heading {
+    font-family: 'Orbitron', sans-serif !important;
+    color: #00f2ff !important;
+    text-transform: uppercase !important;
+    letter-spacing: 2px !important;
+    text-shadow: 0 0 5px rgba(0, 242, 255, 0.7), 0 0 10px rgba(0, 242, 255, 0.5) !important;
+    border-bottom: 1px solid rgba(0, 242, 255, 0.3) !important;
+    padding-bottom: 15px !important;
+    margin-bottom: 30px !important;
+  }
+  
+  /* --- Links --- */
+  a {
+    color: #00f2ff !important;
+    text-decoration: none !important;
+    transition: all 0.3s ease !important;
+  }
+  
+  a:hover {
+    color: #ffffff !important;
+    text-shadow: 0 0 8px rgba(0, 242, 255, 0.8) !important;
+  }
+
+  /* --- Buttons --- */
+  .btn {
+    font-family: 'Orbitron', sans-serif !important;
+    text-transform: uppercase !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    transition: all 0.3s ease !important;
+    padding: 10px 20px !important;
+    font-size: 14px !important;
+    letter-spacing: 1px !important;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5) inset !important;
+  }
+
+  .btn-primary {
+    border: 1px solid #00f2ff !important;
+    color: #00f2ff !important;
+  }
+
+  .btn-primary:hover {
+    background-color: #00f2ff !important;
+    color: #0a0f1e !important;
+    box-shadow: 0 0 15px rgba(0, 242, 255, 0.7) !important;
+  }
+
+  .btn-default {
+    border: 1px solid #a0a0a0 !important;
+    color: #a0a0a0 !important;
+  }
+  
+  .btn-default:hover {
+    background-color: #a0a0a0 !important;
+    color: #0a0f1e !important;
+    box-shadow: 0 0 15px rgba(160, 160, 160, 0.7) !important;
+  }
+
+  .btn-danger {
+    border: 1px solid #ff00ff !important;
+    color: #ff00ff !important;
+  }
+
+  .btn-danger:hover {
+    background-color: #ff00ff !important;
+    color: #0a0f1e !important;
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.7) !important;
+  }
+  
+  .btn .fa {
+    text-shadow: none !important; /* Prevent text-shadow on icons */
+  }
+
+  /* --- Table Styling --- */
+  #member-table {
+    background-color: rgba(10, 15, 30, 0.8) !important;
+    border: 1px solid rgba(0, 242, 255, 0.3) !important;
+    box-shadow: 0 0 20px rgba(0, 242, 255, 0.1) !important;
+    border-collapse: separate !important; /* Use separate to allow spacing */
+    border-spacing: 0 !important;
+  }
+
+  #member-table thead tr {
+    background: transparent !important;
+  }
+
+  #member-table th {
+    font-family: 'Orbitron', sans-serif !important;
+    color: #00f2ff !important;
+    text-transform: uppercase !important;
+    border-bottom: 2px solid #00f2ff !important;
+    background-color: rgba(0, 242, 255, 0.05) !important;
+    text-align: left !important;
+    padding: 15px !important;
+  }
+  
+  #member-table td {
+    padding: 15px !important;
+    vertical-align: middle !important;
+    border: none !important;
+    border-top: 1px solid rgba(0, 242, 255, 0.2) !important;
+    color: #d0d0d0 !important;
+  }
+
+  #member-table tbody tr {
+    background-color: transparent !important;
+    transition: background-color 0.3s ease !important;
+  }
+
+  #member-table tbody tr:hover {
+    background-color: rgba(0, 242, 255, 0.1) !important;
+  }
+
+  #member-table .media a {
+    font-weight: bold !important;
+    font-size: 1.1em !important;
+  }
+
+  #member-table .btn-group .btn {
+      padding: 5px 10px !important;
+      margin-left: 5px !important;
+  }
+
+  /* === FUTURISTIC THEME END === */
+</style>
+
   <h3 class="page-heading">{{ _('{0} members'.format(members|length)) }}</h3>
   <table class="table table-header table-hover table-bordered" id="member-table">
     <thead>

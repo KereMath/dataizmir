@@ -37,8 +37,7 @@
       </div>
     </div>
     <div class="modal-footer">
-      <button id="modal-cancel-btn" style="width: 30px;
-    height: 21px;" class="profile-btn-pro secondary">İptal</button>
+      <button id="modal-cancel-btn" class="profile-btn-pro secondary">İptal</button>
       <button id="modal-save-btn" class="profile-btn-pro primary" disabled>Değişiklikleri Kaydet</button>
     </div>
   </div>
@@ -389,6 +388,11 @@
     grid-template-columns: 1fr 1fr; 
     gap: 2rem; 
   }
+  @media (max-width: 600px) {
+    .membership-grid-container { 
+      grid-template-columns: 1fr; 
+    }
+  }
   .membership-section h4 { 
     font-size: 1.1rem; 
     color: var(--accent-primary); 
@@ -402,14 +406,77 @@
     gap: 0.75rem; 
   }
   
-  /* Checkbox Styles */
+  /* Membership Item with Role Select */
+  .membership-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: var(--bg-main);
+  }
+  .membership-item:hover {
+    background: #eef2ff;
+  }
+  
+  /* Role Select Dropdown */
+  .role-select {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    min-width: 100px;
+  }
+  .role-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+  }
+  .role-select:not(:disabled):hover {
+    border-color: var(--accent-primary);
+  }
+  .role-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.1);
+  }
+  
+  /* Role Info Box */
+  .role-info {
+    background: #f0f9ff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    border: 1px solid #dbeafe;
+  }
+  .role-info h5 {
+    margin: 0 0 0.5rem 0;
+    color: var(--accent-primary);
+    font-size: 1rem;
+  }
+  .role-info ul {
+    margin: 0;
+    padding-left: 1.5rem;
+  }
+  .role-info li {
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Checkbox Styles Updated */
   .checkbox-container { 
-    display: block; 
+    display: flex;
+    align-items: center;
     position: relative; 
     padding-left: 35px; 
     cursor: pointer; 
-    font-size: 1rem; 
-    user-select: none; 
+    font-size: 0.95rem; 
+    user-select: none;
+    flex: 1;
   }
   .checkbox-container input { 
     position: absolute; 
@@ -420,12 +487,17 @@
   }
   .checkmark { 
     position: absolute; 
-    top: 0; 
+    top: 50%;
+    transform: translateY(-50%);
     left: 0; 
-    height: 22px; 
-    width: 22px; 
+    height: 20px; 
+    width: 20px; 
     background-color: #eee; 
-    border-radius: 4px; 
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .checkbox-container:hover input ~ .checkmark {
+    background-color: #e2e8f0;
   }
   .checkbox-container input:checked ~ .checkmark { 
     background-color: var(--accent-primary); 
@@ -439,8 +511,8 @@
     display: block; 
   }
   .checkbox-container .checkmark:after { 
-    left: 8px; 
-    top: 4px; 
+    left: 7px; 
+    top: 3px; 
     width: 5px; 
     height: 10px; 
     border: solid white; 
@@ -531,7 +603,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
   }
 
-  // --- ÜYELİK MODALINI AÇMA ---
+  // --- ÜYELİK MODALINI AÇMA (ROL SEÇİMİ İLE) ---
   async function openMembershipModal(userId, userName) {
     modal.style.display = 'flex';
     modalTitle.textContent = `${userName} Üyeliklerini Yönet`;
@@ -559,29 +631,75 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         currentUserMemberships = { orgs: userOrgs, groups: userGroups };
         
-        const userOrgNames = new Set(userOrgs.map(org => org.name));
-        const userGroupNames = new Set(userGroups.map(group => group.name));
+        // Kullanıcının mevcut üyeliklerini ve rollerini map'e dönüştür
+        const userOrgData = new Map(userOrgs.map(org => [org.name, org.capacity || 'member']));
+        const userGroupData = new Map(userGroups.map(group => [group.name, group.capacity || 'member']));
         
         // Listeleri sırala
         allOrgs.sort((a, b) => a.display_name.localeCompare(b.display_name));
         allGroups.sort((a, b) => a.display_name.localeCompare(b.display_name));
 
-        // HTML oluştur
-        const orgsHtml = allOrgs.map(org => `
-            <label class="checkbox-container">
-                <input type="checkbox" data-id="${org.name}" data-type="organization" ${userOrgNames.has(org.name) ? 'checked' : ''}>
-                <span class="checkmark"></span> ${org.display_name}
-            </label>
-        `).join('');
+        // Organizasyon HTML'i oluştur (rol seçimi ile)
+        const orgsHtml = allOrgs.map(org => {
+            const isMember = userOrgData.has(org.name);
+            const currentRole = userOrgData.get(org.name) || 'member';
+            
+            return `
+                <div class="membership-item">
+                    <label class="checkbox-container">
+                        <input type="checkbox" 
+                               data-id="${org.name}" 
+                               data-type="organization" 
+                               ${isMember ? 'checked' : ''}>
+                        <span class="checkmark"></span> ${org.display_name}
+                    </label>
+                    <select class="role-select" 
+                            data-id="${org.name}" 
+                            data-type="organization" 
+                            ${!isMember ? 'disabled' : ''}>
+                        <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Üye</option>
+                        <option value="editor" ${currentRole === 'editor' ? 'selected' : ''}>Editör</option>
+                        <option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Yönetici</option>
+                    </select>
+                </div>
+            `;
+        }).join('');
         
-        const groupsHtml = allGroups.map(group => `
-            <label class="checkbox-container">
-                <input type="checkbox" data-id="${group.name}" data-type="group" ${userGroupNames.has(group.name) ? 'checked' : ''}>
-                <span class="checkmark"></span> ${group.display_name}
-            </label>
-        `).join('');
+        // Grup HTML'i oluştur (rol seçimi ile - gruplar için sadece member ve admin)
+        const groupsHtml = allGroups.map(group => {
+            const isMember = userGroupData.has(group.name);
+            const currentRole = userGroupData.get(group.name) || 'member';
+            
+            return `
+                <div class="membership-item">
+                    <label class="checkbox-container">
+                        <input type="checkbox" 
+                               data-id="${group.name}" 
+                               data-type="group" 
+                               ${isMember ? 'checked' : ''}>
+                        <span class="checkmark"></span> ${group.display_name}
+                    </label>
+                    <select class="role-select" 
+                            data-id="${group.name}" 
+                            data-type="group" 
+                            ${!isMember ? 'disabled' : ''}>
+                        <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Üye</option>
+                        <option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Yönetici</option>
+                    </select>
+                </div>
+            `;
+        }).join('');
 
+        // Modal içeriğini oluştur
         modalBody.innerHTML = `
+            <div class="role-info">
+                <h5><i class="fa fa-info-circle"></i> Roller Hakkında</h5>
+                <ul>
+                    <li><strong>Üye:</strong> Özel veri setlerini görüntüleyebilir</li>
+                    <li><strong>Editör:</strong> Veri seti ekleyebilir ve düzenleyebilir (sadece organizasyonlar)</li>
+                    <li><strong>Yönetici:</strong> Tam yetki, üyeleri yönetebilir</li>
+                </ul>
+            </div>
             <div class="membership-grid-container">
                 <div class="membership-section">
                     <h4>Veri Paydaşları (Organizasyonlar)</h4>
@@ -605,7 +723,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
-  // --- ÜYELİKLERİ KAYDETME ---
+  // --- ÜYELİKLERİ KAYDETME (ROL DEĞİŞİKLİKLERİ İLE) ---
   async function saveMemberships() {
       const userId = modal.dataset.userId;
       const userName = modal.dataset.userName;
@@ -614,34 +732,71 @@ document.addEventListener('DOMContentLoaded', async () => {
       modalSaveBtn.disabled = true;
       modalSaveBtn.textContent = 'Kaydediliyor...';
 
-      const originalOrgNames = new Set(currentUserMemberships.orgs.map(org => org.name));
-      const originalGroupNames = new Set(currentUserMemberships.groups.map(group => group.name));
+      // Orijinal üyelikleri ve rollerini map'e dönüştür
+      const originalOrgs = new Map(currentUserMemberships.orgs.map(org => [org.name, org.capacity || 'member']));
+      const originalGroups = new Map(currentUserMemberships.groups.map(group => [group.name, group.capacity || 'member']));
       
-      const checkboxes = modalBody.querySelectorAll('input[type="checkbox"]');
+      const items = modalBody.querySelectorAll('.membership-item');
       const promises = [];
 
-      checkboxes.forEach(cb => {
-          const name = cb.dataset.id;
-          const type = cb.dataset.type;
-          const isChecked = cb.checked;
-          let wasMember, createAction, deleteAction, payload;
+      items.forEach(item => {
+          const checkbox = item.querySelector('input[type="checkbox"]');
+          const select = item.querySelector('.role-select');
+          
+          const name = checkbox.dataset.id;
+          const type = checkbox.dataset.type;
+          const isChecked = checkbox.checked;
+          const newRole = select.value;
+          
+          let originals, createAction, deleteAction;
           
           if (type === 'organization') {
-              wasMember = originalOrgNames.has(name);
+              originals = originalOrgs;
               createAction = 'organization_member_create';
               deleteAction = 'organization_member_delete';
-          } else { // type === 'group'
-              wasMember = originalGroupNames.has(name);
+          } else {
+              originals = originalGroups;
               createAction = 'group_member_create';
               deleteAction = 'group_member_delete';
           }
-
-          if (isChecked && !wasMember) { // Ekle
-              payload = { id: name, username: userName, role: 'member' };
-              promises.push(fetchWithCredentials(`/api/3/action/${createAction}`, { method: 'POST', body: JSON.stringify(payload) }));
-          } else if (!isChecked && wasMember) { // Çıkar
-              payload = { id: name, user_id: userId };
-              promises.push(fetchWithCredentials(`/api/3/action/${deleteAction}`, { method: 'POST', body: JSON.stringify(payload) }));
+          
+          const wasMember = originals.has(name);
+          const oldRole = originals.get(name);
+          
+          if (isChecked && !wasMember) {
+              // Yeni üye ekle
+              const payload = { id: name, username: userName, role: newRole };
+              promises.push(
+                  fetchWithCredentials(`/api/3/action/${createAction}`, { 
+                      method: 'POST', 
+                      body: JSON.stringify(payload) 
+                  })
+              );
+          } else if (!isChecked && wasMember) {
+              // Üyeyi çıkar
+              const payload = { id: name, user_id: userId };
+              promises.push(
+                  fetchWithCredentials(`/api/3/action/${deleteAction}`, { 
+                      method: 'POST', 
+                      body: JSON.stringify(payload) 
+                  })
+              );
+          } else if (isChecked && wasMember && oldRole !== newRole) {
+              // Rol değişikliği - önce sil, sonra yeni rolle ekle
+              const deletePayload = { id: name, user_id: userId };
+              const createPayload = { id: name, username: userName, role: newRole };
+              
+              promises.push(
+                  fetchWithCredentials(`/api/3/action/${deleteAction}`, { 
+                      method: 'POST', 
+                      body: JSON.stringify(deletePayload) 
+                  }).then(() => 
+                      fetchWithCredentials(`/api/3/action/${createAction}`, { 
+                          method: 'POST', 
+                          body: JSON.stringify(createPayload) 
+                      })
+                  )
+              );
           }
       });
       
@@ -653,7 +808,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Bazı işlemler başarısız oldu:', errors);
             alert(`Üyelikler kısmen güncellendi. ${errors.length} işlem başarısız oldu.`);
         } else {
-            alert('Üyelikler başarıyla güncellendi!');
+            alert('Üyelikler ve roller başarıyla güncellendi!');
         }
         
         // Kullanıcı listesini yenile
@@ -704,6 +859,20 @@ document.addEventListener('DOMContentLoaded', async () => {
       (user.email && user.email.toLowerCase().includes(searchTerm))
     );
     renderCards(filteredUsers);
+  });
+  
+  // Checkbox değiştiğinde select'i etkinleştir/devre dışı bırak
+  document.addEventListener('change', (e) => {
+    if (e.target.type === 'checkbox' && e.target.closest('.membership-item')) {
+      const item = e.target.closest('.membership-item');
+      const select = item.querySelector('.role-select');
+      if (select) {
+        select.disabled = !e.target.checked;
+        if (!e.target.checked) {
+          select.value = 'member'; // Varsayılan role dön
+        }
+      }
+    }
   });
   
   const closeModal = () => { 

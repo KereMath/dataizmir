@@ -578,3 +578,10 @@ def recently_changed_packages_activity_list(context, data_dict):
     '''Check if the activity stream of all recently added or changed packages is
     visible. Visible to all by default.'''
     return {'success': True}
+def group_list_for_user(context, data_dict):
+    '''
+    :param id: the id or name of the user
+    :type id: string
+    '''
+    # organization_list_for_user ile aynı yetkilendirme mantığını kullan
+    return {'success': True}

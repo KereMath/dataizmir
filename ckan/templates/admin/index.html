@@ -51,7 +51,7 @@
   }
   .admin-dashboard-pro { font-family: var(--font-family-sans) !important; padding: 1rem 0 !important; background: var(--bg-main) !important; }
   
-  /* Header ve Arama Stilleri (Mevcut) */
+  /* Header ve Arama Stilleri */
   .dashboard-header { margin-bottom: 2.5rem; }
   .dashboard-header h1 { font-size: 2.25rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; }
   .dashboard-header h1 i { color: var(--accent-primary); }
@@ -63,7 +63,7 @@
   .search-form button { background: var(--accent-primary); color: #fff; border: none; padding: .75rem 1.5rem; font-weight: 600; border-radius: 0 var(--radius-md) var(--radius-md) 0; cursor: pointer; transition: background .2s; }
   .search-form button:hover { background: var(--accent-secondary); }
 
-  /* Kullanıcı Kartı Stilleri (Mevcut) */
+  /* Kullanıcı Kartı Stilleri */
   .user-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; gap: 2rem !important; }
   .user-profile-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-md); display: flex; flex-direction: column; overflow: hidden; transition: transform .2s, box-shadow .2s; }
   .user-profile-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
@@ -87,7 +87,7 @@
   .role-capacity-pro.editor { background: #d97706; }
   .role-capacity-pro.member { background: #4a5568; }
   
-  /* Kart Footer ve Buton stilleri (YENİ Buton Eklendi) */
+  /* Kart Footer ve Buton stilleri */
   .card-footer-pro { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: #fcfdff; margin-top: auto; display: flex; justify-content: space-between; gap: 1rem; align-items: center;}
   .profile-btn-pro { text-decoration: none; display: inline-block; padding: .6rem 1.2rem; border-radius: 8px; font-weight: 600; transition: all .2s; border: none; cursor: pointer; font-size: 0.9rem;}
   .profile-btn-pro.primary { background: var(--accent-primary); color: #fff; }
@@ -98,12 +98,12 @@
   .manage-memberships-btn:hover { background: #15803d; }
 
 
-  /* Yükleme Spinner (Mevcut) */
+  /* Yükleme Spinner */
   .loading-placeholder { text-align: center; padding: 4rem; color: var(--text-light); grid-column: 1 / -1; }
   .spinner { width: 48px; height: 48px; border: 5px solid #f3f3f3; border-top: 5px solid var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem auto; }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-  /* ------ YENİ MODAL STİLLERİ ------ */
+  /* ------ Modal Stilleri ------ */
   .membership-modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
   .modal-content { background-color: #fff; margin: auto; padding: 0; border: 1px solid #888; width: 90%; max-width: 700px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); animation: fadeIn .3s; }
   .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
@@ -147,22 +147,20 @@ document.addEventListener('DOMContentLoaded', async () => {
   async function fetchWithCredentials(url, options = {}) {
     const defaultOptions = {
         method: 'GET',
-        credentials: 'include', // İsteklerde kimlik bilgilerini dahil et
-        headers: {
-            'Content-Type': 'application/json'
-        }
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
     };
     const response = await fetch(url, { ...defaultOptions, ...options });
-    if (!response.ok) throw new Error(`API çağrısı başarısız: ${response.status} ${response.statusText}`);
+    if (!response.ok) throw new Error(`API call failed: ${response.status} ${response.statusText}`);
     const data = await response.json();
-    if (!data.success) throw new Error(data.error?.message || 'API bilinmeyen bir hata döndürdü');
+    if (!data.success) throw new Error(data.error?.message || 'API returned an unknown error');
     return data.result;
   }
 
-  // --- KARTLARI OLUŞTURMA ---
+  // --- RENDER CARDS ---
   function renderCards(usersToRender) {
     if (usersToRender.length === 0) {
-      grid.innerHTML = `<div class="loading-placeholder"><p>Arama kriterlerinize uygun kullanıcı bulunamadı.</p></div>`;
+      grid.innerHTML = `<div class="loading-placeholder"><p>No users found matching your criteria.</p></div>`;
       return;
     }
 
@@ -173,6 +171,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       const datasetCount = user.number_created_packages || 0;
       const followers = user.num_followers || 0;
       
+      // --- DÜZELTME: Hem organizasyon hem de grup üyeliklerini birleştir.
       const userOrgsAndGroups = [...(user.organizations || []), ...(user.groups || [])];
 
       let rolesHTML = '<p style="font-size:0.9rem; color:#999; text-align:center; padding:1rem;">Kullanıcının üyelik rolü bulunmuyor.</p>';
@@ -210,20 +209,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
   }
   
-  // --- ÜYELİK MODALINI AÇMA ---
+  // --- OPEN MEMBERSHIP MODAL ---
   function openMembershipModal(userId) {
     const user = allUsers.find(u => u.id === userId);
     if (!user) return;
 
     modalTitle.textContent = `${user.display_name} Üyeliklerini Yönet`;
     
-    const userOrgIds = new Set(user.organizations.map(org => org.id));
-    const userGroupIds = new Set(user.groups.map(g => g.id));
+    // --- DÜZELTME: Tanımsız olma ihtimaline karşı boş dizi ata `|| []`.
+    const userOrgNames = new Set((user.organizations || []).map(org => org.name));
+    const userGroupNames = new Set((user.groups || []).map(g => g.name));
+
+    // --- İYİLEŞTİRME: Listeleri `display_name`'e göre alfabetik sırala.
+    allOrgs.sort((a, b) => a.display_name.localeCompare(b.display_name));
+    allGroups.sort((a, b) => a.display_name.localeCompare(b.display_name));
 
     const orgsHtml = allOrgs.map(org => `
       <label class="checkbox-container" title="${org.display_name}">
         ${org.display_name}
-        <input type="checkbox" data-id="${org.id}" data-type="organization" ${userOrgIds.has(org.id) ? 'checked' : ''}>
+        <input type="checkbox" data-id="${org.name}" data-type="organization" ${userOrgNames.has(org.name) ? 'checked' : ''}>
         <span class="checkmark"></span>
       </label>
     `).join('');
@@ -231,7 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const groupsHtml = allGroups.map(group => `
       <label class="checkbox-container" title="${group.display_name}">
         ${group.display_name}
-        <input type="checkbox" data-id="${group.id}" data-type="group" ${userGroupIds.has(group.id) ? 'checked' : ''}>
+        <input type="checkbox" data-id="${group.name}" data-type="group" ${userGroupNames.has(group.name) ? 'checked' : ''}>
         <span class="checkmark"></span>
       </label>
     `).join('');
@@ -250,10 +254,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     `;
 
     modal.style.display = 'flex';
-    modal.dataset.userId = userId; // Kullanıcı ID'sini kaydet
+    modal.dataset.userId = userId;
   }
 
-  // --- ÜYELİKLERİ KAYDETME ---
+  // --- SAVE MEMBERSHIPS ---
   async function saveMemberships() {
       const userId = modal.dataset.userId;
       const user = allUsers.find(u => u.id === userId);
@@ -262,57 +266,57 @@ document.addEventListener('DOMContentLoaded', async () => {
       modalSaveBtn.disabled = true;
       modalSaveBtn.textContent = 'Kaydediliyor...';
 
-      const originalOrgIds = new Set(user.organizations.map(org => org.id));
-      const originalGroupIds = new Set(user.groups.map(g => g.id));
+      const originalOrgNames = new Set((user.organizations || []).map(org => org.name));
+      const originalGroupNames = new Set((user.groups || []).map(g => g.name));
       
       const checkboxes = modalBody.querySelectorAll('input[type="checkbox"]');
       const promises = [];
 
       checkboxes.forEach(cb => {
-          const id = cb.dataset.id;
+          const name = cb.dataset.id; // --- İYİLEŞTİRME: Artık bu 'id' değil, 'name' (slug).
           const type = cb.dataset.type;
           const isChecked = cb.checked;
-          const wasMember = type === 'organization' ? originalOrgIds.has(id) : originalGroupIds.has(id);
+          const wasMember = type === 'organization' ? originalOrgNames.has(name) : originalGroupNames.has(name);
           
           let apiAction = null;
-          const payload = { id: id, username: user.name, role: 'member' }; // Rolü sabit 'member' olarak belirliyoruz
+          let payload = {};
 
-          if (isChecked && !wasMember) { // Ekleme işlemi
+          if (isChecked && !wasMember) { // ADD
               apiAction = type === 'organization' ? 'organization_member_create' : 'group_member_create';
-          } else if (!isChecked && wasMember) { // Çıkarma işlemi
+              payload = { id: name, username: user.name, role: 'member' };
+          } else if (!isChecked && wasMember) { // REMOVE
               apiAction = type === 'organization' ? 'organization_member_delete' : 'group_member_delete';
-              delete payload.role; // Delete payload'da role gerek yok
-              payload.user_id = user.id; // delete için user_id gerekir
-              delete payload.username;
+              payload = { id: name, user_id: user.id };
           }
           
           if(apiAction) {
-              const promise = fetchWithCredentials(`/api/3/action/${apiAction}`, {
+              promises.push(fetchWithCredentials(`/api/3/action/${apiAction}`, {
                   method: 'POST',
                   body: JSON.stringify(payload)
-              });
-              promises.push(promise);
+              }));
           }
       });
       
       try {
-        await Promise.allSettled(promises);
-        // Değişiklikler sonrası veriyi yeniden yükle ve modal'ı kapat
-        await main();
-        modal.style.display = 'none';
+        const results = await Promise.allSettled(promises);
+        console.log('Membership update results:', results);
+        alert('Üyelikler başarıyla güncellendi!');
       } catch (error) {
-          console.error('Üyelikler güncellenirken bir hata oluştu:', error);
+          console.error('Failed to update memberships:', error);
           alert('Bir hata oluştu. Lütfen konsolu kontrol edin.');
       } finally {
         modalSaveBtn.disabled = false;
         modalSaveBtn.textContent = 'Değişiklikleri Kaydet';
+        closeModal();
+        // Değişiklikler sonrası veriyi yeniden yükle
+        main(); 
       }
   }
 
-  // --- ANA YÜKLEME FONKSİYONU ---
+  // --- MAIN DATA FETCH ---
   async function main() {
+    grid.innerHTML = `<div class="loading-placeholder"><div class="spinner"></div><p>Veriler yükleniyor...</p></div>`;
     try {
-      // Tüm verileri paralel olarak çek
       const [userList, orgList, groupList] = await Promise.all([
           fetchWithCredentials('/api/3/action/user_list?all_fields=true&include_site_user=true'),
           fetchWithCredentials('/api/3/action/organization_list?all_fields=true'),
@@ -322,14 +326,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       allOrgs = orgList;
       allGroups = groupList;
 
+      // --- DÜZELTME: API çağrısına `include_organizations=true` eklendi.
       const userDetailPromises = userList.map(user => 
-        fetchWithCredentials(`/api/3/action/user_show?id=${user.id}&include_num_followers=true&include_groups=true`)
+        fetchWithCredentials(`/api/3/action/user_show?id=${user.id}&include_num_followers=true&include_groups=true&include_organizations=true`)
       );
       allUsers = await Promise.all(userDetailPromises);
       
       renderCards(allUsers);
     } catch (error) {
-      console.error('Veriler alınırken bir hata oluştu:', error);
+      console.error('Failed to fetch initial data:', error);
       grid.innerHTML = `<div class="loading-placeholder"><p>Veriler yüklenemedi. Bir hata oluştu: ${error.message}</p></div>`;
     }
   }
@@ -345,34 +350,29 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderCards(filteredUsers);
   });
   
-  // Modal kapatma butonları
   const closeModal = () => modal.style.display = "none";
   modalCloseBtn.addEventListener('click', closeModal);
   modalCancelBtn.addEventListener('click', closeModal);
   window.addEventListener('click', (event) => {
-    if (event.target == modal) {
-      closeModal();
-    }
+    if (event.target == modal) closeModal();
   });
 
-  // Modal kaydetme butonu
   modalSaveBtn.addEventListener('click', saveMemberships);
   
-  // Kartlardaki butonlar için Event Delegation
   grid.addEventListener('click', (e) => {
     const button = e.target.closest('.manage-memberships-btn');
     if (button) {
+      e.preventDefault();
       const userId = button.dataset.userid;
       openMembershipModal(userId);
     }
   });
 
-  // Sayfayı başlat
   main();
 });
 </script>
 {% endblock %}
 
 {% block secondary_content %}
-{# Bu sayfa tam genişlik kullandığı için yan blok boş bırakıldı #}
+{# This page tam genişlik kullandığı için yan blok boş bırakıldı #}
 {% endblock %}

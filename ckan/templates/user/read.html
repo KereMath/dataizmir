@@ -22,10 +22,6 @@
           {% link_for _('Create one now?'), named_route='dataset.new' %}
         {% endif %}
       </p>
-    {% else %}
-      <p class="empty">
-        {{ _('User hasn\'t created any datasets.') }}
-      </p>
     {% endif %}
   {% endif %}
   {% endblock %}

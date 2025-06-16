@@ -1,7 +1,7 @@
 {# ========================= members.html ========================= #}
 {% extends "group/edit_base.html" %}
 
-{# ---------- REFINED FUTURISTIC STYLES ---------- #}
+{# ---------- FUTURISTIC DATA CARD STYLES ---------- #}
 {% block styles %}
   {{ super() }}
   <style>
@@ -12,13 +12,12 @@
       --clr-text-light: #f5f7fa;
       --clr-text-med: #a0b3c4;
       --clr-danger: #e74c3c;
-      --clr-border: rgba(74, 144, 226, 0.3);
+      --clr-border-subtle: rgba(74, 144, 226, 0.2);
     }
 
     /* ─── GLOBAL TYPOGRAPHY ─────────────────────────────────────── */
-    .page-heading, .btn, th, td {
+    .page-heading, .btn, .member-card {
       font-family: 'Orbitron', sans-serif !important;
-      letter-spacing: 0.5px !important;
     }
 
     /* ─── PAGE HEADING ─────────────────────────────────────────── */
@@ -32,57 +31,107 @@
       border-bottom: 1px solid #e0e0e0;
     }
 
-    /* ─── TABLE DESIGN ─────────────────────────────────────────── */
-    #member-table {
-      width: 100% !important;
-      border-collapse: separate !important;
-      border-spacing: 0 8px !important; /* Spacing between rows */
-      border: none !important;
+    /* ─── MEMBER CARD LAYOUT ───────────────────────────────────── */
+    .member-card-list {
+      display: grid;
+      grid-template-columns: 1fr; /* Single column layout */
+      gap: 1.25rem; /* Space between cards */
     }
-    #member-table thead {
-      background: none !important;
-    }
-    #member-table th {
-      color: #555 !important; /* Assuming light page background */
-      text-transform: uppercase !important;
-      border-bottom: 2px solid #ccc !important;
-      padding: 12px 20px !important;
-      font-size: 12px !important;
-      text-align: left;
-    }
-    #member-table tbody tr {
-      background: var(--clr-panel-bg) !important;
-      border-radius: 8px !important;
-      transition: transform 0.2s ease, box-shadow 0.2s ease !important;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #member-table tbody tr:hover {
-      transform: translateY(-3px) !important;
-      box-shadow: 0 6px 12px rgba(28, 43, 58, 0.3) !important;
-    }
-    #member-table td {
-      color: var(--clr-text-light) !important;
-      border: none !important;
-      padding: 20px 22px !important;
-      vertical-align: middle !important;
-    }
-    /* Applying border-radius to first and last cells */
-    #member-table td:first-child { border-top-left-radius: 8px; border-bottom-left-radius: 8px; }
-    #member-table td:last-child { border-top-right-radius: 8px; border-bottom-right-radius: 8px; }
 
-    #member-table a {
-      color: var(--clr-text-light) !important;
-      font-weight: bold;
-      text-decoration: none;
+    .member-card {
+      background: var(--clr-panel-bg);
+      padding: 20px 25px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+      border: 1px solid var(--clr-border-subtle);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: 0 4px 10px rgba(28, 43, 58, 0.2);
+      /* --- Sci-Fi Cut Corner --- */
+      clip-path: polygon(0 0, calc(100% - 30px) 0, 100% 30px, 100% 100%, 0 100%);
     }
-    #member-table a:hover {
-      color: var(--clr-accent) !important;
+
+    .member-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(28, 43, 58, 0.35);
+    }
+
+    /* Accent line on the left */
+    .member-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: var(--clr-border-subtle);
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+      transition: background-color 0.25s ease, box-shadow 0.25s ease;
+    }
+    .member-card:hover::before {
+      background: var(--clr-accent);
+      box-shadow: 0 0 8px var(--clr-accent);
+    }
+
+    .member-card__main-info {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .member-card__avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--clr-border-subtle);
+      color: var(--clr-accent);
+      font-size: 20px;
+    }
+
+    .member-card__info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .member-card__name {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--clr-text-light);
+      margin-bottom: 4px;
+    }
+    .member-card__name a {
+      color: var(--clr-text-light) !important;
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+     .member-card__name a:hover {
+       color: var(--clr-accent) !important;
+     }
+
+    .member-card__role {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--clr-accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .member-card__actions {
+      display: flex;
+      gap: 10px;
     }
 
     /* ─── BUTTONS ──────────────────────────────────────────────── */
     .btn {
       border: none !important;
-      padding: 10px 20px !important;
+      padding: 8px 16px !important;
       font-weight: 600 !important;
       border-radius: 8px !important;
       transition: all 0.2s ease !important;
@@ -92,7 +141,6 @@
     .btn-primary {
       background: var(--clr-accent) !important;
       color: #fff !important;
-      box-shadow: 0 2px 4px rgba(74, 144, 226, 0.3);
     }
     .btn-default {
       background: transparent !important;
@@ -105,12 +153,16 @@
       color: #fff !important;
     }
     .btn-danger {
-      background: var(--clr-danger) !important;
-      color: #fff !important;
+      background: transparent !important;
+      border: 1px solid var(--clr-danger) !important;
+      color: var(--clr-danger) !important;
+    }
+    .btn-danger:hover {
+        background-color: var(--clr-danger) !important;
+        color: #fff !important;
     }
     .btn:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
+      transform: translateY(-2px);
     }
   </style>
 {% endblock %}
@@ -123,31 +175,37 @@
 
 {% block primary_content_inner %}
   <h3 class="page-heading">{{ _('{0} members'.format(members|length)) }}</h3>
-  <table class="table table-header table-hover" id="member-table">
-    <thead>
-      <tr>
-        <th>{{ _('User') }}</th>
-        <th>{{ _('Role') }}</th>
-        <th></th>
-      </tr>
-    </thead>
-    <tbody>
-      {% for user_id, user, role in members %}
-      <tr>
-        <td class="media">
-          {{ h.linked_user(user_id, maxlength=20) }}
-        </td>
-        <td>{{ role }}</td>
-        <td style="text-align: right;">
-          <div class="btn-group pull-right">
-            <a class="btn btn-default btn-sm" href="{{ h.url_for(group_type + '.member_new', id=group_dict.id, user=user_id) }}" title="{{ _('Edit') }}">
-              <i class="fa fa-wrench"></i>
-            </a>
-            <a class="btn btn-danger btn-sm" href="{{ h.url_for(group_type + '.member_delete', id=group_dict.id, user=user_id) }}" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this member?') }}" title="{{ _('Delete') }}">{% block delete_button_text %}<i class="fa fa-times"></i>{% endblock %}</a>
+  
+  {# Düz tablo yerine Veri Kartı Listesi kullanılıyor #}
+  <div class="member-card-list">
+    {% for user_id, user, role in members %}
+      <div class="member-card">
+        
+        <div class="member-card__main-info">
+          <div class="member-card__avatar">
+            <i class="fa fa-user"></i>
           </div>
-        </td>
-      </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          <div class="member-card__info">
+            <div class="member-card__name">
+              {{ h.linked_user(user_id, maxlength=20) }}
+            </div>
+            <div class="member-card__role">
+              {{ role }}
+            </div>
+          </div>
+        </div>
+
+        <div class="member-card__actions">
+          <a class="btn btn-default btn-sm" href="{{ h.url_for(group_type + '.member_new', id=group_dict.id, user=user_id) }}" title="{{ _('Edit') }}">
+            <i class="fa fa-wrench"></i>
+          </a>
+          <a class="btn btn-danger btn-sm" href="{{ h.url_for(group_type + '.member_delete', id=group_dict.id, user=user_id) }}" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this member?') }}" title="{{ _('Delete') }}">
+            {% block delete_button_text %}<i class="fa fa-times"></i>{% endblock %}
+          </a>
+        </div>
+
+      </div>
+    {% endfor %}
+  </div>
+
 {% endblock %}

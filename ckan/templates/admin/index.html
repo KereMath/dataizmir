@@ -2,6 +2,7 @@
 
 {% block primary_content_inner %}
 <div class="admin-dashboard-pro">
+
   <header class="dashboard-header">
     <div class="header-content">
       <h1><i class="fa fa-users"></i> Kullanıcı Kontrol Paneli</h1>
@@ -20,9 +21,9 @@
       <p>Kullanıcı verileri yükleniyor, lütfen bekleyin...</p>
     </div>
   </div>
+
 </div>
 
-<!-- Modal for membership management -->
 <div id="membership-modal" class="membership-modal" style="display: none;">
   <div class="modal-content">
     <div class="modal-header">
@@ -35,19 +36,6 @@
         <p>Üyelikler yükleniyor...</p>
       </div>
     </div>
-    </div>
-    <div id="modal-body" class="modal-body">
-      <div class="loading-placeholder">
-        <div class="spinner"></div>
-        <p>Üyelikler yükleniyor...</p>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button id="modal-cancel-btn" class="profile-btn-pro secondary">İptal</button>
-      <button id="modal-save-btn" class="profile-btn-pro primary" disabled>Değişiklikleri Kaydet</button>
-    </div>
-  </div>
-</div>
     <div class="modal-footer">
       <button id="modal-cancel-btn" class="profile-btn-pro secondary">İptal</button>
       <button id="modal-save-btn" class="profile-btn-pro primary" disabled>Değişiklikleri Kaydet</button>
@@ -55,37 +43,487 @@
   </div>
 </div>
 
-<!-- =====================  STYLING  ===================== -->
 <style>
   :root {
-    --font-family-sans: 'Poppins', sans-serif;
-    --bg-main: #f8f9fc;
+    --font-family-sans: 'Poppins', sans-serif; 
+    --bg-main: #f8f9fc; 
     --bg-card: #ffffff;
-    --border-color: #e2e8f0;
-    --text-dark: #1e293b;
+    --border-color: #e2e8f0; 
+    --text-dark: #1e293b; 
     --text-light: #64748b;
-    --accent-primary: #4338ca;
-    --accent-secondary: #7e22ce;
+    --accent-primary: #4338ca; 
+    --accent-secondary: #7e22ce; 
     --accent-gradient: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
-    --admin-star: #ffc107;
-    --radius-md: 16px;
+    --admin-star: #ffc107; 
+    --radius-md: 16px; 
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -1px rgba(0,0,0,.04);
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.07), 0 4px 6px -4px rgba(0,0,0,.07);
-    --success-color: #16a34a;
+    --success-color: #16a34a; 
     --danger-color: #dc2626;
   }
-  /* styles unchanged for brevity */
+  
+  .admin-dashboard-pro { 
+    font-family: var(--font-family-sans) !important; 
+    padding: 1rem 0 !important; 
+    background: var(--bg-main) !important; 
+  }
+  
+  /* Header Styles */
+  .dashboard-header { margin-bottom: 2.5rem; }
+  .dashboard-header h1 { 
+    font-size: 2.25rem; 
+    font-weight: 700; 
+    color: var(--text-dark); 
+    margin-bottom: 0.5rem; 
+    display: flex; 
+    align-items: center; 
+    gap: 1rem; 
+  }
+  .dashboard-header h1 i { color: var(--accent-primary); }
+  .dashboard-header p { font-size: 1.1rem; color: var(--text-light); }
+  
+  .search-form { display: flex; margin-top: 1.5rem; position: relative; }
+  .search-form i { 
+    position: absolute; 
+    left: 1rem; 
+    top: 50%; 
+    transform: translateY(-50%); 
+    color: var(--text-light); 
+  }
+  .search-form input { 
+    width: 100%; 
+    border: 1px solid var(--border-color); 
+    border-radius: var(--radius-md); 
+    padding: .9rem 1rem .9rem 3rem; 
+    font-size: 1rem; 
+    outline: none; 
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .search-form input:focus { 
+    border-color: var(--accent-primary); 
+    box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.2); 
+  }
+  .search-form button { 
+    background: var(--accent-primary); 
+    color: #fff; 
+    border: none; 
+    padding: .75rem 1.5rem; 
+    font-weight: 600; 
+    border-radius: 0 var(--radius-md) var(--radius-md) 0; 
+    cursor: pointer; 
+    transition: background .2s; 
+  }
+  .search-form button:hover { background: var(--accent-secondary); }
+
+  /* Grid Layout */
+  .user-grid { 
+    display: grid !important; 
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; 
+    gap: 2rem !important; 
+  }
+  
+  /* User Card Styles */
+  .user-profile-card { 
+    background: var(--bg-card); 
+    border: 1px solid var(--border-color); 
+    border-radius: var(--radius-md); 
+    box-shadow: var(--shadow-md); 
+    display: flex; 
+    flex-direction: column; 
+    overflow: hidden; 
+    transition: transform .2s, box-shadow .2s; 
+  }
+  .user-profile-card:hover { 
+    transform: translateY(-5px); 
+    box-shadow: var(--shadow-lg); 
+  }
+  
+  .card-header-pro { 
+    position: relative; 
+    height: 100px; 
+    background: #475569; 
+    background-image: linear-gradient(45deg, #3d4a5f, #5b6b82); 
+  }
+  .card-avatar-pro {
+    position: absolute; 
+    bottom: -40px; 
+    left: 50%; 
+    transform: translateX(-50%);
+    width: 80px; 
+    height: 80px; 
+    border-radius: 50%; 
+    background-size: cover; 
+    background-position: center;
+    border: 4px solid #fff; 
+    box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+  }
+  .sysadmin-badge-pro {
+    position: absolute; 
+    top: 1rem; 
+    right: 1rem; 
+    background: rgba(255, 255, 255, 0.2); 
+    backdrop-filter: blur(5px);
+    color: #fff; 
+    padding: .3rem .7rem; 
+    border-radius: 20px; 
+    font-size: .75rem; 
+    font-weight: 600; 
+    display: flex; 
+    align-items: center; 
+    gap: .3rem;
+  }
+  .sysadmin-badge-pro i { color: var(--admin-star); }
+
+  .card-body-pro { 
+    padding: 50px 1.5rem 1.5rem 1.5rem; 
+    text-align: center; 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+  }
+  .user-name-pro { 
+    font-size: 1.25rem; 
+    font-weight: 600; 
+    color: var(--text-dark); 
+    margin: 0; 
+  }
+  .user-handle-pro { 
+    color: var(--text-light); 
+    font-size: .9rem; 
+    margin-bottom: 1rem; 
+  }
+  
+  .info-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 1rem; 
+    padding: 1rem 0; 
+    border-top: 1px solid var(--border-color); 
+    margin-bottom: 1rem; 
+  }
+  .info-item { text-align: center; }
+  .info-item .value { 
+    font-size: 1.5rem; 
+    font-weight: 700; 
+    color: var(--accent-primary); 
+  }
+  .info-item .label { 
+    font-size: .75rem; 
+    color: var(--text-light); 
+    text-transform: uppercase; 
+  }
+  
+  .roles-section h4 { 
+    font-size: .8rem; 
+    font-weight: 600; 
+    color: var(--text-light); 
+    text-transform: uppercase; 
+    margin-bottom: .75rem; 
+    border-top: 1px solid var(--border-color); 
+    padding-top: 1rem;
+  }
+  .roles-list { 
+    list-style: none; 
+    padding: 0; 
+    margin: 0; 
+    display: flex; 
+    flex-direction: column; 
+    gap: .5rem; 
+    max-height: 120px; 
+    overflow-y: auto; 
+    padding-right: 5px; 
+  }
+  .roles-list li { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    background: var(--bg-main); 
+    padding: .5rem .75rem; 
+    border-radius: 6px; 
+  }
+  .role-org-name { 
+    font-weight: 500; 
+    color: var(--text-dark); 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+    max-width: 180px; 
+  }
+  .role-capacity-pro { 
+    font-size: .8rem; 
+    font-weight: 600; 
+    padding: .2rem .5rem; 
+    border-radius: 5px; 
+    color: #fff; 
+    text-transform: capitalize; 
+  }
+  .role-capacity-pro.admin { background: #c81e1e; }
+  .role-capacity-pro.editor { background: #d97706; }
+  .role-capacity-pro.member { background: #4a5568; }
+
+  .card-footer-pro { 
+    padding: 1rem 1.5rem; 
+    border-top: 1px solid var(--border-color); 
+    background: #fcfdff; 
+    margin-top: auto;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .profile-btn-pro { 
+    text-decoration: none; 
+    padding: .5rem 1rem; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    transition: all .2s; 
+    border: none;
+    cursor: pointer;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+  .profile-btn-pro.primary { 
+    background: var(--accent-primary); 
+    color: #fff; 
+  }
+  .profile-btn-pro.primary:hover { 
+    background: var(--accent-secondary); 
+  }
+  .profile-btn-pro.secondary { 
+    background: #e2e8f0; 
+    color: var(--text-dark); 
+  }
+  .profile-btn-pro.secondary:hover { 
+    background: #cbd5e1; 
+  }
+  .manage-memberships-btn { 
+    background: var(--success-color); 
+    color: white; 
+  }
+  .manage-memberships-btn:hover { 
+    background: #15803d; 
+  }
+
+  /* Loading & Spinner */
+  .loading-placeholder { 
+    text-align: center; 
+    padding: 4rem; 
+    color: var(--text-light); 
+    grid-column: 1 / -1; 
+  }
+  .spinner { 
+    width: 48px; 
+    height: 48px; 
+    border: 5px solid #f3f3f3; 
+    border-top: 5px solid var(--accent-primary); 
+    border-radius: 50%; 
+    animation: spin 1s linear infinite; 
+    margin: 0 auto 1rem auto; 
+  }
+  @keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+  }
+  
+  /* Modal Styles */
+  .membership-modal { 
+    position: fixed; 
+    z-index: 1000; 
+    left: 0; 
+    top: 0; 
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgba(0,0,0,0.5); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+  }
+  .modal-content { 
+    background-color: #fff; 
+    margin: auto; 
+    padding: 0; 
+    border: 1px solid #888; 
+    width: 90%; 
+    max-width: 700px; 
+    border-radius: var(--radius-md); 
+    box-shadow: var(--shadow-lg); 
+  }
+  .modal-header { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 1rem 1.5rem; 
+    border-bottom: 1px solid var(--border-color); 
+  }
+  .modal-header h3 { 
+    margin: 0; 
+    font-size: 1.5rem; 
+    color: var(--text-dark); 
+  }
+  .modal-close { 
+    color: var(--text-light); 
+    font-size: 2rem; 
+    font-weight: bold; 
+    cursor: pointer; 
+    border: none; 
+    background: none; 
+  }
+  .modal-body { 
+    padding: 1.5rem; 
+    max-height: 60vh; 
+    overflow-y: auto; 
+  }
+  .modal-footer { 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 1rem; 
+    padding: 1rem 1.5rem; 
+    border-top: 1px solid var(--border-color); 
+  }
+  
+  /* Membership Grid */
+  .membership-grid-container { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: 2rem; 
+  }
+  @media (max-width: 600px) {
+    .membership-grid-container { 
+      grid-template-columns: 1fr; 
+    }
+  }
+  .membership-section h4 { 
+    font-size: 1.1rem; 
+    color: var(--accent-primary); 
+    border-bottom: 2px solid var(--accent-primary); 
+    padding-bottom: 0.5rem; 
+    margin-bottom: 1rem; 
+  }
+  .membership-list { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 0.75rem; 
+  }
+  
+  /* Membership Item with Role Select */
+  .membership-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-radius: 8px;
+    background: var(--bg-main);
+  }
+  .membership-item:hover {
+    background: #eef2ff;
+  }
+  
+  /* Role Select Dropdown */
+  .role-select {
+    padding: 0.4rem 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    min-width: 100px;
+  }
+  .role-select:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f5f5f5;
+  }
+  .role-select:not(:disabled):hover {
+    border-color: var(--accent-primary);
+  }
+  .role-select:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px rgba(67, 56, 202, 0.1);
+  }
+  
+  /* Role Info Box */
+  .role-info {
+    background: #f0f9ff;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    font-size: 0.85rem;
+    border: 1px solid #dbeafe;
+  }
+  .role-info h5 {
+    margin: 0 0 0.5rem 0;
+    color: var(--accent-primary);
+    font-size: 1rem;
+  }
+  .role-info ul {
+    margin: 0;
+    padding-left: 1.5rem;
+  }
+  .role-info li {
+    margin-bottom: 0.25rem;
+  }
+  
+  /* Checkbox Styles Updated */
+  .checkbox-container { 
+    display: flex;
+    align-items: center;
+    position: relative; 
+    padding-left: 35px; 
+    cursor: pointer; 
+    font-size: 0.95rem; 
+    user-select: none;
+    flex: 1;
+  }
+  .checkbox-container input { 
+    position: absolute; 
+    opacity: 0; 
+    cursor: pointer; 
+    height: 0; 
+    width: 0; 
+  }
+  .checkmark { 
+    position: absolute; 
+    top: 50%;
+    transform: translateY(-50%);
+    left: 0; 
+    height: 20px; 
+    width: 20px; 
+    background-color: #eee; 
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .checkbox-container:hover input ~ .checkmark {
+    background-color: #e2e8f0;
+  }
+  .checkbox-container input:checked ~ .checkmark { 
+    background-color: var(--accent-primary); 
+  }
+  .checkmark:after { 
+    content: ""; 
+    position: absolute; 
+    display: none; 
+  }
+  .checkbox-container input:checked ~ .checkmark:after { 
+    display: block; 
+  }
+  .checkbox-container .checkmark:after { 
+    left: 7px; 
+    top: 3px; 
+    width: 5px; 
+    height: 10px; 
+    border: solid white; 
+    border-width: 0 3px 3px 0; 
+    transform: rotate(45deg); 
+  }
 </style>
 
-<!-- =====================  SCRIPT  ===================== -->
 <script>
-/**
- * CKAN Kullanıcı & Üyelik Yönetim Paneli
- * 2025-06
- * Fix: *_member_update çağrısında "role" alanı kullanılıyor (400 BAD REQUEST hatası çözüldü)
- */
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  // --- DOM Elementleri ---
   const grid = document.getElementById('user-grid');
   const searchInput = document.getElementById('user-search-input');
   const modal = document.getElementById('membership-modal');
@@ -94,102 +532,379 @@ document.addEventListener('DOMContentLoaded', () => {
   const modalSaveBtn = document.getElementById('modal-save-btn');
   const modalCancelBtn = document.getElementById('modal-cancel-btn');
   const modalCloseBtn = document.getElementById('modal-close-btn');
-
+  
+  // --- Global Veri Depoları ---
   let allUsers = [];
   let allOrgs = [];
   let allGroups = [];
   let currentUserMemberships = { orgs: [], groups: [] };
 
+  // --- API YARDIMCI FONKSİYONU ---
   async function fetchWithCredentials(url, options = {}) {
-    const res = await fetch(url, {
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      ...options
-    });
-    if (!res.ok) {
-      let msg = `API çağrısı başarısız: ${res.status}`;
-      try { const j = await res.json(); msg = j.error?.message || msg; } catch (_) {}
-      throw new Error(msg);
-    }
-    const data = await res.json();
+    const defaultOptions = {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+    };
+    const response = await fetch(url, { ...defaultOptions, ...options });
+    if (!response.ok) throw new Error(`API çağrısı başarısız: ${response.status}`);
+    const data = await response.json();
     if (!data.success) throw new Error(data.error?.message || 'Bilinmeyen API hatası');
     return data.result;
   }
 
-  /* renderCards, openMembershipModal, main functions kept same (omitted here) */
+  // --- KULLANICI KARTLARINI OLUŞTURMA ---
+  function renderCards(usersToRender) {
+    if (usersToRender.length === 0) {
+      grid.innerHTML = `<div class="loading-placeholder"><p>Arama kriterlerinize uygun kullanıcı bulunamadı.</p></div>`;
+      return;
+    }
 
-  async function saveMemberships() {
-    const userName = modal.dataset.userName;
-    if (!userName) return;
+    grid.innerHTML = usersToRender.map(user => {
+      const name = user.display_name || 'İsimsiz';
+      const handle = user.name || 'kullanici';
+      const avatar = user.image_display_url || '{{ h.url_for_static('/base/images/placeholder-user.png') }}';
+      const datasetCount = user.number_created_packages || 0;
+      const followers = user.num_followers || 0;
+      const orgs = user.organizations || [];
+      
+      let rolesHTML = '<p style="font-size:0.9rem; color:#999; text-align:center; padding:1rem;">Kullanıcının bir organizasyonda rolü bulunmuyor.</p>';
+      if (orgs.length > 0) {
+        rolesHTML = `<div class="roles-section"><h4>Roller</h4><ul class="roles-list">` +
+          orgs.map(org => `
+            <li>
+              <span class="role-org-name" title="${org.title}">${org.title}</span>
+              <span class="role-capacity-pro ${org.capacity}">${org.capacity.replace('_', ' ')}</span>
+            </li>
+          `).join('') + `</ul></div>`;
+      }
 
+      return `
+        <div class="user-profile-card">
+          <div class="card-header-pro">
+            <img src="${avatar}" alt="Avatar" class="card-avatar-pro"/>
+            ${user.sysadmin ? `<span class="sysadmin-badge-pro" title="Sistem Yöneticisi"><i class="fa fa-star"></i> Yönetici</span>` : ''}
+          </div>
+          <div class="card-body-pro">
+            <h3 class="user-name-pro">${name}</h3>
+            <p class="user-handle-pro">@${handle}</p>
+            <div class="info-grid">
+              <div class="info-item"><span class="value">${datasetCount}</span><span class="label">Veri Seti</span></div>
+              <div class="info-item"><span class="value">${followers}</span><span class="label">Takipçi</span></div>
+            </div>
+            ${rolesHTML}
+          </div>
+          <div class="card-footer-pro">
+            <a href="/user/${handle}" class="profile-btn-pro secondary">Profili Görüntüle</a>
+            <button class="profile-btn-pro manage-memberships-btn" data-userid="${user.id}" data-username="${handle}">Üyelikleri Yönet</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // --- ÜYELİK MODALINI AÇMA (ROL SEÇİMİ İLE) ---
+  async function openMembershipModal(userId, userName) {
+    modal.style.display = 'flex';
+    modalTitle.textContent = `${userName} Üyeliklerini Yönet`;
+    modalBody.innerHTML = `<div class="loading-placeholder"><div class="spinner"></div><p>Üyelikler yükleniyor...</p></div>`;
     modalSaveBtn.disabled = true;
-    modalSaveBtn.textContent = 'Kaydediliyor...';
-
-    const originalOrgs = new Map(currentUserMemberships.orgs.map(o => [o.name, o.capacity || 'member']));
-    const originalGroups = new Map(currentUserMemberships.groups.map(g => [g.name, g.capacity || 'member']));
-
-    const items = modalBody.querySelectorAll('.membership-item');
-    const tasks = [];
-
-    items.forEach(item => {
-      const cb = item.querySelector('input[type="checkbox"]');
-      const sel = item.querySelector('.role-select');
-      const name = cb.dataset.id;
-      const type = cb.dataset.type;
-      const checked = cb.checked;
-      const newRole = sel.value;
-
-      let originals, createAct, updateAct, deleteAct;
-      if (type === 'organization') {
-        originals = originalOrgs;
-        createAct = 'organization_member_create';
-        updateAct = 'organization_member_update';
-        deleteAct = 'organization_member_delete';
-      } else {
-        originals = originalGroups;
-        createAct = 'group_member_create';
-        updateAct = 'group_member_update';
-        deleteAct = 'group_member_delete';
-      }
-
-      const wasMember = originals.has(name);
-      const oldRole = originals.get(name);
-
-      if (checked && !wasMember) {
-        tasks.push(fetchWithCredentials(`/api/3/action/${createAct}`, {
-          method: 'POST',
-          body: JSON.stringify({ id: name, username: userName, role: newRole })
-        }));
-      } else if (!checked && wasMember) {
-        tasks.push(fetchWithCredentials(`/api/3/action/${deleteAct}`, {
-          method: 'POST',
-          body: JSON.stringify({ id: name, username: userName })
-        }));
-      } else if (checked && wasMember && oldRole !== newRole) {
-        tasks.push(fetchWithCredentials(`/api/3/action/${updateAct}`, {
-          method: 'POST',
-          body: JSON.stringify({ id: name, username: userName, role: newRole })
-        }));
-      }
-    });
 
     try {
-      const results = await Promise.allSettled(tasks);
-      const failed = results.filter(r => r.status === 'rejected');
-      if (failed.length) alert(`${failed.length} işlem başarısız oldu. Ayrıntılar konsolda.`);
-      await main();
-    } catch (e) { alert(e.message);} finally {
-      modalSaveBtn.disabled = false;
-      modalSaveBtn.textContent = 'Değişiklikleri Kaydet';
-      modal.style.display = 'none';
+        console.log(`Kullanıcı ID: ${userId}, Kullanıcı Adı: ${userName}`);
+        
+        // Paralel olarak organizasyon ve grup listelerini çek
+        const [userOrgs, userGroups] = await Promise.all([
+            fetchWithCredentials(`/api/3/action/organization_list_for_user?id=${userId}&permission=read`).catch(() => []),
+            fetchWithCredentials(`/api/3/action/group_list_for_user?id=${userId}&permission=read`).catch(async () => {
+                // Alternatif yöntem: Tüm grupları çek ve kullanıcının üye olduklarını filtrele
+                try {
+                    const allGroupsWithMembers = await fetchWithCredentials('/api/3/action/group_list?all_fields=true&include_users=true');
+                    return allGroupsWithMembers.filter(group => {
+                        return group.users && group.users.some(u => u.id === userId);
+                    });
+                } catch (e) {
+                    return [];
+                }
+            })
+        ]);
+        
+        currentUserMemberships = { orgs: userOrgs, groups: userGroups };
+        
+        // Kullanıcının mevcut üyeliklerini ve rollerini map'e dönüştür
+        const userOrgData = new Map(userOrgs.map(org => [org.name, org.capacity || 'member']));
+        const userGroupData = new Map(userGroups.map(group => [group.name, group.capacity || 'member']));
+        
+        // Listeleri sırala
+        allOrgs.sort((a, b) => a.display_name.localeCompare(b.display_name));
+        allGroups.sort((a, b) => a.display_name.localeCompare(b.display_name));
+
+        // Organizasyon HTML'i oluştur (rol seçimi ile)
+        const orgsHtml = allOrgs.map(org => {
+            const isMember = userOrgData.has(org.name);
+            const currentRole = userOrgData.get(org.name) || 'member';
+            
+            return `
+                <div class="membership-item">
+                    <label class="checkbox-container">
+                        <input type="checkbox" 
+                               data-id="${org.name}" 
+                               data-type="organization" 
+                               ${isMember ? 'checked' : ''}>
+                        <span class="checkmark"></span> ${org.display_name}
+                    </label>
+                    <select class="role-select" 
+                            data-id="${org.name}" 
+                            data-type="organization" 
+                            ${!isMember ? 'disabled' : ''}>
+                        <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Üye</option>
+                        <option value="editor" ${currentRole === 'editor' ? 'selected' : ''}>Editör</option>
+                        <option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Yönetici</option>
+                    </select>
+                </div>
+            `;
+        }).join('');
+        
+        // Grup HTML'i oluştur (rol seçimi ile - gruplar için sadece member ve admin)
+        const groupsHtml = allGroups.map(group => {
+            const isMember = userGroupData.has(group.name);
+            const currentRole = userGroupData.get(group.name) || 'member';
+            
+            return `
+                <div class="membership-item">
+                    <label class="checkbox-container">
+                        <input type="checkbox" 
+                               data-id="${group.name}" 
+                               data-type="group" 
+                               ${isMember ? 'checked' : ''}>
+                        <span class="checkmark"></span> ${group.display_name}
+                    </label>
+                    <select class="role-select" 
+                            data-id="${group.name}" 
+                            data-type="group" 
+                            ${!isMember ? 'disabled' : ''}>
+                        <option value="member" ${currentRole === 'member' ? 'selected' : ''}>Üye</option>
+                        <option value="admin" ${currentRole === 'admin' ? 'selected' : ''}>Yönetici</option>
+                    </select>
+                </div>
+            `;
+        }).join('');
+
+        // Modal içeriğini oluştur
+        modalBody.innerHTML = `
+            <div class="role-info">
+                <h5><i class="fa fa-info-circle"></i> Roller Hakkında</h5>
+                <ul>
+                    <li><strong>Üye:</strong> Özel veri setlerini görüntüleyebilir</li>
+                    <li><strong>Editör:</strong> Veri seti ekleyebilir ve düzenleyebilir (sadece organizasyonlar)</li>
+                    <li><strong>Yönetici:</strong> Tam yetki, üyeleri yönetebilir</li>
+                </ul>
+            </div>
+            <div class="membership-grid-container">
+                <div class="membership-section">
+                    <h4>Veri Paydaşları (Organizasyonlar)</h4>
+                    <div class="membership-list">${orgsHtml || '<p>Sistemde organizasyon bulunmuyor.</p>'}</div>
+                </div>
+                <div class="membership-section">
+                    <h4>Kategoriler (Gruplar)</h4>
+                    <div class="membership-list">${groupsHtml || '<p>Sistemde grup bulunmuyor.</p>'}</div>
+                </div>
+            </div>`;
+        
+        modalSaveBtn.disabled = false;
+        
+    } catch (error) {
+        console.error('Genel hata:', error);
+        modalBody.innerHTML = `
+            <div class="loading-placeholder">
+                <p style="color: red;">Üyelikler çekilemedi: ${error.message}</p>
+                <p>Lütfen tarayıcı konsolunu kontrol edin.</p>
+            </div>`;
     }
   }
 
-  /* event listeners remain same (omitted) */
+  // --- ÜYELİKLERİ KAYDETME (ROL DEĞİŞİKLİKLERİ İLE) ---
+  async function saveMemberships() {
+      const userId = modal.dataset.userId;
+      const userName = modal.dataset.userName;
+      if (!userId || !userName) return;
+      
+      modalSaveBtn.disabled = true;
+      modalSaveBtn.textContent = 'Kaydediliyor...';
 
+      // Orijinal üyelikleri ve rollerini map'e dönüştür
+      const originalOrgs = new Map(currentUserMemberships.orgs.map(org => [org.name, org.capacity || 'member']));
+      const originalGroups = new Map(currentUserMemberships.groups.map(group => [group.name, group.capacity || 'member']));
+      
+      const items = modalBody.querySelectorAll('.membership-item');
+      const promises = [];
+
+      items.forEach(item => {
+          const checkbox = item.querySelector('input[type="checkbox"]');
+          const select = item.querySelector('.role-select');
+          
+          const name = checkbox.dataset.id;
+          const type = checkbox.dataset.type;
+          const isChecked = checkbox.checked;
+          const newRole = select.value;
+          
+          let originals, createAction, deleteAction;
+          
+          if (type === 'organization') {
+              originals = originalOrgs;
+              createAction = 'organization_member_create';
+              deleteAction = 'organization_member_delete';
+          } else {
+              originals = originalGroups;
+              createAction = 'group_member_create';
+              deleteAction = 'group_member_delete';
+          }
+          
+          const wasMember = originals.has(name);
+          const oldRole = originals.get(name);
+          
+          if (isChecked && !wasMember) {
+              // Yeni üye ekle
+              const payload = { id: name, username: userName, role: newRole };
+              promises.push(
+                  fetchWithCredentials(`/api/3/action/${createAction}`, { 
+                      method: 'POST', 
+                      body: JSON.stringify(payload) 
+                  })
+              );
+          } else if (!isChecked && wasMember) {
+              // Üyeyi çıkar
+              const payload = { id: name, user_id: userId };
+              promises.push(
+                  fetchWithCredentials(`/api/3/action/${deleteAction}`, { 
+                      method: 'POST', 
+                      body: JSON.stringify(payload) 
+                  })
+              );
+          } else if (isChecked && wasMember && oldRole !== newRole) {
+              // Rol değişikliği - önce sil, sonra yeni rolle ekle
+              const deletePayload = { id: name, user_id: userId };
+              const createPayload = { id: name, username: userName, role: newRole };
+              
+              promises.push(
+                  fetchWithCredentials(`/api/3/action/${deleteAction}`, { 
+                      method: 'POST', 
+                      body: JSON.stringify(deletePayload) 
+                  }).then(() => 
+                      fetchWithCredentials(`/api/3/action/${createAction}`, { 
+                          method: 'POST', 
+                          body: JSON.stringify(createPayload) 
+                      })
+                  )
+              );
+          }
+      });
+      
+      try {
+        const results = await Promise.allSettled(promises);
+        const errors = results.filter(r => r.status === 'rejected');
+        
+        if (errors.length > 0) {
+            console.error('Bazı işlemler başarısız oldu:', errors);
+            alert(`Üyelikler kısmen güncellendi. ${errors.length} işlem başarısız oldu.`);
+        } else {
+            alert('Üyelikler ve roller başarıyla güncellendi!');
+        }
+        
+        // Kullanıcı listesini yenile
+        await main();
+        
+      } catch (error) {
+          console.error('Üyelikler güncellenirken hata:', error);
+          alert('Bir hata oluştu. Lütfen konsolu kontrol edin.');
+      } finally {
+        modalSaveBtn.disabled = false;
+        modalSaveBtn.textContent = 'Değişiklikleri Kaydet';
+        closeModal();
+      }
+  }
+
+  // --- ANA VERİ YÜKLEME FONKSİYONU ---
+  async function main() {
+    grid.innerHTML = `<div class="loading-placeholder"><div class="spinner"></div><p>Veriler yükleniyor...</p></div>`;
+    try {
+      const [userList, orgList, groupList] = await Promise.all([
+          fetchWithCredentials('/api/3/action/user_list?all_fields=true&include_site_user=true'),
+          fetchWithCredentials('/api/3/action/organization_list?all_fields=true'),
+          fetchWithCredentials('/api/3/action/group_list?all_fields=true')
+      ]);
+      
+      allOrgs = orgList;
+      allGroups = groupList;
+      
+      // Her kullanıcı için detaylı bilgileri çek
+      const userDetailPromises = userList.map(user => 
+        fetchWithCredentials(`/api/3/action/user_show?id=${user.id}&include_num_followers=true`)
+      );
+      allUsers = await Promise.all(userDetailPromises);
+
+      renderCards(allUsers);
+    } catch (error) {
+      console.error('Kullanıcı verileri alınırken bir hata oluştu:', error);
+      grid.innerHTML = `<div class="loading-placeholder"><p>Veriler yüklenemedi: ${error.message}</p></div>`;
+    }
+  }
+
+  // --- EVENT LISTENERS ---
+  searchInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const filteredUsers = allUsers.filter(user => 
+      (user.display_name && user.display_name.toLowerCase().includes(searchTerm)) ||
+      (user.name && user.name.toLowerCase().includes(searchTerm)) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm))
+    );
+    renderCards(filteredUsers);
+  });
+  
+  // Checkbox değiştiğinde select'i etkinleştir/devre dışı bırak
+  document.addEventListener('change', (e) => {
+    if (e.target.type === 'checkbox' && e.target.closest('.membership-item')) {
+      const item = e.target.closest('.membership-item');
+      const select = item.querySelector('.role-select');
+      if (select) {
+        select.disabled = !e.target.checked;
+        if (!e.target.checked) {
+          select.value = 'member'; // Varsayılan role dön
+        }
+      }
+    }
+  });
+  
+  const closeModal = () => { 
+    modal.style.display = "none"; 
+    modalBody.innerHTML = ''; 
+  }
+  
+  modalCloseBtn.addEventListener('click', closeModal);
+  modalCancelBtn.addEventListener('click', closeModal);
+  window.addEventListener('click', (event) => { 
+    if (event.target == modal) closeModal(); 
+  });
+  modalSaveBtn.addEventListener('click', saveMemberships);
+  
+  grid.addEventListener('click', (e) => {
+    const button = e.target.closest('.manage-memberships-btn');
+    if (button) {
+      e.preventDefault();
+      const userId = button.dataset.userid;
+      const userName = button.dataset.username;
+      modal.dataset.userId = userId;
+      modal.dataset.userName = userName;
+      openMembershipModal(userId, userName);
+    }
+  });
+
+  // Ana fonksiyonu çalıştır
   main();
 });
 </script>
 {% endblock %}
 
-{% block secondary_content %}{% endblock %}
+{% block secondary_content %}
+{# Bu sayfa tam genişlik kullandığı için yan blok boş bırakıldı #}
+{% endblock %}

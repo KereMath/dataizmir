@@ -754,83 +754,56 @@ def organization_list_for_user(context, data_dict):
     return orgs_list
 
 def group_list_for_user(context, data_dict):
-    '''Return the groups that the user has a given permission for.
-
-    Specifically it returns the list of groups that the currently
-    authorized user has a given permission (for example: "read") against.
-    This version correctly includes the user's capacity (role) in the response.
-
-    :param id: the name or id of the user to get the group list for
-        (optional, defaults to the currently authorized user)
-    :type id: string
-    :param permission: the permission the user has against the
-        returned groups, for example ``"read"`` or ``"update"``
-        (optional, default: ``"read"``)
-    :type permission: string
-    :param include_dataset_count: include the package_count in each group
-        (optional, default: ``False``)
-    :type include_dataset_count: bool
-
-    :returns: list of groups that the user has the given permission for,
-              including their capacity in that group.
-    :rtype: list of dicts
-    '''
     model = context['model']
 
-    # Kullanıcıyı belirle (ID veya mevcut kullanıcı)
+    # -------- Kullanıcı nesnesi --------
     if data_dict.get('id'):
         user_obj = model.User.get(data_dict['id'])
         if not user_obj:
-            raise NotFound('User not found')
-        user = user_obj.name
+            raise NotFound(_('User not found'))
     else:
-        user = context['user']
-        user_obj = context.get('auth_user_obj')
+        user_obj = context.get('auth_user_obj') or model.User.get(context['user'])
 
-    # Yetki kontrolü
+    user = user_obj.name
+
     _check_access('group_list_for_user', context, data_dict)
 
-    # Sysadmin tüm gruplarda admin yetkisine sahiptir
-    sysadmin = authz.is_sysadmin(user)
-    if sysadmin:
-        all_groups_q = model.Session.query(model.Group) \
-            .filter(model.Group.is_organization == False) \
-            .filter(model.Group.state == 'active')
-        groups_and_capacities = [(group, 'admin') for group in all_groups_q.all()]
-    else:
-        # Normal kullanıcılar için rolleri ve üyelikleri sorgula
-        permission = data_dict.get('permission', 'read')
-        roles = authz.get_roles_with_permission(permission)
+    # -------- Sysadmin kısayolu --------
+    if authz.is_sysadmin(user):
+        q = model.Session.query(model.Group).filter(
+            model.Group.is_organization == False,
+            model.Group.state == 'active'
+        )
+        groups_and_capacities = [(g, 'admin') for g in q.all()]
 
-        if not roles or not user_obj:
+    # -------- Normal kullanıcı --------
+    else:
+        perm = data_dict.get('permission', 'read')
+        roles = authz.get_roles_with_permission(perm)
+        if not roles:
             return []
 
-        # Kullanıcının üye olduğu ve belirtilen role sahip olduğu grupları bul
-        q = model.Session.query(model.Member, model.Group) \
-            .join(model.Group, model.Group.id == model.Member.group_id) \
-            .filter(model.Member.table_name == 'user') \
-            .filter(model.Member.table_id == user_obj.id) \
-            .filter(model.Member.capacity.in_(roles)) \
-            .filter(model.Member.state == 'active') \
-            .filter(model.Group.is_organization == False) \
-            .filter(model.Group.state == 'active')
+        m = model.Member
+        g = model.Group
 
-        groups_and_capacities = []
-        for member, group in q.all():
-            # Her grup için kullanıcının spesifik rolünü (capacity) al
-            groups_and_capacities.append((group, member.capacity))
+        q = model.Session.query(m, g).join(g, g.id == m.group_id).filter(
+            m.table_name == 'user',
+            m.table_id == user_obj.id,
+            m.capacity.in_(roles),
+            m.state == 'active',
+            g.is_organization == False,
+            g.state == 'active'
+        )
 
-    # Sonucu dict'e dönüştürürken kapasite bilgisini de ekle
+        groups_and_capacities = [(group, member.capacity) for member, group in q.all()]
+
+    # -------- Dictize --------
     context['with_capacity'] = True
-    groups_list = model_dictize.group_list_dictize(
+    return model_dictize.group_list_dictize(
         groups_and_capacities,
         context,
         with_package_counts=asbool(data_dict.get('include_dataset_count', False))
     )
-
-    return groups_list
-
-
 
 def license_list(context, data_dict):
     '''Return the list of licenses available for datasets on the site.

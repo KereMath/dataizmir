@@ -24,6 +24,21 @@
 
 </div>
 
+<div id="membership-modal" class="membership-modal" style="display: none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="modal-title">Üyelikleri Yönet</h3>
+      <button id="modal-close-btn" class="modal-close">&times;</button>
+    </div>
+    <div id="modal-body" class="modal-body">
+      </div>
+    <div class="modal-footer">
+      <button id="modal-cancel-btn" class="profile-btn-pro secondary">İptal</button>
+      <button id="modal-save-btn" class="profile-btn-pro primary">Değişiklikleri Kaydet</button>
+    </div>
+  </div>
+</div>
+
 
 <style>
   :root {
@@ -32,69 +47,84 @@
     --accent-primary: #4338ca; --accent-secondary: #7e22ce; --accent-gradient: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
     --admin-star: #ffc107; --radius-md: 16px; --shadow-md: 0 4px 6px -1px rgba(0,0,0,.07), 0 2px 4px -1px rgba(0,0,0,.04);
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.07), 0 4px 6px -4px rgba(0,0,0,.07);
+    --success-color: #16a34a; --danger-color: #dc2626;
   }
   .admin-dashboard-pro { font-family: var(--font-family-sans) !important; padding: 1rem 0 !important; background: var(--bg-main) !important; }
   
+  /* Header ve Arama Stilleri (Mevcut) */
   .dashboard-header { margin-bottom: 2.5rem; }
   .dashboard-header h1 { font-size: 2.25rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; }
   .dashboard-header h1 i { color: var(--accent-primary); }
   .dashboard-header p { font-size: 1.1rem; color: var(--text-light); }
   .search-form { display: flex; margin-top: 1.5rem; position: relative; }
   .search-form i { position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-light); }
-  .search-form input { 
-    width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-md); 
-    padding: .9rem 1rem .9rem 3rem; font-size: 1rem; outline: none; 
-    transition: border-color .2s, box-shadow .2s;
-  }
+  .search-form input { width: 100%; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: .9rem 1rem .9rem 3rem; font-size: 1rem; outline: none; transition: border-color .2s, box-shadow .2s; }
   .search-form input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.2); }
   .search-form button { background: var(--accent-primary); color: #fff; border: none; padding: .75rem 1.5rem; font-weight: 600; border-radius: 0 var(--radius-md) var(--radius-md) 0; cursor: pointer; transition: background .2s; }
   .search-form button:hover { background: var(--accent-secondary); }
 
+  /* Kullanıcı Kartı Stilleri (Mevcut) */
   .user-grid { display: grid !important; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; gap: 2rem !important; }
-  
   .user-profile-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: var(--shadow-md); display: flex; flex-direction: column; overflow: hidden; transition: transform .2s, box-shadow .2s; }
   .user-profile-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-lg); }
-  
   .card-header-pro { position: relative; height: 100px; background: #475569; background-image: linear-gradient(45deg, #3d4a5f, #5b6b82); }
-  .card-avatar-pro {
-    position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%);
-    width: 80px; height: 80px; border-radius: 50%; background-size: cover; background-position: center;
-    border: 4px solid #fff; box-shadow: 0 5px 10px rgba(0,0,0,0.1);
-  }
-  .sysadmin-badge-pro {
-    position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px);
-    color: #fff; padding: .3rem .7rem; border-radius: 20px; font-size: .75rem; font-weight: 600; display: flex; align-items: center; gap: .3rem;
-  }
+  .card-avatar-pro { position: absolute; bottom: -40px; left: 50%; transform: translateX(-50%); width: 80px; height: 80px; border-radius: 50%; background-size: cover; background-position: center; border: 4px solid #fff; box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+  .sysadmin-badge-pro { position: absolute; top: 1rem; right: 1rem; background: rgba(255, 255, 255, 0.2); backdrop-filter: blur(5px); color: #fff; padding: .3rem .7rem; border-radius: 20px; font-size: .75rem; font-weight: 600; display: flex; align-items: center; gap: .3rem; }
   .sysadmin-badge-pro i { color: var(--admin-star); }
-
   .card-body-pro { padding: 50px 1.5rem 1.5rem 1.5rem; text-align: center; flex-grow: 1; display: flex; flex-direction: column; }
   .user-name-pro { font-size: 1.25rem; font-weight: 600; color: var(--text-dark); margin: 0; }
   .user-handle-pro { color: var(--text-light); font-size: .9rem; margin-bottom: 1rem; }
-  
   .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; padding: 1rem 0; border-top: 1px solid var(--border-color); margin-bottom: 1rem; }
   .info-item { text-align: center; }
   .info-item .value { font-size: 1.5rem; font-weight: 700; color: var(--accent-primary); }
   .info-item .label { font-size: .75rem; color: var(--text-light); text-transform: uppercase; }
-  
   .roles-section h4 { font-size: .8rem; font-weight: 600; color: var(--text-light); text-transform: uppercase; margin-bottom: .75rem; border-top: 1px solid var(--border-color); padding-top: 1rem;}
   .roles-list { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: .5rem; max-height: 120px; overflow-y: auto; padding-right: 5px; }
   .roles-list li { display: flex; justify-content: space-between; align-items: center; background: var(--bg-main); padding: .5rem .75rem; border-radius: 6px; }
   .role-org-name { font-weight: 500; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px; }
   .role-capacity-pro { font-size: .8rem; font-weight: 600; padding: .2rem .5rem; border-radius: 5px; color: #fff; text-transform: capitalize; }
-  .role-capacity-pro.admin { background: #c81e1e; }
+  .role-capacity-pro.admin { background: var(--danger-color); }
   .role-capacity-pro.editor { background: #d97706; }
   .role-capacity-pro.member { background: #4a5568; }
-
-  .card-footer-pro { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: #fcfdff; margin-top: auto;}
-  .profile-btn-pro { text-decoration: none; padding: .6rem 1.2rem; border-radius: 8px; font-weight: 600; transition: all .2s; }
+  
+  /* Kart Footer ve Buton stilleri (YENİ Buton Eklendi) */
+  .card-footer-pro { padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: #fcfdff; margin-top: auto; display: flex; justify-content: space-between; gap: 1rem; align-items: center;}
+  .profile-btn-pro { text-decoration: none; display: inline-block; padding: .6rem 1.2rem; border-radius: 8px; font-weight: 600; transition: all .2s; border: none; cursor: pointer; font-size: 0.9rem;}
   .profile-btn-pro.primary { background: var(--accent-primary); color: #fff; }
   .profile-btn-pro.primary:hover { background: var(--accent-secondary); }
   .profile-btn-pro.secondary { background: #e2e8f0; color: var(--text-dark); }
   .profile-btn-pro.secondary:hover { background: #cbd5e1; }
+  .manage-memberships-btn { background: var(--success-color); color: white; }
+  .manage-memberships-btn:hover { background: #15803d; }
 
+
+  /* Yükleme Spinner (Mevcut) */
   .loading-placeholder { text-align: center; padding: 4rem; color: var(--text-light); grid-column: 1 / -1; }
   .spinner { width: 48px; height: 48px; border: 5px solid #f3f3f3; border-top: 5px solid var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem auto; }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  /* ------ YENİ MODAL STİLLERİ ------ */
+  .membership-modal { position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; }
+  .modal-content { background-color: #fff; margin: auto; padding: 0; border: 1px solid #888; width: 90%; max-width: 700px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); animation: fadeIn .3s; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); }
+  .modal-header h3 { margin: 0; font-size: 1.5rem; color: var(--text-dark); }
+  .modal-close { color: var(--text-light); font-size: 2rem; font-weight: bold; cursor: pointer; border: none; background: none; }
+  .modal-close:hover { color: var(--text-dark); }
+  .modal-body { padding: 1.5rem; max-height: 60vh; overflow-y: auto; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 1rem; padding: 1rem 1.5rem; border-top: 1px solid var(--border-color); background: #fcfdff; border-radius: 0 0 var(--radius-md) var(--radius-md); }
+  .membership-grid-container { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+  .membership-section h4 { font-size: 1.1rem; color: var(--accent-primary); border-bottom: 2px solid var(--accent-primary); padding-bottom: 0.5rem; margin-bottom: 1rem; }
+  .membership-list { display: flex; flex-direction: column; gap: 0.75rem; }
+  .checkbox-container { display: block; position: relative; padding-left: 35px; cursor: pointer; font-size: 1rem; -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; }
+  .checkbox-container input { position: absolute; opacity: 0; cursor: pointer; height: 0; width: 0; }
+  .checkmark { position: absolute; top: 0; left: 0; height: 22px; width: 22px; background-color: #eee; border-radius: 4px; transition: background-color .2s; }
+  .checkbox-container:hover input ~ .checkmark { background-color: #ccc; }
+  .checkbox-container input:checked ~ .checkmark { background-color: var(--accent-primary); }
+  .checkmark:after { content: ""; position: absolute; display: none; }
+  .checkbox-container input:checked ~ .checkmark:after { display: block; }
+  .checkbox-container .checkmark:after { left: 8px; top: 4px; width: 5px; height: 10px; border: solid white; border-width: 0 3px 3px 0; -webkit-transform: rotate(45deg); -ms-transform: rotate(45deg); transform: rotate(45deg); }
+  @keyframes fadeIn { from {opacity: 0; transform: scale(.95);} to {opacity: 1; transform: scale(1);} }
+
 </style>
 
 <script>
@@ -102,16 +132,34 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   const grid = document.getElementById('user-grid');
   const searchInput = document.getElementById('user-search-input');
+  const modal = document.getElementById('membership-modal');
+  const modalTitle = document.getElementById('modal-title');
+  const modalBody = document.getElementById('modal-body');
+  const modalSaveBtn = document.getElementById('modal-save-btn');
+  const modalCancelBtn = document.getElementById('modal-cancel-btn');
+  const modalCloseBtn = document.getElementById('modal-close-btn');
+  
   let allUsers = [];
+  let allOrgs = [];
+  let allGroups = [];
 
-  async function fetchWithCredentials(url) {
-    const response = await fetch(url, { credentials: 'include' });
-    if (!response.ok) throw new Error(`API çağrısı başarısız: ${response.status}`);
+  // --- API HELPER ---
+  async function fetchWithCredentials(url, options = {}) {
+    const defaultOptions = {
+        method: 'GET',
+        credentials: 'include', // İsteklerde kimlik bilgilerini dahil et
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
+    const response = await fetch(url, { ...defaultOptions, ...options });
+    if (!response.ok) throw new Error(`API çağrısı başarısız: ${response.status} ${response.statusText}`);
     const data = await response.json();
-    if (!data.success) throw new Error(data.error?.message || 'API çağrısı başarılı olmadı');
+    if (!data.success) throw new Error(data.error?.message || 'API bilinmeyen bir hata döndürdü');
     return data.result;
   }
 
+  // --- KARTLARI OLUŞTURMA ---
   function renderCards(usersToRender) {
     if (usersToRender.length === 0) {
       grid.innerHTML = `<div class="loading-placeholder"><p>Arama kriterlerinize uygun kullanıcı bulunamadı.</p></div>`;
@@ -124,15 +172,16 @@ document.addEventListener('DOMContentLoaded', async () => {
       const avatar = user.image_display_url || '{{ h.url_for_static('/base/images/placeholder-user.png') }}';
       const datasetCount = user.number_created_packages || 0;
       const followers = user.num_followers || 0;
-      const orgs = user.organizations || [];
       
-      let rolesHTML = '<p style="font-size:0.9rem; color:#999; text-align:center; padding:1rem;">Kullanıcının bir organizasyonda rolü bulunmuyor.</p>';
-      if (orgs.length > 0) {
+      const userOrgsAndGroups = [...(user.organizations || []), ...(user.groups || [])];
+
+      let rolesHTML = '<p style="font-size:0.9rem; color:#999; text-align:center; padding:1rem;">Kullanıcının üyelik rolü bulunmuyor.</p>';
+      if (userOrgsAndGroups.length > 0) {
         rolesHTML = `<div class="roles-section"><h4>Roller</h4><ul class="roles-list">` +
-          orgs.map(org => `
+          userOrgsAndGroups.map(org => `
             <li>
               <span class="role-org-name" title="${org.title}">${org.title}</span>
-              <span class="role-capacity-pro ${org.capacity}">${org.capacity.replace('_', ' ')}</span>
+              <span class="role-capacity-pro ${org.capacity}">${org.capacity}</span>
             </li>
           `).join('') + `</ul></div>`;
       }
@@ -153,27 +202,139 @@ document.addEventListener('DOMContentLoaded', async () => {
             ${rolesHTML}
           </div>
           <div class="card-footer-pro">
-            <a href="/user/${handle}" class="profile-btn-pro primary">Profili Görüntüle</a>
+            <a href="/user/${handle}" class="profile-btn-pro secondary">Profili Görüntüle</a>
+            <button class="profile-btn-pro manage-memberships-btn" data-userid="${user.id}">Üyelikleri Yönet</button>
           </div>
         </div>
       `;
     }).join('');
   }
+  
+  // --- ÜYELİK MODALINI AÇMA ---
+  function openMembershipModal(userId) {
+    const user = allUsers.find(u => u.id === userId);
+    if (!user) return;
 
+    modalTitle.textContent = `${user.display_name} Üyeliklerini Yönet`;
+    
+    const userOrgIds = new Set(user.organizations.map(org => org.id));
+    const userGroupIds = new Set(user.groups.map(g => g.id));
+
+    const orgsHtml = allOrgs.map(org => `
+      <label class="checkbox-container" title="${org.display_name}">
+        ${org.display_name}
+        <input type="checkbox" data-id="${org.id}" data-type="organization" ${userOrgIds.has(org.id) ? 'checked' : ''}>
+        <span class="checkmark"></span>
+      </label>
+    `).join('');
+
+    const groupsHtml = allGroups.map(group => `
+      <label class="checkbox-container" title="${group.display_name}">
+        ${group.display_name}
+        <input type="checkbox" data-id="${group.id}" data-type="group" ${userGroupIds.has(group.id) ? 'checked' : ''}>
+        <span class="checkmark"></span>
+      </label>
+    `).join('');
+
+    modalBody.innerHTML = `
+      <div class="membership-grid-container">
+        <div class="membership-section">
+          <h4>Veri Paydaşları (Organizasyonlar)</h4>
+          <div class="membership-list">${orgsHtml || '<p>Sistemde organizasyon bulunmuyor.</p>'}</div>
+        </div>
+        <div class="membership-section">
+          <h4>Kategoriler (Gruplar)</h4>
+          <div class="membership-list">${groupsHtml || '<p>Sistemde grup bulunmuyor.</p>'}</div>
+        </div>
+      </div>
+    `;
+
+    modal.style.display = 'flex';
+    modal.dataset.userId = userId; // Kullanıcı ID'sini kaydet
+  }
+
+  // --- ÜYELİKLERİ KAYDETME ---
+  async function saveMemberships() {
+      const userId = modal.dataset.userId;
+      const user = allUsers.find(u => u.id === userId);
+      if (!user) return;
+      
+      modalSaveBtn.disabled = true;
+      modalSaveBtn.textContent = 'Kaydediliyor...';
+
+      const originalOrgIds = new Set(user.organizations.map(org => org.id));
+      const originalGroupIds = new Set(user.groups.map(g => g.id));
+      
+      const checkboxes = modalBody.querySelectorAll('input[type="checkbox"]');
+      const promises = [];
+
+      checkboxes.forEach(cb => {
+          const id = cb.dataset.id;
+          const type = cb.dataset.type;
+          const isChecked = cb.checked;
+          const wasMember = type === 'organization' ? originalOrgIds.has(id) : originalGroupIds.has(id);
+          
+          let apiAction = null;
+          const payload = { id: id, username: user.name, role: 'member' }; // Rolü sabit 'member' olarak belirliyoruz
+
+          if (isChecked && !wasMember) { // Ekleme işlemi
+              apiAction = type === 'organization' ? 'organization_member_create' : 'group_member_create';
+          } else if (!isChecked && wasMember) { // Çıkarma işlemi
+              apiAction = type === 'organization' ? 'organization_member_delete' : 'group_member_delete';
+              delete payload.role; // Delete payload'da role gerek yok
+              payload.user_id = user.id; // delete için user_id gerekir
+              delete payload.username;
+          }
+          
+          if(apiAction) {
+              const promise = fetchWithCredentials(`/api/3/action/${apiAction}`, {
+                  method: 'POST',
+                  body: JSON.stringify(payload)
+              });
+              promises.push(promise);
+          }
+      });
+      
+      try {
+        await Promise.allSettled(promises);
+        // Değişiklikler sonrası veriyi yeniden yükle ve modal'ı kapat
+        await main();
+        modal.style.display = 'none';
+      } catch (error) {
+          console.error('Üyelikler güncellenirken bir hata oluştu:', error);
+          alert('Bir hata oluştu. Lütfen konsolu kontrol edin.');
+      } finally {
+        modalSaveBtn.disabled = false;
+        modalSaveBtn.textContent = 'Değişiklikleri Kaydet';
+      }
+  }
+
+  // --- ANA YÜKLEME FONKSİYONU ---
   async function main() {
     try {
-      const userList = await fetchWithCredentials('/api/3/action/user_list?all_fields=true&include_site_user=true');
+      // Tüm verileri paralel olarak çek
+      const [userList, orgList, groupList] = await Promise.all([
+          fetchWithCredentials('/api/3/action/user_list?all_fields=true&include_site_user=true'),
+          fetchWithCredentials('/api/3/action/organization_list?all_fields=true'),
+          fetchWithCredentials('/api/3/action/group_list?all_fields=true')
+      ]);
+      
+      allOrgs = orgList;
+      allGroups = groupList;
+
       const userDetailPromises = userList.map(user => 
-        fetchWithCredentials(`/api/3/action/user_show?id=${user.id}&include_num_followers=true`)
+        fetchWithCredentials(`/api/3/action/user_show?id=${user.id}&include_num_followers=true&include_groups=true`)
       );
       allUsers = await Promise.all(userDetailPromises);
+      
       renderCards(allUsers);
     } catch (error) {
-      console.error('Kullanıcı verileri alınırken bir hata oluştu:', error);
-      grid.innerHTML = `<div class="loading-placeholder"><p>Kullanıcılar yüklenemedi. Bir hata oluştu.</p></div>`;
+      console.error('Veriler alınırken bir hata oluştu:', error);
+      grid.innerHTML = `<div class="loading-placeholder"><p>Veriler yüklenemedi. Bir hata oluştu: ${error.message}</p></div>`;
     }
   }
 
+  // --- EVENT LISTENERS ---
   searchInput.addEventListener('input', (e) => {
     const searchTerm = e.target.value.toLowerCase();
     const filteredUsers = allUsers.filter(user => 
@@ -183,7 +344,30 @@ document.addEventListener('DOMContentLoaded', async () => {
     );
     renderCards(filteredUsers);
   });
+  
+  // Modal kapatma butonları
+  const closeModal = () => modal.style.display = "none";
+  modalCloseBtn.addEventListener('click', closeModal);
+  modalCancelBtn.addEventListener('click', closeModal);
+  window.addEventListener('click', (event) => {
+    if (event.target == modal) {
+      closeModal();
+    }
+  });
 
+  // Modal kaydetme butonu
+  modalSaveBtn.addEventListener('click', saveMemberships);
+  
+  // Kartlardaki butonlar için Event Delegation
+  grid.addEventListener('click', (e) => {
+    const button = e.target.closest('.manage-memberships-btn');
+    if (button) {
+      const userId = button.dataset.userid;
+      openMembershipModal(userId);
+    }
+  });
+
+  // Sayfayı başlat
   main();
 });
 </script>

@@ -3,137 +3,137 @@
 {% import 'macros/form.html' as form %}
 {% set user = user_dict %}
 
-{# ---------- FUTURISTIC STYLES ---------- #}
+{# ---------- REFINED FUTURISTIC STYLES ---------- #}
 {% block styles %}
   {{ super() }}
   <style>
     :root {
-      --clr-bg: #05060f;
-      --clr-primary: #00eaff;
-      --clr-secondary: #8f00ff;
-      --clr-danger: #ff2969;
-      --pane-glass: rgba(255, 255, 255, 0.04);
+      --clr-panel-bg: #1c2b3a;
+      --clr-accent: #4a90e2;
+      --clr-text-light: #f5f7fa;
+      --clr-text-med: #a0b3c4;
+      --clr-danger: #e74c3c;
+      --clr-border: rgba(74, 144, 226, 0.3);
     }
 
-    body,
-    label,
-    .page-heading,
-    .btn,
-    input,
-    select {
+    body, label, .page-heading, .btn, input, select, p {
       font-family: 'Orbitron', sans-serif !important;
-    }
-    body {
-      background: var(--clr-bg) !important;
-    }
-
-    /* ─── HOLOGRAPHIC GRID BACKGROUND ─────────────────────────── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px),
-                        linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
-      background-size: 60px 60px;
-      pointer-events: none;
-      z-index: -1;
-      animation: gridMove 60s linear infinite;
-    }
-    @keyframes gridMove {
-      from { transform: translate(0,0); }
-      to   { transform: translate(60px,60px); }
     }
 
     /* ─── PAGE HEADING ─────────────────────────────────────────── */
     .page-heading {
-      font-size: 30px !important;
-      color: var(--clr-primary) !important;
-      font-weight: 700 !important;
-      text-shadow: 0 0 8px var(--clr-primary), 0 0 25px var(--clr-secondary) !important;
+      font-size: 26px !important;
+      font-weight: 600 !important;
+      color: #333 !important; /* Assuming light page background */
+      position: relative;
+      padding-bottom: 15px !important;
       margin-bottom: 35px !important;
+      border-bottom: 1px solid #e0e0e0;
     }
 
-    /* ─── GLASS PANEL ─────────────────────────────────────────── */
+    /* ─── FORM PANEL ───────────────────────────────────────────── */
     .dataset-form {
-      background: var(--pane-glass) !important;
-      border: 1px solid rgba(0, 234, 255, 0.15) !important;
-      backdrop-filter: blur(10px) !important;
-      padding: 45px 40px !important;
-      border-radius: 24px !important;
-      box-shadow: 0 0 28px rgba(0, 234, 255, 0.35) !important;
+      background: var(--clr-panel-bg) !important;
+      border: none !important;
+      padding: 40px !important;
+      border-radius: 12px !important;
+      box-shadow: 0 10px 30px rgba(28, 43, 58, 0.3) !important;
     }
 
     /* ─── INPUTS & SELECT ─────────────────────────────────────── */
-    .dataset-form input,
+    .dataset-form input[type="text"],
     .dataset-form select {
-      background: rgba(0, 0, 0, 0.55) !important;
-      border: 1px solid var(--clr-primary) !important;
-      border-radius: 12px !important;
+      background: rgba(0, 0, 0, 0.3) !important;
+      border: 1px solid rgba(255, 255, 255, 0.2) !important;
+      border-radius: 8px !important;
       padding: 14px 18px !important;
-      color: #e8fdff !important;
-      transition: box-shadow 0.25s ease, border-color 0.25s ease !important;
+      color: var(--clr-text-light) !important;
+      transition: box-shadow 0.2s ease, border-color 0.2s ease !important;
     }
     .dataset-form input:focus,
     .dataset-form select:focus {
       outline: none !important;
-      box-shadow: 0 0 14px var(--clr-primary) !important;
-      border-color: #ffffff !important;
+      box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.4) !important;
+      border-color: var(--clr-accent) !important;
     }
-    label {
-      color: var(--clr-primary) !important;
+    .dataset-form p {
+        color: var(--clr-text-med) !important;
+        font-size: 14px;
+    }
+    label.control-label {
+      color: var(--clr-text-light) !important;
       font-weight: 600 !important;
+      text-transform: uppercase;
+      font-size: 12px !important;
     }
 
     /* ─── DIVIDER "OR" ─────────────────────────────────────────── */
-    .add-member-or-wrap .add-member-or {
-      background: linear-gradient(135deg, var(--clr-secondary), var(--clr-primary)) !important;
-      color: #fff !important;
-      font-weight: 700 !important;
-      padding: 8px 22px !important;
-      border-radius: 999px !important;
-      box-shadow: 0 0 18px rgba(0, 234, 255, 0.55) !important;
-      transform: rotate(-15deg);
+    .add-member-or-wrap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        min-height: 150px;
+    }
+    .add-member-or {
+      color: var(--clr-text-med);
+      font-weight: bold;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+    .add-member-or::before,
+    .add-member-or::after {
+        content: '';
+        flex-grow: 1;
+        height: 1px;
+        background: var(--clr-border);
+        margin: 0 10px;
     }
 
     /* ─── BUTTONS ──────────────────────────────────────────────── */
     .btn {
       border: none !important;
-      padding: 12px 22px !important;
-      font-weight: 700 !important;
-      border-radius: 12px !important;
-      transition: transform 0.25s ease, box-shadow 0.25s ease !important;
+      padding: 12px 25px !important;
+      font-weight: 600 !important;
+      border-radius: 8px !important;
+      transition: all 0.2s ease !important;
+      text-transform: uppercase;
+      font-size: 13px !important;
     }
     .btn-primary {
-      background: linear-gradient(135deg, var(--clr-primary) 0%, var(--clr-secondary) 100%) !important;
+      background: var(--clr-accent) !important;
       color: #fff !important;
     }
     .btn-default {
       background: transparent !important;
-      border: 2px solid var(--clr-primary) !important;
-      color: var(--clr-primary) !important;
+      border: 1px solid #ccc !important;
+      color: #555 !important;
     }
     .btn-danger {
-      background: linear-gradient(135deg, var(--clr-danger) 0%, #7a0846 100%) !important;
+      background: var(--clr-danger) !important;
       color: #fff !important;
     }
     .btn:hover {
-      box-shadow: 0 0 16px var(--clr-primary), 0 0 22px var(--clr-secondary) !important;
-      transform: translateY(-3px) !important;
+      transform: translateY(-2px) !important;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2) !important;
     }
 
     /* ─── INFO BOX MODULE ─────────────────────────────────────── */
     .module.module-narrow {
-      background: rgba(0, 0, 0, 0.45) !important;
-      border: 1px solid var(--clr-primary) !important;
-      backdrop-filter: blur(8px) !important;
+      background: #f5f7fa !important;
+      border: 1px solid #e0e0e0 !important;
+      border-left: 4px solid var(--clr-accent) !important;
       padding: 25px 22px !important;
-      border-radius: 18px !important;
-      color: #e6faff !important;
+      border-radius: 8px !important;
     }
     .module-heading {
-      color: var(--clr-primary) !important;
-      text-shadow: 0 0 6px var(--clr-primary) !important;
-      margin-bottom: 15px !important;
+      color: #333 !important;
+      font-weight: bold;
+    }
+    .module-content p {
+        color: #555 !important;
     }
   </style>
 {% endblock %}
@@ -164,7 +164,7 @@
                      disabled="True" class="form-control control-medium">
             {% else %}
               <input id="username" type="text" name="username" placeholder="Username"
-                     value="" class="control-medium"
+                     value="" class="form-control"
                      data-module="autocomplete"
                      data-module-source="/api/2/util/user/autocomplete?ignore_self=true&q=?">
             {% endif %}
@@ -192,7 +192,7 @@
       {% endif %}
     </div>
 
-    {# Role select (disabled for self-admin) #}
+    {# Role select #}
     {% if user and user.name == c.user and user_role == 'admin' %}
       {% set format_attrs = {'data-module': 'autocomplete', 'disabled': 'disabled'} %}
       {{ form.select('role', label=_('Role'), options=roles, selected=user_role, error='', attrs=format_attrs) }}
@@ -202,12 +202,12 @@
       {{ form.select('role', label=_('Role'), options=roles, selected=user_role, error='', attrs=format_attrs) }}
     {% endif %}
 
-    <div class="form-actions">
+    <div class="form-actions" style="border-top: 1px solid var(--clr-border); margin-top: 30px; padding-top: 30px;">
       {% if user %}
         <a href="{{ h.url_for(group_type + '.member_delete', id=group_dict.id, user=user.id) }}" class="btn btn-danger pull-left" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to delete this member?') }}">{{ _('Delete') }}</a>
-        <button class="btn btn-primary" type="submit" name="submit">{{ _('Save') }}</button>
+        <button class="btn btn-primary pull-right" type="submit" name="submit">{{ _('Save') }}</button>
       {% else %}
-        <button class="btn btn-primary" type="submit" name="submit">{{ _('Add Member') }}</button>
+        <button class="btn btn-primary pull-right" type="submit" name="submit">{{ _('Add Member') }}</button>
       {% endif %}
     </div>
   </form>

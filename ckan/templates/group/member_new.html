@@ -1,36 +1,51 @@
 {% extends "group/edit_base.html" %}
 
-{% import 'macros/form.html' as form %}
+{# --- JINJA BLOKLARI: Standart yapı korunuyor, içleri manuel dolduruluyor --- #}
 
-{% set user = user_dict %}
+{% block subtitle %}
+  {% if user_dict %}
+    {{ _('Edit Member') }} - {{ user_dict.display_name }}
+  {% else %}
+    {{ _('Add Member') }}
+  {% endif %}
+   {{ g.template_title_delimiter }} {{ group_dict.display_name }}
+{% endblock %}
 
 {% block primary_content_inner %}
 <div class="member-form-page">
   <div class="back-link-wrapper">
-    {% link_for _('Back to Members'), named_route=group_type+'.members', id=group.name, class_='btn-back', icon='arrow-left' %}
+    {# `h.url_for` veya `link_for` yerine manuel URL oluşturma #}
+    <a href="/group/members/{{ group.name }}" class="btn-back">
+      <i class="fa fa-arrow-left"></i> {{ _('Back to Members') }}
+    </a>
   </div>
 
   <div class="form-container-card">
     <div class="form-header">
       <div class="form-icon">
-        <i class="fa {% if user %}fa-user-pen{% else %}fa-user-plus{% endif %}"></i>
+        <i class="fa {% if user_dict %}fa-user-pen{% else %}fa-user-plus{% endif %}"></i>
       </div>
       <h1 class="page-heading">
-        {% block page_heading %}{{ _('Edit Member') if user else _('Add Member') }}{% endblock %}
+        {{ _('Edit Member') if user_dict else _('Add Member') }}
       </h1>
       <p class="page-subheading">{{ _('Manage user roles and permissions for this group.') }}</p>
     </div>
 
-    <form class="futuristic-form" method='post' id="add-member-form">
+    {# Formun başlangıcı. Action boş bırakılır, mevcut sayfaya post eder. #}
+    <form class="futuristic-form" method="post">
+
+      {# ============================================= #}
+      {# == KULLANICI BİLGİSİ BÖLÜMÜ == #}
+      {# ============================================= #}
 
       {# Mevcut kullanıcıyı DÜZENLEME modu #}
-      {% if user %}
+      {% if user_dict %}
         <div class="form-section">
           <label for="username" class="form-label">{{ _('User') }}</label>
           <div class="input-group">
             <span class="input-group-icon"><i class="fa fa-user"></i></span>
-            <input type="text" value="{{ user.display_name }} (@{{ user.name }})" disabled class="form-control">
-            <input type="hidden" name="username" value="{{ user.name }}">
+            <input type="text" value="{{ user_dict.display_name }} (@{{ user_dict.name }})" disabled class="form-control">
+            <input type="hidden" name="username" value="{{ user_dict.name }}">
           </div>
         </div>
 
@@ -48,6 +63,7 @@
               <label for="username-ac" class="form-label sr-only">{{ _('Username') }}</label>
               <div class="input-group">
                 <span class="input-group-icon"><i class="fa fa-at"></i></span>
+                {# Autocomplete API'si manuel olarak yazıldı #}
                 <input id="username-ac" type="text" name="username" placeholder="{{ _('Search by username...') }}"
                      class="form-control" data-module="autocomplete"
                      data-module-source="/api/2/util/user/autocomplete?ignore_self=true&q=?">
@@ -67,25 +83,39 @@
         </div>
       {% endif %}
 
-      {# Rol Seçimi Bölümü #}
+      {# ============================================= #}
+      {# == ROL SEÇİMİ BÖLÜMÜ (MANUEL OLUŞTURMA) == #}
+      {# ============================================= #}
       <div class="form-section">
         <label for="role" class="form-label">{{ _('Role') }}</label>
         <div class="input-group">
           <span class="input-group-icon"><i class="fa fa-user-shield"></i></span>
-          {% if user and user.name == c.user and user_role == 'admin' %}
-            {# Kullanıcı kendi admin rolünü değiştiremesin #}
-            {{ form.select('role', options=roles, selected=user_role, error='', attrs={'disabled': 'disabled', 'class': 'form-control'}) }}
-            {{ form.hidden('role', value=user_role) }}
-          {% else %}
-            {{ form.select('role', options=roles, selected=user_role, error='', attrs={'class': 'form-control'}) }}
+          
+          {# `form.select` makrosu yerine standart HTML <select> döngüsü #}
+          <select name="role" id="role" class="form-control"
+            {% if user_dict and user_dict.name == c.user and user_role == 'admin' %}disabled="disabled"{% endif %}>
+            
+            {% for r in roles %}
+              <option value="{{ r.value }}" {% if r.value == user_role %}selected="selected"{% endif %}>
+                {{ r.text }}
+              </option>
+            {% endfor %}
+          </select>
+
+          {# Kullanıcı kendi admin rolünü değiştiremesin diye gizli input #}
+          {% if user_dict and user_dict.name == c.user and user_role == 'admin' %}
+            <input type="hidden" name="role" value="{{ user_role }}">
           {% endif %}
         </div>
       </div>
 
-      {# Butonlar #}
+      {# ============================================= #}
+      {# == BUTONLAR BÖLÜMÜ == #}
+      {# ============================================= #}
       <div class="form-actions">
-        {% if user %}
-          <a href="{{ h.url_for(group_type + '.member_delete', id=group_dict.id, user=user.id) }}" class="btn btn-danger" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to remove this member?') }}">
+        {% if user_dict %}
+          {# Silme linki manuel olarak oluşturuldu #}
+          <a href="/group/member_delete/{{ group_dict.id }}?user={{ user_dict.id }}" class="btn btn-danger" data-module="confirm-action" data-module-content="{{ _('Are you sure you want to remove this member?') }}">
             <i class="fa fa-trash-can"></i> {{ _('Remove Member') }}
           </a>
           <button class="btn btn-primary" type="submit" name="submit">
@@ -102,11 +132,26 @@
 </div>
 {% endblock %}
 
+
+{# İkincil içerik (sidebar) olduğu gibi kalıyor #}
 {% block secondary_content %}
   {{ super() }}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="fa fa-lg fa-info-circle"></i>
+      {{ _('What are roles?') }}
+    </h2>
+    <div class="module-content">
+      {% trans %}
+       <p><strong>Admin:</strong> Can edit group information, as well as manage group members.</p>
+       <p><strong>Member:</strong> Can view the group's private datasets.</p>
+      {% endtrans %}
+    </div>
+  </div>
 {% endblock %}
 
 
+{# Scriptler sayfaya inline olarak ekleniyor #}
 {% block scripts %}
   {{ super() }}
   <script>
@@ -155,6 +200,7 @@
 {% endblock %}
 
 
+{# Stiller sayfaya inline olarak ekleniyor #}
 {% block styles %}
   {{ super() }}
   <style>

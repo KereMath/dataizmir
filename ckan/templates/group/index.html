@@ -106,7 +106,7 @@
                     let apiUrl;
                     if (isLoggedIn) {
                         // Giriş yapmış kullanıcılar (adminler dahil) için yetkili listeyi çek.
-                        apiUrl = '/api/3/action/group_list_authz?all_fields=true&include_dataset_count=true&limit=1000';
+                        apiUrl = '/api/3/action/group_list?all_fields=true&include_dataset_count=true&limit=1000';
                     } else {
                         // Ziyaretçiler için herkese açık listeyi çek.
                         apiUrl = '/api/3/action/group_list?all_fields=true&include_dataset_count=true&limit=1000';

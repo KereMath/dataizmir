@@ -15,7 +15,8 @@ import ckan.lib.dictization as dictization
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.api_token as api_token
 from ckan import authz
-
+from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+from ckan.model import meta, Session
 from ckan.common import _
 
 
@@ -858,3 +859,38 @@ def api_token_revoke(context, data_dict):
     _check_access(u'api_token_revoke', context, {u'jti': jti})
     model = context[u'model']
     model.ApiToken.revoke(jti)
+
+
+# Theme DELETE Actions
+
+def theme_category_delete(context, data_dict):
+    """Kategori sil"""
+    from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+    from ckan.model import Session
+    
+    _check_access('sysadmin', context, data_dict)
+    
+    slug = data_dict.get('slug')
+    if not slug:
+        raise ValidationError('slug parameter required')
+    
+    try:
+        session = Session()
+        
+        category = session.query(ThemeCategory).filter_by(slug=slug).first()
+        if not category:
+            raise NotFound('Theme category not found')
+        
+        # İlişkili dataset assignment'ları da sil
+        session.query(DatasetThemeAssignment).filter_by(theme_slug=slug).delete()
+        
+        # Kategoriyi sil
+        session.delete(category)
+        session.commit()
+        
+        return {'success': True}
+    except Exception as e:
+        session.rollback()
+        if isinstance(e, (ValidationError, NotFound)):
+            raise
+        raise ValidationError(f'Error deleting category: {str(e)}')

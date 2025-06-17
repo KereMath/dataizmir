@@ -301,13 +301,17 @@
 
         <!-- —— Ana menü (ortada) —— -->
         <nav class="main-nav"
-             style="flex:1;display:flex;justify-content:center;">
+           style="flex:1;display:flex;justify-content:center;">
           <ul class="nav nav-pills"
               style="display:flex;gap:14px;margin:0;padding:0;list-style:none;">
             {{ h.build_nav_main(
-                 ('dataset.search', _('Datasets')),
-                 ('organization.index', _('Organizations')),
-                 ('group.index', _('Groups')) ) }}
+                ('dataset.search', _('Veri Setleri')),
+                ('organization.index', _('Veri Paydaşları')),
+                ('group.index', _('Kategoriler')) ) }}
+
+            {# --- YENİ EKLENEN SATIR --- #}
+            <li><a href="/temalar">{{ _('Temalar') }}</a></li>
+            
             <li><a href="{{ h.url_for('home.about') }}">Platform Nasıl Kullanılır</a></li>
           </ul>
         </nav>
@@ -406,6 +410,12 @@
                     <span>Kategoriler</span>
                   </a>
                 </li>
+                              <li class="sidebar-menu-item">
+                <a href="/temalar">
+                  <i class="fa fa-paint-brush"></i>
+                  <span>Temalar</span>
+                </a>
+              </li>
                 <li class="sidebar-menu-item">
                   <a href="/dashboard">
                     <i class="fa fa-activity"></i>

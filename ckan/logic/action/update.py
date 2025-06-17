@@ -27,7 +27,8 @@ import ckan.lib.search as search
 import ckan.lib.uploader as uploader
 import ckan.lib.datapreview
 import ckan.lib.app_globals as app_globals
-
+from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+from ckan.model import meta, Session
 
 from ckan.common import _, request
 
@@ -1421,3 +1422,78 @@ def config_option_update(context, data_dict):
     log.info('Updated config options: {0}'.format(data))
 
     return data
+
+
+
+# Theme UPDATE Actions
+
+def theme_category_update(context, data_dict):
+    """Kategori güncelle"""
+    from ckan.model.theme import ThemeCategory
+    from ckan.model import Session
+    
+    _check_access('sysadmin', context, data_dict)
+    
+    slug = data_dict.get('slug')
+    if not slug:
+        raise ValidationError('slug parameter required')
+    
+    try:
+        session = Session()
+        
+        category = session.query(ThemeCategory).filter_by(slug=slug).first()
+        if not category:
+            raise NotFound('Theme category not found')
+        
+        # Güncellenebilir alanlar
+        if 'name' in data_dict:
+            category.name = data_dict['name']
+        if 'description' in data_dict:
+            category.description = data_dict['description']
+        if 'color' in data_dict:
+            category.color = data_dict['color']
+        if 'icon' in data_dict:
+            category.icon = data_dict['icon']
+        
+        session.commit()
+        
+        return {
+            'id': category.id,
+            'slug': category.slug,
+            'name': category.name,
+            'description': category.description,
+            'color': category.color,
+            'icon': category.icon,
+            'created_at': category.created_at.isoformat() if category.created_at else None
+        }
+    except Exception as e:
+        session.rollback()
+        if isinstance(e, (ValidationError, NotFound)):
+            raise
+        raise ValidationError(f'Error updating category: {str(e)}')
+
+def remove_dataset_theme(context, data_dict):
+    """Dataset'ten tema kaldır"""
+    from ckan.model.theme import DatasetThemeAssignment
+    from ckan.model import Session
+    
+    dataset_id = data_dict.get('dataset_id')
+    
+    if not dataset_id:
+        raise ValidationError('dataset_id is required')
+    
+    # Dataset'e erişim yetkisi kontrol et
+    _check_access('package_update', context, {'id': dataset_id})
+    
+    try:
+        session = Session()
+        
+        assignment = session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
+        if assignment:
+            session.delete(assignment)
+            session.commit()
+        
+        return {'success': True, 'dataset_id': dataset_id}
+    except Exception as e:
+        session.rollback()
+        raise ValidationError(f'Error removing theme: {str(e)}')

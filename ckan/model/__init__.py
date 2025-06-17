@@ -128,6 +128,10 @@ from ckan.model.dashboard import (
 from ckan.model.api_token import (
     ApiToken,
 )
+from ckan.model.theme import (
+    ThemeCategory, 
+    DatasetThemeAssignment,
+)    
 
 import ckan.migration
 from ckan.common import config

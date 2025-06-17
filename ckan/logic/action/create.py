@@ -12,7 +12,8 @@ import six
 
 import ckan.common
 from sqlalchemy import func
-
+from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+from ckan.model import meta, Session
 import ckan.lib.plugins as lib_plugins
 import ckan.logic as logic
 import ckan.plugins as plugins
@@ -1646,3 +1647,98 @@ def api_token_create(context, data_dict):
 
     result = api_token.add_extra({u'token': token})
     return result
+
+# Theme CREATE Actions
+
+def theme_category_create(context, data_dict):
+    """Yeni kategori oluştur"""
+    from ckan.model.theme import ThemeCategory
+    from ckan.model import Session
+    
+    _check_access('sysadmin', context, data_dict)
+    
+    # Zorunlu alanları kontrol et
+    required_fields = ['slug', 'name']
+    for field in required_fields:
+        if not data_dict.get(field):
+            raise ValidationError(f'{field} is required')
+    
+    try:
+        session = Session()
+        
+        # Slug benzersiz mi kontrol et
+        existing = session.query(ThemeCategory).filter_by(slug=data_dict['slug']).first()
+        if existing:
+            raise ValidationError('Slug already exists')
+        
+        # Yeni kategori oluştur
+        category = ThemeCategory(
+            slug=data_dict['slug'],
+            name=data_dict['name'],
+            description=data_dict.get('description', ''),
+            color=data_dict.get('color', '#333333'),
+            icon=data_dict.get('icon', '')
+        )
+        
+        session.add(category)
+        session.commit()
+        
+        return {
+            'id': category.id,
+            'slug': category.slug,
+            'name': category.name,
+            'description': category.description,
+            'color': category.color,
+            'icon': category.icon,
+            'created_at': category.created_at.isoformat() if category.created_at else None
+        }
+    except Exception as e:
+        session.rollback()
+        if isinstance(e, ValidationError):
+            raise
+        raise ValidationError(f'Error creating category: {str(e)}')
+
+def assign_dataset_theme(context, data_dict):
+    """Dataset'e tema ata"""
+    from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+    from ckan.model import Session
+    
+    dataset_id = data_dict.get('dataset_id')
+    theme_slug = data_dict.get('theme_slug')
+    
+    if not dataset_id or not theme_slug:
+        raise ValidationError('dataset_id and theme_slug are required')
+    
+    # Dataset'e erişim yetkisi kontrol et
+    _check_access('package_update', context, {'id': dataset_id})
+    
+    try:
+        session = Session()
+        
+        # Tema var mı kontrol et
+        theme = session.query(ThemeCategory).filter_by(slug=theme_slug).first()
+        if not theme:
+            raise NotFound('Theme category not found')
+        
+        # Mevcut assignment varsa güncelle, yoksa yeni oluştur
+        assignment = session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
+        
+        if assignment:
+            assignment.theme_slug = theme_slug
+            assignment.assigned_by = context.get('user')
+        else:
+            assignment = DatasetThemeAssignment(
+                dataset_id=dataset_id,
+                theme_slug=theme_slug, 
+                assigned_by=context.get('user')
+            )
+            session.add(assignment)
+        
+        session.commit()
+        
+        return {'success': True, 'dataset_id': dataset_id, 'theme_slug': theme_slug}
+    except Exception as e:
+        session.rollback()
+        if isinstance(e, (ValidationError, NotFound)):
+            raise
+        raise ValidationError(f'Error assigning theme: {str(e)}')

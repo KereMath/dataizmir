@@ -28,7 +28,8 @@ import ckan.lib.plugins as lib_plugins
 import ckan.lib.datapreview as datapreview
 import ckan.authz as authz
 from sqlalchemy import and_
-
+from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+from ckan.model import meta, Session
 from ckan.common import _
 
 log = logging.getLogger('ckan.logic')
@@ -3657,3 +3658,123 @@ def api_token_list(context, data_dict):
         model.ApiToken.user_id == user.id
     )
     return model_dictize.api_token_list_dictize(tokens, context)
+
+
+@logic.side_effect_free
+def theme_category_list(context, data_dict):
+    """Tüm kategorileri listele"""
+    try:
+        from ckan.model import Session
+        from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+        
+        session = Session()
+        categories = session.query(ThemeCategory).all()
+        
+        result = []
+        for cat in categories:
+            # Her kategorideki dataset sayısını da al
+            dataset_count = session.query(DatasetThemeAssignment).filter_by(theme_slug=cat.slug).count()
+            
+            result.append({
+                'id': cat.id,
+                'slug': cat.slug,
+                'name': cat.name,
+                'description': cat.description,
+                'color': cat.color,
+                'icon': cat.icon,
+                'dataset_count': dataset_count,
+                'created_at': cat.created_at.isoformat() if cat.created_at else None
+            })
+        
+        return result
+    except Exception as e:
+        raise logic.ValidationError(f'Error fetching categories: {str(e)}')
+
+# Theme GET Actions
+
+@logic.side_effect_free  
+def theme_category_show(context, data_dict):
+    """Bir kategorinin detayını ve dataset'lerini göster"""
+    from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+    from ckan.model import Session
+    
+    slug = data_dict.get('slug')
+    if not slug:
+        raise ValidationError('slug parameter required')
+    
+    try:
+        session = Session()
+        
+        category = session.query(ThemeCategory).filter_by(slug=slug).first()
+        if not category:
+            raise NotFound('Theme category not found')
+        
+        # Bu kategorideki dataset'leri al
+        assignments = session.query(DatasetThemeAssignment).filter_by(theme_slug=slug).all()
+        dataset_ids = [a.dataset_id for a in assignments]
+        
+        # CKAN'dan dataset bilgilerini al
+        datasets = []
+        for dataset_id in dataset_ids:
+            try:
+                dataset = logic.get_action('package_show')(context, {'id': dataset_id})
+                datasets.append({
+                    'id': dataset['id'],
+                    'name': dataset['name'], 
+                    'title': dataset['title'],
+                    'notes': dataset.get('notes', '')[:200] + '...' if dataset.get('notes', '') else ''
+                })
+            except:
+                continue
+        
+        return {
+            'category': {
+                'id': category.id,
+                'slug': category.slug,
+                'name': category.name,
+                'description': category.description,
+                'color': category.color,
+                'icon': category.icon,
+                'created_at': category.created_at.isoformat() if category.created_at else None
+            },
+            'datasets': datasets
+        }
+    except Exception as e:
+        if isinstance(e, NotFound):
+            raise
+        raise ValidationError(f'Error fetching category: {str(e)}')
+
+@logic.side_effect_free
+def get_dataset_theme(context, data_dict):
+    """Dataset'in temasını getir"""
+    from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+    from ckan.model import Session
+    
+    dataset_id = data_dict.get('dataset_id')
+    
+    if not dataset_id:
+        raise ValidationError('dataset_id is required')
+    
+    try:
+        session = Session()
+        
+        assignment = session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
+        if not assignment:
+            return None
+        
+        theme = session.query(ThemeCategory).filter_by(slug=assignment.theme_slug).first()
+        if not theme:
+            return None
+        
+        return {
+            'id': theme.id,
+            'slug': theme.slug,
+            'name': theme.name,
+            'description': theme.description,
+            'color': theme.color,
+            'icon': theme.icon,
+            'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+            'assigned_by': assignment.assigned_by
+        }
+    except Exception as e:
+        raise ValidationError(f'Error fetching dataset theme: {str(e)}')

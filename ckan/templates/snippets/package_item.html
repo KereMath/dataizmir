@@ -53,6 +53,11 @@
     .profile-card.user-profile {
       background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
     }
+    /* YENİ: Tema Profil Kartı Stili */
+    .profile-card.theme-profile {
+      background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); /* Cyan tonları */
+    }
+
 
     .profile-header {
       display: flex;
@@ -67,6 +72,13 @@
       margin-right: 15px;
       object-fit: cover;
       background-color: rgba(255,255,255,0.2);
+      display: flex; /* İkonu ortalamak için */
+      align-items: center; /* İkonu dikeyde ortalamak için */
+      justify-content: center; /* İkonu yatayda ortalamak için */
+      font-size: 30px; /* İkon boyutu */
+    }
+    .profile-image .fa { /* İkonun rengini beyaz yap */
+      color: white;
     }
 
     .profile-title {
@@ -190,10 +202,22 @@
       background-color: #e3f2fd;
       color: #1976d2;
     }
+    /* YENİ: Seçili ve devre dışı bırakılmış tema filtresi için stil */
+    .multi-select-option.selected.disabled {
+        background-color: #d1ecf1; /* Açık mavi */
+        color: #00838f; /* Koyu tema rengi */
+        cursor: not-allowed;
+        font-weight: bold;
+    }
 
     .multi-select-option input[type="checkbox"] {
       margin-right: 8px;
     }
+    /* YENİ: Devre dışı bırakılmış checkbox için stil */
+    .multi-select-option input[type="checkbox"]:disabled {
+        cursor: not-allowed;
+    }
+
 
     .loading-users {
       color: #6c757d;
@@ -463,19 +487,24 @@
     // --- Değişkenler ---
     var allDatasets = [];
     var filteredDatasets = [];
-    // allThemes artık tüm temaların adlarını içerecek
     var allOrgs = [], allFormats = [], allUsers = [], allGroups = [], allTags = [], allThemes = [];
     var userCache = {}; // User ID -> Username cache
-    // selectedThemes artık seçili tema adlarını içerecek
     var selectedOrgs = new Set(), selectedFormats = new Set(), selectedUsers = new Set(), selectedGroups = new Set(), selectedTags = new Set(), selectedThemes = new Set();
     var currentPage = 1;
     var itemsPerPage = 20;
     var usersLoaded = false;
+    
+    var currentThemeSlugFromURL = null; // URL'den alınan temanın slug'ı
+    var currentThemeData = null; // URL'deki temaya ait tüm veriler (profil kartı için)
 
     // --- Fonksiyonlar (Orijinal yapı korunarak) ---
 
     function getPathInfo() {
       var currentUrl = window.location.pathname;
+      // Tema sayfası kontrolü eklendi
+      if (currentUrl.startsWith('/temalar/') && currentUrl.split('/').length > 2) {
+        return { type: 'theme', name: currentUrl.split('/')[2] };
+      }
       if (currentUrl.startsWith('/organization/')) return { type: 'organization', name: currentUrl.replace('/organization/', '') };
       if (currentUrl.startsWith('/group/')) return { type: 'group', name: currentUrl.replace('/group/', '') };
       if (currentUrl.startsWith('/user/')) return { type: 'user', name: currentUrl.replace('/user/', '') };
@@ -529,6 +558,38 @@
       }
     }
 
+    // YENİ: Tema Profil Kartı Render Fonksiyonu
+    function renderThemeProfileCard(themeData) {
+        var profileCard = document.getElementById('profileCard');
+        if (!themeData) {
+            profileCard.style.display = 'none';
+            return;
+        }
+        var html = '';
+        profileCard.className = 'profile-card theme-profile'; // Tema sınıfı eklendi
+        html += '<div class="profile-header">';
+        if (themeData.icon) {
+          html += `<div class="profile-image" style="background-color: ${themeData.color || '#667eea'};"><i class="fa fa-${themeData.icon}"></i></div>`;
+        } else {
+            html += '<div class="profile-image"></div>';
+        }
+        html += '<div>';
+        html += '<h3 class="profile-title">' + (themeData.name || themeData.slug || '') + '</h3>';
+        html += '<div class="profile-type">Tema Kategorisi</div>'; // Tür belirtildi
+        html += '</div></div>';
+        html += '<div class="profile-info">';
+        if (themeData.dataset_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + themeData.dataset_count + '</span></div>';
+        if (themeData.created_at) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(themeData.created_at).toLocaleDateString('tr-TR') + '</span></div>';
+        html += '</div>';
+        var description = themeData.description;
+        if (description) {
+            html += '<div class="profile-description">' + description + '</div>';
+        }
+        profileCard.innerHTML = html;
+        profileCard.style.display = 'block';
+    }
+
+
     function renderProfileCard(profileData, profileType) {
       var profileCard = document.getElementById('profileCard');
       if (!profileData) {
@@ -541,6 +602,7 @@
       if (profileData.image_display_url) {
         html += '<img src="' + profileData.image_display_url + '" class="profile-image" alt="' + (profileData.title || profileData.name || '') + '">';
       } else {
+        // İkon yerine boş div veya varsayılan ikon
         html += '<div class="profile-image"></div>';
       }
       html += '<div>';
@@ -584,29 +646,51 @@
       if (pathInfo.type === 'organization' && pathInfo.name) return baseQuery + '&fq=organization:' + encodeURIComponent(pathInfo.name);
       if (pathInfo.type === 'group' && pathInfo.name) return baseQuery + '&fq=groups:' + encodeURIComponent(pathInfo.name);
       if (pathInfo.type === 'user' && pathInfo.name) return baseQuery;
+      // Tema filtresi için fq parametresi package_search API'sinde doğrudan bulunmadığı için
+      // tema filtrelemesini JavaScript'te yapacağız.
       return baseQuery;
     }
     
     async function loadProfileData() {
         var pathInfo = getPathInfo();
         if (pathInfo.type === 'dataset' || !pathInfo.name) { renderProfileCard(null); return; }
-        var apiEndpoint = ''; var profileType = pathInfo.type;
-        if (pathInfo.type === 'organization') apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
-        else if (pathInfo.type === 'group') apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
-        else if (pathInfo.type === 'user') apiEndpoint = '/api/3/action/user_show';
-        if (apiEndpoint) {
+        
+        // Eğer tema sayfası ise özel profil kartını render et
+        if (pathInfo.type === 'theme') {
             try {
-                let response;
-                // CKAN API'si yetkilendirme için 'credentials: include' ve bazen POST metodu gerektirebilir
-                if (pathInfo.type === 'user') {
-                    response = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ id: pathInfo.name }) });
+                const ckan_api_base = "https://dataizmir.izka.org.tr/api/3/action/";
+                const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
+                const themeData = await themeResponse.json();
+                if (themeData.success && themeData.result && themeData.result.category) {
+                    currentThemeData = themeData.result.category; // Tema profil kartı için veriyi sakla
+                    currentThemeSlugFromURL = pathInfo.name; // URL'deki slug'ı sakla
+                    renderThemeProfileCard(currentThemeData);
                 } else {
-                    response = await fetch(apiEndpoint, { credentials: 'include' });
+                    renderProfileCard(null);
                 }
-                const data = await response.json();
-                if (data.success && data.result) renderProfileCard(data.result, profileType);
-                else renderProfileCard(null);
-            } catch (error) { console.error('Profil bilgileri yüklenirken hata:', error); renderProfileCard(null); }
+            } catch (error) {
+                console.error('Tema profil bilgileri yüklenirken hata:', error);
+                renderProfileCard(null);
+            }
+        } else {
+            // Diğer profil türleri için mevcut mantık
+            var apiEndpoint = ''; var profileType = pathInfo.type;
+            if (pathInfo.type === 'organization') apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
+            else if (pathInfo.type === 'group') apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
+            else if (pathInfo.type === 'user') apiEndpoint = '/api/3/action/user_show';
+            if (apiEndpoint) {
+                try {
+                    let response;
+                    if (pathInfo.type === 'user') {
+                        response = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ id: pathInfo.name }) });
+                    } else {
+                        response = await fetch(apiEndpoint, { credentials: 'include' });
+                    }
+                    const data = await response.json();
+                    if (data.success && data.result) renderProfileCard(data.result, profileType);
+                    else renderProfileCard(null);
+                } catch (error) { console.error('Profil bilgileri yüklenirken hata:', error); renderProfileCard(null); }
+            }
         }
     }
     
@@ -636,9 +720,17 @@
       }
       items.forEach(function(item) {
         var opt = document.createElement("div");
-        opt.className = "multi-select-option" + (selectedSet.has(item) ? " selected" : "");
-        opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item) ? "checked" : ""}> <span>${item}</span>`;
+        // Tema filtresi ise ve URL'den geliyorsa checkbox'ı devre dışı bırak
+        const isThemeFilterAndFromURL = (containerId === "themeSelect" && currentThemeSlugFromURL && item === currentThemeData?.name);
+        
+        opt.className = "multi-select-option" + (selectedSet.has(item) ? " selected" : "") + (isThemeFilterAndFromURL ? " disabled" : "");
+        opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item) ? "checked" : ""} ${isThemeFilterAndFromURL ? "disabled" : ""}> <span>${item}</span>`;
+        
         opt.onclick = function(e) {
+          if(isThemeFilterAndFromURL) { // Eğer tema filtresi ve URL'den geliyorsa tıklamayı engelle
+            e.preventDefault(); 
+            return;
+          }
           e.stopPropagation();
           if(selectedSet.has(item)) selectedSet.delete(item);
           else selectedSet.add(item);
@@ -666,14 +758,14 @@
 
         // YENİ: Tema filtreleme mantığı
         if (selectedThemes.size) {
-            // Eğer veri setinin bir teması yoksa ve seçili temalar arasında boş tema yoksa, filtrele
+            // Eğer veri setinin bir teması yoksa ve seçili temalar arasında "Yok" varsa, tut
             if (pkg.themeName === null && selectedThemes.has('Yok')) {
-                // Eğer "Yok" seçiliyse ve tema gerçekten yoksa, tut
+                // Bu durum zaten filtrelemeyecek, özel bir durum
             } else if (pkg.themeName === null) {
-                // Tema yok ama "Yok" seçili değil, filtrele
+                // Tema yok ama "Yok" seçili değil, bu veri setini filtrele (gösterme)
                 return false;
             } else if (!selectedThemes.has(pkg.themeName)) {
-                // Tema var ama seçili temalar arasında değil, filtrele
+                // Tema var ama seçili temalar arasında değil, bu veri setini filtrele (gösterme)
                 return false;
             }
         }
@@ -729,10 +821,10 @@
         var title = pkg.title || pkg.name || '';
         var link = '/dataset/' + encodeURIComponent(pkg.name);
         var desc = pkg.notes ? pkg.notes.replace(/\n/g, ' ').substring(0, 150) + (pkg.notes.length > 150 ? '...' : '') : '<span class="empty-cell">Yok</span>';
-        var org = pkg.orgTitle || '<span class="empty-cell">Yok</span>';
+        var org = pkg.organization?.title || '<span class="empty-cell">Yok</span>'; // organization object'ten title alındı
         var user = pkg.creatorUsername ? `<span class="user-tag">${pkg.creatorUsername}</span>` : '<span class="empty-cell">Bilinmiyor</span>';
-        var groups = pkg.groupTitles.length ? pkg.groupTitles.map(g => `<span class="group-tag">${g}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
-        var tags = pkg.tagNames.length ? pkg.tagNames.map(t => `<span class="tag-tag">${t}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
+        var groups = pkg.groups?.length ? pkg.groups.map(g => `<span class="group-tag">${g.display_name || g.title || g.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>'; // group object'ten display_name/title/name alındı
+        var tags = pkg.tags?.length ? pkg.tags.map(t => `<span class="tag-tag">${t.display_name || t.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>'; // tag object'ten display_name/name alındı
         var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>'; // YENİ: Tema sütun verisi
         var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
         var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
@@ -778,23 +870,47 @@
     var datasetThemeMap = {}; // dataset_id'den tema adına eşleşme
     
     async function initializeData() {
-        // CKAN API'nizin doğru temel URL'si
-        const ckan_api_base = "https://dataizmir.izka.org.tr/api/3/action/";
+        // CKAN API'nizin doğru temel URL'si (eğer farklıysa bu alana domaininizi yazın)
+        const ckan_api_base = "/api/3/action/"; // CKAN'ın varsayılan API yolu
+        // Eğer tarayıcıda doğrudan domain belirtmeniz gerekiyorsa:
+        // const ckan_api_base = "https://dataizmir.izka.org.tr/api/3/action/";
 
-        // 1. Tüm tema kategorilerini çek
+        const pathInfo = getPathInfo();
+
+        // 1. URL'den tema bilgisi varsa, tema profil kartını yükle
+        if (pathInfo.type === 'theme' && pathInfo.name) {
+            try {
+                const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
+                const themeData = await themeResponse.json();
+                if (themeData.success && themeData.result && themeData.result.category) {
+                    currentThemeData = themeData.result.category; // Tema profil kartı için veriyi sakla
+                    currentThemeSlugFromURL = pathInfo.name; // URL'deki slug'ı sakla
+                    renderThemeProfileCard(currentThemeData);
+
+                    // Eğer tema sayfasındaysak, ilgili temayı seçili hale getir
+                    selectedThemes.add(currentThemeData.name); 
+                }
+            } catch (error) {
+                console.error("Tema profil bilgileri yüklenirken hata:", error);
+            }
+        } else {
+             // Diğer profil türleri için mevcut loadProfileData çağrısı
+             loadProfileData();
+        }
+
+        // 2. Tüm tema kategorilerini çek (filtre listesi için)
         try {
             const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
             const themeListData = await themeListResponse.json();
 
             if (themeListData.success && themeListData.result) {
-                // themesForFilter: Tema adları/slug'ları listesi (filtrenin seçenekleri için)
-                // allThemes: Filtre için kullanılacak nihai temalar
+                // allThemes: Filtre için kullanılacak tüm temaların adları
+                // "Yok" seçeneği, teması olmayan veri setleri için eklenecek
                 allThemes = themeListData.result.map(t => t.name || t.slug);
                 
                 // Her bir tema için ilişkili veri setlerini çekip datasetThemeMap'i oluştur
                 await Promise.all(themeListData.result.map(async (theme) => {
                     try {
-                        // theme_category_show çağrısı için yetkilendirme bilgisi dahil edildi
                         const themeShowResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' });
                         const themeShowData = await themeShowResponse.json();
 
@@ -810,10 +926,10 @@
                 }));
             }
         } catch (error) {
-            console.error("Ana tema listesi yüklenirken hata:", error);
+            console.error("Tema listesi veya detayları yüklenirken hata:", error);
         }
 
-        // 2. Tüm paketleri çek ve tema bilgilerini ekle
+        // 3. Tüm paketleri çek ve tema bilgilerini ekle
         try {
             const packageSearchResponse = await fetch('/api/3/action/package_search?' + buildApiQuery(), { credentials: 'include' });
             const packageSearchData = await packageSearchResponse.json();
@@ -839,11 +955,7 @@
 
                 // datasetThemeMap'ten veri setinin temasını al
                 const themeName = datasetThemeMap[pkg.id] || null;
-                // Tema yoksa, filtrede "Yok" seçeneği için bu değeri ekliyoruz
-                if (themeName === null) {
-                    allThemes.push('Yok'); // "Yok" seçeneğini temalar listesine ekle
-                }
-
+                
                 return {
                     ...pkg,
                     orgTitle: orgTitle,
@@ -855,8 +967,14 @@
                 };
             });
             
-            // allThemes listesini tekilleştir ve sırala
+            // allThemes listesine "Yok" seçeneğini ekle ve tekilleştir/sırala
+            // Sadece teması olmayan datasetler varsa "Yok" eklenmeli
+            const hasNullThemes = allDatasets.some(pkg => pkg.themeName === null);
+            if (hasNullThemes) {
+                allThemes.push('Yok');
+            }
             allThemes = [...new Set(allThemes)].sort();
+
 
             // Eğer user sayfasındaysak, veriyi ana dizi üzerinden filtrele
             await filterByUserPath();

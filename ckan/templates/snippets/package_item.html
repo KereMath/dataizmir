@@ -4,27 +4,32 @@
   <meta charset="utf-8">
   <title>Veri Seti Tablosu</title>
   <style>
+    /* CKAN arama formunu gizle */
     .search-form {
         display:none !important;
     }
+    
+    /* Genel Sıfırlama ve Kutu Boyutlandırma */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
+    /* Temel Gövde Stilleri */
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background-color: #f8f9fa;
       color: #333;
     }
 
+    /* Sayfa Kapsayıcısı */
     .page-container {
       display: flex;
       min-height: 100vh;
     }
 
-    /* Sidebar Stilleri */
+    /* Kenar Çubuğu Filtre Stilleri */
     .sidebar-filter {
       width: 300px;
       background-color: #fff;
@@ -197,12 +202,14 @@
       padding: 5px 12px;
     }
 
+    /* Ana İçerik Kapsayıcısı */
     .main-container {
       flex-grow: 1;
       padding: 20px;
       width: calc(100% - 320px);
     }
 
+    /* Sayfalama Kontrolleri */
     .pagination-controls {
       background-color: #fff;
       padding: 20px;
@@ -273,6 +280,7 @@
       border-color: #007bff;
     }
 
+    /* Veri Seti Tablosu */
     .dataset-table {
       width: 100%;
       border-collapse: collapse;
@@ -316,22 +324,24 @@
       text-decoration: underline;
     }
     
-    /* Sütun genişlikleri Etiketler sütunu için güncellendi */
-    .t-title { width: 18%; }
-    .t-desc { width: 22%; }
-    .t-org { width: 10%; }
-    .t-user { width: 8%; }
-    .t-groups { width: 12%; }
-    .t-tags { width: 12%; } /* Yeni sütun */
-    .t-upd { width: 9%; }
-    .t-formats { width: 9%; }
+    /* Sütun Genişlikleri */
+    .t-title { width: 15%; } /* Başlık */
+    .t-desc { width: 20%; } /* Açıklama */
+    .t-org { width: 10%; } /* Organizasyon */
+    .t-user { width: 8%; } /* Oluşturan */
+    .t-groups { width: 10%; } /* Kategoriler */
+    .t-tags { width: 10%; } /* Etiketler */
+    .t-theme { width: 10%; } /* Tema - YENİ SÜTUN */
+    .t-upd { width: 8%; } /* Güncellenme */
+    .t-formats { width: 9%; } /* Formatlar */
 
     .empty-cell {
       color: #9b98a7;
       font-style: italic;
     }
 
-    .format-tag, .user-tag, .group-tag, .tag-tag {
+    /* Etiket Stilleri */
+    .format-tag, .user-tag, .group-tag, .tag-tag, .theme-tag {
       display: inline-block;
       padding: 2px 6px;
       border-radius: 3px;
@@ -343,8 +353,10 @@
 
     .user-tag { background-color: #e3f2fd; color: #1976d2; }
     .group-tag { background-color: #e8f5e8; color: #2e7d32; }
-    .tag-tag { background-color: #fbe9e7; color: #d84315; } /* Yeni stil */
+    .tag-tag { background-color: #fbe9e7; color: #d84315; }
+    .theme-tag { background-color: #e0f7fa; color: #00838f; } /* YENİ TEMA ETİKET STİLİ */
 
+    /* Format Etiket Stilleri */
     .fmt-csv { background-color: #e8f5e8; color: #2e7d32; }
     .fmt-xls { background-color: #e3f2fd; color: #1976d2; }
     .fmt-json { background-color: #fff3e0; color: #f57c00; }
@@ -357,6 +369,7 @@
     .fmt-txt { background-color: #fafafa; color: #616161; }
     .fmt-other { background-color: #eceff1; color: #455a64; }
 
+    /* Kopyalanan elementleri gizle */
     .duplicate-hidden {
       display: none !important;
     }
@@ -388,6 +401,9 @@
         <label>Etiketler</label>
         <div class="multi-select" id="tagSelect"></div>
       </div>
+
+      <div class="filter-section">
+        <label>Temalar</label> <div class="multi-select" id="themeSelect"></div> </div>
       
       <div class="filter-section">
         <label>Kullanıcılar</label>
@@ -433,7 +449,8 @@
             <th class="t-org">Organizasyon</th>
             <th class="t-user">Oluşturan</th>
             <th class="t-groups">Kategoriler</th>
-            <th class="t-tags">Etiketler</th> <th class="t-upd">Güncellenme</th>
+            <th class="t-tags">Etiketler</th>
+            <th class="t-theme">Tema</th> <th class="t-upd">Güncellenme</th>
             <th class="t-formats">Formatlar</th>
           </tr>
         </thead>
@@ -446,9 +463,11 @@
     // --- Değişkenler ---
     var allDatasets = [];
     var filteredDatasets = [];
-    var allOrgs = [], allFormats = [], allUsers = [], allGroups = [], allTags = [];
+    // allThemes artık tüm temaların adlarını içerecek
+    var allOrgs = [], allFormats = [], allUsers = [], allGroups = [], allTags = [], allThemes = [];
     var userCache = {}; // User ID -> Username cache
-    var selectedOrgs = new Set(), selectedFormats = new Set(), selectedUsers = new Set(), selectedGroups = new Set(), selectedTags = new Set();
+    // selectedThemes artık seçili tema adlarını içerecek
+    var selectedOrgs = new Set(), selectedFormats = new Set(), selectedUsers = new Set(), selectedGroups = new Set(), selectedTags = new Set(), selectedThemes = new Set();
     var currentPage = 1;
     var itemsPerPage = 20;
     var usersLoaded = false;
@@ -485,17 +504,17 @@
     async function loadUsernames() {
       const uniqueUserIds = [...new Set(allDatasets.map(pkg => pkg.creator_user_id).filter(Boolean))];
       console.log('🔄 Toplam unique user sayısı:', uniqueUserIds.length);
-      const batchSize = 5;
+      const batchSize = 5; // Parallel fetch for users
       for (let i = 0; i < uniqueUserIds.length; i += batchSize) {
         const batch = uniqueUserIds.slice(i, i + batchSize);
         await Promise.all(batch.map(userId => fetchUsername(userId)));
         const progress = Math.min(i + batchSize, uniqueUserIds.length);
         console.log(`📊 User yükleme: ${progress}/${uniqueUserIds.length}`);
-        updateUsersFilter();
+        updateUsersFilter(); // Update filter as users load
       }
       usersLoaded = true;
       console.log('✅ Tüm user bilgileri yüklendi:', Object.keys(userCache).length);
-      updateUsersFilter();
+      updateUsersFilter(); // Final update after all users loaded
     }
 
     function updateUsersFilter() {
@@ -506,11 +525,10 @@
       } else if (!usersLoaded) {
         document.getElementById('userSelect').innerHTML = '<div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>';
       } else {
-        document.getElementById('userSelect').innerHTML = '<div class="loading-users">❌ Kullanıcı bilgisi bulunamadı</div>';
+        document.getElementById('userSelect').innerHTML = '<div class="empty-cell" style="padding:10px;">Kullanıcı yok</div>';
       }
     }
 
-    // Orijinal renderProfileCard fonksiyonu eksiksiz olarak geri eklendi
     function renderProfileCard(profileData, profileType) {
       var profileCard = document.getElementById('profileCard');
       if (!profileData) {
@@ -570,7 +588,6 @@
     }
     
     async function loadProfileData() {
-        // Bu fonksiyon orijinal haliyle korunmuştur.
         var pathInfo = getPathInfo();
         if (pathInfo.type === 'dataset' || !pathInfo.name) { renderProfileCard(null); return; }
         var apiEndpoint = ''; var profileType = pathInfo.type;
@@ -580,6 +597,7 @@
         if (apiEndpoint) {
             try {
                 let response;
+                // CKAN API'si yetkilendirme için 'credentials: include' ve bazen POST metodu gerektirebilir
                 if (pathInfo.type === 'user') {
                     response = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ id: pathInfo.name }) });
                 } else {
@@ -592,7 +610,6 @@
         }
     }
     
-    // Orijinal hideDuplicateElements fonksiyonu geri eklendi
     function hideDuplicateElements() {
       var selectors = ['.sidebar-filter', '.dataset-table', '.main-container', '.page-container'];
       selectors.forEach(selector => {
@@ -610,7 +627,6 @@
       return `fmt-${classes[fmt] || 'other'}`;
     }
 
-    // renderMultiSelect fonksiyonu basitleştirildi ve genelleştirildi
     function renderMultiSelect(containerId, items, selectedSet, onchange) {
       var c = document.getElementById(containerId);
       c.innerHTML = "";
@@ -633,7 +649,6 @@
       });
     }
     
-    // filterDatasets fonksiyonu yeni filtrelerle (tags) ve AND mantığı ile güncellendi
     function filterDatasets() {
       var searchVal = document.getElementById("searchTitle").value.trim().toLowerCase();
       var dateSort = document.getElementById("sortDate").value;
@@ -648,6 +663,20 @@
         
         // AND mantığı: Seçili her etiketin, veri setinin etiketlerinde olması gerekir
         if (selectedTags.size && ![...selectedTags].every(t => pkg.tagNames.includes(t))) return false;
+
+        // YENİ: Tema filtreleme mantığı
+        if (selectedThemes.size) {
+            // Eğer veri setinin bir teması yoksa ve seçili temalar arasında boş tema yoksa, filtrele
+            if (pkg.themeName === null && selectedThemes.has('Yok')) {
+                // Eğer "Yok" seçiliyse ve tema gerçekten yoksa, tut
+            } else if (pkg.themeName === null) {
+                // Tema yok ama "Yok" seçili değil, filtrele
+                return false;
+            } else if (!selectedThemes.has(pkg.themeName)) {
+                // Tema var ama seçili temalar arasında değil, filtrele
+                return false;
+            }
+        }
 
         var fmts = Object.keys(pkg.fmts);
         if (selectedFormats.size && ![...selectedFormats].every(fmt => fmts.includes(fmt))) return false;
@@ -665,7 +694,6 @@
     }
 
     function renderPagination() {
-        // Bu fonksiyon orijinal haliyle korunmuştur.
         var totalItems = filteredDatasets.length;
         var totalPages = Math.ceil(totalItems / itemsPerPage);
         var startItem = (currentPage - 1) * itemsPerPage + 1;
@@ -690,7 +718,6 @@
         buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
     }
     
-    // renderTable fonksiyonu yeni Etiketler sütunu için güncellendi
     function renderTable() {
       filterDatasets();
       renderPagination();
@@ -706,6 +733,7 @@
         var user = pkg.creatorUsername ? `<span class="user-tag">${pkg.creatorUsername}</span>` : '<span class="empty-cell">Bilinmiyor</span>';
         var groups = pkg.groupTitles.length ? pkg.groupTitles.map(g => `<span class="group-tag">${g}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
         var tags = pkg.tagNames.length ? pkg.tagNames.map(t => `<span class="tag-tag">${t}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
+        var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>'; // YENİ: Tema sütun verisi
         var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
         var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
         
@@ -716,16 +744,16 @@
           <td class="t-user">${user}</td>
           <td class="t-groups">${groups}</td>
           <td class="t-tags">${tags}</td>
-          <td class="t-upd">${upd}</td>
+          <td class="t-theme">${theme}</td> <td class="t-upd">${upd}</td>
           <td class="t-formats">${formats}</td>
         </tr>`;
       }).join('');
       
-      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="8" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
+      // colspan değeri 8'den 9'a çıkarıldı (yeni tema sütunu için)
+      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="9" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
     }
     
     async function filterByUserPath() {
-        // Bu fonksiyon orijinal haliyle korunmuştur.
         var pathInfo = getPathInfo();
         if (pathInfo.type === 'user' && pathInfo.name) {
             try {
@@ -744,120 +772,165 @@
         }
     }
 
-    // --- Sayfa Yükleme ve Başlatma Mantığı ---
-    document.addEventListener('DOMContentLoaded', hideDuplicateElements);
-    loadProfileData();
+    // YENİ: Veri yükleme ve başlatma mantığını güncelledik
+    // Tüm tema bilgilerini (ve ilişkili veri setlerini), ardından tüm paketleri çeker
+    // ve datasetThemeMap'i oluşturur.
+    var datasetThemeMap = {}; // dataset_id'den tema adına eşleşme
+    
+    async function initializeData() {
+        // CKAN API'nizin doğru temel URL'si
+        const ckan_api_base = "https://dataizmir.izka.org.tr/api/3/action/";
 
-    var apiQuery = buildApiQuery();
-    fetch('/api/3/action/package_search?' + apiQuery, { credentials: 'include' })
-      .then(r => r.json())
-      .then(async data => { // async eklendi
-        if (!data.result || !data.result.results) return;
-        
-        var orgSet = new Set(), fmtSet = new Set(), groupSet = new Set(), tagSet = new Set();
-        
-        allDatasets = data.result.results.map(function(pkg) {
-          var orgTitle = pkg.organization?.title || "";
-          if (orgTitle) orgSet.add(orgTitle);
-          
-          var fmts = {};
-          pkg.resources?.forEach(r => {
-            if (r.format) { fmtSet.add(r.format.toLowerCase()); fmts[r.format.toLowerCase()] = true; }
-          });
-          
-          var groupTitles = pkg.groups?.map(g => g.display_name || g.title || g.name) || [];
-          groupTitles.forEach(g => groupSet.add(g));
-          
-          var tagNames = pkg.tags?.map(t => t.display_name || t.name) || [];
-          tagNames.forEach(t => tagSet.add(t));
-          
-          return {
-            ...pkg,
-            orgTitle: orgTitle,
-            fmts: fmts,
-            creatorUsername: userCache[pkg.creator_user_id] || 'Yükleniyor...',
-            groupTitles: groupTitles,
-            tagNames: tagNames
-          };
-        });
-        
-        // Eğer user sayfasındaysak, veriyi ana dizi üzerinden filtrele
-        await filterByUserPath();
+        // 1. Tüm tema kategorilerini çek
+        try {
+            const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
+            const themeListData = await themeListResponse.json();
 
-        // Filtre listelerini DOLDUR (artık veriden türetiliyor)
-        allOrgs = [...orgSet].filter(Boolean).sort();
-        allFormats = [...fmtSet].filter(Boolean).sort();
-        allGroups = [...groupSet].filter(Boolean).sort();
-        allTags = [...tagSet].filter(Boolean).sort();
+            if (themeListData.success && themeListData.result) {
+                // themesForFilter: Tema adları/slug'ları listesi (filtrenin seçenekleri için)
+                // allThemes: Filtre için kullanılacak nihai temalar
+                allThemes = themeListData.result.map(t => t.name || t.slug);
+                
+                // Her bir tema için ilişkili veri setlerini çekip datasetThemeMap'i oluştur
+                await Promise.all(themeListData.result.map(async (theme) => {
+                    try {
+                        // theme_category_show çağrısı için yetkilendirme bilgisi dahil edildi
+                        const themeShowResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' });
+                        const themeShowData = await themeShowResponse.json();
 
-        // Filtreleri RENDER ET
-        renderMultiSelect("orgSelect", allOrgs, selectedOrgs, renderTable);
-        renderMultiSelect("fmtSelect", allFormats, selectedFormats, renderTable);
-        renderMultiSelect("groupSelect", allGroups, selectedGroups, renderTable);
-        renderMultiSelect("tagSelect", allTags, selectedTags, renderTable);
-
-        // Olay dinleyicilerini ata
-        document.getElementById("searchTitle").oninput = renderTable;
-        document.getElementById("sortDate").onchange = renderTable;
-        document.getElementById("itemsPerPage").onchange = function() {
-          itemsPerPage = parseInt(this.value);
-          currentPage = 1;
-          renderTable();
-        };
-
-        // Eğer grup sayfasındaysak, grubu seçili yap
-        const pathInfo = getPathInfo();
-        if (pathInfo.type === 'group' && pathInfo.name) {
-            const groupInfo = allDatasets[0]?.groups.find(g => g.name === pathInfo.name);
-            if (groupInfo) {
-                const groupTitle = groupInfo.display_name || groupInfo.title || groupInfo.name;
-                if(allGroups.includes(groupTitle)) selectedGroups.add(groupTitle);
+                        if (themeShowData.success && themeShowData.result && themeShowData.result.datasets) {
+                            themeShowData.result.datasets.forEach(dataset => {
+                                // datasetThemeMap'e her veri setinin ID'sini ve tema adını ekle
+                                datasetThemeMap[dataset.id] = theme.name; // Tema adını kullanıyoruz
+                            });
+                        }
+                    } catch (error) {
+                        console.warn(`Tema '${theme.slug}' için veri setleri yüklenirken hata oluştu:`, error);
+                    }
+                }));
             }
+        } catch (error) {
+            console.error("Ana tema listesi yüklenirken hata:", error);
         }
+
+        // 2. Tüm paketleri çek ve tema bilgilerini ekle
+        try {
+            const packageSearchResponse = await fetch('/api/3/action/package_search?' + buildApiQuery(), { credentials: 'include' });
+            const packageSearchData = await packageSearchResponse.json();
+
+            if (!packageSearchData.result || !packageSearchData.result.results) return;
+
+            var orgSet = new Set(), fmtSet = new Set(), groupSet = new Set(), tagSet = new Set();
+            
+            allDatasets = packageSearchData.result.results.map(function(pkg) {
+                var orgTitle = pkg.organization?.title || "";
+                if (orgTitle) orgSet.add(orgTitle);
+
+                var fmts = {};
+                pkg.resources?.forEach(r => {
+                    if (r.format) { fmtSet.add(r.format.toLowerCase()); fmts[r.format.toLowerCase()] = true; }
+                });
+
+                var groupTitles = pkg.groups?.map(g => g.display_name || g.title || g.name) || [];
+                groupTitles.forEach(g => groupSet.add(g));
+
+                var tagNames = pkg.tags?.map(t => t.display_name || t.name) || [];
+                tagNames.forEach(t => tagSet.add(t));
+
+                // datasetThemeMap'ten veri setinin temasını al
+                const themeName = datasetThemeMap[pkg.id] || null;
+                // Tema yoksa, filtrede "Yok" seçeneği için bu değeri ekliyoruz
+                if (themeName === null) {
+                    allThemes.push('Yok'); // "Yok" seçeneğini temalar listesine ekle
+                }
+
+                return {
+                    ...pkg,
+                    orgTitle: orgTitle,
+                    fmts: fmts,
+                    creatorUsername: userCache[pkg.creator_user_id] || 'Yükleniyor...',
+                    groupTitles: groupTitles,
+                    tagNames: tagNames,
+                    themeName: themeName // Veri seti objesine tema adını ekle
+                };
+            });
+            
+            // allThemes listesini tekilleştir ve sırala
+            allThemes = [...new Set(allThemes)].sort();
+
+            // Eğer user sayfasındaysak, veriyi ana dizi üzerinden filtrele
+            await filterByUserPath();
+
+            // Filtre listelerini DOLDUR (artık veriden türetiliyor)
+            allOrgs = [...orgSet].filter(Boolean).sort();
+            allFormats = [...fmtSet].filter(Boolean).sort();
+            allGroups = [...groupSet].filter(Boolean).sort();
+            allTags = [...tagSet].filter(Boolean).sort();
+
+            // Filtreleri RENDER ET
+            renderMultiSelect("orgSelect", allOrgs, selectedOrgs, renderTable);
+            renderMultiSelect("fmtSelect", allFormats, selectedFormats, renderTable);
+            renderMultiSelect("groupSelect", allGroups, selectedGroups, renderTable);
+            renderMultiSelect("tagSelect", allTags, selectedTags, renderTable);
+            renderMultiSelect("themeSelect", allThemes, selectedThemes, renderTable); // Tema filtresini render et
+
+            // Olay dinleyicilerini ata
+            document.getElementById("searchTitle").oninput = renderTable;
+            document.getElementById("sortDate").onchange = renderTable;
+            document.getElementById("itemsPerPage").onchange = function() {
+                itemsPerPage = parseInt(this.value);
+                currentPage = 1;
+                renderTable();
+            };
+
+            // Eğer grup sayfasındaysak, ilgili grubu seçili yap
+            const pathInfo = getPathInfo();
+            if (pathInfo.type === 'group' && pathInfo.name) {
+                const groupInfo = allDatasets[0]?.groups.find(g => g.name === pathInfo.name);
+                if (groupInfo) {
+                    const groupTitle = groupInfo.display_name || groupInfo.title || groupInfo.name;
+                    if(allGroups.includes(groupTitle)) selectedGroups.add(groupTitle);
+                }
+            }
             applyGlobalSearchAndFilter(); 
 
-        // İlk render
-        renderTable();
-        hideDuplicateElements();
-        
-        // User bilgilerini asenkron olarak yükle ve tabloyu son haliyle güncelle
-        await loadUsernames();
-        allDatasets.forEach(pkg => {
-          pkg.creatorUsername = userCache[pkg.creator_user_id] || 'Bilinmiyor'
-        });
-        renderTable();
-      })
-      .catch(function(error) {
-        console.error('Veri yüklenirken hata:', error);
-        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="8" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
-      });
-      
-    // Orijinal MutationObserver geri eklendi
+            // İlk render
+            renderTable();
+            hideDuplicateElements();
+            
+            // User bilgilerini asenkron olarak yükle ve tabloyu son haliyle güncelle
+            await loadUsernames();
+            allDatasets.forEach(pkg => {
+                pkg.creatorUsername = userCache[pkg.creator_user_id] || 'Bilinmiyor'
+            });
+            renderTable();
+
+        } catch (error) {
+            console.error('Veri yüklenirken hata:', error);
+            document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="9" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+        }
+    }
+
+    // Sayfa yüklendiğinde veri başlatma fonksiyonunu çağır
+    document.addEventListener('DOMContentLoaded', initializeData);
+    document.addEventListener('DOMContentLoaded', hideDuplicateElements); // Duplikatları gizle
+
     var observer = new MutationObserver(function(mutations) {
       hideDuplicateElements();
     });
     observer.observe(document.body, { childList: true, subtree: true });
 
-
-
-
-    // YENİ EKLENEN FONKSİYON
-function applyGlobalSearchAndFilter() {
-  // localStorage'dan arama terimini al
-  const searchTerm = localStorage.getItem('globalSearchTerm');
-
-  // Eğer bir terim varsa
-  if (searchTerm) {
-    const titleSearchInput = document.getElementById('searchTitle');
-    if (titleSearchInput) {
-      // 'Başlıkta Ara' input'una değeri yaz
-      titleSearchInput.value = searchTerm;
-      console.log(`'${searchTerm}' local storage'dan alınıp arama kutusuna yazıldı.`);
+    function applyGlobalSearchAndFilter() {
+        const searchTerm = localStorage.getItem('globalSearchTerm');
+        if (searchTerm) {
+            const titleSearchInput = document.getElementById('searchTitle');
+            if (titleSearchInput) {
+                titleSearchInput.value = searchTerm;
+                console.log(`'${searchTerm}' local storage'dan alınıp arama kutusuna yazıldı.`);
+            }
+            localStorage.removeItem('globalSearchTerm');
+        }
     }
-    // İşlem bittiği için localStorage'dan veriyi sil
-    localStorage.removeItem('globalSearchTerm');
-  }
-}
 </script>
 </body>
 </html>

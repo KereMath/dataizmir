@@ -18,6 +18,7 @@
   {# The content block allows you to replace the content of the page if needed #}
   {%- block content %}
 
+<div class="site-wrapper"> {# Yeni Eklenen Sarmalayıcı Div #}
 
 {% if self.yeni_artı_butonu_blok() | trim %}
     <div class="ekle_floating_btn_container"  style="background-color: rgb(88,84,124); display: none !important; ">
@@ -96,7 +97,8 @@
           </div>
         {% endblock %}
       </div>
-    </div>
+    </div> {# Kapanan main div'i #}
+
   {% endblock -%}
 
   {#
@@ -107,6 +109,9 @@
   {%- block footer %}
     {% include "footer.html" %}
   {% endblock -%}
+
+</div> {# Kapanan site-wrapper div'i #}
+
 {%- endblock -%}
 
 {%- block scripts %}
@@ -118,11 +123,65 @@
   {{ super() }}
 {% endblock -%}
 <style>
+/* FOOTER DÜZELTMESİ İÇİN YENİ SİTLLER */
+html, body {
+  height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.site-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Sayfanın en az viewport yüksekliği kadar olmasını sağlar */
+}
+
+/* Header'ı doğrudan site-wrapper altına al */
+.site-wrapper > .header {
+  flex-shrink: 0; /* Header'ın küçülmesini engeller */
+}
+
+/* Main içeriğin esnek bir şekilde büyümesini sağlar */
+.main {
+  flex-grow: 1; /* Main içeriğin mümkün olduğunca boş alanı kaplamasını sağlar */
+  display: flex; /* İçindeki content container'ı da esnek yapar */
+  flex-direction: column; /* İçindeki elemanların alt alta sıralanmasını sağlar */
+}
+
+/* Content container'ın main içinde esnek olmasını sağlar */
+.main > #content {
+    flex-grow: 1; /* Content container'ın main içinde mümkün olduğunca büyümesini sağlar */
+    display: flex;
+    flex-direction: column;
+}
+
+/* İçerik wrapper'ının da esnek olmasını sağlar */
+.main > #content > .row.wrapper {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Primary content'in de esnek olmasını sağlar */
+.main > #content > .row.wrapper > .primary {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Footer'ı en altta tutar */
+.site-wrapper > footer {
+  flex-shrink: 0; /* Footer'ın küçülmesini engeller */
+  margin-top: auto; /* Footer'ı dikeyde en alta iter */
+}
+
+
 /* ► Genel buton gövdesi */
 .butonmarkins{
   position:fixed !important;
   top:180px !important;
-  left:30px !important;          /* solda */
+  left:30px !important;            /* solda */
   z-index:1000 !important;
 
   width:64px !important;
@@ -140,7 +199,7 @@
 
 /* ► “+” ikonu */
 .butonmarkins i{
-  font-size:40px !important;     /* 30-40 px arası: 40 px verdik */
+  font-size:40px !important;      /* 30-40 px arası: 40 px verdik */
   line-height:1 !important;
 }
 

@@ -117,8 +117,107 @@
   {% endif %}
   {{ super() }}
 {% endblock -%}
+
 <style>
-/* ► Genel buton gövdesi */
+/* ► Sticky Footer - TÜM SİTE İÇİN */
+html, body {
+  height: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+body {
+  min-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* ► Header kısmı normal kalacak */
+.header {
+  flex-shrink: 0 !important;
+}
+
+/* ► Main content area flex ile büyüyecek */
+.main {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+#content {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.wrapper {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.primary {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.module {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: #fff !important;
+}
+
+.module-content {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 20px !important;
+}
+
+/* ► Footer sayfanın en altına yapışacak */
+footer {
+  flex-shrink: 0 !important;
+  margin-top: auto !important;
+}
+
+/* ► Flash mesajları için */
+.flash-messages {
+  flex-shrink: 0 !important;
+}
+
+/* ► İçerik az olan sayfalar için minimum yükseklik */
+.primary-content-inner {
+  min-height: 200px !important;
+}
+
+/* ► Admin sayfaları için özel düzenleme */
+.pro-config-page {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 100% !important;
+}
+
+.pro-config-page form {
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.pro-grid {
+  flex: 1 !important;
+}
+
+.pro-actions {
+  margin-top: auto !important;
+  background: #fff !important;
+  padding: 20px 0 !important;
+}
+
+/* ► Genel buton gövdesi (mevcut kod) */
 .butonmarkins{
   position:fixed !important;
   top:180px !important;
@@ -138,7 +237,7 @@
   transition:all .25s ease !important;
 }
 
-/* ► “+” ikonu */
+/* ► "+" ikonu */
 .butonmarkins i{
   font-size:40px !important;     /* 30-40 px arası: 40 px verdik */
   line-height:1 !important;
@@ -161,6 +260,28 @@
 .butonmarkins.show-label .btn-label{
   display:inline-block !important;
 }
+
+/* ► Responsive düzenlemeler */
+@media (max-width: 768px) {
+  .main {
+    min-height: calc(100vh - 200px) !important;
+  }
+}
+
+/* ► Özel sayfa tipleri için düzenlemeler */
+.dataset-list, .organization-list, .group-list {
+  min-height: 400px !important;
+}
+
+/* ► Boş içerik durumu için */
+.empty-content {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  min-height: 300px !important;
+  color: #666 !important;
+}
 </style>
 
 <script>
@@ -177,5 +298,28 @@ document.addEventListener('DOMContentLoaded',function(){
 
   btn.addEventListener('mouseenter', show);
   btn.addEventListener('mouseleave', show);   // imleç çıksa da sayaç devam etsin
+
+  // ► Sticky footer düzeltmeleri
+  function adjustLayout() {
+    const main = document.querySelector('.main');
+    const footer = document.querySelector('footer');
+    const content = document.querySelector('#content');
+    
+    if (main && footer && content) {
+      const windowHeight = window.innerHeight;
+      const headerHeight = document.querySelector('.header')?.offsetHeight || 0;
+      const footerHeight = footer.offsetHeight;
+      const availableHeight = windowHeight - headerHeight - footerHeight;
+      
+      // Minimum yükseklik ayarlama
+      if (content.offsetHeight < availableHeight) {
+        content.style.minHeight = availableHeight + 'px';
+      }
+    }
+  }
+
+  // Sayfa yüklendiğinde ve boyut değiştiğinde çalıştır
+  adjustLayout();
+  window.addEventListener('resize', adjustLayout);
 });
 </script>

@@ -88,9 +88,6 @@
   </form>
 </div>
 
-<!-- ► Bu beyaz spacer footer'ı aşağı itecek -->
-<div class="white-spacer"></div>
-
 <style>
   :root {
     --font-family-sans: 'Poppins', sans-serif; --bg-main: #f8f9fc; --bg-card: #ffffff;
@@ -98,50 +95,7 @@
     --accent-color: #4f46e5; --danger-color: #ef4444; --radius: 12px;
     --shadow-md: 0 4px 6px -1px rgba(0,0,0,.05), 0 2px 4px -1px rgba(0,0,0,.04);
   }
-
-  /* ► Sticky Footer için gerekli CSS */
-  body {
-    min-height: 100vh !important;
-    display: flex !important;
-    flex-direction: column !important;
-    margin: 0 !important;
-  }
-
-  .main {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-
-  #content {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-
-  .wrapper {
-    flex: 1 !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-
-  .primary {
-    flex-shrink: 0 !important; /* Kartları normal boyutlarında tut */
-  }
-
-  /* ► Beyaz spacer - Footer'ı aşağı iten boşluk */
-  .white-spacer {
-    flex: 1 !important;
-    background: #f8f9fc !important; /* Sayfa arka planı ile aynı renk */
-    min-height: 50px !important;
-  }
-
-  /* ► Normal kartlar - değişiklik yok */
-  .pro-config-page {
-    font-family: var(--font-family-sans) !important; 
-    padding: 1rem 0 !important;
-  }
-
+  .pro-config-page { font-family: var(--font-family-sans) !important; padding: 1rem 0 !important; }
   .dashboard-header h1 { font-size: 2.25rem; font-weight: 700; color: var(--text-dark); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; }
   .dashboard-header p { font-size: 1.1rem; color: var(--text-light); }
   .dashboard-header { margin-bottom: 2.5rem; }
@@ -190,17 +144,7 @@
   .pro-uploader:hover .pro-btn-remove-img, .pro-btn-remove-img:not(.hidden) { opacity: 1; }
   .pro-btn-remove-img.hidden { display: none; }
 
-  .pro-actions { 
-    margin-top: 2rem; 
-    padding: 2rem; 
-    border-top: 1px solid var(--border-color); 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-    flex-wrap: wrap; 
-    gap: 1rem;
-    background: #fff !important;
-  }
+  .pro-actions { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:1rem;}
   .pro-actions-main { display: flex; gap: 1rem; }
   .pro-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 8px; text-decoration: none; transition: all .2s; border: 1px solid transparent; color: #fff; cursor: pointer; }
   .pro-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }

@@ -1,35 +1,43 @@
 {# layout2.html – INTRO (video + metin) ➜ popüler ➜ kategoriler #}
 
 <style>
+/* --- Montserrat Font Tanımı --- */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+
+body, html, * {
+    font-family: 'Montserrat', sans-serif !important;
+}
+
 /* ——— VAR OLAN STILLER (popüler & kategori) ——— */
 .pop-main { background:url("../../populer_veri_setleri_zemin.png") center/220% auto no-repeat!important; }
-.catg-main{ background:url("../../kategoriler_zemin.png")     center/170% auto no-repeat!important; }
-  .card-grid{
-      display:grid;
-      grid-template-columns:repeat(5,1fr);   /* her satırda 5 */
-      grid-auto-rows:auto;                   /* satır yüksekliği içeriğe göre */
-      gap:1rem;
-  }
+.catg-main{ background:url("../../kategoriler_zemin.png") center/170% auto no-repeat!important; }
+.card-grid{
+    display:grid;
+    grid-template-columns:repeat(5,1fr);   /* her satırda 5 */
+    grid-auto-rows:auto;                   /* satır yüksekliği içeriğe göre */
+    gap:1rem;
+}
 
-.card-grid-popular            { text-align:justify; display:grid; grid-template-columns:repeat(4,1fr); grid-gap:1rem; grid-auto-flow:dense; visibility:hidden; opacity:0; transition:opacity .5s }
-@media (max-width:767px)      { .card-grid-popular{ grid-template-columns:repeat(1,1fr)!important; padding:10px!important } }
-.card-grid-popular .card-grid-item{ min-width:150px; min-height:200px; border:none; padding:20px; text-decoration:none; transition:.2s; font:700 18px/1 Labrada,sans-serif; background:#fff; border-radius:20px; color:#0a1458 }
+.card-grid-popular           { text-align:justify; display:grid; grid-template-columns:repeat(4,1fr); grid-gap:1rem; grid-auto-flow:dense; visibility:hidden; opacity:0; transition:opacity .5s }
+@media (max-width:767px)     { .card-grid-popular{ grid-template-columns:repeat(1,1fr)!important; padding:10px!important } }
+.card-grid-popular .card-grid-item{ min-width:150px; min-height:200px; border:none; padding:20px; text-decoration:none; transition:.2s; font:700 18px/1 Montserrat,sans-serif; background:#fff; border-radius:20px; color:#0a1458 }
 .card-grid-popular .card-grid-item:hover{ color:#fff }
 
-.pagination-container         { display:flex; justify-content:center; align-items:center; margin-top:20px; width:100%; grid-column:1/-1; visibility:hidden; opacity:0; transition:opacity .5s }
-.pagination-nav-button        { width:14px; height:12px; background:transparent; color:#101752; border:none; cursor:pointer; padding:0; margin:0 10px; display:flex; justify-content:center; align-items:center; font-size:14px }
+.pagination-container          { display:flex; justify-content:center; align-items:center; margin-top:20px; width:100%; grid-column:1/-1; visibility:hidden; opacity:0; transition:opacity .5s }
+.pagination-nav-button         { width:14px; height:12px; background:transparent; color:#101752; border:none; cursor:pointer; padding:0; margin:0 10px; display:flex; justify-content:center; align-items:center; font-size:14px }
 .pagination-nav-button:disabled{ opacity:.3; cursor:default }
-.pagination-page-indicator    { font:600 16px Labrada,sans-serif; color:#101752; margin:0 5px }
+.pagination-page-indicator     { font:600 16px Montserrat,sans-serif; color:#101752; margin:0 5px }
 
-.veri-sets-ust-baslik         { font:600 18px Labrada,sans-serif; color:black; margin-bottom:10px }
-.veri-sets-alt-baslik         { font:700 44px/54px Labrada,sans-serif; color:black; margin-bottom:20px }
-.veri-sets-alt-baslik1         { font:700 44px/54px Labrada,sans-serif; color:black; margin-bottom:20px }
+.veri-sets-ust-baslik          { font:600 18px Montserrat,sans-serif; color:black; margin-bottom:10px }
+.veri-sets-alt-baslik          { font:700 44px/54px Montserrat,sans-serif; color:black; margin-bottom:20px }
+.veri-sets-alt-baslik1         { font:700 44px/54px Montserrat,sans-serif; color:black; margin-bottom:20px }
+
 
 /* ——— INTRO BÖLÜMÜ ——— */
-.intro-main                   { background:#EEF1F6; }
-.intro-row                    { display:flex; flex-wrap:wrap; justify-content:center; padding:40px 0 }
-.intro-video-col              { flex:0 0 50%; max-width:50%; padding:20px 50px }
-.intro-text-col               { flex:1 1 50%;  padding:0 }
+.intro-main                    { background:#EEF1F6; }
+.intro-row                     { display:flex; flex-wrap:wrap; justify-content:center; padding:40px 0 }
+.intro-video-col               { flex:0 0 50%; max-width:50%; padding:20px 50px }
+.intro-text-col                { flex:1 1 50%;  padding:0 }
 @media (max-width:991px){
   .intro-video-col, .intro-text-col{ flex:0 0 90%; max-width:90%; padding:20px }
 }
@@ -43,16 +51,123 @@
   transform:translateY(-4px);
   box-shadow:0 32px 64px 0 #00000052;
 }
+
+/* ——— ANASAYFA TEMA KARTLARI (YENİ EKLENEN) ——— */
+.anasayfa-theme-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Kartları ortala */
+    gap: 20px; /* Kartlar arası boşluk */
+    padding: 20px 0;
+}
+
+.anasayfa-theme-card {
+    flex: 1 1 calc(33.333% - 40px); /* Her satırda 3 kart (gap dahil) */
+    max-width: 350px;
+    color: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    text-decoration: none !important; /* Link olduğu için alt çizgiyi kaldır */
+}
+
+@media (max-width: 991px) {
+    .anasayfa-theme-card {
+        flex: 1 1 calc(50% - 40px); /* Tabletlerde 2 kart */
+    }
+}
+
+@media (max-width: 767px) {
+    .anasayfa-theme-card {
+        flex: 1 1 90%; /* Mobil cihazlarda tek kart */
+        max-width: unset; /* Mobil cihazlarda tam genişlik */
+    }
+}
+
+.anasayfa-theme-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+
+.anasayfa-theme-card .card-header .title {
+    font-size: 18px !important; /* Font büyüklüğünü artır */
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+}
+.anasayfa-theme-card .card-header .title .fa {
+    margin-right: 10px;
+    font-size: 24px; /* İkonu biraz büyüt */
+}
+
+.anasayfa-theme-card .card-body .description {
+    font-size: 14px !important;
+    margin: 0;
+    min-height: 40px; /* Açıklama alanı için minimum yükseklik */
+    line-height: 1.5;
+}
+
+.anasayfa-theme-card .card-body .meta-info {
+    font-size: 12px !important;
+    opacity: 0.8;
+    margin-top: 10px;
+}
+
+.anasayfa-theme-card .card-stats {
+    display: flex;
+    justify-content: flex-start;
+    gap: 30px;
+    margin: 20px 0;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.anasayfa-theme-card .stat-item .number {
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    display: block;
+}
+
+.anasayfa-theme-card .stat-item .label {
+    font-size: 14px !important;
+    opacity: 0.8;
+}
+
+.anasayfa-theme-card .card-footer {
+    margin-top: auto;
+}
+
+.anasayfa-theme-card .btn-details {
+    display: block;
+    width: 100%;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600 !important;
+    transition: background-color 0.2s;
+}
+
+.anasayfa-theme-card .btn-details:hover {
+    background-color: white;
+    color: #000;
+}
 </style>
 
 {# ——— HERO BLOĞU ÇIKARILDI; header artık index.html’de ——— #}
 
-<!-- ——— VERİ PAYDAŞLARIMIZ ——— -->
 <div role="main" style="background-color: white; padding: 20px 0 40px 0;">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
-        <h1 style="color: black; font-family: Izmir; font-weight: 700; font-size: 24px; line-height: 58px; text-align: center;">
+        <h1 style="color: black; font-weight: 700 !important; font-size: 24px !important; line-height: 58px !important; text-align: center !important;">
           Veri Paydaşlarımız
         </h1>
 
@@ -75,33 +190,24 @@
   </div>
 </div>
 
-
-
-
-
-<!-- ——— Tematik Verilerimiz——— -->
 <div role="main" style="background-color: white; padding: 20px 0 40px 0;">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
         <div style="text-align:center">
-          <h1 style="color: black; font-family: Izmir; font-weight: 700; font-size: 24px; line-height: 58px; text-align: center;">
+          <h1 style="color: black; font-weight: 700 !important; font-size: 24px !important; line-height: 58px !important; text-align: center !important;">
             TEMATİK VERİLERİMİZ
           </h1>
-          <h1 class="veri-sets-alt-baslik1">7 Ana Tema Altında İzmir’in Tüm Verileri
-
-          </h1>
+          <h1 class="veri-sets-alt-baslik1">6 Ana Tema Altında İzmir’in Tüm Verileri</h1>
         </div>
+        
+        <div id="homepage-theme-grid" class="anasayfa-theme-grid">
+          </div>
       </div>
     </div>
   </div>
 </div>
 
-
-
-
-
-<!-- ——— POPÜLER VERİ SETLERİ ——— -->
 <div role="main" class="pop-main">
   <div class="container">
     <div style="text-align:center">
@@ -118,13 +224,12 @@
   </div>
 </div>
 
-<!-- ——— KATEGORİLER ——— -->
 <div role="main" class="catg-main" style="padding-bottom:60px;">
   <div class="container">
     <div class="category-header" style="text-align:center;margin-bottom:30px">
-      <h3 style="font:600 18px Labrada,sans-serif;margin-bottom:15px;color:black">Veri Kategorilerimiz</h3>
-      <h1 style="font:700 44px/54px Labrada,sans-serif;color:black">
-        Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi&nbsp;İnceleyin…
+      <h3 style="font:600 18px Montserrat,sans-serif !important;margin-bottom:15px;color:black">Veri Kategorilerimiz</h3>
+      <h1 style="font:700 44px/54px Montserrat,sans-serif !important;color:black">
+        Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi İnceleyin…
       </h1>
     </div>
 
@@ -135,7 +240,7 @@
     </div>
   </div>
 </div>
-<!-- ——— INTRO (Video + Metin) ——— -->
+
 <div role="main" class="intro-main">
   <div class="container">
     <div class="intro-row">
@@ -147,10 +252,10 @@
                 referrerpolicy="strict-origin-when-cross-origin"
                 allowfullscreen></iframe>
       </div>
-      <div class="intro-text-col" style="font-family:Labrada">
-        <h3 style="font:600 18px Labrada,sans-serif;margin-bottom:10px;color:black">Data İzmir Platformu Kullanım Rehberi</h3>
-        <h1 style="font:700 44px/54px Labrada,sans-serif;color:black">Data İzmir Platformu Nedir? Kullanım Rehberimiz Yayında!</h1>
-        <p style="font:400 16px/26px Labrada,sans-serif;color:black">
+      <div class="intro-text-col" style="font-family:Montserrat !important">
+        <h3 style="font:600 18px Montserrat,sans-serif !important;margin-bottom:10px;color:black">Data İzmir Platformu Kullanım Rehberi</h3>
+        <h1 style="font:700 44px/54px Montserrat,sans-serif !important;color:black">Data İzmir Platformu Nedir? Kullanım Rehberimiz Yayında!</h1>
+        <p style="font:400 16px/26px Montserrat,sans-serif !important;color:black">
           İzmir Kalkınma Ajansı, sürdürülebilir kalkınma için yerel potansiyeli harekete geçirirken,
           Data İzmir Platformu İzmir'e yönelik kanıta dayalı karar süreçleri için veri sunar.
         </p>
@@ -159,7 +264,6 @@
   </div>
 </div>
 
-<!-- ——— Basitleştirilmiş pagination JS ——— -->
 <script>
 document.addEventListener("DOMContentLoaded",function(){
   const itemsPerPage=4,container=document.getElementById("featured-datasets");
@@ -183,14 +287,78 @@ document.addEventListener("DOMContentLoaded",function(){
     paginationContainer.innerHTML="";
     if(totalPages<=1){paginationContainer.style.display="none";return}
     paginationContainer.style.display="flex";
-    paginationContainer.appendChild(btn("&#8592;",p===1,()=>showPage(p-1)));
+    paginationContainer.appendChild(btn("←",p===1,()=>showPage(p-1)));
     const ind=document.createElement("span");
     ind.className="pagination-page-indicator"; ind.textContent=`${p}/${totalPages}`; paginationContainer.appendChild(ind);
-    paginationContainer.appendChild(btn("&#8594;",p===totalPages,()=>showPage(p+1)));
+    paginationContainer.appendChild(btn("→",p===totalPages,()=>showPage(p+1)));
   }
 
   setTimeout(()=>{showPage(1); container.style.visibility=paginationContainer.style.visibility="visible";
-                   container.style.opacity =paginationContainer.style.opacity  ="1";},500);
+                   container.style.opacity =paginationContainer.style.opacity ="1";},500);
   window.paginationData={showPage,currentPage,totalPages,totalItems};
+});
+
+// Anasayfa Tematik Verilerimiz için JS
+document.addEventListener('DOMContentLoaded', function() {
+    const apiUrl = '/api/3/action/theme_category_list';
+    const homepageThemeGrid = document.getElementById('homepage-theme-grid');
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const options = { day: 'numeric', month: 'short', year: 'numeric' };
+        return new Date(dateString).toLocaleDateString('tr-TR', options);
+    }
+
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) { throw new Error(`Sunucuya ulaşılamadı. Durum: ${response.status}`); }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Sadece ilk 6 temayı al
+                const categories = data.result.slice(0, 6); 
+                if (categories && categories.length > 0) {
+                    homepageThemeGrid.innerHTML = ''; 
+                    categories.forEach(category => {
+                        const card = document.createElement('a'); // Link olarak değişti
+                        card.href = `/temalar/${category.slug}`; // Detay sayfasına yönlendir
+                        card.className = 'anasayfa-theme-card';
+                        card.style.backgroundColor = category.color || '#6c757d'; 
+
+                        const iconHtml = category.icon ? `<i class="fa fa-${category.icon}"></i>` : '';
+
+                        card.innerHTML = `
+                            <div class="card-header">
+                                <h3 class="title">${iconHtml} ${category.name}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="description">${category.description || 'Açıklama mevcut değil.'}</p>
+                                <p class="meta-info">Son Güncelleme: ${formatDate(category.created_at)}</p>
+                            </div>
+                            <div class="card-stats">
+                                <div class="stat-item">
+                                    <span class="number">${category.dataset_count}</span>
+                                    <span class="label">Veri Seti</span>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <span class="btn-details">Detaylı İncele</span>
+                            </div>
+                        `;
+                        
+                        homepageThemeGrid.appendChild(card);
+                    });
+                } else {
+                    homepageThemeGrid.innerHTML = '<p style="text-align:center; color: #555;">Gösterilecek tema bulunamadı.</p>';
+                }
+            } else {
+                homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Bir hata oluştu: ${data.error ? data.error.message : 'API bilinmeyen bir hata döndürdü.'}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Temalar yüklenirken bir hata oluştu: ${error.message}</p>`;
+        });
 });
 </script>

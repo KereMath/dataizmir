@@ -1430,14 +1430,43 @@ def config_option_update(context, data_dict):
 def theme_category_update(context, data_dict):
     """Kategori güncelle"""
     from ckan.model.theme import ThemeCategory
-    from ckan.model import Session
+    from ckan.model import Session, User
     
-    _check_access('sysadmin', context, data_dict)
-    
+    # Yetkilendirme kontrolü
+    user_obj = context.get('auth_user_obj')
+    if not user_obj and context.get('user'):
+        user_obj = Session.query(User).filter_by(name=context['user']).first()
+
+    is_sysadmin = user_obj and user_obj.sysadmin
+    is_theme_authorized_for_update = False
+
     slug = data_dict.get('slug')
     if not slug:
         raise ValidationError('slug parameter required')
+
+    if is_sysadmin:
+        is_theme_authorized_for_update = True
+    elif user_obj:
+        user_id = user_obj.id
+        # Kullanıcının atanmış temalarını ve rollerini çek
+        user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
+        current_user_assignment = next((t for t in user_themes if t['theme_slug'] == slug), None)
+        
+        if current_user_assignment:
+            assigned_role = current_user_assignment['role']
+            if assigned_role in ['admin', 'editor']: # admin veya editor ise izin ver
+                is_theme_authorized_for_update = True
+
+    if not is_theme_authorized_for_update:
+        raise NotAuthorized(_('Bu temayı güncellemek için yetkiniz yok.'))
     
+    # Zorunlu alanları kontrol et (eğer bunlar yoksa ValidationError fırlat)
+    # Bu kısmı _validate ile de yapabilirsiniz.
+    # required_fields = ['name'] # name zorunlu ise
+    # for field in required_fields:
+    #     if field in data_dict and not data_dict.get(field):
+    #         raise ValidationError(f'{field} cannot be empty')
+
     try:
         session = Session()
         
@@ -1472,18 +1501,56 @@ def theme_category_update(context, data_dict):
             raise
         raise ValidationError(f'Error updating category: {str(e)}')
 
+
+
 def remove_dataset_theme(context, data_dict):
     """Dataset'ten tema kaldır"""
     from ckan.model.theme import DatasetThemeAssignment
-    from ckan.model import Session
+    from ckan.model import Session, User
     
     dataset_id = data_dict.get('dataset_id')
     
     if not dataset_id:
         raise ValidationError('dataset_id is required')
+
+    # Yetkilendirme kontrolü
+    user_obj = context.get('auth_user_obj')
+    if not user_obj and context.get('user'):
+        user_obj = Session.query(User).filter_by(name=context['user']).first()
+
+    is_sysadmin = user_obj and user_obj.sysadmin
+    is_theme_authorized_for_removal = False
+
+    # Tema slug'ı doğrudan data_dict'te olmayabilir, mevcut atamadan bulmalıyız
+    current_assignment = Session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
+    theme_slug = current_assignment.theme_slug if current_assignment else None
+
+    if not theme_slug: # Tema ataması yoksa kaldıracak bir şey de yoktur
+        return {'success': True, 'dataset_id': dataset_id, 'message': 'No theme assigned to this dataset to remove.'}
+
+
+    if is_sysadmin:
+        is_theme_authorized_for_removal = True
+    elif user_obj:
+        user_id = user_obj.id
+        user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
+        current_user_assignment = next((t for t in user_themes if t['theme_slug'] == theme_slug), None)
+        if current_user_assignment:
+            assigned_role = current_user_assignment['role']
+            if assigned_role in ['admin', 'editor']: # Temanın admini veya editörü ise izin ver
+                is_theme_authorized_for_removal = True
     
-    # Dataset'e erişim yetkisi kontrol et
-    _check_access('package_update', context, {'id': dataset_id})
+    # Kullanıcının veri setini güncelleme yetkisi olmalı
+    is_package_update_authorized = False
+    try:
+        _check_access('package_update', context, {'id': dataset_id})
+        is_package_update_authorized = True
+    except NotAuthorized:
+        pass
+
+    # Hem tema hem de veri seti için yetki kontrolü
+    if not (is_theme_authorized_for_removal and is_package_update_authorized):
+        raise NotAuthorized(_('Bu temadan veri seti kaldırmak için yetkiniz yok veya veri setini düzenleme yetkiniz yok.'))
     
     try:
         session = Session()
@@ -1497,8 +1564,7 @@ def remove_dataset_theme(context, data_dict):
     except Exception as e:
         session.rollback()
         raise ValidationError(f'Error removing theme: {str(e)}')
-
-
+        
 def update_user_theme_role(context, data_dict):
     """Kullanıcının tema rolünü güncelle"""
     from ckan.model.theme import UserThemeAssignment

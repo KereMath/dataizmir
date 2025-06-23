@@ -1701,26 +1701,52 @@ def theme_category_create(context, data_dict):
 def assign_dataset_theme(context, data_dict):
     """Dataset'e tema ata"""
     from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
-    from ckan.model import Session
+    from ckan.model import Session, User
     
     dataset_id = data_dict.get('dataset_id')
     theme_slug = data_dict.get('theme_slug')
     
     if not dataset_id or not theme_slug:
         raise ValidationError('dataset_id and theme_slug are required')
-    
-    # Dataset'e erişim yetkisi kontrol et
-    _check_access('package_update', context, {'id': dataset_id})
+
+    # Yetkilendirme kontrolü
+    user_obj = context.get('auth_user_obj')
+    if not user_obj and context.get('user'):
+        user_obj = Session.query(User).filter_by(name=context['user']).first()
+
+    is_sysadmin = user_obj and user_obj.sysadmin
+    is_theme_authorized_for_assignment = False
+
+    if is_sysadmin:
+        is_theme_authorized_for_assignment = True
+    elif user_obj:
+        user_id = user_obj.id
+        user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
+        current_user_assignment = next((t for t in user_themes if t['theme_slug'] == theme_slug), None)
+        if current_user_assignment:
+            assigned_role = current_user_assignment['role']
+            if assigned_role in ['admin', 'editor']: # Temanın admini veya editörü ise izin ver
+                is_theme_authorized_for_assignment = True
+
+    # Kullanıcının veri setini güncelleme yetkisi olmalı
+    is_package_update_authorized = False
+    try:
+        _check_access('package_update', context, {'id': dataset_id})
+        is_package_update_authorized = True
+    except NotAuthorized:
+        pass # Yetkisi yoksa NotAuthorized istisnası fırlatılır, biz sadece kontrol ediyoruz
+
+    # Hem tema hem de veri seti için yetki kontrolü
+    if not (is_theme_authorized_for_assignment and is_package_update_authorized):
+        raise NotAuthorized(_('Bu temaya veri seti atamak için yetkiniz yok veya veri setini düzenleme yetkiniz yok.'))
     
     try:
         session = Session()
         
-        # Tema var mı kontrol et
         theme = session.query(ThemeCategory).filter_by(slug=theme_slug).first()
         if not theme:
             raise NotFound('Theme category not found')
         
-        # Mevcut assignment varsa güncelle, yoksa yeni oluştur
         assignment = session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
         
         if assignment:
@@ -1742,9 +1768,6 @@ def assign_dataset_theme(context, data_dict):
         if isinstance(e, (ValidationError, NotFound)):
             raise
         raise ValidationError(f'Error assigning theme: {str(e)}')
-
-
-
 
 def assign_user_to_theme(context, data_dict):
     """Kullanıcıyı temaya ata"""

@@ -1742,3 +1742,67 @@ def assign_dataset_theme(context, data_dict):
         if isinstance(e, (ValidationError, NotFound)):
             raise
         raise ValidationError(f'Error assigning theme: {str(e)}')
+
+
+
+
+def assign_user_to_theme(context, data_dict):
+    """Kullanıcıyı temaya ata"""
+    from ckan.model.theme import ThemeCategory, UserThemeAssignment
+    from ckan.model import Session, User
+    
+    _check_access('sysadmin', context, data_dict)
+    
+    user_id = data_dict.get('user_id')
+    theme_slug = data_dict.get('theme_slug')
+    role = data_dict.get('role', 'member')
+    
+    if not user_id or not theme_slug:
+        raise ValidationError('user_id and theme_slug are required')
+    
+    if role not in ['member', 'editor', 'admin']:
+        raise ValidationError('role must be one of: member, editor, admin')
+    
+    try:
+        session = Session()
+        
+        # Kullanıcı ve tema var mı kontrol et
+        user = session.query(User).filter_by(id=user_id).first()
+        if not user:
+            raise NotFound('User not found')
+            
+        theme = session.query(ThemeCategory).filter_by(slug=theme_slug).first()
+        if not theme:
+            raise NotFound('Theme category not found')
+        
+        # Mevcut assignment varsa güncelle, yoksa yeni oluştur
+        assignment = session.query(UserThemeAssignment).filter_by(
+            user_id=user_id, 
+            theme_slug=theme_slug
+        ).first()
+        
+        if assignment:
+            assignment.role = role
+            assignment.assigned_by = context.get('user')
+        else:
+            assignment = UserThemeAssignment(
+                user_id=user_id,
+                theme_slug=theme_slug,
+                role=role,
+                assigned_by=context.get('user')
+            )
+            session.add(assignment)
+        
+        session.commit()
+        
+        return {
+            'success': True, 
+            'user_id': user_id, 
+            'theme_slug': theme_slug, 
+            'role': role
+        }
+    except Exception as e:
+        session.rollback()
+        if isinstance(e, (ValidationError, NotFound)):
+            raise
+        raise ValidationError(f'Error assigning user to theme: {str(e)}')

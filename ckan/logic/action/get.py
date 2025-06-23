@@ -3778,3 +3778,66 @@ def get_dataset_theme(context, data_dict):
         }
     except Exception as e:
         raise ValidationError(f'Error fetching dataset theme: {str(e)}')
+
+@logic.side_effect_free
+def get_theme_users(context, data_dict):
+    """Bir temanın kullanıcılarını getir"""
+    from ckan.model.theme import UserThemeAssignment
+    from ckan.model import Session, User
+    
+    theme_slug = data_dict.get('theme_slug')
+    if not theme_slug:
+        raise ValidationError('theme_slug is required')
+    
+    try:
+        session = Session()
+        
+        assignments = session.query(UserThemeAssignment).filter_by(theme_slug=theme_slug).all()
+        
+        users = []
+        for assignment in assignments:
+            user = session.query(User).filter_by(id=assignment.user_id).first()
+            if user:
+                users.append({
+                    'user_id': user.id,
+                    'user_name': user.name,
+                    'display_name': user.display_name or user.name,
+                    'role': assignment.role,
+                    'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+                    'assigned_by': assignment.assigned_by
+                })
+        
+        return users
+    except Exception as e:
+        raise ValidationError(f'Error fetching theme users: {str(e)}')
+
+@logic.side_effect_free
+def get_user_themes(context, data_dict):
+    """Bir kullanıcının temalarını getir"""
+    from ckan.model.theme import UserThemeAssignment, ThemeCategory
+    from ckan.model import Session
+    
+    user_id = data_dict.get('user_id')
+    if not user_id:
+        raise ValidationError('user_id is required')
+    
+    try:
+        session = Session()
+        
+        assignments = session.query(UserThemeAssignment).filter_by(user_id=user_id).all()
+        
+        themes = []
+        for assignment in assignments:
+            theme = session.query(ThemeCategory).filter_by(slug=assignment.theme_slug).first()
+            if theme:
+                themes.append({
+                    'theme_slug': theme.slug,
+                    'theme_name': theme.name,
+                    'role': assignment.role,
+                    'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+                    'assigned_by': assignment.assigned_by
+                })
+        
+        return themes
+    except Exception as e:
+        raise ValidationError(f'Error fetching user themes: {str(e)}')

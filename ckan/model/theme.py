@@ -26,6 +26,16 @@ dataset_theme_table = Table(
     Column('assigned_at', DateTime, default=datetime.datetime.utcnow)
 )
 
+# Kullanıcı-tema ilişki tablosu
+user_theme_table = Table(
+    'user_theme_assignments', metadata,
+    Column('user_id', String(100), primary_key=True),
+    Column('theme_slug', String(100), ForeignKey('theme_categories.slug'), primary_key=True),
+    Column('role', String(50), nullable=False),
+    Column('assigned_at', DateTime, default=datetime.datetime.utcnow),
+    Column('assigned_by', String(100))
+)
+
 class ThemeCategory(DomainObject):
     def __init__(self, slug=None, name=None, description=None, color='#333333', icon=None):
         self.slug = slug
@@ -40,6 +50,14 @@ class DatasetThemeAssignment(DomainObject):
         self.theme_slug = theme_slug
         self.assigned_by = assigned_by
 
+class UserThemeAssignment(DomainObject):
+    def __init__(self, user_id=None, theme_slug=None, role='member', assigned_by=None):
+        self.user_id = user_id
+        self.theme_slug = theme_slug
+        self.role = role
+        self.assigned_by = assigned_by
+
 # ORM mapping
 mapper(ThemeCategory, theme_category_table)
 mapper(DatasetThemeAssignment, dataset_theme_table)
+mapper(UserThemeAssignment, user_theme_table)

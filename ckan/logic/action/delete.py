@@ -894,3 +894,35 @@ def theme_category_delete(context, data_dict):
         if isinstance(e, (ValidationError, NotFound)):
             raise
         raise ValidationError(f'Error deleting category: {str(e)}')
+
+
+
+def remove_user_from_theme(context, data_dict):
+    """Kullanıcıyı temadan çıkar"""
+    from ckan.model.theme import UserThemeAssignment
+    from ckan.model import Session
+    
+    _check_access('sysadmin', context, data_dict)
+    
+    user_id = data_dict.get('user_id')
+    theme_slug = data_dict.get('theme_slug')
+    
+    if not user_id or not theme_slug:
+        raise ValidationError('user_id and theme_slug are required')
+    
+    try:
+        session = Session()
+        
+        assignment = session.query(UserThemeAssignment).filter_by(
+            user_id=user_id,
+            theme_slug=theme_slug
+        ).first()
+        
+        if assignment:
+            session.delete(assignment)
+            session.commit()
+        
+        return {'success': True}
+    except Exception as e:
+        session.rollback()
+        raise ValidationError(f'Error removing user from theme: {str(e)}')

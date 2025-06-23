@@ -1497,3 +1497,43 @@ def remove_dataset_theme(context, data_dict):
     except Exception as e:
         session.rollback()
         raise ValidationError(f'Error removing theme: {str(e)}')
+
+
+def update_user_theme_role(context, data_dict):
+    """Kullanıcının tema rolünü güncelle"""
+    from ckan.model.theme import UserThemeAssignment
+    from ckan.model import Session
+    
+    _check_access('sysadmin', context, data_dict)
+    
+    user_id = data_dict.get('user_id')
+    theme_slug = data_dict.get('theme_slug')
+    new_role = data_dict.get('role')
+    
+    if not user_id or not theme_slug or not new_role:
+        raise ValidationError('user_id, theme_slug and role are required')
+    
+    if new_role not in ['member', 'editor', 'admin']:
+        raise ValidationError('role must be one of: member, editor, admin')
+    
+    try:
+        session = Session()
+        
+        assignment = session.query(UserThemeAssignment).filter_by(
+            user_id=user_id,
+            theme_slug=theme_slug
+        ).first()
+        
+        if not assignment:
+            raise NotFound('User theme assignment not found')
+        
+        assignment.role = new_role
+        assignment.assigned_by = context.get('user')
+        session.commit()
+        
+        return {'success': True, 'role': new_role}
+    except Exception as e:
+        session.rollback()
+        if isinstance(e, (ValidationError, NotFound)):
+            raise
+        raise ValidationError(f'Error updating user theme role: {str(e)}')        

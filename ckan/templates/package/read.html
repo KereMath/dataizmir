@@ -344,6 +344,10 @@
 {# --- FÜTÜRİSTİK ÇOKLU EYLEM BUTONLARI --- #}
     <div class="fab-container">
       {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
+        <a href="{{ request.path }}/resource/new" class="groups-fab-futuristic" title="{{ _('Kaynak Ekle') }}">
+            <span class="fab-icon"><i class="fa fa-plus"></i></span> {# Burası güncellendi #}
+            <span class="fab-text">Kaynak Ekle</span>
+        </a>
         <a href="{{ h.url_for('dataset.groups', id=pkg_dict.name) }}" class="groups-fab-futuristic" title="{{ _('Manage Groups') }}">
           <span class="fab-icon"><i class="fa fa-sitemap"></i></span>
           <span class="fab-text">Kategorileri Düzenle</span>
@@ -462,19 +466,54 @@ class ModernDatasetPage {
         if(this.dataset.extras) this.dataset.extras.forEach(x=>pushMeta(x.key,x.value));
         html+='</div>'; el.innerHTML=html;
     }
+    
     renderResourcesContent(){
-        const el=document.getElementById('resources-content');
-        let html='';
-        if(this.dataset.resources?.length){
-          html+='<div class="resource-list">';
-          this.dataset.resources.forEach(r=>{
-            const view=`/dataset/${this.dataset.name}/resource/${r.id}`;
-            html+=`<div class="resource-item"><div class="resource-content-left"><h4 class="resource-title">${r.name||r.id}</h4><span class="resource-format">${r.format||'Bilinmiyor'}</span>${r.description?`<p class="resource-description">${r.description}</p>`:''}</div><div class="resource-actions-right"><a href="${view}" target="_blank">👁️ Görüntüle</a><a href="${r.url}" target="_blank">💾 İndir</a></div></div>`;
-          });
-          html+='</div>';
-        } else { html+='<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti için henüz kaynak eklenmemiş.</p>'; }
-        el.innerHTML=html;
+    const el = document.getElementById('resources-content');
+    let html = '';
+    if (this.dataset.resources?.length) {
+        html += '<div class="resource-list">';
+        this.dataset.resources.forEach(r => {
+            const viewUrl = `/dataset/${this.dataset.name}/resource/${r.id}`;
+            const editUrl = `${viewUrl}/edit`; // Kaynak düzenleme linki
+
+            html += `<div class="resource-item">
+                <div class="resource-content-left">
+                    <h4 class="resource-title">${r.name || r.id}</h4>
+                    <span class="resource-format">${r.format || 'Bilinmiyor'}</span>
+                    ${r.description ? `<p class="resource-description">${r.description}</p>` : ''}
+                </div>
+                <div class="resource-actions-right">
+                    <a href="${viewUrl}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#6c757d;">👁️ Görüntüle</a>
+                    <a href="${r.url}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#667eea;">💾 İndir</a>
+                    
+                    {# Sadece bu kısım Jinja2 tarafından işlenir ve yetki kontrolü yapar #}
+                    {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
+                        <a href="${editUrl}" style="
+                            background-color: #dc3545; /* Kırmızı arka plan */
+                            color: #fff; /* Beyaz metin */
+                            padding: 8px 15px;
+                            border-radius: 5px;
+                            text-decoration: none;
+                            font-weight: 600;
+                            font-size: 13px;
+                            display: flex; /* İkon ve metni hizalamak için */
+                            align-items: center;
+                            gap: 5px; /* İkon ile metin arasına boşluk */
+                        ">
+                            <i class="fa fa-cog" style="color: #fff;"></i>
+                            Düzenle
+                        </a>
+                    {% endif %}
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+    } else {
+        html += '<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti için henüz kaynak eklenmemiş.</p>';
     }
+    el.innerHTML = html;
+}
+    
     renderGroupsContent(){
         const el=document.getElementById('groups-content');
         let html='';

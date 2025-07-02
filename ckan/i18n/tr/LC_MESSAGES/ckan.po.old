@@ -1307,7 +1307,7 @@ msgstr "Veri Setleri"
 #: ckan/templates/package/base.html:16 ckan/views/dataset.py:289
 #: ckan/views/group.py:298 ckan/views/home.py:64
 msgid "Organizations"
-msgstr "Organizasyonlar"
+msgstr "Veri Paydaşları"
 
 #: ckan/templates/group/edit.html:4 ckan/templates/group/edit_base.html:4
 #: ckan/templates/group/index.html:4 ckan/templates/group/index.html:7
@@ -1502,7 +1502,7 @@ msgstr "Silinmiş veri setleri"
 
 #: ckan/templates/admin/snippets/data_type.html:13
 msgid "Deleted organizations"
-msgstr "Silinmiş organizasyonlar"
+msgstr "Silinmiş veri paydaşları"
 
 #: ckan/templates/admin/snippets/data_type.html:15
 msgid "Deleted groups"
@@ -1947,7 +1947,7 @@ msgstr "veri setleri"
 
 #: ckan/templates/home/snippets/stats.html:17
 msgid "organizations"
-msgstr "organizasyonlar"
+msgstr "veri paydaşları"
 
 #: ckan/templates/home/snippets/stats.html:23
 msgid "groups"
@@ -2058,7 +2058,7 @@ msgstr "Organizasyon Ekle"
 
 #: ckan/templates/organization/index.html:20
 msgid "Search organizations..."
-msgstr "Organizasyonları ara..."
+msgstr "Veri Paydaşlarıı ara..."
 
 #: ckan/templates/organization/index.html:29
 msgid "There are currently no organizations for this site"
@@ -2110,15 +2110,15 @@ msgstr ""
 
 #: ckan/templates/organization/snippets/helper.html:16
 msgid "What are Organizations?"
-msgstr "Organizasyonlar nedir?"
+msgstr "Veri Paydaşları nedir?"
 
 #: ckan/templates/organization/snippets/helper.html:20
 msgid "CKAN Organizations are used to create, manage and publish collections of datasets. Users can have different roles within an Organization, depending on their level of authorisation to create, edit and publish."
-msgstr "Veri organizasyonları, verileri oluşturmak, yönetmek ve yayımlamak için kullanılır. Kullanıcılar, organizasyon içinde oluşturma, yönetme ve yayımlama yetkilerine göre farklı rollere sahip olabilirler."
+msgstr "Veri veri paydaşlarıı, verileri oluşturmak, yönetmek ve yayımlamak için kullanılır. Kullanıcılar, organizasyon içinde oluşturma, yönetme ve yayımlama yetkilerine göre farklı rollere sahip olabilirler."
 
 #: ckan/templates/organization/snippets/organization_form.html:12
 msgid "My Organization"
-msgstr "Organizasyonlarım"
+msgstr "Veri Paydaşlarıım"
 
 #: ckan/templates/organization/snippets/organization_form.html:22
 msgid "A little information about my organization..."
@@ -2937,7 +2937,7 @@ msgstr "Veri Setlerim"
 #: ckan/templates/user/dashboard.html:26
 #: ckan/templates/user/dashboard_organizations.html:12
 msgid "My Organizations"
-msgstr "Organizasyonlarım"
+msgstr "Veri Paydaşlarıım"
 
 #: ckan/templates/user/dashboard.html:27
 #: ckan/templates/user/dashboard_groups.html:12
@@ -3280,7 +3280,7 @@ msgstr "Bu veri setlerini temizlemek istediğinize emin misiniz?"
 
 #: ckan/views/admin.py:158
 msgid "Are you sure you want to purge organizations?"
-msgstr "Bu organizasyonları temizlemek istediğinize emin misiniz?"
+msgstr "Bu veri paydaşlarıı temizlemek istediğinize emin misiniz?"
 
 #: ckan/views/admin.py:159
 msgid "Are you sure you want to purge groups?"

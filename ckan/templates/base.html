@@ -1,6 +1,12 @@
 {# Allows the DOCTYPE to be set on a page by page basis #}
 {%- block doctype %}<!DOCTYPE html>{% endblock -%}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
+body, html, * {
+    font-family: 'Montserrat', sans-serif !important;
+}
+</style>
 {# Allows custom attributes to be added to the <html> tag #}
 {%- block htmltag -%}
 {% set lang = h.lang() %}

@@ -47,7 +47,7 @@
   <div id="organizations-wrapper">
     <div id="loading-message" style="text-align: center; padding: 40px;">
       <i class="fa fa-spinner fa-spin fa-2x"></i>
-      <p style="margin-top: 15px; font-size: 16px; color: #555;">Organizasyonlarınız yükleniyor...</p>
+      <p style="margin-top: 15px; font-size: 16px; color: #555;">Veri Paydaşlarıınız yükleniyor...</p>
     </div>
     <div id="organizations-content" style="display: none;">
       <ul class="media-grid" id="organizations-list" style="padding: 0; margin: 0; list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; min-height: 240px; border: none; background: none;">
@@ -190,8 +190,8 @@ document.addEventListener('DOMContentLoaded', function() {
         elements.emptyMessage.style.display = 'block';
       }
     } catch (error) {
-      console.error('Organizasyonlar yüklenirken bir hata oluştu:', error);
-      elements.loading.innerHTML = '<p style="color: red; text-align:center; padding: 40px;">Organizasyonlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>';
+      console.error('Veri Paydaşları yüklenirken bir hata oluştu:', error);
+      elements.loading.innerHTML = '<p style="color: red; text-align:center; padding: 40px;">Veri Paydaşları yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.</p>';
     }
   }
 

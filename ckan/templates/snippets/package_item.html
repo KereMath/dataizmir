@@ -88,6 +88,7 @@
     }
 
     .profile-type {
+      display:none !important;
       font-size: 12px;
       opacity: 0.8;
       text-transform: uppercase;
@@ -355,8 +356,8 @@
     .t-user { width: 8%; } /* Oluşturan */
     .t-groups { width: 10%; } /* Kategoriler */
     .t-tags { width: 10%; } /* Etiketler */
-    .t-theme { width: 10%; } /* Tema - YENİ SÜTUN */
-    .t-upd { width: 8%; } /* Güncellenme */
+    .t-theme { width: 8%; } /* Tema - YENİ SÜTUN */
+    .t-upd { width: 10%; } /* Güncellenme */
     .t-formats { width: 9%; } /* Formatlar */
 
     .empty-cell {
@@ -412,7 +413,7 @@
       </div>
       
       <div class="filter-section">
-        <label>Organizasyonlar</label>
+        <label>Veri Paydaşları</label>
         <div class="multi-select" id="orgSelect"></div>
       </div>
 
@@ -482,7 +483,7 @@
       </table>
     </div>
   </div>
-
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.6.0/tinycolor.min.js"></script>
 <script>
     // --- Değişkenler ---
     var allDatasets = [];
@@ -560,35 +561,41 @@
 
     // YENİ: Tema Profil Kartı Render Fonksiyonu
     function renderThemeProfileCard(themeData) {
-        var profileCard = document.getElementById('profileCard');
-        if (!themeData) {
-            profileCard.style.display = 'none';
-            return;
-        }
-        var html = '';
-        profileCard.className = 'profile-card theme-profile'; // Tema sınıfı eklendi
-        html += '<div class="profile-header">';
-        if (themeData.icon) {
-          html += `<div class="profile-image" style="background-color: ${themeData.color || '#667eea'};"><i class="fa fa-${themeData.icon}"></i></div>`;
-        } else {
-            html += '<div class="profile-image"></div>';
-        }
-        html += '<div>';
-        html += '<h3 class="profile-title">' + (themeData.name || themeData.slug || '') + '</h3>';
-        html += '<div class="profile-type">Tema Kategorisi</div>'; // Tür belirtildi
-        html += '</div></div>';
-        html += '<div class="profile-info">';
-        if (themeData.dataset_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + themeData.dataset_count + '</span></div>';
-        if (themeData.created_at) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(themeData.created_at).toLocaleDateString('tr-TR') + '</span></div>';
-        html += '</div>';
-        var description = themeData.description;
-        if (description) {
-            html += '<div class="profile-description">' + description + '</div>';
-        }
-        profileCard.innerHTML = html;
-        profileCard.style.display = 'block';
+    var profileCard = document.getElementById('profileCard');
+    if (!themeData) {
+        profileCard.style.display = 'none';
+        return;
     }
+    
+    // Tema rengini al veya varsayılan bir renk kullan
+    const themeColor = themeData.color || '#00BCD4'; // Eğer tema rengi yoksa varsayılan cyan tonu
+    
+    profileCard.className = 'profile-card theme-profile'; 
+    // Arka plan stilini dinamik olarak ayarla
+    profileCard.style.background = `linear-gradient(135deg, ${themeColor} 0%, ${tinycolor(themeColor).darken(10).toString()} 100%)`; // Ana renk ve %10 koyulaştırılmış hali
 
+    var html = '';
+    html += '<div class="profile-header">';
+    if (themeData.icon) {
+      html += `<div class="profile-image"><i class="fa fa-${themeData.icon}"></i></div>`; // İkonun arka plan rengini CSS'ten alacak
+    } else {
+        html += '<div class="profile-image"></div>';
+    }
+    html += '<div>';
+    html += '<h3 class="profile-title">' + (themeData.name || themeData.slug || '') + '</h3>';
+    html += '<div class="profile-type">Tema Kategorisi</div>'; 
+    html += '</div></div>';
+    html += '<div class="profile-info">';
+    if (themeData.dataset_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + themeData.dataset_count + '</span></div>';
+    if (themeData.created_at) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(themeData.created_at).toLocaleDateString('tr-TR') + '</span></div>';
+    html += '</div>';
+    var description = themeData.description;
+    if (description) {
+        html += '<div class="profile-description">' + description + '</div>';
+    }
+    profileCard.innerHTML = html;
+    profileCard.style.display = 'block';
+}
 
     function renderProfileCard(profileData, profileType) {
       var profileCard = document.getElementById('profileCard');
@@ -782,34 +789,61 @@
         return (dateSort === 'desc' ? tb - ta : ta - tb);
       });
 
-      currentPage = 1;
     }
 
     function renderPagination() {
-        var totalItems = filteredDatasets.length;
-        var totalPages = Math.ceil(totalItems / itemsPerPage);
-        var startItem = (currentPage - 1) * itemsPerPage + 1;
-        var endItem = Math.min(currentPage * itemsPerPage, totalItems);
-        document.getElementById('paginationInfo').textContent = totalItems === 0 ? "Gösterilecek kayıt yok" : `${startItem}-${endItem} / ${totalItems} kayıt`;
-        var buttonsContainer = document.getElementById('paginationButtons');
-        buttonsContainer.innerHTML = '';
-        if (totalPages <= 1) return;
-        var createBtn = (text, page, isDisabled = false, isActive = false) => {
-            const btn = document.createElement('button');
-            btn.className = 'pagination-btn' + (isActive ? ' active' : '');
-            btn.textContent = text;
-            btn.disabled = isDisabled;
-            if (page) btn.onclick = () => { currentPage = page; renderTable(); };
-            return btn;
-        };
-        buttonsContainer.appendChild(createBtn('‹ Önceki', currentPage - 1, currentPage === 1));
-        var startPage = Math.max(1, currentPage - 2), endPage = Math.min(totalPages, currentPage + 2);
-        if (startPage > 1) { buttonsContainer.appendChild(createBtn('1', 1)); if (startPage > 2) buttonsContainer.appendChild(createBtn('...', null, true)); }
-        for (let i = startPage; i <= endPage; i++) buttonsContainer.appendChild(createBtn(i, i, false, i === currentPage));
-        if (endPage < totalPages) { if (endPage < totalPages - 1) buttonsContainer.appendChild(createBtn('...', null, true)); buttonsContainer.appendChild(createBtn(totalPages, totalPages)); }
-        buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
+    var totalItems = filteredDatasets.length;
+    var totalPages = Math.ceil(totalItems / itemsPerPage);
+    var startItem = (currentPage - 1) * itemsPerPage + 1;
+    var endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    document.getElementById('paginationInfo').textContent = totalItems === 0 ? "Gösterilecek kayıt yok" : `${startItem}-${endItem} / ${totalItems} kayıt`;
+    var buttonsContainer = document.getElementById('paginationButtons');
+    buttonsContainer.innerHTML = '';
+    if (totalPages <= 1) return;
+
+    var createBtn = (text, page, isDisabled = false, isActive = false) => {
+        const btn = document.createElement('button');
+        btn.className = 'pagination-btn' + (isActive ? ' active' : '');
+        btn.textContent = text;
+        btn.disabled = isDisabled;
+        // Önemli: Burada doğrudan bir anonim fonksiyon ile currentPage'i güncelleyip renderTable'ı çağırıyoruz.
+        if (page !== null) { // Eğer sayfa numarası varsa onclick ekle
+            btn.onclick = () => {
+                currentPage = page;
+                renderTable();
+            };
+        }
+        return btn;
+    };
+
+    // Önceki butonu
+    buttonsContainer.appendChild(createBtn('‹ Önceki', currentPage - 1, currentPage === 1));
+
+    // Sayfa numarası butonları
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, currentPage + 2);
+
+    if (startPage > 1) {
+        buttonsContainer.appendChild(createBtn('1', 1));
+        if (startPage > 2) {
+            buttonsContainer.appendChild(createBtn('...', null, true)); // ... butonu tıklanabilir olmamalı
+        }
     }
-    
+
+    for (let i = startPage; i <= endPage; i++) {
+        buttonsContainer.appendChild(createBtn(i, i, false, i === currentPage));
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            buttonsContainer.appendChild(createBtn('...', null, true)); // ... butonu tıklanabilir olmamalı
+        }
+        buttonsContainer.appendChild(createBtn(totalPages, totalPages));
+    }
+
+    // Sonraki butonu
+    buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
+}
     function renderTable() {
       filterDatasets();
       renderPagination();

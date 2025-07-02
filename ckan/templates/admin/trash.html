@@ -211,7 +211,7 @@
             <h3>Silinmiş Gruplar</h3>
           {% else %} 
             <i class="fa fa-building-o"></i>
-            <h3>Silinmiş Organizasyonlar</h3>
+            <h3>Silinmiş Veri Paydaşları</h3>
           {% endif %}
         </div>
 
@@ -242,7 +242,7 @@
                  class="btn btn-danger"
                  data-module="confirm-action"
                  data-module-with-data=true
-                 data-module-content="{% if ent_type == 'package' %}Tüm silinmiş veri setlerini kalıcı olarak temizlemek istediğinizden emin misiniz?{% elif ent_type == 'organization' %}Tüm silinmiş organizasyonları kalıcı olarak temizlemek istediğinizden emin misiniz?{% elif ent_type == 'group' %}Tüm silinmiş grupları kalıcı olarak temizlemek istediğinizden emin misiniz?{% endif %}">
+                 data-module-content="{% if ent_type == 'package' %}Tüm silinmiş veri setlerini kalıcı olarak temizlemek istediğinizden emin misiniz?{% elif ent_type == 'organization' %}Tüm silinmiş veri paydaşlarıı kalıcı olarak temizlemek istediğinizden emin misiniz?{% elif ent_type == 'group' %}Tüm silinmiş grupları kalıcı olarak temizlemek istediğinizden emin misiniz?{% endif %}">
                 <i class="fa fa-trash"></i>
                 TEMİZLE
               </a>
@@ -264,7 +264,7 @@
   </h2>
   <div class="module-content">
     <p>
-      Silinmiş veri setlerini, organizasyonları veya grupları kalıcı ve geri dönüşümsüz olarak temizleyin.
+      Silinmiş veri setlerini, veri paydaşlarıı veya grupları kalıcı ve geri dönüşümsüz olarak temizleyin.
     </p>
     <p style="margin-top: 1rem;">
       <i class="fa fa-warning"></i> <strong>Dikkat:</strong> Bu işlemler geri alınamaz!

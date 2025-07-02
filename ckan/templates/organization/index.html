@@ -88,7 +88,7 @@
             loadAllOrganizations();
         });
 
-        // API'den tüm organizasyonları çek
+        // API'den tüm veri paydaşlarıı çek
         async function loadAllOrganizations() {
             try {
                 const response = await fetch('/api/3/action/organization_list?all_fields=true&include_extras=true&limit=1000');
@@ -193,7 +193,7 @@
             updateCount();
         }
 
-        // Organizasyonları render et
+        // Veri Paydaşlarıı render et
         function renderOrganizations() {
             const container = document.getElementById('organizations-list');
             if (!container) return;

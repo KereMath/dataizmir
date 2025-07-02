@@ -163,41 +163,16 @@ body, html, * {
 
 {# ——— HERO BLOĞU ÇIKARILDI; header artık index.html’de ——— #}
 
-<div role="main" style="background-color: white; padding: 20px 0 40px 0;">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <h1 style="color: black; font-weight: 700 !important; font-size: 24px !important; line-height: 58px !important; text-align: center !important;">
-          Veri Paydaşlarımız
-        </h1>
 
-        <div class="paydas-logos-container" style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:20px;">
-          {% set all_organizations = h.organizations_available('read', True) %}
-          {% set sorted_organizations = all_organizations|sort(attribute='package_count', reverse=True) %}
-          {% set top_organizations = sorted_organizations[:5] %}
-          {% for organization in top_organizations %}
-            {% set url = h.url_for('organization.read', id=organization.name) %}
-            <a href="{{ url }}" class="paydas-logo" style="display:block;margin:0 15px 25px;text-align:center;text-decoration:none;width:150px;">
-              <img src="{{ organization.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}"
-                   alt="{{ organization.display_name }}"
-                   title="{{ organization.display_name }}"
-                   style="max-width:120px;max-height:80px;border-radius:5px;">
-            </a>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div role="main" style="background-color: white; padding: 20px 0 40px 0;">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
         <div style="text-align:center">
-          <h1 style="color: black; font-weight: 700 !important; font-size: 24px !important; line-height: 58px !important; text-align: center !important;">
+          <!-- <h1 style="color: black; font-weight: 700 !important; font-size: 24px !important; line-height: 58px !important; text-align: center !important;">
             TEMATİK VERİLERİMİZ
-          </h1>
+          </h1> -->
           <h1 class="veri-sets-alt-baslik1">6 Ana Tema Altında İzmir’in Tüm Verileri</h1>
         </div>
         
@@ -211,7 +186,7 @@ body, html, * {
 <div role="main" class="pop-main">
   <div class="container">
     <div style="text-align:center">
-      <h3 class="veri-sets-ust-baslik">Veri Setlerimiz</h3>
+      <!-- <h3 class="veri-sets-ust-baslik">Veri Setlerimiz</h3> -->
       <h1 class="veri-sets-alt-baslik">Öne Çıkan Veri Setlerimiz ile Data İzmir Platformu</h1>
     </div>
 
@@ -241,7 +216,7 @@ body, html, * {
   </div>
 </div>
 
-<div role="main" class="intro-main">
+<!-- <div role="main" class="intro-main">
   <div class="container">
     <div class="intro-row">
       <div class="intro-video-col">
@@ -262,8 +237,34 @@ body, html, * {
       </div>
     </div>
   </div>
-</div>
+</div> -->
 
+<div role="main" style="background-color: white; padding: 20px 0 40px 0;">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1 style="color: black; font-weight: 700 !important; font-size: 24px !important; line-height: 58px !important; text-align: center !important;">
+          Veri Paydaşlarımız
+        </h1>
+
+        <div class="paydas-logos-container" style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:20px;">
+          {% set all_organizations = h.organizations_available('read', True) %}
+          {% set sorted_organizations = all_organizations|sort(attribute='package_count', reverse=True) %}
+          {% set top_organizations = sorted_organizations[:5] %}
+          {% for organization in top_organizations %}
+            {% set url = h.url_for('organization.read', id=organization.name) %}
+            <a href="{{ url }}" class="paydas-logo" style="display:block;margin:0 15px 25px;text-align:center;text-decoration:none;width:150px;">
+              <img src="{{ organization.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}"
+                   alt="{{ organization.display_name }}"
+                   title="{{ organization.display_name }}"
+                   style="max-width:120px;max-height:80px;border-radius:5px;">
+            </a>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 <script>
 document.addEventListener("DOMContentLoaded",function(){
   const itemsPerPage=4,container=document.getElementById("featured-datasets");

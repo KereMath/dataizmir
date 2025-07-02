@@ -52,9 +52,9 @@
         
         <div style="flex: 1; min-width: 120px;">
           <select class="form-control" id="limit-select" style="border: 2px solid #e5e7eb; border-radius: 6px;">
-            <option value="10" selected>10'lu</option>
+            <option value="10">10'lu</option>
             <option value="20">20'li</option>
-            <option value="50">50'li</option>
+            <option value="50" selected>50'li</option>
           </select>
         </div>
       </div>
@@ -84,7 +84,7 @@
             let allGroups = [];
             let filteredGroups = [];
             let currentPage = 1;
-            let itemsPerPage = 10;
+            let itemsPerPage = 50;
 
             const elements = {
                 loading: document.getElementById('loading-message'),

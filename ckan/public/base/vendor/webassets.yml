@@ -1,3 +1,5 @@
+# Dosya: /usr/lib/ckan/default/src/ckan/ckan/public/base/vendor/webassets.yml
+
 select2-css:
   output: vendor/%(version)s_select2.css
   filters: cssrewrite
@@ -40,7 +42,7 @@ bootstrap:
   output: vendor/%(version)s_bootstrap.js
   extra:
     preload:
-      - vendor/font-awesome
+      - vendor/font-awesome # BURASI ZATEN DOĞRU, FONT AWESOME'I ÖN YÜKLÜYOR
       - vendor/jquery
   contents:
     - bootstrap/js/bootstrap.js
@@ -67,3 +69,8 @@ reorder:
     - jquery.ui.widget.js
     - jquery.ui.mouse.js
     - jquery.ui.sortable.js
+
+# Bu dosyanın sonuna CKAN'ın ana webassets.yml'sinden kopyalaman gereken bir kısım daha var.
+# Bu dosya (public/base/vendor/webassets.yml) genellikle sadece vendor varlıklarını tanımlar.
+# Ana tema CSS'ini tanımlayan webassets.yml (genellikle public/base/webassets.yml) dosyasını da kontrol etmeliyiz.
+# Eğer o dosyayı bulamıyorsan, bu dosyayı olduğu gibi bırak ve bir sonraki adıma geç.

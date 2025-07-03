@@ -15,7 +15,8 @@ body, html, * {
 
   {# Allows custom attributes to be added to the <head> tag #}
   <head{% block headtag %}{% endblock %}>
-<link rel="stylesheet" href="/static/base/vendor/font-awesome/css/font-awesome.css" />
+{# BURADAKİ MANUEL FONT AWESOME LİNKİNİ SİLİYORUZ. CKAN'IN WEBASSETS'İ YÜKLEYECEK. #}
+{# <link rel="stylesheet" href="/static/base/vendor/font-awesome/css/font-awesome.css" /> #}
   {#
     Add custom meta tags to the page. Call super() to get the default tags
     such as charset, viewport and generator.
@@ -74,7 +75,7 @@ body, html, * {
     {%- block styles %}
       {# TODO: store just name of asset instead of path to it. #}
       {% set theme = h.get_rtl_theme() if h.is_rtl_language() else g.theme %}
-      {% asset theme %}
+      {% asset theme %} {# BU SATIR, webassets.yml'deki tanımlara göre CSS'leri yükleyecek #}
     {% endblock %}
 
     {% block head_extras %}
@@ -121,7 +122,7 @@ body, html, * {
     {% block body_extras -%}
       {# defined in the config.ini under "ckan.template_footer_end" #}
       {{ g.template_footer_end | safe }}
-    {%- endblock %}
+    {% endblock %}
 
     {# render all assets included in scripts block and everywhere else #}
     {# make sure there are no calls to `asset` tag after this point #}

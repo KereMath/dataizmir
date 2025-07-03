@@ -53,20 +53,20 @@ const moment = () =>
     dest(__dirname + "/ckan/public/base/vendor")
   );
 
-const fontAwesomeCss = () =>
-  src(__dirname + "/node_modules/font-awesome/css/font-awesome.css").pipe(
-    dest(__dirname + "/ckan/public/base/vendor/font-awesome/css")
-  );
+// const fontAwesomeCss = () =>
+//   src(__dirname + "/node_modules/font-awesome/css/font-awesome.css").pipe(
+//     dest(__dirname + "/ckan/public/base/vendor/font-awesome/css")
+//   );
 
-const fontAwesomeFonts = () =>
-  src(__dirname + "/node_modules/font-awesome/fonts/*").pipe(
-    dest(__dirname + "/ckan/public/base/vendor/font-awesome/fonts")
-  );
+// const fontAwesomeFonts = () =>
+//   src(__dirname + "/node_modules/font-awesome/fonts/*").pipe(
+//     dest(__dirname + "/ckan/public/base/vendor/font-awesome/fonts")
+//   );
 
-const fontAwesomeLess = () =>
-  src(__dirname + "/node_modules/font-awesome/less/*").pipe(
-    dest(__dirname + "/ckan/public/base/vendor/font-awesome/less")
-  );
+// const fontAwesomeLess = () =>
+//   src(__dirname + "/node_modules/font-awesome/less/*").pipe(
+//     dest(__dirname + "/ckan/public/base/vendor/font-awesome/less")
+//   );
 
 const jQueryFileUpload = () =>
   src(__dirname + "/node_modules/blueimp-file-upload/js/*.js").pipe(

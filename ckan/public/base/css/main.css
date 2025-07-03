@@ -5,6 +5,7 @@
  */
 /*! normalize.css v3.0.3 | MIT License | github.com/necolas/normalize.css */
 /* tuFGe2ZbspXdfN7ZWJSMqB3Dm/rOf4VSeiXh0zxILNQyXsTJ4L03Oo/H5uXWpVFmAE7Ah+F4POvMLFQIER4N4t3F3lbMXNpC+1egSDCCFEk= */
+@import url("../vendor/font-awesome/css/font-awesome.css");
 html {
   font-family: sans-serif;
   -ms-text-size-adjust: 100%;

@@ -10,7 +10,7 @@
     transition: all 0.3s ease-in-out; /* Yumuşak geçiş için */
   } 
   /* Tüm kartı tıklanabilir yapmak için eklenen stil */
-  .card-grid-item a {display:block; width:100%; height:100%; text-decoration:none; color:inherit;}
+  .card-grid-item a {display:block; width:100%; height:100%; text-decoration:none; color:#0a1458 !important;}
   .card-grid-item a .card-content {display:flex; flex-direction:column; justify-content:space-between; height:100%; padding:15px;} /* İçerik için dolgu ve düzen */
 
   /* Yeni Hover Efekti: Kutucuğun üzerine gelince */
@@ -20,14 +20,20 @@
     border-color: #0a1458; /* Kenarlık rengi değişimi */
   }
   .card.nohover:hover .group-title {
-    color: #0a1458 !important; /* Başlık rengi değişimi */
+    color: black !important; /* Başlık rengi değişimi */
   }
   .card.nohover:hover .btn1-inceleyin span {
-    color: #0a1458 !important; /* Buton metin rengi değişimi */
+    color: black !important; /* Buton metin rengi değişimi */
   }
-  .card.nohover:hover .btn1-inceleyin svg path {
-    stroke: #0a1458 !important; /* Buton oku rengi değişimi */
-  }
+.card .btn1-inceleyin svg path {
+  stroke: black !important; /* Buton oku rengi mor olsun */
+  opacity: 1 !important;    /* Her zaman görünür olsun */
+}
+
+/* Hover durumundaki değişikliği kaldırmak için bu kuralı silebilirsiniz veya aşağıdaki gibi ayarlayabilirsiniz: */
+.card.nohover:hover .btn1-inceleyin svg path {
+  stroke: black !important; /* Hover'da da mor kalsın */
+}
 
   /* Başlık (mavi) */
   .group-title{font-family:Labrada;font-weight:600;font-size:24px;line-height:26px;text-align:center;margin-top:5px;color:#0a1458; transition: color 0.3s ease-in-out;}
@@ -43,11 +49,10 @@
   }
   /* Butonun kendi hover efekti (sadeleştirildi) */
   .btn1-inceleyin:hover{
-    background:#e0e0e0 !important; /* Hafif gri arka plan */
-    color:#000 !important; /* Yazı siyah kalsın */
+color:#000 !important;
   }
   /* Ok her durumda siyah (kart hoverından etkilenmez) */
-  .btn1-inceleyin svg path, .btn1-inceleyin:hover svg path{stroke:#000 !important;}
+  .btn1-inceleyin svg path, .btn1-inceleyin:hover svg path{color:#000 !important;}
 </style>
 
 {% set groups = h.get_featured_groups(count=30) %}

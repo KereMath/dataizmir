@@ -349,16 +349,17 @@
       text-decoration: underline;
     }
     
-    /* Sütun Genişlikleri */
-    .t-title { width: 15%; } /* Başlık */
-    .t-desc { width: 20%; } /* Açıklama */
-    .t-org { width: 10%; } /* Organizasyon */
-    .t-user { width: 8%; } /* Oluşturan */
-    .t-groups { width: 10%; } /* Kategoriler */
-    .t-tags { width: 10%; } /* Etiketler */
-    .t-theme { width: 8%; } /* Tema - YENİ SÜTUN */
-    .t-upd { width: 10%; } /* Güncellenme */
-    .t-formats { width: 9%; } /* Formatlar */
+    /* Sütun Genişlikleri - İşlemler sütunu eklendi */
+    .t-title { width: 14%; } /* Başlık */
+    .t-desc { width: 18%; } /* Açıklama */
+    .t-org { width: 9%; } /* Organizasyon */
+    .t-user { width: 7%; } /* Oluşturan */
+    .t-groups { width: 9%; } /* Kategoriler */
+    .t-tags { width: 9%; } /* Etiketler */
+    .t-theme { width: 7%; } /* Tema */
+    .t-upd { width: 9%; } /* Güncellenme */
+    .t-formats { width: 8%; } /* Formatlar */
+    .t-actions { width: 10%; } /* İşlemler - YENİ SÜTUN */
 
     .empty-cell {
       color: #9b98a7;
@@ -394,6 +395,48 @@
     .fmt-txt { background-color: #fafafa; color: #616161; }
     .fmt-other { background-color: #eceff1; color: #455a64; }
 
+    /* İşlemler sütunu buton stilleri */
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .edit-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .edit-btn:hover {
+      background-color: #0056b3;
+      color: white;
+      text-decoration: none;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+
     /* Kopyalanan elementleri gizle */
     .duplicate-hidden {
       display: none !important;
@@ -428,7 +471,9 @@
       </div>
 
       <div class="filter-section">
-        <label>Temalar</label> <div class="multi-select" id="themeSelect"></div> </div>
+        <label>Temalar</label> 
+        <div class="multi-select" id="themeSelect"></div> 
+      </div>
       
       <div class="filter-section">
         <label>Kullanıcılar</label>
@@ -443,10 +488,12 @@
       </div>
       
       <div class="filter-section">
-        <label>Güncelleme Tarihi</label>
-        <select id="sortDate">
-          <option value="desc">En Yeni Önce</option>
-          <option value="asc">En Eski Önce</option>
+        <label>Sıralama</label>
+        <select id="sortOrder">
+          <option value="date_desc">En Yeni Önce</option>
+          <option value="date_asc">En Eski Önce</option>
+          <option value="title_asc">A-Z (Alfabetik)</option>
+          <option value="title_desc">Z-A (Alfabetik)</option>
         </select>
       </div>
     </div>
@@ -475,8 +522,10 @@
             <th class="t-user">Oluşturan</th>
             <th class="t-groups">Kategoriler</th>
             <th class="t-tags">Etiketler</th>
-            <th class="t-theme">Tema</th> <th class="t-upd">Güncellenme</th>
+            <th class="t-theme">Tema</th>
+            <th class="t-upd">Güncellenme</th>
             <th class="t-formats">Formatlar</th>
+            <th class="t-actions">İşlemler</th>
           </tr>
         </thead>
         <tbody id="dataset-table-body"></tbody>
@@ -750,7 +799,7 @@
     
     function filterDatasets() {
       var searchVal = document.getElementById("searchTitle").value.trim().toLowerCase();
-      var dateSort = document.getElementById("sortDate").value;
+      var sortOrder = document.getElementById("sortOrder").value;
 
       filteredDatasets = allDatasets.filter(function(pkg) {
         if (searchVal && !(pkg.title || pkg.name || '').toLowerCase().includes(searchVal)) return false;
@@ -783,10 +832,28 @@
         return true;
       });
 
+      // Geliştirilmiş sıralama mantığı
       filteredDatasets.sort(function(a, b) {
-        var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
-        var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
-        return (dateSort === 'desc' ? tb - ta : ta - tb);
+        switch(sortOrder) {
+          case 'date_desc':
+            var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
+            var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
+            return tb - ta;
+          case 'date_asc':
+            var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
+            var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
+            return ta - tb;
+          case 'title_asc':
+            var titleA = (a.title || a.name || '').toLowerCase();
+            var titleB = (b.title || b.name || '').toLowerCase();
+            return titleA.localeCompare(titleB, 'tr');
+          case 'title_desc':
+            var titleA = (a.title || a.name || '').toLowerCase();
+            var titleB = (b.title || b.name || '').toLowerCase();
+            return titleB.localeCompare(titleA, 'tr');
+          default:
+            return 0;
+        }
       });
 
     }
@@ -844,6 +911,12 @@
     // Sonraki butonu
     buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
 }
+
+    // YENİ: Silme onayı için fonksiyon
+    function confirmDelete(datasetName) {
+      return confirm(`"${datasetName}" veri setini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!`);
+    }
+
     function renderTable() {
       filterDatasets();
       renderPagination();
@@ -863,6 +936,20 @@
         var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
         var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
         
+        // YENİ: İşlemler sütunu
+        var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
+        var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
+        var actions = `
+          <div class="action-buttons">
+            <a href="${editLink}" class="action-btn edit-btn" title="Düzenle">
+              ✏️ Düzenle
+            </a>
+            <a href="${deleteLink}" class="action-btn delete-btn" title="Sil" onclick="return confirmDelete('${title.replace(/'/g, "\\'")}')">
+              🗑️ Sil
+            </a>
+          </div>
+        `;
+        
         return `<tr>
           <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
           <td class="t-desc">${desc}</td>
@@ -870,13 +957,15 @@
           <td class="t-user">${user}</td>
           <td class="t-groups">${groups}</td>
           <td class="t-tags">${tags}</td>
-          <td class="t-theme">${theme}</td> <td class="t-upd">${upd}</td>
+          <td class="t-theme">${theme}</td>
+          <td class="t-upd">${upd}</td>
           <td class="t-formats">${formats}</td>
+          <td class="t-actions">${actions}</td>
         </tr>`;
       }).join('');
       
-      // colspan değeri 8'den 9'a çıkarıldı (yeni tema sütunu için)
-      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="9" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
+      // colspan değeri 9'dan 10'a çıkarıldı (yeni işlemler sütunu için)
+      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="10" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
     }
     
     async function filterByUserPath() {
@@ -1028,7 +1117,7 @@
 
             // Olay dinleyicilerini ata
             document.getElementById("searchTitle").oninput = renderTable;
-            document.getElementById("sortDate").onchange = renderTable;
+            document.getElementById("sortOrder").onchange = renderTable; // sortDate'ten sortOrder'a değişti
             document.getElementById("itemsPerPage").onchange = function() {
                 itemsPerPage = parseInt(this.value);
                 currentPage = 1;
@@ -1059,7 +1148,7 @@
 
         } catch (error) {
             console.error('Veri yüklenirken hata:', error);
-            document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="9" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+            document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="10" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
         }
     }
 

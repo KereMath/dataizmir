@@ -1,29 +1,686 @@
 {% import 'macros/form.html' as form %}
 {% extends "package/resource_edit_base.html" %}
 
-{% block subtitle %}{{ _('View') }} {{ g.template_title_delimiter }} {{ h.resource_display_name(res) }}{% endblock %}
+{% block head_extras %}
+  {{ super() }}
+  <style>
+    .views-management-container {
+      background: var(--glass-bg);
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--glass-border);
+      border-radius: 25px;
+      padding: 0;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
-{% block page_primary_action %}
-  <div class="dropdown btn-group">
-    <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#">
-      <i class="fa fa-plus-square"></i>
-      {{ _('New view') }}
-      <span class="caret"></span>
-    </a>
-    <ul class="dropdown-menu">
-      {% for option in h.get_allowed_view_types(resource, pkg_dict)  %}
-        {% set url = h.url_for(pkg_dict.type ~ '_resource.edit_view', id=pkg_dict.name, resource_id=resource.id, view_type=option[0]) %}
-        <li><a href="{{ url }}"><i class="fa fa-{{ option[2] }}"></i> {{ option[1] }}</a></li>
-      {% endfor %}
-    </ul>
-  </div>
-  {% asset 'vendor/reorder' %}
+    .views-header {
+      background: var(--primary-gradient);
+      padding: 2rem;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .views-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: shimmer 4s infinite;
+    }
+
+    .views-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 2;
+    }
+
+    .views-subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+      font-size: 1.1rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .add-view-section {
+      padding: 2rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .add-view-info {
+      flex: 1;
+      min-width: 250px;
+    }
+
+    .add-view-info h3 {
+      color: white;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+    }
+
+    .add-view-info p {
+      color: rgba(255, 255, 255, 0.8);
+      margin: 0;
+      line-height: 1.5;
+    }
+
+    .add-view-dropdown {
+      position: relative;
+      display: inline-block;
+    }
+
+    .add-view-btn {
+      background: var(--secondary-gradient);
+      border: none;
+      border-radius: 20px;
+      padding: 1rem 2rem;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 1rem;
+      box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+      text-decoration: none;
+    }
+
+    .add-view-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(79, 172, 254, 0.6);
+      color: white;
+      text-decoration: none;
+    }
+
+    .view-types-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 280px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      z-index: 1000;
+      margin-top: 1rem;
+      overflow: hidden;
+      animation: dropdownSlide 0.4s ease-out;
+    }
+
+    .add-view-dropdown:hover .view-types-dropdown,
+    .add-view-dropdown.show .view-types-dropdown {
+      display: block;
+    }
+
+    .view-type-option {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.2rem 1.5rem;
+      color: white;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+
+    .view-type-option:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      text-decoration: none;
+      transform: translateX(5px);
+    }
+
+    .view-type-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      background: var(--primary-gradient);
+      flex-shrink: 0;
+    }
+
+    .view-type-info h4 {
+      margin: 0 0 0.3rem 0;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .view-type-info p {
+      margin: 0;
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .views-list-section {
+      padding: 2rem;
+    }
+
+    .views-list-modern {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    .view-item-modern {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding: 1.5rem;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+      cursor: move;
+    }
+
+    .view-item-modern::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transition: left 0.6s ease;
+    }
+
+    .view-item-modern:hover::before {
+      left: 100%;
+    }
+
+    .view-item-modern:hover {
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+      border-color: rgba(102, 126, 234, 0.5);
+    }
+
+    .view-item-modern.dragging {
+      opacity: 0.7;
+      transform: rotate(5deg);
+      z-index: 1000;
+    }
+
+    .view-item-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .view-icon-container {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.3rem;
+      background: var(--primary-gradient);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      flex-shrink: 0;
+    }
+
+    .view-info {
+      flex: 1;
+    }
+
+    .view-title {
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin: 0 0 0.3rem 0;
+    }
+
+    .view-meta {
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .view-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .view-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .view-action-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 0.6rem 1rem;
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.85rem;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .view-action-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+      color: white;
+      text-decoration: none;
+    }
+
+    .view-action-btn.primary {
+      background: var(--secondary-gradient);
+      border-color: transparent;
+    }
+
+    .view-action-btn.danger {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+      border-color: transparent;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      opacity: 0.3;
+    }
+
+    .empty-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: white;
+    }
+
+    .empty-message {
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .drag-handle {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      color: rgba(255, 255, 255, 0.5);
+      cursor: grab;
+      padding: 0.5rem;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .drag-handle:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .drag-handle:active {
+      cursor: grabbing;
+    }
+
+    .sortable-placeholder {
+      background: rgba(102, 126, 234, 0.2);
+      border: 2px dashed rgba(102, 126, 234, 0.5);
+      border-radius: 20px;
+      height: 120px;
+      margin: 1.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(102, 126, 234, 0.8);
+      font-weight: 600;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .views-header {
+        padding: 1.5rem;
+      }
+
+      .views-title {
+        font-size: 1.5rem;
+      }
+
+      .add-view-section {
+        flex-direction: column;
+        text-align: center;
+        padding: 1.5rem;
+      }
+
+      .view-types-dropdown {
+        position: fixed;
+        top: auto;
+        bottom: 2rem;
+        left: 1rem;
+        right: 1rem;
+        min-width: auto;
+      }
+
+      .view-item-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+      }
+
+      .view-actions {
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+    }
+
+    /* Animations */
+    @keyframes dropdownSlide {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes shimmer {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(180deg); }
+    }
+
+    @keyframes itemAppear {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .view-item-modern {
+      animation: itemAppear 0.6s ease-out;
+    }
+
+    .view-item-modern:nth-child(2) { animation-delay: 0.1s; }
+    .view-item-modern:nth-child(3) { animation-delay: 0.2s; }
+    .view-item-modern:nth-child(4) { animation-delay: 0.3s; }
+  </style>
 {% endblock %}
 
-{% block primary_content_inner %}
-  {% if views %}
-    {% snippet "package/snippets/resource_views_list.html", views=views, pkg=pkg, is_edit=true, extra_attributes='data-module = resource-view-reorder data-module-id=' + resource.id, extra_class='resource-view-list nav-pills nav-stacked' %}
-  {% else %}
-    <p class="empty">{{ _('This resource has no views') }}</p>
-  {% endif %}
+{% block subtitle %}{{ _('Views') }} {{ g.template_title_delimiter }} {{ h.resource_display_name(res) }}{% endblock %}
+
+{% block form_title %}{{ _('Manage Resource Views') }}{% endblock %}
+
+{% block form %}
+<div class="views-management-container">
+  <div class="views-header">
+    <h1 class="views-title">
+      <i class="fa fa-chart-bar"></i>
+      {{ _('Resource Views') }}
+    </h1>
+    <p class="views-subtitle">
+      {{ _('Create and manage different ways to visualize and interact with your data') }}
+    </p>
+  </div>
+
+  <div class="add-view-section">
+    <div class="add-view-info">
+      <h3>{{ _('Add New View') }}</h3>
+      <p>{{ _('Choose how you want to present your data to users. Different view types work better for different kinds of data.') }}</p>
+    </div>
+    
+    <div class="add-view-dropdown">
+      <a href="#" class="add-view-btn" onclick="event.preventDefault(); this.parentNode.classList.toggle('show');">
+        <i class="fa fa-plus-circle"></i>
+        {{ _('Create New View') }}
+        <i class="fa fa-caret-down"></i>
+      </a>
+      
+      <div class="view-types-dropdown">
+        {% for option in h.get_allowed_view_types(resource, pkg_dict) %}
+          {% set url = h.url_for(pkg_dict.type ~ '_resource.edit_view', id=pkg_dict.name, resource_id=resource.id, view_type=option[0]) %}
+          <a href="{{ url }}" class="view-type-option">
+            <div class="view-type-icon">
+              <i class="fa fa-{{ option[2] or 'chart-bar' }}"></i>
+            </div>
+            <div class="view-type-info">
+              <h4>{{ option[1] }}</h4>
+              <p>
+                {% if option[0] == 'recline_view' %}
+                  {{ _('Interactive table with sorting and filtering') }}
+                {% elif option[0] == 'recline_graph_view' %}
+                  {{ _('Charts and graphs for data visualization') }}
+                {% elif option[0] == 'recline_map_view' %}
+                  {{ _('Geographic data on interactive maps') }}
+                {% elif option[0] == 'text_view' %}
+                  {{ _('Display text and document content') }}
+                {% elif option[0] == 'image_view' %}
+                  {{ _('Display images and photos') }}
+                {% elif option[0] == 'pdf_view' %}
+                  {{ _('Embedded PDF document viewer') }}
+                {% else %}
+                  {{ _('Custom data presentation') }}
+                {% endif %}
+              </p>
+            </div>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="views-list-section">
+    {% if views %}
+      <ul class="views-list-modern" 
+          data-module="resource-view-reorder" 
+          data-module-id="{{ resource.id }}">
+        {% for view in views %}
+          <li class="view-item-modern" data-id="{{ view.id }}">
+            <div class="drag-handle" title="{{ _('Drag to reorder') }}">
+              <i class="fa fa-grip-vertical"></i>
+            </div>
+            
+            <div class="view-item-header">
+              <div class="view-icon-container">
+                <i class="fa fa-{{ h.resource_view_icon(view) or 'chart-bar' }}"></i>
+              </div>
+              
+              <div class="view-info">
+                <h3 class="view-title">{{ view.title or _('Untitled View') }}</h3>
+                <div class="view-meta">
+                  <div class="view-meta-item">
+                    <i class="fa fa-tag"></i>
+                    <span>{{ view.view_type|title }}</span>
+                  </div>
+                  {% if view.created %}
+                    <div class="view-meta-item">
+                      <i class="fa fa-clock-o"></i>
+                      <span>{{ h.render_datetime(view.created) }}</span>
+                    </div>
+                  {% endif %}
+                  {% if view.description %}
+                    <div class="view-meta-item">
+                      <i class="fa fa-info-circle"></i>
+                      <span>{{ view.description|truncate(50) }}</span>
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <div class="view-actions">
+              <a href="{{ h.url_for(pkg_dict.type ~ '_resource.edit_view', id=pkg_dict.name, resource_id=resource.id, view_id=view.id) }}" 
+                 class="view-action-btn primary">
+                <i class="fa fa-edit"></i>
+                {{ _('Edit') }}
+              </a>
+              
+              <a href="{{ h.url_for(pkg_dict.type ~ '_resource.read', id=pkg_dict.name, resource_id=resource.id, view_id=view.id) }}" 
+                 class="view-action-btn" target="_blank">
+                <i class="fa fa-eye"></i>
+                {{ _('Preview') }}
+              </a>
+              
+              <a href="{{ h.url_for('resource_view', id=pkg_dict.name, resource_id=resource.id, view_id=view.id, qualified=True) }}" 
+                 class="view-action-btn" target="_blank">
+                <i class="fa fa-external-link"></i>
+                {{ _('Full Screen') }}
+              </a>
+              
+              {% if h.check_access('resource_view_delete', {'id': view.id}) %}
+                <a href="{{ h.url_for(pkg_dict.type ~ '_resource.delete_view', id=pkg_dict.name, resource_id=resource.id, view_id=view.id) }}" 
+                   class="view-action-btn danger"
+                   onclick="return confirm('{{ _('Are you sure you want to delete this view?') }}')">
+                  <i class="fa fa-trash"></i>
+                  {{ _('Delete') }}
+                </a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-icon">
+          <i class="fa fa-chart-bar"></i>
+        </div>
+        <h3 class="empty-title">{{ _('No Views Created Yet') }}</h3>
+        <p class="empty-message">
+          {{ _('Resource views allow users to interact with your data in different ways. Create your first view using the button above to get started.') }}
+        </p>
+        <p class="empty-message">
+          <strong>{{ _('Popular view types:') }}</strong><br>
+          • {{ _('Table View - Best for structured data like CSV files') }}<br>
+          • {{ _('Graph View - Perfect for creating charts and visualizations') }}<br>
+          • {{ _('Map View - Ideal for geographic and location data') }}
+        </p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% asset 'vendor/reorder' %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Close dropdown when clicking outside
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('.add-view-dropdown')) {
+      document.querySelectorAll('.add-view-dropdown.show').forEach(dropdown => {
+        dropdown.classList.remove('show');
+      });
+    }
+  });
+
+  // Initialize sortable functionality
+  const sortableList = document.querySelector('.views-list-modern[data-module="resource-view-reorder"]');
+  if (sortableList && typeof Sortable !== 'undefined') {
+    new Sortable(sortableList, {
+      handle: '.drag-handle',
+      animation: 200,
+      ghostClass: 'sortable-placeholder',
+      chosenClass: 'dragging',
+      
+      onStart: function(evt) {
+        evt.item.classList.add('dragging');
+      },
+      
+      onEnd: function(evt) {
+        evt.item.classList.remove('dragging');
+        
+        // Send reorder request
+        const resourceId = sortableList.dataset.moduleId;
+        const items = Array.from(sortableList.children);
+        const order = items.map(item => item.dataset.id);
+        
+        // Make AJAX request to update order
+        fetch('/api/action/resource_view_reorder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+          },
+          body: JSON.stringify({
+            id: resourceId,
+            order: order
+          })
+        }).catch(error => {
+          console.error('Failed to reorder views:', error);
+          // Revert order on error
+          sortableList.insertBefore(evt.item, evt.from.children[evt.oldIndex]);
+        });
+      }
+    });
+  }
+
+  // Add confirmation dialogs for destructive actions
+  const deleteButtons = document.querySelectorAll('.view-action-btn.danger');
+  deleteButtons.forEach(button => {
+    button.addEventListener('click', function(e) {
+      if (!confirm(this.title || 'Are you sure you want to delete this view?')) {
+        e.preventDefault();
+      }
+    });
+  });
+
+  // Add analytics tracking
+  const viewActions = document.querySelectorAll('.view-action-btn');
+  viewActions.forEach(button => {
+    button.addEventListener('click', function() {
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'view_action', {
+          'action_type': this.textContent.trim().toLowerCase(),
+          'view_type': this.closest('.view-item-modern').querySelector('.view-meta-item span').textContent
+        });
+      }
+    });
+  });
+
+  // Add hover effects for better UX
+  const viewItems = document.querySelectorAll('.view-item-modern');
+  viewItems.forEach(item => {
+    item.addEventListener('mouseenter', function() {
+      this.style.zIndex = '10';
+    });
+    
+    item.addEventListener('mouseleave', function() {
+      this.style.zIndex = 'auto';
+    });
+  });
+});
+</script>
 {% endblock %}

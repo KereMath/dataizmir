@@ -1,3 +1,7 @@
+{#
+Modern version of individual view list item with enhanced interactivity
+#}
+
 {% set action = 'resource.edit_view' if is_edit else 'resource.read' %}
 
 {% if current_filters %}
@@ -9,10 +13,592 @@
                          resource_id=view.resource_id, view_id=view.id) %}
 {% endif %}
 
-<li class="{% if is_selected %} active{% endif %}" data-id="{{ view.id }}">
+<style>
+.modern-view-item {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 0.5rem;
+}
 
-  <a href="{{ url }}" data-id="{{ view.id }}">
-    <i class="fa icon fa-{{ h.resource_view_icon(view) }}"></i>
-    {{ view.title }}
+.modern-view-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s ease;
+  z-index: 1;
+  border-radius: 15px;
+}
+
+.modern-view-item:hover::before {
+  left: 100%;
+}
+
+.modern-view-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 15px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  z-index: 2;
+  overflow: hidden;
+}
+
+.modern-view-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(102, 126, 234, 0.5);
+  transform: translateX(5px) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-decoration: none;
+}
+
+.modern-view-link.active {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 0 20px rgba(79, 172, 254, 0.4), 0 8px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modern-view-link.active:hover {
+  transform: translateX(0) translateY(-3px) scale(1.02);
+  box-shadow: 0 0 30px rgba(79, 172, 254, 0.6), 0 15px 35px rgba(0, 0, 0, 0.3);
+}
+
+.view-icon-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.view-icon-main {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.modern-view-link.active .view-icon-main {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+  transform: scale(1.1);
+}
+
+.modern-view-link:not(.active) .view-icon-main {
+  background: var(--primary-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.modern-view-link:hover .view-icon-main {
+  transform: scale(1.05) rotate(5deg);
+  box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
+}
+
+/* Icon type specific styles */
+.view-icon-main.chart { background: linear-gradient(135deg, #4CAF50, #45a049); }
+.view-icon-main.table { background: linear-gradient(135deg, #2196F3, #1976D2); }
+.view-icon-main.map { background: linear-gradient(135deg, #FF9800, #F57C00); }
+.view-icon-main.text { background: linear-gradient(135deg, #9C27B0, #7B1FA2); }
+.view-icon-main.image { background: linear-gradient(135deg, #E91E63, #C2185B); }
+
+.view-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.view-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.3;
+  word-break: break-word;
+  transition: all 0.3s ease;
+}
+
+.modern-view-link.active .view-title {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.view-subtitle {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.view-type-badge {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.modern-view-link.active .view-type-badge {
+  background: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.view-status {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+}
+
+.view-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4CAF50;
+  box-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+  animation: statusPulse 2s infinite;
+}
+
+.view-status-dot.processing {
+  background: #FF9800;
+  box-shadow: 0 0 8px rgba(255, 152, 0, 0.5);
+}
+
+.view-status-dot.error {
+  background: #F44336;
+  box-shadow: 0 0 8px rgba(244, 67, 54, 0.5);
+  animation: none;
+}
+
+@keyframes statusPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.3);
+  }
+}
+
+.view-actions {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.3s ease;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 3;
+}
+
+.modern-view-item:hover .view-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.view-action-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: none;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+}
+
+.view-action-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.view-action-btn.edit {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+.view-action-btn.delete {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+}
+
+.view-metadata {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-top: 0.25rem;
+}
+
+.view-metadata-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.view-filters-indicator {
+  background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
+  color: white;
+  padding: 0.2rem 0.5rem;
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.view-description {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Edit mode specific styles */
+.modern-view-item.edit-mode .modern-view-link {
+  border-left: 4px solid var(--primary-gradient, #667eea);
+  padding-left: calc(1.5rem - 4px);
+}
+
+.modern-view-item.edit-mode .view-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.drag-handle {
+  position: absolute;
+  left: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  z-index: 3;
+}
+
+.drag-handle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+.modern-view-item.dragging {
+  opacity: 0.7;
+  transform: rotate(5deg) scale(1.05);
+  z-index: 1000;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .modern-view-link {
+    padding: 0.8rem 1rem;
+    gap: 0.75rem;
+  }
+  
+  .view-icon-main {
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .view-title {
+    font-size: 0.9rem;
+  }
+  
+  .view-subtitle {
+    font-size: 0.8rem;
+  }
+  
+  .view-actions {
+    position: static;
+    opacity: 1;
+    transform: none;
+    margin-top: 0.5rem;
+    justify-content: flex-end;
+  }
+  
+  .view-metadata {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+  }
+  
+  .view-filters-indicator {
+    margin-left: 0;
+  }
+}
+
+/* Animation for new items */
+@keyframes itemSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.modern-view-item {
+  animation: itemSlideIn 0.6s ease-out;
+}
+
+/* Focus styles for accessibility */
+.modern-view-link:focus {
+  outline: 2px solid #4facfe;
+  outline-offset: 2px;
+}
+
+.view-action-btn:focus {
+  outline: 2px solid #4facfe;
+  outline-offset: 1px;
+}
+</style>
+
+<li class="modern-view-item {{ 'edit-mode' if is_edit }}" data-id="{{ view.id }}">
+  {% if is_edit %}
+    <div class="drag-handle" title="{{ _('Drag to reorder') }}">
+      <i class="fa fa-grip-vertical"></i>
+    </div>
+  {% endif %}
+
+  <a class="modern-view-link {{ 'active' if is_selected }}" 
+     href="{{ url }}" 
+     data-id="{{ view.id }}"
+     title="{{ view.description or view.title }}"
+     aria-label="{{ view.title or _('Untitled View') }} - {{ view.view_type|replace('_', ' ')|title }}">
+    
+    <div class="view-icon-wrapper">
+      <div class="view-icon-main {{ view.view_type.split('_')[0] if view.view_type else 'chart' }}">
+        {% set icon = h.resource_view_icon(view) %}
+        {% if icon %}
+          <i class="fa fa-{{ icon }}"></i>
+        {% elif view.view_type %}
+          {% if 'table' in view.view_type or 'grid' in view.view_type %}
+            <i class="fa fa-table"></i>
+          {% elif 'chart' in view.view_type or 'graph' in view.view_type %}
+            <i class="fa fa-chart-bar"></i>
+          {% elif 'map' in view.view_type %}
+            <i class="fa fa-map"></i>
+          {% elif 'text' in view.view_type %}
+            <i class="fa fa-file-text"></i>
+          {% elif 'image' in view.view_type %}
+            <i class="fa fa-image"></i>
+          {% else %}
+            <i class="fa fa-eye"></i>
+          {% endif %}
+        {% else %}
+          <i class="fa fa-chart-bar"></i>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="view-content">
+      <h4 class="view-title">{{ view.title or _('Untitled View') }}</h4>
+      
+      <div class="view-subtitle">
+        <span class="view-type-badge">{{ view.view_type|replace('_', ' ')|title }}</span>
+        
+        <div class="view-status">
+          <div class="view-status-dot {{ 'processing' if not view.title else 'active' if view.state == 'active' else 'error' }}"></div>
+          <span>
+            {% if view.state == 'active' or not view.state %}
+              {{ _('Active') }}
+            {% elif view.state == 'draft' %}
+              {{ _('Draft') }}
+            {% else %}
+              {{ _('Error') }}
+            {% endif %}
+          </span>
+        </div>
+
+        {% if current_filters %}
+          <div class="view-filters-indicator">
+            <i class="fa fa-filter"></i>
+            {{ _('Filtered') }}
+          </div>
+        {% endif %}
+      </div>
+
+      {% if view.description %}
+        <div class="view-description">
+          {{ view.description }}
+        </div>
+      {% endif %}
+
+      <div class="view-metadata">
+        {% if view.created %}
+          <div class="view-metadata-item">
+            <i class="fa fa-calendar"></i>
+            <span>{{ h.render_datetime(view.created, with_hours=False) }}</span>
+          </div>
+        {% endif %}
+        
+        {% if view.last_modified and view.last_modified != view.created %}
+          <div class="view-metadata-item">
+            <i class="fa fa-clock-o"></i>
+            <span>{{ _('Updated') }} {{ h.render_datetime(view.last_modified, with_hours=False) }}</span>
+          </div>
+        {% endif %}
+        
+        {% if view.view_type %}
+          <div class="view-metadata-item">
+            <i class="fa fa-tag"></i>
+            <span>{{ view.view_type|replace('_', ' ')|title }}</span>
+          </div>
+        {% endif %}
+      </div>
+    </div>
   </a>
+
+  {% if is_edit %}
+    <div class="view-actions">
+      <button class="view-action-btn edit" 
+              onclick="location.href='{{ h.url_for(pkg.type ~ '_resource.edit_view', id=pkg.name, resource_id=view.resource_id, view_id=view.id) }}'"
+              title="{{ _('Edit view') }}"
+              aria-label="{{ _('Edit view') }}">
+        <i class="fa fa-edit"></i>
+      </button>
+      
+      <button class="view-action-btn" 
+              onclick="window.open('{{ h.url_for('resource_view', id=pkg.name, resource_id=view.resource_id, view_id=view.id, qualified=True) }}', '_blank')"
+              title="{{ _('Preview in new window') }}"
+              aria-label="{{ _('Preview in new window') }}">
+        <i class="fa fa-external-link"></i>
+      </button>
+      
+      {% if h.check_access('resource_view_delete', {'id': view.id}) %}
+        <button class="view-action-btn delete" 
+                onclick="if(confirm('{{ _('Are you sure you want to delete this view?') }}')) { location.href='{{ h.url_for(pkg.type ~ '_resource.delete_view', id=pkg.name, resource_id=view.resource_id, view_id=view.id) }}'; }"
+                title="{{ _('Delete view') }}"
+                aria-label="{{ _('Delete view') }}">
+          <i class="fa fa-trash"></i>
+        </button>
+      {% endif %}
+    </div>
+  {% endif %}
 </li>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add analytics tracking for view interactions
+  const viewLink = document.querySelector('[data-id="{{ view.id }}"] .modern-view-link');
+  if (viewLink) {
+    viewLink.addEventListener('click', function() {
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'view_click', {
+          'view_id': '{{ view.id }}',
+          'view_type': '{{ view.view_type }}',
+          'view_title': '{{ view.title or "untitled" }}',
+          'is_edit_mode': {{ 'true' if is_edit else 'false' }}
+        });
+      }
+    });
+  }
+
+  // Add keyboard support for action buttons
+  const actionBtns = document.querySelectorAll('[data-id="{{ view.id }}"] .view-action-btn');
+  actionBtns.forEach(btn => {
+    btn.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.click();
+      }
+    });
+  });
+
+  // Add hover effect enhancements
+  const viewItem = document.querySelector('[data-id="{{ view.id }}"]');
+  if (viewItem) {
+    viewItem.addEventListener('mouseenter', function() {
+      this.style.zIndex = '10';
+    });
+    
+    viewItem.addEventListener('mouseleave', function() {
+      this.style.zIndex = 'auto';
+    });
+  }
+
+  // Add drag and drop functionality for edit mode
+  {% if is_edit %}
+    if (viewItem && typeof Sortable !== 'undefined') {
+      // This will be handled by the parent sortable container
+      viewItem.addEventListener('dragstart', function() {
+        this.classList.add('dragging');
+      });
+      
+      viewItem.addEventListener('dragend', function() {
+        this.classList.remove('dragging');
+      });
+    }
+  {% endif %}
+
+  // Add intersection observer for lazy loading analytics
+  if (typeof IntersectionObserver !== 'undefined') {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (typeof gtag !== 'undefined') {
+            gtag('event', 'view_impression', {
+              'view_id': '{{ view.id }}',
+              'view_type': '{{ view.view_type }}',
+              'position': Array.from(entry.target.parentNode.children).indexOf(entry.target)
+            });
+          }
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    if (viewItem) {
+      observer.observe(viewItem);
+    }
+  }
+});
+</script>

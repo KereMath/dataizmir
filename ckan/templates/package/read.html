@@ -458,7 +458,7 @@ class ModernDatasetPage {
         html+=`<h3 style="color:#667eea;margin-bottom:20px;font-size:1.8rem;font-weight:700;">📋 Veri Seti Bilgileri</h3><div class="metadata-grid">`;
         const pushMeta=(label,val)=>{html+=`<div class="metadata-item"><div class="metadata-label">${label}</div><div class="metadata-value">${val}</div></div>`;};
         // BURASI GÜNCELLENDİ: Son Güncelleme zamanından 3 saat çıkarılıyor
-        pushMeta('Son Güncelleme',this.formatDate(this.dataset.metadata_modified, -3)); 
+        pushMeta('Son Güncelleme',this.formatDate(this.dataset.metadata_modified, +3)); 
         pushMeta('Oluşturma Tarihi',this.formatDate(this.dataset.metadata_created));
         pushMeta('Kaynak Sayısı',(this.dataset.num_resources||this.dataset.resources?.length||0)+' dosya');
         if(this.dataset.license_title) pushMeta('Lisans',this.dataset.license_title);

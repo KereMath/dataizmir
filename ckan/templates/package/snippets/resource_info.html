@@ -517,14 +517,6 @@ Modern sidebar info panel for resource information with glassmorphism design
             {{ _('Export as JSON') }}
           </a>
         {% endif %}
-
-        {% if h.check_access('package_update', {'id': res.package_id}) %}
-          <a href="{{ h.url_for(res.package.type ~ '_resource.edit', id=res.package.name, resource_id=res.id) }}" 
-             class="action-btn">
-            <i class="fa fa-edit"></i>
-            {{ _('Edit Resource') }}
-          </a>
-        {% endif %}
       </div>
     </div>
 

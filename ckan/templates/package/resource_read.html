@@ -322,12 +322,6 @@
           </div>
 
           <div class="action-buttons">
-            {% if h.check_access('package_update', {'id':pkg.id }) and not is_activity_archive %}
-              <a href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id) }}" class="modern-btn secondary">
-                <i class="fa fa-edit"></i> {{ _('Manage') }}
-              </a>
-            {% endif %}
-            
             {% if res.url and h.is_url(res.url) %}
               <div class="download-dropdown">
                 <a class="modern-btn" href="{{ res.url }}">
@@ -368,49 +362,41 @@
           {% endif %}
         </div>
 
-        {% if not is_activity_archive %}
+        {% if not is_activity_archive and (res.has_views or resource_preview) %}
           <div class="glass-card">
             <div class="data-preview">
               {% set resource_preview = h.resource_preview(resource, package) %}
               {% set views_created = res.has_views or resource_preview %}
               
-              {% if views_created %}
-                <div class="preview-tabs">
-                  {% if resource_preview %}
-                    <button class="preview-tab active">
-                      <i class="fa fa-eye"></i> {{ _("Preview") }}
-                    </button>
-                  {% endif %}
-                  
-                  {% for view in resource_views %}
-                    <button class="preview-tab">
-                      <i class="fa fa-{{ h.resource_view_icon(view) }}"></i> {{ view.title }}
-                    </button>
-                  {% endfor %}
-                </div>
+              <div class="preview-tabs">
+                {% if resource_preview %}
+                  <button class="preview-tab active">
+                    <i class="fa fa-eye"></i> {{ _("Preview") }}
+                  </button>
+                {% endif %}
                 
-                <div class="preview-content">
-                  {% if resource_preview and not current_resource_view %}
-                    {{ h.resource_preview(resource, package) }}
-                  {% else %}
-                    {% for resource_view in resource_views %}
-                      {% if resource_view == current_resource_view %}
-                        {% snippet 'package/snippets/resource_view.html',
-                           resource_view=resource_view,
-                           resource=resource,
-                           package=package
-                         %}
-                      {% endif %}
-                    {% endfor %}
-                  {% endif %}
-                </div>
-              {% else %}
-                <div class="text-center" style="padding: 3rem; color: #666;">
-                  <i class="fa fa-file-o" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                  <h3>{{ _("No views available") }}</h3>
-                  <p>{{ _("There are no views created for this resource yet.") }}</p>
-                </div>
-              {% endif %}
+                {% for view in resource_views %}
+                  <button class="preview-tab">
+                    <i class="fa fa-{{ h.resource_view_icon(view) }}"></i> {{ view.title }}
+                  </button>
+                {% endfor %}
+              </div>
+              
+              <div class="preview-content">
+                {% if resource_preview and not current_resource_view %}
+                  {{ h.resource_preview(resource, package) }}
+                {% else %}
+                  {% for resource_view in resource_views %}
+                    {% if resource_view == current_resource_view %}
+                      {% snippet 'package/snippets/resource_view.html',
+                         resource_view=resource_view,
+                         resource=resource,
+                         package=package
+                       %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+              </div>
             </div>
           </div>
         {% endif %}

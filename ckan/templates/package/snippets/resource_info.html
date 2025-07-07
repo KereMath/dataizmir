@@ -1,25 +1,614 @@
 {#
-Displays a sidebar module with information for given resource
-
-res    - The resource dict
-
-Example:
-
-  {% snippet "package/snippets/resource_info.html", res=res %}
-
+Modern sidebar info panel for resource information with glassmorphism design
 #}
-<div class="module context-info">
-  <div class="module-content">
-    {% block page_title %}
-      <h1 class="heading">{{ h.resource_display_name(res) or res.id }}</h1>
-    {% endblock %}
-    {% block resource_info %}
-      <div class="nums">
-        <dl>
-          <dt>{{ _('Format') }}</dt>
-          <dd>{{ h.get_translated(res, 'format') }}</dd>
-        </dl>
+
+<style>
+.modern-resource-info {
+  background: var(--glass-bg, rgba(255, 255, 255, 0.1));
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.2));
+  border-radius: 20px;
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.modern-resource-info:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 0 30px rgba(102, 126, 234, 0.3), 0 25px 50px rgba(0, 0, 0, 0.2);
+}
+
+.info-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 1.5rem;
+  color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+.info-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+  animation: subtleShimmer 6s infinite;
+}
+
+@keyframes subtleShimmer {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(180deg) scale(1.1); }
+}
+
+.info-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 0;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.info-content {
+  padding: 1.5rem;
+}
+
+.resource-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.detail-item::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.detail-item:hover::before {
+  left: 100%;
+}
+
+.detail-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(102, 126, 234, 0.5);
+  transform: translateX(5px);
+}
+
+.detail-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1rem;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.detail-icon.format {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+}
+
+.detail-icon.size {
+  background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.detail-icon.modified {
+  background: linear-gradient(135deg, #2196F3, #1976D2);
+}
+
+.detail-icon.type {
+  background: linear-gradient(135deg, #9C27B0, #7B1FA2);
+}
+
+.detail-icon.status {
+  background: linear-gradient(135deg, #4CAF50, #2E7D32);
+}
+
+.detail-content {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.detail-label {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+  margin-bottom: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  font-size: 0.95rem;
+  color: white;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.format-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 0.3rem 0.8rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 10px rgba(102, 126, 234, 0.3);
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #4CAF50;
+  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  animation: pulse 2s infinite;
+}
+
+.status-dot.inactive {
+  background: #F44336;
+  box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+}
+
+.status-dot.processing {
+  background: #FF9800;
+  box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+.file-size {
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.quick-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.quick-actions-title {
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 0.8rem 1rem;
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.action-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.action-btn:hover::before {
+  left: 100%;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(102, 126, 234, 0.5);
+  transform: translateX(3px);
+  color: white;
+  text-decoration: none;
+}
+
+.action-btn.primary {
+  background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+  border-color: transparent;
+  box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+}
+
+.action-btn.primary:hover {
+  transform: translateX(3px) translateY(-2px);
+  box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+}
+
+.metadata-grid {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.metadata-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  font-size: 0.85rem;
+}
+
+.metadata-item:last-child {
+  border-bottom: none;
+}
+
+.metadata-key {
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 500;
+}
+
+.metadata-value {
+  color: white;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .info-header {
+    padding: 1rem;
+  }
+
+  .info-content {
+    padding: 1rem;
+  }
+
+  .detail-item {
+    padding: 0.6rem;
+  }
+
+  .detail-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+  }
+
+  .action-buttons {
+    gap: 0.5rem;
+  }
+
+  .action-btn {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Loading animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modern-resource-info {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.detail-item {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.detail-item:nth-child(2) { animation-delay: 0.1s; }
+.detail-item:nth-child(3) { animation-delay: 0.2s; }
+.detail-item:nth-child(4) { animation-delay: 0.3s; }
+.detail-item:nth-child(5) { animation-delay: 0.4s; }
+</style>
+
+<div class="modern-resource-info">
+  <div class="info-header">
+    <h2 class="info-title">
+      <i class="fa fa-info-circle"></i>
+      {{ h.resource_display_name(res) or res.id }}
+    </h2>
+  </div>
+
+  <div class="info-content">
+    <div class="resource-details">
+      {% if res.format %}
+        <div class="detail-item">
+          <div class="detail-icon format">
+            {% set format_lower = res.format.lower() %}
+            {% if format_lower in ['csv', 'tsv'] %}
+              <i class="fa fa-table"></i>
+            {% elif format_lower in ['json', 'geojson'] %}
+              <i class="fa fa-code"></i>
+            {% elif format_lower in ['xml', 'rdf'] %}
+              <i class="fa fa-sitemap"></i>
+            {% elif format_lower in ['pdf'] %}
+              <i class="fa fa-file-pdf-o"></i>
+            {% elif format_lower in ['xls', 'xlsx'] %}
+              <i class="fa fa-file-excel-o"></i>
+            {% else %}
+              <i class="fa fa-file-o"></i>
+            {% endif %}
+          </div>
+          <div class="detail-content">
+            <div class="detail-label">{{ _('Format') }}</div>
+            <div class="detail-value">
+              <span class="format-badge">
+                <i class="fa fa-tag"></i>
+                {{ h.get_translated(res, 'format') }}
+              </span>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if res.size %}
+        <div class="detail-item">
+          <div class="detail-icon size">
+            <i class="fa fa-hdd-o"></i>
+          </div>
+          <div class="detail-content">
+            <div class="detail-label">{{ _('File Size') }}</div>
+            <div class="detail-value">
+              <span class="file-size">{{ res.size }}</span>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if res.last_modified or res.created %}
+        <div class="detail-item">
+          <div class="detail-icon modified">
+            <i class="fa fa-clock-o"></i>
+          </div>
+          <div class="detail-content">
+            <div class="detail-label">{{ _('Last Updated') }}</div>
+            <div class="detail-value">
+              {{ h.render_datetime(res.last_modified or res.created, with_hours=False) or _('Unknown') }}
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      {% if res.mimetype %}
+        <div class="detail-item">
+          <div class="detail-icon type">
+            <i class="fa fa-file-code-o"></i>
+          </div>
+          <div class="detail-content">
+            <div class="detail-label">{{ _('MIME Type') }}</div>
+            <div class="detail-value">{{ res.mimetype }}</div>
+          </div>
+        </div>
+      {% endif %}
+
+      <div class="detail-item">
+        <div class="detail-icon status">
+          <i class="fa fa-check-circle"></i>
+        </div>
+        <div class="detail-content">
+          <div class="detail-label">{{ _('Status') }}</div>
+          <div class="detail-value">
+            <div class="status-indicator">
+              {% if res.datastore_active %}
+                <span class="status-dot"></span>
+                {{ _('Data Available') }}
+              {% elif res.url and h.is_url(res.url) %}
+                <span class="status-dot inactive"></span>
+                {{ _('External Resource') }}
+              {% else %}
+                <span class="status-dot processing"></span>
+                {{ _('Processing') }}
+              {% endif %}
+            </div>
+          </div>
+        </div>
       </div>
-    {% endblock %}
+    </div>
+
+    <div class="quick-actions">
+      <h3 class="quick-actions-title">
+        <i class="fa fa-bolt"></i>
+        {{ _('Quick Actions') }}
+      </h3>
+      
+      <div class="action-buttons">
+        {% if res.url and h.is_url(res.url) %}
+          <a href="{{ res.url }}" class="action-btn primary" target="_blank">
+            {% if res.resource_type == 'api' %}
+              <i class="fa fa-plug"></i>
+              {{ _('API Endpoint') }}
+            {% elif res.url_type == 'upload' or res.has_views %}
+              <i class="fa fa-download"></i>
+              {{ _('Download File') }}
+            {% else %}
+              <i class="fa fa-external-link"></i>
+              {{ _('Open Resource') }}
+            {% endif %}
+          </a>
+        {% endif %}
+
+        {% if res.datastore_active %}
+          <a href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}" 
+             class="action-btn" target="_blank">
+            <i class="fa fa-table"></i>
+            {{ _('Export as CSV') }}
+          </a>
+          
+          <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='json') }}" 
+             class="action-btn" target="_blank">
+            <i class="fa fa-code"></i>
+            {{ _('Export as JSON') }}
+          </a>
+        {% endif %}
+
+        {% if h.check_access('package_update', {'id': res.package_id}) %}
+          <a href="{{ h.url_for(res.package.type ~ '_resource.edit', id=res.package.name, resource_id=res.id) }}" 
+             class="action-btn">
+            <i class="fa fa-edit"></i>
+            {{ _('Edit Resource') }}
+          </a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if res.description %}
+      <div class="metadata-grid">
+        <div class="metadata-item">
+          <span class="metadata-key">{{ _('Description') }}</span>
+        </div>
+        <div style="padding: 0.5rem 0; color: rgba(255, 255, 255, 0.9); font-size: 0.9rem; line-height: 1.4;">
+          {{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=150) }}
+        </div>
+      </div>
+    {% endif %}
+
+    {% if res.id %}
+      <div class="metadata-grid" style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+        <div class="metadata-item">
+          <span class="metadata-key">{{ _('Resource ID') }}</span>
+          <span class="metadata-value" style="font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; font-size: 0.75rem;">
+            {{ res.id|truncate(16) }}
+          </span>
+        </div>
+        
+        {% if res.created %}
+          <div class="metadata-item">
+            <span class="metadata-key">{{ _('Created') }}</span>
+            <span class="metadata-value">{{ h.render_datetime(res.created, with_hours=False) }}</span>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
   </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Add click tracking for action buttons
+  const actionButtons = document.querySelectorAll('.action-btn');
+  actionButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'resource_action', {
+          'action_type': this.textContent.trim().toLowerCase(),
+          'resource_format': '{{ res.format or "unknown" }}'
+        });
+      }
+    });
+  });
+
+  // Add copy functionality for resource ID
+  const resourceIdElement = document.querySelector('.metadata-value[style*="Monaco"]');
+  if (resourceIdElement) {
+    resourceIdElement.style.cursor = 'pointer';
+    resourceIdElement.title = 'Click to copy full ID';
+    
+    resourceIdElement.addEventListener('click', function() {
+      const fullId = '{{ res.id }}';
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(fullId).then(() => {
+          const originalText = this.textContent;
+          this.textContent = 'Copied!';
+          this.style.color = '#4CAF50';
+          
+          setTimeout(() => {
+            this.textContent = originalText;
+            this.style.color = 'white';
+          }, 2000);
+        });
+      }
+    });
+  }
+
+  // Add smooth animations for interaction feedback
+  const detailItems = document.querySelectorAll('.detail-item');
+  detailItems.forEach(item => {
+    item.addEventListener('mouseenter', function() {
+      this.style.transform = 'translateX(5px)';
+      this.style.zIndex = '10';
+    });
+    
+    item.addEventListener('mouseleave', function() {
+      this.style.transform = 'translateX(0)';
+      this.style.zIndex = 'auto';
+    });
+  });
+});
+</script>

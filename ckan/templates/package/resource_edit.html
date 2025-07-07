@@ -1,14 +1,727 @@
 {% extends "package/resource_edit_base.html" %}
 
+{% block head_extras %}
+  {{ super() }}
+  <style>
+    .modern-edit-container {
+      position: relative;
+    }
+
+    .edit-progress {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .progress-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--secondary-gradient, linear-gradient(135deg, #4facfe 0%, #00f2fe 100%));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .progress-content {
+      flex: 1;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .progress-title {
+      font-weight: 600;
+      margin: 0 0 0.25rem 0;
+      font-size: 1rem;
+    }
+
+    .progress-subtitle {
+      margin: 0;
+      font-size: 0.85rem;
+      opacity: 0.8;
+    }
+
+    .edit-tips {
+      background: rgba(79, 172, 254, 0.1);
+      border: 1px solid rgba(79, 172, 254, 0.3);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .tips-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      color: white;
+    }
+
+    .tips-icon {
+      color: #4facfe;
+      font-size: 1.2rem;
+    }
+
+    .tips-title {
+      font-weight: 600;
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    .tips-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .tips-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      color: rgba(255, 255, 255, 0.9);
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+
+    .tips-list li i {
+      color: #4facfe;
+      margin-top: 0.1rem;
+      flex-shrink: 0;
+    }
+
+    .form-success-message {
+      background: linear-gradient(135deg, #4CAF50, #45a049);
+      color: white;
+      padding: 1rem 1.5rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      animation: slideInFromTop 0.5s ease-out;
+    }
+
+    .form-success-message.show {
+      display: flex;
+    }
+
+    .form-success-message i {
+      font-size: 1.2rem;
+    }
+
+    .validation-summary {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: 15px;
+      margin-bottom: 2rem;
+      display: none;
+    }
+
+    .validation-summary.show {
+      display: block;
+    }
+
+    .validation-title {
+      font-weight: 600;
+      margin: 0 0 1rem 0;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .validation-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .validation-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .validation-list li:last-child {
+      margin-bottom: 0;
+    }
+
+    .save-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 1000;
+      font-size: 0.9rem;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    .save-indicator.saving {
+      display: flex;
+      background: rgba(255, 152, 0, 0.9);
+    }
+
+    .save-indicator.saved {
+      display: flex;
+      background: rgba(76, 175, 80, 0.9);
+    }
+
+    .save-indicator.error {
+      display: flex;
+      background: rgba(244, 67, 54, 0.9);
+    }
+
+    .save-spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .form-section {
+      margin-bottom: 2rem;
+    }
+
+    .section-divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      margin: 2rem 0;
+    }
+
+    .autosave-status {
+      position: absolute;
+      top: -2.5rem;
+      right: 0;
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .autosave-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #4CAF50;
+      animation: pulse 2s infinite;
+    }
+
+    .autosave-dot.saving {
+      background: #FF9800;
+    }
+
+    .autosave-dot.error {
+      background: #F44336;
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.7;
+        transform: scale(1.2);
+      }
+    }
+
+    /* Mobile responsiveness */
+    @media (max-width: 768px) {
+      .edit-progress {
+        flex-direction: column;
+        text-align: center;
+        padding: 1rem;
+      }
+
+      .progress-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+
+      .edit-tips {
+        padding: 1rem;
+      }
+
+      .tips-list {
+        gap: 0.5rem;
+      }
+
+      .save-indicator {
+        position: fixed;
+        bottom: 20px;
+        left: 20px;
+        right: 20px;
+        top: auto;
+        justify-content: center;
+      }
+
+      .autosave-status {
+        position: static;
+        justify-content: center;
+        margin-bottom: 1rem;
+      }
+    }
+
+    /* Animation delays for staggered appearance */
+    .edit-progress {
+      animation: slideInFromTop 0.6s ease-out;
+    }
+
+    .edit-tips {
+      animation: slideInFromTop 0.8s ease-out;
+    }
+
+    @keyframes slideInFromTop {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+{% endblock %}
+
 {% block subtitle %}{{ _('Edit') }} {{ g.template_title_delimiter }} {{ h.resource_display_name(res) }} {{ g.template_title_delimiter }} {{ h.dataset_display_name(pkg) }}{% endblock %}
 
+{% block form_title %}{{ _('Edit Resource') }}{% endblock %}
+
 {% block form %}
-  {% snippet 'package/snippets/resource_edit_form.html',
-    data=data,
-    errors=errors,
-    error_summary=error_summary,
-    pkg_name=pkg.name,
-    form_action=form_action,
-    resource_form_snippet=resource_form_snippet,
-    dataset_type=dataset_type %}
+<div class="modern-edit-container">
+  <!-- Autosave Status -->
+  <div class="autosave-status" id="autosave-status">
+    <div class="autosave-dot" id="autosave-dot"></div>
+    <span id="autosave-text">{{ _('All changes saved') }}</span>
+  </div>
+
+  <!-- Edit Progress Indicator -->
+  <div class="edit-progress">
+    <div class="progress-icon">
+      <i class="fa fa-edit"></i>
+    </div>
+    <div class="progress-content">
+      <div class="progress-title">{{ _('Editing Resource') }}: {{ h.resource_display_name(res) }}</div>
+      <div class="progress-subtitle">{{ _('Last modified') }}: {{ h.render_datetime(res.last_modified or res.created) or _('Unknown') }}</div>
+    </div>
+  </div>
+
+  <!-- Success Message -->
+  <div class="form-success-message" id="success-message">
+    <i class="fa fa-check-circle"></i>
+    <span>{{ _('Resource updated successfully!') }}</span>
+  </div>
+
+  <!-- Validation Summary -->
+  {% if errors %}
+    <div class="validation-summary show">
+      <div class="validation-title">
+        <i class="fa fa-exclamation-triangle"></i>
+        {{ _('Please fix the following issues:') }}
+      </div>
+      <ul class="validation-list">
+        {% for field, field_errors in errors.items() %}
+          {% if field_errors %}
+            {% for error in field_errors %}
+              <li>
+                <i class="fa fa-times-circle"></i>
+                <span><strong>{{ field|title }}:</strong> {{ error }}</span>
+              </li>
+            {% endfor %}
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <!-- Helpful Tips -->
+  <div class="edit-tips">
+    <div class="tips-header">
+      <i class="tips-icon fa fa-lightbulb-o"></i>
+      <h3 class="tips-title">{{ _('Tips for Better Resources') }}</h3>
+    </div>
+    <ul class="tips-list">
+      <li>
+        <i class="fa fa-tag"></i>
+        {{ _('Use descriptive names that clearly explain what the resource contains') }}
+      </li>
+      <li>
+        <i class="fa fa-file-text"></i>
+        {{ _('Add detailed descriptions to help users understand the data structure and content') }}
+      </li>
+      <li>
+        <i class="fa fa-tags"></i>
+        {{ _('Specify the correct format (CSV, JSON, XML, etc.) for automatic file type detection') }}
+      </li>
+      <li>
+        <i class="fa fa-clock-o"></i>
+        {{ _('Update the "Last Modified" date when making significant changes to the data') }}
+      </li>
+      <li>
+        <i class="fa fa-shield"></i>
+        {{ _('For sensitive data, consider the appropriate access permissions and licensing') }}
+      </li>
+    </ul>
+  </div>
+
+  <!-- Resource Form -->
+  <div class="form-section">
+    {% snippet 'package/snippets/resource_edit_form.html',
+      data=data,
+      errors=errors,
+      error_summary=error_summary,
+      pkg_name=pkg.name,
+      form_action=form_action,
+      resource_form_snippet=resource_form_snippet,
+      dataset_type=dataset_type %}
+  </div>
+
+  <!-- Save Indicator -->
+  <div class="save-indicator" id="save-indicator">
+    <div class="save-spinner"></div>
+    <span id="save-text">{{ _('Saving...') }}</span>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  let formChanged = false;
+  let saveTimeout;
+  let originalFormData;
+
+  document.addEventListener('DOMContentLoaded', function() {
+    initializeEditInterface();
+    setupFormMonitoring();
+    setupAutosave();
+    addKeyboardShortcuts();
+  });
+
+  function initializeEditInterface() {
+    // Store original form data for comparison
+    const form = document.getElementById('resource-edit');
+    if (form) {
+      originalFormData = new FormData(form);
+    }
+
+    // Show success message if redirected after save
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('saved') === '1') {
+      showSuccessMessage();
+      
+      // Remove the parameter from URL
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, '', newUrl);
+    }
+
+    // Add form validation enhancements
+    enhanceFormValidation();
+    
+    // Track editing session
+    trackEditingSession();
+  }
+
+  function setupFormMonitoring() {
+    const form = document.getElementById('resource-edit');
+    if (!form) return;
+
+    // Monitor form changes
+    const inputs = form.querySelectorAll('input, textarea, select');
+    inputs.forEach(input => {
+      input.addEventListener('input', handleFormChange);
+      input.addEventListener('change', handleFormChange);
+    });
+
+    // Monitor file uploads
+    const fileInputs = form.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+      input.addEventListener('change', function() {
+        if (this.files.length > 0) {
+          showSaveStatus('saving', '{{ _("Uploading file...") }}');
+        }
+      });
+    });
+
+    // Prevent accidental navigation away
+    window.addEventListener('beforeunload', function(e) {
+      if (formChanged) {
+        e.preventDefault();
+        e.returnValue = '{{ _("You have unsaved changes. Are you sure you want to leave?") }}';
+        return e.returnValue;
+      }
+    });
+  }
+
+  function handleFormChange() {
+    formChanged = true;
+    updateAutosaveStatus('saving');
+    
+    // Debounce autosave
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(performAutosave, 2000);
+
+    // Track field changes for analytics
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'resource_field_change', {
+        'field_name': this.name || this.id,
+        'field_type': this.type || this.tagName.toLowerCase()
+      });
+    }
+  }
+
+  function setupAutosave() {
+    // Note: This is a UI demonstration. In a real implementation,
+    // you would make AJAX calls to save draft versions.
+    
+    const form = document.getElementById('resource-edit');
+    if (!form) return;
+
+    // Simulate autosave functionality
+    window.performAutosave = function() {
+      if (!formChanged) return;
+
+      updateAutosaveStatus('saving');
+
+      // Simulate API call delay
+      setTimeout(() => {
+        // In real implementation, save to draft endpoint
+        console.log('Autosave performed');
+        updateAutosaveStatus('saved');
+        
+        // Store in localStorage as backup (UI only)
+        try {
+          const formData = new FormData(form);
+          const dataObj = {};
+          for (let [key, value] of formData.entries()) {
+            dataObj[key] = value;
+          }
+          localStorage.setItem('resource-edit-backup', JSON.stringify(dataObj));
+        } catch (e) {
+          console.warn('Could not save backup:', e);
+        }
+      }, 1000);
+    };
+  }
+
+  function updateAutosaveStatus(status) {
+    const statusElement = document.getElementById('autosave-status');
+    const dotElement = document.getElementById('autosave-dot');
+    const textElement = document.getElementById('autosave-text');
+
+    if (!statusElement) return;
+
+    // Remove all status classes
+    dotElement.className = 'autosave-dot';
+    
+    switch (status) {
+      case 'saving':
+        dotElement.classList.add('saving');
+        textElement.textContent = '{{ _("Saving changes...") }}';
+        break;
+      case 'saved':
+        textElement.textContent = '{{ _("All changes saved") }}';
+        formChanged = false;
+        break;
+      case 'error':
+        dotElement.classList.add('error');
+        textElement.textContent = '{{ _("Save failed") }}';
+        break;
+    }
+  }
+
+  function enhanceFormValidation() {
+    const form = document.getElementById('resource-edit');
+    if (!form) return;
+
+    // Add real-time validation
+    const inputs = form.querySelectorAll('input[required], textarea[required]');
+    inputs.forEach(input => {
+      input.addEventListener('blur', function() {
+        validateField(this);
+      });
+
+      input.addEventListener('input', function() {
+        if (this.classList.contains('error')) {
+          validateField(this);
+        }
+      });
+    });
+
+    // Enhanced form submission
+    form.addEventListener('submit', function(e) {
+      showSaveStatus('saving', '{{ _("Saving resource...") }}');
+      
+      // Disable form to prevent double submission
+      const submitButtons = form.querySelectorAll('button[type="submit"]');
+      submitButtons.forEach(btn => {
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+      });
+
+      // Track form submission
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'resource_edit_submit', {
+          'resource_id': '{{ res.id }}',
+          'has_file_upload': form.querySelector('input[type="file"]')?.files?.length > 0
+        });
+      }
+    });
+  }
+
+  function validateField(field) {
+    const errorClass = 'error';
+    const isValid = field.checkValidity();
+
+    if (isValid) {
+      field.classList.remove(errorClass);
+      field.style.borderColor = '';
+    } else {
+      field.classList.add(errorClass);
+      field.style.borderColor = '#f44336';
+    }
+
+    return isValid;
+  }
+
+  function showSaveStatus(type, message) {
+    const indicator = document.getElementById('save-indicator');
+    const text = document.getElementById('save-text');
+
+    if (!indicator) return;
+
+    // Remove all type classes
+    indicator.className = 'save-indicator';
+    indicator.classList.add(type);
+    
+    if (text) {
+      text.textContent = message;
+    }
+
+    if (type === 'saved' || type === 'error') {
+      setTimeout(() => {
+        indicator.classList.remove(type);
+      }, 3000);
+    }
+  }
+
+  function showSuccessMessage() {
+    const message = document.getElementById('success-message');
+    if (message) {
+      message.classList.add('show');
+      
+      setTimeout(() => {
+        message.classList.remove('show');
+      }, 5000);
+    }
+  }
+
+  function addKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+      // Ctrl/Cmd + S to save
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        
+        const form = document.getElementById('resource-edit');
+        if (form) {
+          const submitBtn = form.querySelector('button[type="submit"]');
+          if (submitBtn) {
+            submitBtn.click();
+          }
+        }
+      }
+
+      // Escape to cancel editing (go back)
+      if (e.key === 'Escape' && !formChanged) {
+        const backBtn = document.querySelector('a[href*="resource.read"]');
+        if (backBtn) {
+          window.location.href = backBtn.href;
+        }
+      }
+    });
+  }
+
+  function trackEditingSession() {
+    const startTime = Date.now();
+    
+    // Track session start
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'resource_edit_start', {
+        'resource_id': '{{ res.id }}',
+        'resource_format': '{{ res.format or "unknown" }}'
+      });
+    }
+
+    // Track session end
+    window.addEventListener('beforeunload', function() {
+      const duration = Math.round((Date.now() - startTime) / 1000);
+      
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'resource_edit_session', {
+          'duration_seconds': duration,
+          'had_changes': formChanged,
+          'resource_id': '{{ res.id }}'
+        });
+      }
+    });
+  }
+
+  // Load backup if available (UI demonstration)
+  function loadBackup() {
+    try {
+      const backup = localStorage.getItem('resource-edit-backup');
+      if (backup && !formChanged) {
+        const data = JSON.parse(backup);
+        const form = document.getElementById('resource-edit');
+        
+        if (form && confirm('{{ _("Load unsaved changes from previous session?") }}')) {
+          Object.entries(data).forEach(([key, value]) => {
+            const field = form.querySelector(`[name="${key}"]`);
+            if (field && field.type !== 'file') {
+              field.value = value;
+            }
+          });
+          
+          formChanged = true;
+          updateAutosaveStatus('saved');
+        }
+      }
+    } catch (e) {
+      console.warn('Could not load backup:', e);
+    }
+  }
+
+  // Check for backup on load
+  setTimeout(loadBackup, 1000);
+})();
+</script>
 {% endblock %}

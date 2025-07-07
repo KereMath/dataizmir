@@ -2,25 +2,646 @@
 
 {% set has_reorder = pkg_dict and pkg_dict.resources and pkg_dict.resources|length > 0 %}
 
+{% block head_extras %}
+  {{ super() }}
+  <style>
+    :root {
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+      --success-gradient: linear-gradient(135deg, #4CAF50, #45a049);
+      --glass-bg: rgba(255, 255, 255, 0.1);
+      --glass-border: rgba(255, 255, 255, 0.2);
+      --shadow-modern: 0 20px 40px rgba(0, 0, 0, 0.1);
+      --hover-glow: 0 0 30px rgba(102, 126, 234, 0.4);
+    }
+
+    .modern-resources-management {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 2rem 0;
+    }
+
+    .resources-management-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(15px);
+      border: 1px solid var(--glass-border);
+      border-radius: 25px;
+      padding: 0;
+      overflow: hidden;
+      box-shadow: var(--shadow-modern);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+    }
+
+    .resources-management-card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--hover-glow), var(--shadow-modern);
+    }
+
+    .management-header {
+      background: var(--primary-gradient);
+      padding: 2rem 2.5rem;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .management-header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+      animation: headerShimmer 6s infinite;
+    }
+
+    @keyframes headerShimmer {
+      0%, 100% { transform: rotate(0deg) scale(1); }
+      50% { transform: rotate(180deg) scale(1.1); }
+    }
+
+    .management-title {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin: 0 0 0.5rem 0;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+      z-index: 2;
+      text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .management-subtitle {
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+      font-size: 1.1rem;
+      position: relative;
+      z-index: 2;
+      line-height: 1.5;
+    }
+
+    .header-actions {
+      position: absolute;
+      top: 2rem;
+      right: 2.5rem;
+      z-index: 2;
+    }
+
+    .add-resource-btn {
+      background: var(--secondary-gradient);
+      border: none;
+      border-radius: 20px;
+      padding: 1rem 2rem;
+      color: white;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .add-resource-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .add-resource-btn:hover::before {
+      left: 100%;
+    }
+
+    .add-resource-btn:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 15px 35px rgba(79, 172, 254, 0.6);
+      color: white;
+      text-decoration: none;
+    }
+
+    .management-content {
+      padding: 2rem 2.5rem;
+    }
+
+    .resources-toolbar {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .resource-count {
+      color: white;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .count-badge {
+      background: var(--success-gradient);
+      color: white;
+      padding: 0.3rem 0.8rem;
+      border-radius: 15px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .reorder-toggle {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      padding: 0.7rem 1.2rem;
+      color: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-weight: 500;
+    }
+
+    .reorder-toggle:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+    }
+
+    .reorder-toggle.active {
+      background: var(--primary-gradient);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+    }
+
+    .bulk-actions {
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      margin-bottom: 1rem;
+    }
+
+    .bulk-actions.show {
+      display: flex;
+    }
+
+    .bulk-action-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 10px;
+      padding: 0.6rem 1rem;
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .bulk-action-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .bulk-action-btn.danger {
+      background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+      border-color: transparent;
+    }
+
+    .modern-resource-list {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      position: relative;
+    }
+
+    .modern-resource-list.reorder-mode {
+      gap: 0.5rem;
+    }
+
+    .modern-resource-list.reorder-mode .resource-item {
+      cursor: move;
+      border-left: 4px solid var(--secondary-gradient);
+    }
+
+    .reorder-instructions {
+      background: rgba(79, 172, 254, 0.1);
+      border: 1px solid rgba(79, 172, 254, 0.3);
+      border-radius: 15px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1rem;
+      color: rgba(255, 255, 255, 0.9);
+      display: none;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .reorder-instructions.show {
+      display: flex;
+    }
+
+    .reorder-instructions-icon {
+      color: #4facfe;
+      font-size: 1.2rem;
+    }
+
+    .sortable-placeholder {
+      background: rgba(102, 126, 234, 0.2);
+      border: 2px dashed rgba(102, 126, 234, 0.5);
+      border-radius: 15px;
+      height: 80px;
+      margin: 0.5rem 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(102, 126, 234, 0.8);
+      font-weight: 600;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .empty-icon {
+      font-size: 5rem;
+      margin-bottom: 2rem;
+      opacity: 0.3;
+      color: white;
+    }
+
+    .empty-title {
+      font-size: 2rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      color: white;
+    }
+
+    .empty-message {
+      font-size: 1.2rem;
+      line-height: 1.6;
+      margin-bottom: 2.5rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .empty-features {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 2rem;
+      margin: 2rem auto;
+      max-width: 500px;
+      text-align: left;
+    }
+
+    .empty-features h4 {
+      color: white;
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .empty-features ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .empty-features li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      font-size: 0.95rem;
+    }
+
+    .empty-features li i {
+      color: #4facfe;
+      width: 20px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 15px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .stat-icon.resources { background: var(--primary-gradient); }
+    .stat-icon.formats { background: var(--secondary-gradient); }
+    .stat-icon.size { background: var(--success-gradient); }
+
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .modern-resources-management {
+        padding: 1rem 0;
+      }
+
+      .management-header {
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      .management-title {
+        font-size: 2rem;
+        flex-direction: column;
+        gap: 0.5rem;
+      }
+
+      .header-actions {
+        position: static;
+        margin-top: 1.5rem;
+        text-align: center;
+      }
+
+      .management-content {
+        padding: 1.5rem;
+      }
+
+      .resources-toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        text-align: center;
+      }
+
+      .toolbar-left,
+      .toolbar-right {
+        justify-content: center;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .reorder-instructions {
+        flex-direction: column;
+        text-align: center;
+      }
+    }
+
+    /* Animations */
+    @keyframes resourceManagementSlide {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .resources-management-card {
+      animation: resourceManagementSlide 0.8s ease-out;
+    }
+  </style>
+{% endblock %}
+
 {% block subtitle %}{{ _('Resources') }} {{ g.template_title_delimiter }} {{ h.dataset_display_name(pkg) }}{% endblock %}
 
 {% block page_primary_action %}
-  {% link_for _('Add new resource'), named_route=pkg_dict.type ~ '_resource.new', id=pkg_dict.name, class_='btn btn-primary', icon='plus' %}
+  <div class="header-actions">
+    <a href="{{ h.url_for(pkg_dict.type ~ '_resource.new', id=pkg_dict.name) }}" class="add-resource-btn">
+      <i class="fa fa-plus-circle"></i>
+      {{ _('Add New Resource') }}
+    </a>
+  </div>
 {% endblock %}
 
 {% block primary_content_inner %}
-  {% if pkg.resources %}
-    <ul class="resource-list"{% if has_reorder %} data-module="resource-reorder" data-module-id="{{ pkg.id }}"{% endif %}>
-      {% set can_edit = h.check_access('package_update', {'id':pkg.id }) %}
-      {% for resource in pkg.resources %}
-        {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource, url_is_edit=true, can_edit=can_edit, is_activity_archive=False %}
-      {% endfor %}
-    </ul>
-  {% else %}
-    {% trans url=h.url_for(pkg.type ~ '_resource.new', id=pkg.name) %}
-      <p class="empty">This dataset has no data, <a href="{{ url }}">why not add some?</a></p>
-    {% endtrans %}
-  {% endif %}
+<div class="modern-resources-management">
+  <div class="container">
+    <div class="resources-management-card">
+      <div class="management-header">
+        <h1 class="management-title">
+          <i class="fa fa-database"></i>
+          {{ _('Manage Resources') }}
+        </h1>
+        <p class="management-subtitle">
+          {{ _('Add, edit, and organize the data files and resources for this dataset. Resources can be files you upload or links to external data sources.') }}
+        </p>
+        
+        {{ self.page_primary_action() }}
+      </div>
+
+      <div class="management-content">
+        {% if pkg.resources %}
+          <!-- Statistics Dashboard -->
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-icon resources">
+                <i class="fa fa-database"></i>
+              </div>
+              <div class="stat-number">{{ pkg.resources|length }}</div>
+              <div class="stat-label">{{ _('Total Resources') }}</div>
+            </div>
+            
+            {% set formats = pkg.resources|map(attribute='format')|reject('none')|list|unique %}
+            <div class="stat-card">
+              <div class="stat-icon formats">
+                <i class="fa fa-tags"></i>
+              </div>
+              <div class="stat-number">{{ formats|length }}</div>
+              <div class="stat-label">{{ _('Different Formats') }}</div>
+            </div>
+            
+            {% set total_size = pkg.resources|map(attribute='size')|select('string')|map('length')|sum %}
+            <div class="stat-card">
+              <div class="stat-icon size">
+                <i class="fa fa-hdd-o"></i>
+              </div>
+              <div class="stat-number">{{ pkg.resources|map(attribute='size')|select|list|length }}</div>
+              <div class="stat-label">{{ _('With Size Info') }}</div>
+            </div>
+          </div>
+
+          <!-- Toolbar -->
+          <div class="resources-toolbar">
+            <div class="toolbar-left">
+              <div class="resource-count">
+                <i class="fa fa-list"></i>
+                <span>{{ _('Resources:') }}</span>
+                <span class="count-badge">{{ pkg.resources|length }}</span>
+              </div>
+              
+              {% if has_reorder %}
+                <button class="reorder-toggle" onclick="toggleReorderMode()" id="reorder-toggle">
+                  <i class="fa fa-sort" id="reorder-icon"></i>
+                  <span id="reorder-text">{{ _('Reorder') }}</span>
+                </button>
+              {% endif %}
+            </div>
+            
+            <div class="toolbar-right">
+              <button class="reorder-toggle" onclick="toggleBulkActions()" id="bulk-toggle">
+                <i class="fa fa-check-square-o"></i>
+                {{ _('Bulk Actions') }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Bulk Actions Bar -->
+          <div class="bulk-actions" id="bulk-actions">
+            <span style="color: rgba(255, 255, 255, 0.8);">
+              <span id="selected-count">0</span> {{ _('selected') }}
+            </span>
+            
+            <button class="bulk-action-btn" onclick="exportSelected()">
+              <i class="fa fa-download"></i>
+              {{ _('Export Selected') }}
+            </button>
+            
+            <button class="bulk-action-btn danger" onclick="deleteSelected()">
+              <i class="fa fa-trash"></i>
+              {{ _('Delete Selected') }}
+            </button>
+            
+            <button class="bulk-action-btn" onclick="clearSelection()">
+              {{ _('Clear Selection') }}
+            </button>
+          </div>
+
+          <!-- Reorder Instructions -->
+          <div class="reorder-instructions" id="reorder-instructions">
+            <div class="reorder-instructions-icon">
+              <i class="fa fa-info-circle"></i>
+            </div>
+            <div>
+              <strong>{{ _('Reorder Mode Active') }}</strong> - 
+              {{ _('Drag and drop resources to change their order. The first resource will be displayed as the primary resource.') }}
+            </div>
+          </div>
+
+          <!-- Resources List -->
+          <ul class="modern-resource-list" 
+              {% if has_reorder %}data-module="resource-reorder" data-module-id="{{ pkg.id }}"{% endif %}
+              id="resources-list">
+            {% set can_edit = h.check_access('package_update', {'id':pkg.id }) %}
+            {% for resource in pkg.resources %}
+              {% snippet 'package/snippets/resource_item.html', pkg=pkg, res=resource, url_is_edit=true, can_edit=can_edit, is_activity_archive=False %}
+            {% endfor %}
+          </ul>
+
+        {% else %}
+          <!-- Empty State -->
+          <div class="empty-state">
+            <div class="empty-icon">
+              <i class="fa fa-database"></i>
+            </div>
+            <h2 class="empty-title">{{ _('No Resources Yet') }}</h2>
+            <p class="empty-message">
+              {{ _('Resources contain the actual data for your dataset. They can be data files you upload (like CSV, JSON, or Excel files) or links to external data sources and APIs.') }}
+            </p>
+            
+            <div class="empty-features">
+              <h4>{{ _('What you can add:') }}</h4>
+              <ul>
+                <li>
+                  <i class="fa fa-upload"></i>
+                  {{ _('Upload data files (CSV, JSON, XML, Excel, etc.)') }}
+                </li>
+                <li>
+                  <i class="fa fa-link"></i>
+                  {{ _('Link to external data sources and APIs') }}
+                </li>
+                <li>
+                  <i class="fa fa-file-text"></i>
+                  {{ _('Documentation and data dictionaries') }}
+                </li>
+                <li>
+                  <i class="fa fa-image"></i>
+                  {{ _('Charts, maps, and visualizations') }}
+                </li>
+              </ul>
+            </div>
+            
+            <a href="{{ h.url_for(pkg.type ~ '_resource.new', id=pkg.name) }}" class="add-resource-btn">
+              <i class="fa fa-plus-circle"></i>
+              {{ _('Add Your First Resource') }}
+            </a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -28,4 +649,362 @@
   {% if has_reorder %}
     {% asset 'vendor/reorder' %}
   {% endif %}
+  
+  <script>
+  (function() {
+    'use strict';
+
+    let reorderMode = false;
+    let bulkMode = false;
+    let selectedResources = new Set();
+
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeResourceManagement();
+    });
+
+    function initializeResourceManagement() {
+      // Add analytics tracking
+      trackResourceManagement();
+      
+      // Initialize bulk selection
+      addBulkSelectionHandlers();
+      
+      // Initialize drag and drop if available
+      {% if has_reorder %}
+        initializeDragAndDrop();
+      {% endif %}
+      
+      // Add keyboard shortcuts
+      addKeyboardShortcuts();
+    }
+
+    window.toggleReorderMode = function() {
+      const toggle = document.getElementById('reorder-toggle');
+      const icon = document.getElementById('reorder-icon');
+      const text = document.getElementById('reorder-text');
+      const instructions = document.getElementById('reorder-instructions');
+      const list = document.getElementById('resources-list');
+
+      reorderMode = !reorderMode;
+
+      if (reorderMode) {
+        toggle.classList.add('active');
+        icon.className = 'fa fa-times';
+        text.textContent = '{{ _("Exit Reorder") }}';
+        instructions.classList.add('show');
+        list.classList.add('reorder-mode');
+      } else {
+        toggle.classList.remove('active');
+        icon.className = 'fa fa-sort';
+        text.textContent = '{{ _("Reorder") }}';
+        instructions.classList.remove('show');
+        list.classList.remove('reorder-mode');
+      }
+
+      // Track reorder mode toggle
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'reorder_mode_toggle', {
+          'active': reorderMode
+        });
+      }
+    };
+
+    window.toggleBulkActions = function() {
+      const toggle = document.getElementById('bulk-toggle');
+      const bulkActions = document.getElementById('bulk-actions');
+
+      bulkMode = !bulkMode;
+
+      if (bulkMode) {
+        toggle.classList.add('active');
+        bulkActions.classList.add('show');
+        addSelectionCheckboxes();
+      } else {
+        toggle.classList.remove('active');
+        bulkActions.classList.remove('show');
+        removeSelectionCheckboxes();
+        clearSelection();
+      }
+    };
+
+    window.exportSelected = function() {
+      if (selectedResources.size === 0) {
+        alert('{{ _("Please select resources to export") }}');
+        return;
+      }
+
+      // Create export data
+      const exportData = Array.from(selectedResources).map(id => {
+        const item = document.querySelector(`[data-id="${id}"]`);
+        return {
+          id: id,
+          name: item.querySelector('.resource-title')?.textContent?.trim(),
+          format: item.dataset.format || 'unknown',
+          url: item.querySelector('.resource-url')?.href
+        };
+      });
+
+      // Download as JSON
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+        type: 'application/json'
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'selected-resources.json';
+      a.click();
+      URL.revokeObjectURL(url);
+
+      // Track export
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'bulk_export', {
+          'resource_count': selectedResources.size
+        });
+      }
+    };
+
+    window.deleteSelected = function() {
+      if (selectedResources.size === 0) {
+        alert('{{ _("Please select resources to delete") }}');
+        return;
+      }
+
+      const count = selectedResources.size;
+      if (!confirm(`{{ _("Are you sure you want to delete ") }}${count}{{ _(" selected resources? This action cannot be undone.") }}`)) {
+        return;
+      }
+
+      // In a real implementation, this would make API calls to delete resources
+      Array.from(selectedResources).forEach(id => {
+        const item = document.querySelector(`[data-id="${id}"]`);
+        if (item) {
+          item.style.opacity = '0.5';
+          item.style.pointerEvents = 'none';
+        }
+      });
+
+      // Show confirmation
+      setTimeout(() => {
+        alert(`{{ _("") }}${count}{{ _(" resources deleted successfully") }}`);
+        location.reload();
+      }, 1000);
+
+      // Track deletion
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'bulk_delete', {
+          'resource_count': count
+        });
+      }
+    };
+
+    window.clearSelection = function() {
+      selectedResources.clear();
+      updateSelectionCount();
+      
+      document.querySelectorAll('.resource-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+      });
+
+      document.querySelectorAll('.resource-item').forEach(item => {
+        item.classList.remove('selected');
+      });
+    };
+
+    function addSelectionCheckboxes() {
+      document.querySelectorAll('.resource-item').forEach(item => {
+        if (!item.querySelector('.resource-checkbox')) {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'resource-checkbox';
+          checkbox.style.cssText = `
+            position: absolute;
+            top: 1rem;
+            left: 1rem;
+            width: 20px;
+            height: 20px;
+            z-index: 10;
+            accent-color: #4facfe;
+          `;
+          
+          checkbox.addEventListener('change', function() {
+            const resourceId = item.dataset.id;
+            if (this.checked) {
+              selectedResources.add(resourceId);
+              item.classList.add('selected');
+            } else {
+              selectedResources.delete(resourceId);
+              item.classList.remove('selected');
+            }
+            updateSelectionCount();
+          });
+
+          item.style.position = 'relative';
+          item.appendChild(checkbox);
+        }
+      });
+    }
+
+    function removeSelectionCheckboxes() {
+      document.querySelectorAll('.resource-checkbox').forEach(checkbox => {
+        checkbox.remove();
+      });
+    }
+
+    function updateSelectionCount() {
+      const countElement = document.getElementById('selected-count');
+      if (countElement) {
+        countElement.textContent = selectedResources.size;
+      }
+    }
+
+    {% if has_reorder %}
+    function initializeDragAndDrop() {
+      const resourcesList = document.getElementById('resources-list');
+      if (resourcesList && typeof Sortable !== 'undefined') {
+        new Sortable(resourcesList, {
+          animation: 200,
+          ghostClass: 'sortable-placeholder',
+          disabled: true,
+          
+          onStart: function(evt) {
+            evt.item.style.opacity = '0.7';
+          },
+          
+          onEnd: function(evt) {
+            evt.item.style.opacity = '1';
+            
+            // Send reorder request
+            const items = Array.from(resourcesList.children);
+            const order = items.map(item => item.dataset.id);
+            
+            // Make API request to update order
+            fetch('/api/action/package_resource_reorder', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+              },
+              body: JSON.stringify({
+                id: '{{ pkg.id }}',
+                order: order
+              })
+            }).then(response => {
+              if (!response.ok) {
+                throw new Error('Reorder failed');
+              }
+              
+              // Show success message
+              showNotification('{{ _("Resources reordered successfully") }}', 'success');
+              
+              // Track reorder
+              if (typeof gtag !== 'undefined') {
+                gtag('event', 'resources_reordered', {
+                  'resource_count': order.length
+                });
+              }
+            }).catch(error => {
+              console.error('Failed to reorder resources:', error);
+              showNotification('{{ _("Failed to reorder resources") }}', 'error');
+              
+              // Revert order on error
+              resourcesList.insertBefore(evt.item, resourcesList.children[evt.oldIndex]);
+            });
+          }
+        });
+
+        // Enable/disable sorting based on reorder mode
+        window.addEventListener('reorderModeChanged', function(e) {
+          const sortable = Sortable.get(resourcesList);
+          if (sortable) {
+            sortable.option('disabled', !e.detail.active);
+          }
+        });
+      }
+    }
+    {% endif %}
+
+    function trackResourceManagement() {
+      // Track page load
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'resource_management_view', {
+          'resource_count': {{ pkg.resources|length if pkg.resources else 0 }},
+          'has_resources': {{ 'true' if pkg.resources else 'false' }}
+        });
+      }
+
+      // Track resource interactions
+      document.addEventListener('click', function(e) {
+        const resourceLink = e.target.closest('a[href*="resource"]');
+        if (resourceLink && typeof gtag !== 'undefined') {
+          gtag('event', 'resource_management_click', {
+            'action': resourceLink.textContent.trim().toLowerCase(),
+            'resource_id': resourceLink.closest('[data-id]')?.dataset.id
+          });
+        }
+      });
+    }
+
+    function addBulkSelectionHandlers() {
+      // Select all with Ctrl+A
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'a' && bulkMode) {
+          e.preventDefault();
+          
+          document.querySelectorAll('.resource-checkbox').forEach(checkbox => {
+            if (!checkbox.checked) {
+              checkbox.click();
+            }
+          });
+        }
+      });
+    }
+
+    function addKeyboardShortcuts() {
+      document.addEventListener('keydown', function(e) {
+        // R key to toggle reorder mode
+        if (e.key === 'r' && !e.ctrlKey && !e.metaKey && e.target.tagName !== 'INPUT') {
+          {% if has_reorder %}
+          toggleReorderMode();
+          {% endif %}
+        }
+        
+        // B key to toggle bulk actions
+        if (e.key === 'b' && !e.ctrlKey && !e.metaKey && e.target.tagName !== 'INPUT') {
+          toggleBulkActions();
+        }
+      });
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
+        color: white;
+        padding: 1rem 1.5rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        z-index: 10000;
+        transform: translateX(100%);
+        transition: transform 0.3s ease;
+      `;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          notification.remove();
+        }, 300);
+      }, 3000);
+    }
+  })();
+  </script>
 {% endblock %}

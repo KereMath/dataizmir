@@ -1,691 +1,90 @@
 {% import 'macros/form.html' as form %}
 
-<style>
-:root {
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --dark-overlay: rgba(0, 0, 0, 0.7);
-  --neon-glow: 0 0 30px rgba(102, 126, 234, 0.4);
-}
-
-.modern-resource-view {
-  background: var(--glass-bg);
-  backdrop-filter: blur(15px);
-  border: 1px solid var(--glass-border);
-  border-radius: 25px;
-  padding: 0;
-  margin: 2rem 0;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-}
-
-.modern-resource-view:hover {
-  transform: translateY(-5px);
-  box-shadow: var(--neon-glow), 0 25px 50px rgba(0, 0, 0, 0.2);
-}
-
-.view-header {
-  background: var(--primary-gradient);
-  padding: 1.5rem 2rem;
-  color: white;
-  position: relative;
-  overflow: hidden;
-}
-
-.view-header::before {
-  content: '';
-  position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-  animation: shimmer 3s infinite;
-}
-
-@keyframes shimmer {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(180deg); }
-}
-
-.view-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0 0 0.5rem 0;
-  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-}
-
-.view-description {
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-  line-height: 1.5;
-}
-
-.view-actions {
-  position: absolute;
-  top: 1.5rem;
-  right: 2rem;
-  display: flex;
-  gap: 1rem;
-  z-index: 10;
-}
-
-.modern-action-btn {
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 15px;
-  padding: 0.75rem 1.25rem;
-  color: white;
-  text-decoration: none;
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  font-size: 0.9rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-}
-
-.modern-action-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-  color: white;
-  text-decoration: none;
-}
-
-.modern-action-btn.primary {
-  background: rgba(255, 255, 255, 0.9);
-  color: #667eea;
-}
-
-.modern-action-btn.primary:hover {
-  background: white;
-  color: #667eea;
-}
-
-.view-content {
-  padding: 2rem;
-  position: relative;
-  min-height: 400px;
-}
-
-.data-viewer-wrapper {
-  background: white;
-  border-radius: 20px;
-  padding: 1.5rem;
-  box-shadow: inset 0 4px 15px rgba(0, 0, 0, 0.05);
-  position: relative;
-  overflow: hidden;
-}
-
-.data-viewer-wrapper::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: var(--primary-gradient);
-}
-
-.filter-section {
-  background: rgba(102, 126, 234, 0.1);
-  border: 1px solid rgba(102, 126, 234, 0.2);
-  border-radius: 15px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  backdrop-filter: blur(10px);
-}
-
-.filter-title {
-  color: white;
-  font-weight: 600;
-  margin-bottom: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.iframe-container {
-  position: relative;
-  border-radius: 15px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  background: white;
-}
-
-.iframe-container iframe {
-  width: 100%;
-  min-height: 500px;
-  border: none;
-  border-radius: 15px;
-}
-
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 1rem;
-  z-index: 100;
-  border-radius: 15px;
-  backdrop-filter: blur(5px);
-}
-
-.loading-spinner {
-  width: 50px;
-  height: 50px;
-  border: 4px solid rgba(102, 126, 234, 0.2);
-  border-top: 4px solid #667eea;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loading-text {
-  color: #667eea;
-  font-weight: 600;
-}
-
-.error-container {
-  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
-  color: white;
-  padding: 2rem;
-  border-radius: 20px;
-  text-align: center;
-  margin: 2rem 0;
-  box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
-}
-
-.error-icon {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-  opacity: 0.8;
-}
-
-.error-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 1rem;
-}
-
-.error-message {
-  margin-bottom: 2rem;
-  opacity: 0.9;
-}
-
-.error-actions {
-  display: flex;
-  gap: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.error-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  color: white;
-  padding: 0.75rem 1.5rem;
-  border-radius: 25px;
-  text-decoration: none;
-  font-weight: 600;
-  transition: all 0.3s ease;
-}
-
-.error-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-2px);
-  color: white;
-  text-decoration: none;
-}
-
-.embed-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--dark-overlay);
-  backdrop-filter: blur(10px);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  padding: 2rem;
-}
-
-.embed-modal.show {
-  display: flex;
-}
-
-.embed-content {
-  background: var(--glass-bg);
-  backdrop-filter: blur(20px);
-  border: 1px solid var(--glass-border);
-  border-radius: 25px;
-  padding: 2rem;
-  max-width: 600px;
-  width: 100%;
-  max-height: 80vh;
-  overflow-y: auto;
-  position: relative;
-}
-
-.embed-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  color: white;
-}
-
-.embed-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: 0;
-}
-
-.close-btn {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 2rem;
-  cursor: pointer;
-  padding: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-}
-
-.close-btn:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: rotate(90deg);
-}
-
-.embed-form {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.embed-input-group {
-  display: flex;
-  gap: 1rem;
-}
-
-.embed-input {
-  flex: 1;
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid transparent;
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-}
-
-.embed-input:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
-}
-
-.embed-textarea {
-  background: rgba(255, 255, 255, 0.9);
-  border: 2px solid transparent;
-  border-radius: 10px;
-  padding: 1rem;
-  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-  font-size: 0.9rem;
-  resize: vertical;
-  min-height: 120px;
-}
-
-.embed-label {
-  color: white;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  display: block;
-}
-
-.copy-btn {
-  background: var(--primary-gradient);
-  border: none;
-  border-radius: 10px;
-  padding: 0.75rem 1.5rem;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.copy-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .view-header {
-    padding: 1.5rem 1rem;
-  }
-  
-  .view-actions {
-    position: static;
-    margin-top: 1rem;
-    justify-content: center;
-  }
-  
-  .view-content {
-    padding: 1rem;
-  }
-  
-  .embed-content {
-    margin: 1rem;
-    padding: 1.5rem;
-  }
-  
-  .embed-input-group {
-    flex-direction: column;
-  }
-  
-  .modern-action-btn {
-    font-size: 0.8rem;
-    padding: 0.6rem 1rem;
-  }
-}
-
-/* Animation for view loading */
-@keyframes fadeInScale {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-.modern-resource-view {
-  animation: fadeInScale 0.6s ease-out;
-}
-</style>
-
 {% block resource_view %}
-  <div id="view-{{ resource_view['id'] }}" class="modern-resource-view" data-id="{{ resource_view['id'] }}" data-title="{{ resource_view['title'] }}" data-description="{{ resource_view['description'] }}">
-    
-    <div class="view-header">
-      <div class="view-title">
-        <i class="fa fa-chart-bar"></i>
-        {{ resource_view['title'] or _('Data Preview') }}
-      </div>
-      {% if resource_view['description'] %}
-        <div class="view-description">
-          {{ h.render_markdown(resource_view['description']) }}
-        </div>
-      {% endif %}
-      
-      <div class="view-actions">
-        <a class="modern-action-btn primary"
-           target="_blank"
-           href="{{ h.url_for('resource_view', id=package['name'], resource_id=resource['id'], view_id=resource_view['id'], qualified=True) }}">
-          <i class="fa fa-external-link"></i>
-          {{ _("Full Screen") }}
-        </a>
-        
-        <a class="modern-action-btn"
-           href="#"
-           onclick="openEmbedModal('{{ resource_view['id'] }}'); return false;"
-           data-module="resource-view-embed"
-           data-module-id="{{ resource_view['id'] }}"
-           data-module-url="{{ h.url_for('resource_view', id=package['name'], resource_id=resource['id'], view_id=resource_view['id'], qualified=True) }}">
-          <i class="fa fa-code"></i>
-          {{ _("Embed") }}
-        </a>
-      </div>
-    </div>
-
-    <div class="view-content">
+  <div id="view-{{ resource_view['id'] }}" class="resource-view" data-id="{{ resource_view['id'] }}" data-title="{{ resource_view['title'] }}" data-description="{{ resource_view['descripion'] }}">
+  <div class="actions">
+    <a class="btn btn-default"
+       target="_blank"
+       href="{{ h.url_for('resource_view', id=package['name'], resource_id=resource['id'], view_id=resource_view['id'], qualified=True) }}">
+      <i class="fa fa-arrows-alt"></i>
+      {{ _("Fullscreen") }}
+    </a>
+    <a class="btn btn-default"
+       href="#embed-{{ resource_view['id'] }}"
+       data-module="resource-view-embed"
+       data-module-id="{{ resource_view['id'] }}"
+       data-module-url="{{ h.url_for('resource_view', id=package['name'], resource_id=resource['id'], view_id=resource_view['id'], qualified=True) }}">
+      <i class="fa fa-code"></i>
+      {{ _("Embed") }}
+    </a>
+  </div>
+  <p class="desc">{{ h.render_markdown(resource_view['description']) }}</p>
+    <div class="m-top ckanext-datapreview">
       {% if not to_preview and h.resource_view_is_filterable(resource_view) %}
-        <div class="filter-section">
-          <div class="filter-title">
-            <i class="fa fa-filter"></i>
-            {{ _("Filter Data") }}
-          </div>
-          {% snippet 'package/snippets/resource_view_filters.html', resource=resource %}
-        </div>
+        {% snippet 'package/snippets/resource_view_filters.html', resource=resource %}
       {% endif %}
-
-      <div class="data-viewer-wrapper">
-        {% if not h.resource_view_is_iframed(resource_view) %}
-          {{ h.rendered_resource_view(resource_view, resource, package) }}
-        {% else %}
-          <div class="data-viewer-error js-hide error-container">
-            <div class="error-icon">
-              <i class="fa fa-exclamation-triangle"></i>
-            </div>
-            <div class="error-title">
-              {{ _('Resource view temporarily unavailable') }}
-            </div>
-            <div class="error-message">
-              <p>{{ _('This resource view is not available at the moment.') }}</p>
-              <p id="data-view-error" style="margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;"></p>
-            </div>
-            <div class="error-actions">
-              <a href="{{ resource.url }}" class="error-btn resource-url-analytics" target="_blank">
-                <i class="fa fa-download"></i>
-                {{ _('Download Original Resource') }}
-              </a>
-              <a href="#" class="error-btn" onclick="location.reload()">
-                <i class="fa fa-refresh"></i>
-                {{ _('Try Again') }}
-              </a>
-            </div>
-          </div>
-
-          <div class="iframe-container">
-            <div class="loading-overlay" id="loading-overlay">
-              <div class="loading-spinner"></div>
-              <div class="loading-text">{{ _('Loading data visualization...') }}</div>
-            </div>
-
-            {% if not to_preview %}
-              {% set current_filters = request.args.get('filters') %}
-              {% if current_filters %}
-                {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
-                  resource_id=resource['id'],
-                  view_id=resource_view['id'],
-                  filters=current_filters, qualified=true) %}
-              {% else %}
-                {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
-                  resource_id=resource['id'],
-                  view_id=resource_view['id'], qualified=true) %}
-              {% endif %}
-            {% else %}
-              {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'], resource_id=resource['id'], qualified=true) + '?' + h.urlencode({'resource_view': h.dump_json(resource_view)}) %}
-            {% endif %}
-
-            <iframe src="{{ src }}" 
-                    frameborder="0" 
-                    width="100%" 
-                    data-module="data-viewer"
-                    onload="hideLoading()"
-                    onerror="showError()">
-              <p>{{ _('Your browser does not support iframes.') }}</p>
-            </iframe>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-
-    <!-- Embed Modal -->
-    <div id="embed-modal-{{ resource_view['id'] }}" class="embed-modal">
-      <div class="embed-content">
-        <div class="embed-header">
-          <h3 class="embed-title">
-            <i class="fa fa-code"></i>
-            {{ _("Embed Resource View") }}
-          </h3>
-          <button type="button" class="close-btn" onclick="closeEmbedModal('{{ resource_view['id'] }}')">&times;</button>
-        </div>
-        
-        <div class="embed-form">
-          <p style="color: rgba(255, 255, 255, 0.8); margin-bottom: 1.5rem;">
-            {{ _("Copy and paste this code into any website or blog that supports HTML") }}
+      {% if not h.resource_view_is_iframed(resource_view) %}
+        {{ h.rendered_resource_view(resource_view, resource, package) }}
+      {% else %}
+        <div class="data-viewer-error js-hide">
+          <p class="text-danger">
+            <i class="fa fa-info-circle"></i>
+            {{ _('This resource view is not available at the moment.') }}
+            <a href="#" data-toggle="collapse" data-target="#data-view-error">
+              {{ _('Click here for more information.') }}
+            </a>
           </p>
-          
-          <div class="embed-input-group">
-            <div style="flex: 1;">
-              <label class="embed-label" for="width-{{ resource_view['id'] }}">{{ _("Width") }}</label>
-              <input type="number" 
-                     id="width-{{ resource_view['id'] }}" 
-                     class="embed-input" 
-                     value="700" 
-                     onchange="updateEmbedCode('{{ resource_view['id'] }}')">
-            </div>
-            <div style="flex: 1;">
-              <label class="embed-label" for="height-{{ resource_view['id'] }}">{{ _("Height") }}</label>
-              <input type="number" 
-                     id="height-{{ resource_view['id'] }}" 
-                     class="embed-input" 
-                     value="400" 
-                     onchange="updateEmbedCode('{{ resource_view['id'] }}')">
-            </div>
-          </div>
-          
-          <div>
-            <label class="embed-label" for="embed-code-{{ resource_view['id'] }}">{{ _("Embed Code") }}</label>
-            <textarea id="embed-code-{{ resource_view['id'] }}" 
-                      class="embed-textarea" 
-                      readonly></textarea>
-          </div>
-          
-          <button type="button" class="copy-btn" onclick="copyEmbedCode('{{ resource_view['id'] }}')">
-            <i class="fa fa-copy"></i>
-            {{ _("Copy to Clipboard") }}
-          </button>
+          <p id="data-view-error" class="collapse"></p>
+          <p>
+            <a href="{{ resource.url }}" class="btn btn-default btn-lg resource-url-analytics" target="_blank">
+              <i class="fa fa-lg fa-arrow-circle-o-down"></i>
+              {{ _('Download resource') }}
+            </a>
+          </p>
         </div>
+        {% if not to_preview %}
+          {% set current_filters = request.args.get('filters') %}
+          {% if current_filters %}
+            {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
+              resource_id=resource['id'],
+              view_id=resource_view['id'],
+              filters=current_filters, qualified=true)  %}
+          {% else %}
+            {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
+              resource_id=resource['id'],
+              view_id=resource_view['id'], qualified=true)  %}
+          {% endif %}
+        {% else %}
+          {# When previewing we need to stick the whole resource_view as a param as there is no other way to pass to information on to the iframe #}
+          {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'], resource_id=resource['id'], qualified=true) + '?' + h.urlencode({'resource_view': h.dump_json(resource_view)}) %}
+        {% endif %}
+        <iframe src="{{ src }}" frameborder="0" width="100%" data-module="data-viewer">
+          <p>{{ _('Your browser does not support iframes.') }}</p>
+        </iframe>
+      {% endif %}
+    </div>
+    <div id="embed-{{ resource_view['id'] }}" class="modal fade resource-view-embed">
+      <div class="modal-dialog">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal">&times;</button>
+        <h3 class="modal-title">{{ _("Embed resource view") }}</h3>
+      </div>
+      <div class="modal-body">
+        <p class="embed-content">{{ _("You can copy and paste the embed code into a CMS or blog software that supports raw HTML") }}</p>
+        <div class="row">
+          <div class="col-md-6">
+            {{ form.input("width", label=_("Width"), value=700, classes=["control-full"]) }}
+          </div>
+          <div class="col-md-6">
+            {{ form.input("height", label=_("Height"), value=400, classes=["control-full"]) }}
+          </div>
+        </div>
+        {{ form.textarea("code", label=_("Code"), value="", classes=["pre"], rows=3) }}
+      </div>
+      </div>
       </div>
     </div>
   </div>
 {% endblock %}
-
-<script>
-function hideLoading() {
-  const loadingOverlay = document.getElementById('loading-overlay');
-  if (loadingOverlay) {
-    loadingOverlay.style.display = 'none';
-  }
-}
-
-function showError() {
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const errorContainer = document.querySelector('.data-viewer-error');
-  
-  if (loadingOverlay) {
-    loadingOverlay.style.display = 'none';
-  }
-  
-  if (errorContainer) {
-    errorContainer.classList.remove('js-hide');
-  }
-}
-
-function openEmbedModal(viewId) {
-  const modal = document.getElementById('embed-modal-' + viewId);
-  if (modal) {
-    modal.classList.add('show');
-    updateEmbedCode(viewId);
-    
-    // Add escape key listener
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeEmbedModal(viewId);
-      }
-    });
-  }
-}
-
-function closeEmbedModal(viewId) {
-  const modal = document.getElementById('embed-modal-' + viewId);
-  if (modal) {
-    modal.classList.remove('show');
-  }
-}
-
-function updateEmbedCode(viewId) {
-  const width = document.getElementById('width-' + viewId).value;
-  const height = document.getElementById('height-' + viewId).value;
-  const url = "{{ h.url_for('resource_view', id=package['name'], resource_id=resource['id'], view_id=resource_view['id'], qualified=True) }}";
-  
-  const embedCode = `<iframe src="${url}" width="${width}" height="${height}" frameborder="0" style="border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);"></iframe>`;
-  
-  const textarea = document.getElementById('embed-code-' + viewId);
-  if (textarea) {
-    textarea.value = embedCode;
-  }
-}
-
-function copyEmbedCode(viewId) {
-  const textarea = document.getElementById('embed-code-' + viewId);
-  const copyBtn = document.querySelector('.copy-btn');
-  
-  if (textarea) {
-    textarea.select();
-    document.execCommand('copy');
-    
-    // Visual feedback
-    const originalText = copyBtn.innerHTML;
-    copyBtn.innerHTML = '<i class="fa fa-check"></i> ' + "{{ _('Copied!') }}";
-    copyBtn.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
-    
-    setTimeout(() => {
-      copyBtn.innerHTML = originalText;
-      copyBtn.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-    }, 2000);
-  }
-}
-
-// Close modal when clicking outside
-document.addEventListener('click', function(event) {
-  if (event.target.classList.contains('embed-modal')) {
-    event.target.classList.remove('show');
-  }
-});
-
-// Initialize iframe loading state
-document.addEventListener('DOMContentLoaded', function() {
-  const iframes = document.querySelectorAll('[data-module="data-viewer"]');
-  iframes.forEach(iframe => {
-    iframe.addEventListener('load', hideLoading);
-    iframe.addEventListener('error', showError);
-  });
-  
-  // Set timeout for loading overlay
-  setTimeout(() => {
-    const loadingOverlay = document.getElementById('loading-overlay');
-    if (loadingOverlay && loadingOverlay.style.display !== 'none') {
-      showError();
-    }
-  }, 10000); // 10 second timeout
-});
-</script>

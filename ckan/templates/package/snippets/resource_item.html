@@ -1,545 +1,79 @@
 {#
-  Modern version of resource item with glassmorphism and interactive elements
+  Renders a single resource with icons and view links.
+
+  res - A resource dict to render
+  pkg - A package dict that the resource belongs to
+  can_edit - Whether the user is allowed to edit the resource
+  url_is_edit - Whether the link to the resource should be to editing it (set to False to make the link view the resource)
+  is_activity_archive - Whether this is an old version of the dataset (and therefore read-only)
+
+  Example:
+
+    {% snippet "package/snippets/resource_item.html", res=resource, pkg_dict=pkg_dict, can_edit=True, url_is_edit=False %}
+
 #}
 {% set url_action = pkg.type ~ ('_resource.edit' if url_is_edit and can_edit else '_resource.read') %}
 {% set url = h.url_for(url_action, id=pkg.id if is_activity_archive else pkg.name, resource_id=res.id, **({'activity_id': request.args['activity_id']} if 'activity_id' in request.args else {})) %}
 
-<style>
-.modern-resource-item {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 20px;
-  padding: 1.5rem;
-  margin-bottom: 1rem;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-}
-
-.modern-resource-item::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.6s ease;
-}
-
-.modern-resource-item:hover::before {
-  left: 100%;
-}
-
-.modern-resource-item:hover {
-  transform: translateY(-8px) scale(1.02);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  border-color: rgba(102, 126, 234, 0.5);
-}
-
-.resource-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.resource-icon-container {
-  position: relative;
-  flex-shrink: 0;
-}
-
-.resource-icon {
-  width: 50px;
-  height: 50px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 1.2rem;
-  position: relative;
-  z-index: 2;
-  transition: all 0.3s ease;
-}
-
-.resource-icon::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: 12px;
-  opacity: 0.8;
-  z-index: -1;
-}
-
-/* Format-specific colors and icons */
-.format-csv .resource-icon::before { background: linear-gradient(135deg, #4CAF50, #45a049); }
-.format-json .resource-icon::before { background: linear-gradient(135deg, #FF9800, #F57C00); }
-.format-xml .resource-icon::before { background: linear-gradient(135deg, #9C27B0, #7B1FA2); }
-.format-pdf .resource-icon::before { background: linear-gradient(135deg, #F44336, #D32F2F); }
-.format-xls .resource-icon::before,
-.format-xlsx .resource-icon::before { background: linear-gradient(135deg, #4CAF50, #2E7D32); }
-.format-api .resource-icon::before { background: linear-gradient(135deg, #2196F3, #1976D2); }
-.format-default .resource-icon::before { background: linear-gradient(135deg, #607D8B, #455A64); }
-
-.resource-icon:hover {
-  transform: rotate(5deg) scale(1.1);
-  box-shadow: 0 0 20px rgba(102, 126, 234, 0.5);
-}
-
-.resource-content {
-  flex: 1;
-  min-width: 0;
-}
-
-.resource-title {
-  margin: 0 0 0.5rem 0;
-}
-
-.resource-title a {
-  color: white;
-  text-decoration: none;
-  font-weight: 700;
-  font-size: 1.1rem;
-  transition: all 0.3s ease;
-  display: block;
-  line-height: 1.4;
-}
-
-.resource-title a:hover {
-  color: #667eea;
-  text-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
-}
-
-.format-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: rgba(255, 255, 255, 0.2);
-  color: white;
-  padding: 0.3rem 0.8rem;
-  border-radius: 15px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  margin-left: 0.5rem;
-  transition: all 0.3s ease;
-}
-
-.format-badge:hover {
-  background: rgba(255, 255, 255, 0.3);
-  transform: scale(1.05);
-}
-
-.popularity-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  background: linear-gradient(135deg, #FF6B6B, #4ECDC4);
-  color: white;
-  padding: 0.2rem 0.6rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  margin-left: 0.5rem;
-  animation: pulse 2s infinite;
-}
-
-.resource-description {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 0.9rem;
-  line-height: 1.4;
-  margin-bottom: 1rem;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.resource-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.action-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.action-btn {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 20px;
-  padding: 0.6rem 1.2rem;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  font-size: 0.85rem;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-}
-
-.action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-  color: white;
-  text-decoration: none;
-}
-
-.dropdown-menu-modern {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  min-width: 200px;
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 15px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  margin-top: 0.5rem;
-  overflow: hidden;
-  animation: dropdownSlide 0.3s ease-out;
-}
-
-@keyframes dropdownSlide {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.action-dropdown:hover .dropdown-menu-modern,
-.action-dropdown.show .dropdown-menu-modern {
-  display: block;
-}
-
-.dropdown-item-modern {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.8rem 1rem;
-  color: white;
-  text-decoration: none;
-  transition: all 0.3s ease;
-  border: none;
-  background: none;
-  width: 100%;
-  text-align: left;
-  font-size: 0.9rem;
-}
-
-.dropdown-item-modern:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  text-decoration: none;
-  transform: translateX(5px);
-}
-
-.dropdown-divider {
-  height: 1px;
-  background: rgba(255, 255, 255, 0.1);
-  margin: 0.5rem 0;
-}
-
-.resource-metadata {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
-  flex-wrap: wrap;
-}
-
-.metadata-item {
-  display: flex;
-  align-items: center;
-  gap: 0.3rem;
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.8rem;
-}
-
-.metadata-item i {
-  width: 14px;
-  text-align: center;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .modern-resource-item {
-    padding: 1rem;
-  }
-  
-  .resource-header {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .resource-icon {
-    width: 40px;
-    height: 40px;
-    font-size: 1rem;
-  }
-  
-  .resource-actions {
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  
-  .dropdown-menu-modern {
-    position: fixed;
-    left: 1rem;
-    right: 1rem;
-    top: auto;
-    bottom: 1rem;
-    min-width: auto;
-  }
-}
-
-/* Animation for new items */
-@keyframes slideInFromLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-50px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-.modern-resource-item.new-item {
-  animation: slideInFromLeft 0.6s ease-out;
-}
-
-/* Status indicators */
-.status-indicator {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #4CAF50;
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-}
-
-.status-indicator.inactive {
-  background: #F44336;
-  box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
-}
-
-.status-indicator.processing {
-  background: #FF9800;
-  box-shadow: 0 0 10px rgba(255, 152, 0, 0.5);
-  animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.7;
-    transform: scale(1.2);
-  }
-}
-</style>
-
-<li class="modern-resource-item {{ 'format-' + (res.format.lower() if res.format else 'default') }}" data-id="{{ res.id }}">
-  {% if res.datastore_active %}
-    <div class="status-indicator" title="{{ _('Data available in DataStore') }}"></div>
-  {% elif res.url %}
-    <div class="status-indicator inactive" title="{{ _('External resource') }}"></div>
-  {% else %}
-    <div class="status-indicator processing" title="{{ _('Processing') }}"></div>
-  {% endif %}
-
-  <div class="resource-header">
-    <div class="resource-icon-container">
-      <div class="resource-icon">
-        {% if res.format %}
-          {% set format_lower = res.format.lower() %}
-          {% if format_lower in ['csv', 'tsv'] %}
-            <i class="fa fa-table"></i>
-          {% elif format_lower in ['json', 'geojson'] %}
-            <i class="fa fa-code"></i>
-          {% elif format_lower in ['xml', 'rdf'] %}
-            <i class="fa fa-sitemap"></i>
-          {% elif format_lower in ['pdf'] %}
-            <i class="fa fa-file-pdf-o"></i>
-          {% elif format_lower in ['xls', 'xlsx'] %}
-            <i class="fa fa-file-excel-o"></i>
-          {% elif format_lower in ['doc', 'docx'] %}
-            <i class="fa fa-file-word-o"></i>
-          {% elif format_lower == 'api' %}
-            <i class="fa fa-plug"></i>
-          {% else %}
-            <i class="fa fa-file-o"></i>
-          {% endif %}
-        {% else %}
-          <i class="fa fa-file-o"></i>
-        {% endif %}
-      </div>
-    </div>
-
-    <div class="resource-content">
-      <h3 class="resource-title">
-        <a href="{{ url }}" title="{{ res.name or res.description }}">
-          {{ h.resource_display_name(res) | truncate(50) }}
-        </a>
-        {% if res.format %}
-          <span class="format-badge">
-            <i class="fa fa-tag"></i>
-            {{ h.get_translated(res, 'format') }}
-          </span>
-        {% endif %}
-        {% if res.tracking_summary and res.tracking_summary.total >= 10 %}
-          <span class="popularity-indicator">
-            <i class="fa fa-fire"></i>
-            {{ res.tracking_summary.total }} {{ _('views') }}
-          </span>
-        {% endif %}
-      </h3>
-
+<li class="resource-item" data-id="{{ res.id }}">
+  {% block resource_item_title %}
+  <a class="heading" href="{{ url }}" title="{{ res.name or res.description }}">
+    {{ h.resource_display_name(res) | truncate(50) }}<span class="format-label" property="dc:format" data-format="{{ res.format.lower() or 'data' }}">{{ h.get_translated(res, 'format') }}</span>
+    {{ h.popular('views', res.tracking_summary.total, min=10) if res.tracking_summary }}
+  </a>
+  {% endblock %}
+  {% block resource_item_description %}
+    <p class="description">
       {% if res.description %}
-        <div class="resource-description">
-          {{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=80) }}
-        </div>
+        {{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=80) }}
       {% endif %}
-
-      <div class="resource-metadata">
-        {% if res.last_modified %}
-          <div class="metadata-item">
-            <i class="fa fa-clock-o"></i>
-            <span>{{ h.render_datetime(res.last_modified) }}</span>
-          </div>
-        {% endif %}
-        {% if res.size %}
-          <div class="metadata-item">
-            <i class="fa fa-hdd-o"></i>
-            <span>{{ res.size }}</span>
-          </div>
-        {% endif %}
-        {% if res.url and h.is_url(res.url) %}
-          <div class="metadata-item">
-            <i class="fa fa-external-link"></i>
-            <span>{{ _('External') }}</span>
-          </div>
-        {% endif %}
-      </div>
-    </div>
-  </div>
-
+    </p>
+  {% endblock %}
+  {% block resource_item_explore %}
   {% if not url_is_edit %}
-    <div class="resource-actions">
-      <div class="action-dropdown">
-        <a href="#" class="action-btn" onclick="event.preventDefault(); this.parentNode.classList.toggle('show');">
-          <i class="fa fa-cog"></i>
-          {{ _('Actions') }}
-          <i class="fa fa-caret-down"></i>
+  <div class="dropdown btn-group">
+    <a href="#" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+      <i class="fa fa-share"></i>
+      {{ _('Explore') }}
+      <span class="caret"></span>
+    </a>
+    <ul class="dropdown-menu">
+      {% block resource_item_explore_links %}
+      <li>
+        <a href="{{ url }}">
+          {% if not is_activity_archive and res.has_views %}
+            <i class="fa fa-bar-chart-o"></i>
+            {{ _('Preview') }}
+          {% else %}
+            <i class="fa fa-info-circle"></i>
+            {{ _('More information') }}
+          {% endif %}
         </a>
-        
-        <div class="dropdown-menu-modern">
-          <a href="{{ url }}" class="dropdown-item-modern">
-            {% if not is_activity_archive and res.has_views %}
-              <i class="fa fa-eye"></i>
-              {{ _('Preview') }}
-            {% else %}
-              <i class="fa fa-info-circle"></i>
-              {{ _('Details') }}
-            {% endif %}
-          </a>
-          
-          {% if res.url and h.is_url(res.url) %}
-            <a href="{{ res.url }}" class="dropdown-item-modern resource-url-analytics" target="_blank">
-              {% if res.has_views or res.url_type == 'upload' %}
-                <i class="fa fa-download"></i>
-                {{ _('Download') }}
-              {% else %}
-                <i class="fa fa-external-link"></i>
-                {{ _('Open Resource') }}
-              {% endif %}
-            </a>
+      </li>
+      {% if res.url and h.is_url(res.url) %}
+      <li>
+        <a href="{{ res.url }}" class="resource-url-analytics" target="_blank">
+          {% if res.has_views or res.url_type == 'upload' %}
+            <i class="fa fa-arrow-circle-o-down"></i>
+            {{ _('Download') }}
+          {% else %}
+            <i class="fa fa-external-link"></i>
+            {{ _('Go to resource') }}
           {% endif %}
-
-          {% if res.datastore_active %}
-            <div class="dropdown-divider"></div>
-            <a href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}" 
-               class="dropdown-item-modern" target="_blank">
-              <i class="fa fa-file-text-o"></i>
-              {{ _('Export CSV') }}
-            </a>
-            <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='json') }}" 
-               class="dropdown-item-modern" target="_blank">
-              <i class="fa fa-code"></i>
-              {{ _('Export JSON') }}
-            </a>
-          {% endif %}
-          
-          {% if can_edit %}
-            <div class="dropdown-divider"></div>
-            <a href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id) }}" 
-               class="dropdown-item-modern">
-              <i class="fa fa-edit"></i>
-              {{ _('Edit') }}
-            </a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
+        </a>
+      </li>
+      {% endif %}
+      {% if can_edit %}
+      <li>
+        <a href="{{ h.url_for(pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id) }}">
+          <i class="fa fa-pencil-square-o"></i>
+          {{ _('Edit') }}
+        </a>
+      </li>
+      {% endif %}
+      {% endblock %}
+    </ul>
+  </div>
   {% endif %}
+  {% endblock %}
 </li>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Close dropdown when clicking outside
-  document.addEventListener('click', function(event) {
-    if (!event.target.closest('.action-dropdown')) {
-      document.querySelectorAll('.action-dropdown.show').forEach(dropdown => {
-        dropdown.classList.remove('show');
-      });
-    }
-  });
-
-  // Add hover effects for resource items
-  const resourceItems = document.querySelectorAll('.modern-resource-item');
-  resourceItems.forEach(item => {
-    item.addEventListener('mouseenter', function() {
-      this.style.zIndex = '10';
-    });
-    
-    item.addEventListener('mouseleave', function() {
-      this.style.zIndex = 'auto';
-    });
-  });
-
-  // Add click analytics tracking
-  const analyticsLinks = document.querySelectorAll('.resource-url-analytics');
-  analyticsLinks.forEach(link => {
-    link.addEventListener('click', function() {
-      // Track download/view analytics
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'resource_download', {
-          'resource_id': this.closest('.modern-resource-item').dataset.id,
-          'resource_format': this.closest('.modern-resource-item').className.match(/format-(\w+)/)?.[1] || 'unknown'
-        });
-      }
-    });
-  });
-});
-</script>

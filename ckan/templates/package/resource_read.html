@@ -7,286 +7,6 @@
   {% set description = h.markdown_extract(h.get_translated(res, 'description'), extract_length=200) if res.description else h.markdown_extract(h.get_translated(package, 'notes'), extract_length=200) %}
   <meta property="og:title" content="{{ h.dataset_display_name(package) }} - {{ h.resource_display_name(res) }} - {{ g.site_title }}">
   <meta property="og:description" content="{{ description|forceescape }}">
-  
-  <style>
-    :root {
-      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      --glass-bg: rgba(255, 255, 255, 0.1);
-      --glass-border: rgba(255, 255, 255, 0.2);
-      --dark-glass: rgba(0, 0, 0, 0.1);
-      --neon-glow: 0 0 20px rgba(102, 126, 234, 0.3);
-    }
-
-    .modern-resource-container {
-      min-height: 100vh;
-      padding: 2rem 0;
-    }
-
-    .glass-card {
-      background: var(--glass-bg);
-      backdrop-filter: blur(10px);
-      border: 1px solid var(--glass-border);
-      border-radius: 20px;
-      padding: 2rem;
-      margin-bottom: 2rem;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .glass-card:hover {
-      transform: translateY(-5px);
-      box-shadow: var(--neon-glow), 0 20px 40px rgba(0, 0, 0, 0.2);
-    }
-
-    .resource-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .resource-icon {
-      width: 60px;
-      height: 60px;
-      background: var(--primary-gradient);
-      border-radius: 15px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-size: 24px;
-      box-shadow: var(--neon-glow);
-    }
-
-    .resource-title {
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: white;
-      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-      margin: 0;
-    }
-
-    .resource-url {
-      background: var(--dark-glass);
-      border-radius: 10px;
-      padding: 1rem;
-      color: rgba(255, 255, 255, 0.9);
-      word-break: break-all;
-      border-left: 4px solid #667eea;
-    }
-
-    .action-buttons {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      margin-bottom: 2rem;
-    }
-
-    .modern-btn {
-      background: var(--primary-gradient);
-      border: none;
-      border-radius: 25px;
-      padding: 12px 24px;
-      color: white;
-      text-decoration: none;
-      font-weight: 600;
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .modern-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
-      color: white;
-      text-decoration: none;
-    }
-
-    .modern-btn.secondary {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .download-dropdown {
-      position: relative;
-      display: inline-block;
-    }
-
-    .dropdown-content {
-      display: none;
-      position: absolute;
-      background: var(--glass-bg);
-      backdrop-filter: blur(10px);
-      border-radius: 10px;
-      min-width: 200px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-      z-index: 1;
-      top: 100%;
-      left: 0;
-      margin-top: 5px;
-    }
-
-    .dropdown-content a {
-      display: block;
-      padding: 12px 16px;
-      color: white;
-      text-decoration: none;
-      border-radius: 5px;
-      margin: 5px;
-      transition: background 0.3s ease;
-    }
-
-    .dropdown-content a:hover {
-      background: rgba(255, 255, 255, 0.1);
-    }
-
-    .download-dropdown:hover .dropdown-content {
-      display: block;
-    }
-
-    .resource-description {
-      background: var(--dark-glass);
-      border-radius: 15px;
-      padding: 2rem;
-      color: rgba(255, 255, 255, 0.9);
-      line-height: 1.6;
-      margin-bottom: 2rem;
-    }
-
-    .data-preview {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-
-    .preview-tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      border-bottom: 2px solid #f0f0f0;
-    }
-
-    .preview-tab {
-      padding: 12px 24px;
-      background: none;
-      border: none;
-      border-radius: 10px 10px 0 0;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      color: #666;
-      font-weight: 600;
-    }
-
-    .preview-tab.active {
-      background: var(--primary-gradient);
-      color: white;
-      box-shadow: 0 -5px 15px rgba(102, 126, 234, 0.3);
-    }
-
-    .info-table {
-      background: var(--glass-bg);
-      backdrop-filter: blur(10px);
-      border-radius: 15px;
-      overflow: hidden;
-      border: 1px solid var(--glass-border);
-    }
-
-    .info-table tr {
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .info-table tr:last-child {
-      border-bottom: none;
-    }
-
-    .info-table th {
-      background: var(--primary-gradient);
-      color: white;
-      padding: 1rem;
-      font-weight: 600;
-      width: 30%;
-    }
-
-    .info-table td {
-      padding: 1rem;
-      color: rgba(255, 255, 255, 0.9);
-    }
-
-    .sidebar-modern {
-      background: var(--glass-bg);
-      backdrop-filter: blur(10px);
-      border-radius: 20px;
-      padding: 2rem;
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-    }
-
-    .resources-nav {
-      list-style: none;
-      padding: 0;
-    }
-
-    .resources-nav li {
-      margin-bottom: 8px;
-    }
-
-    .resources-nav a {
-      display: block;
-      padding: 12px 16px;
-      color: rgba(255, 255, 255, 0.8);
-      text-decoration: none;
-      border-radius: 10px;
-      transition: all 0.3s ease;
-    }
-
-    .resources-nav a:hover,
-    .resources-nav .active a {
-      background: var(--primary-gradient);
-      color: white;
-      transform: translateX(5px);
-    }
-
-    @media (max-width: 768px) {
-      .resource-title {
-        font-size: 2rem;
-      }
-      
-      .action-buttons {
-        flex-direction: column;
-      }
-      
-      .glass-card {
-        padding: 1rem;
-      }
-    }
-
-    /* Animations */
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(30px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .glass-card {
-      animation: fadeInUp 0.6s ease-out;
-    }
-
-    .glass-card:nth-child(2) {
-      animation-delay: 0.1s;
-    }
-
-    .glass-card:nth-child(3) {
-      animation-delay: 0.2s;
-    }
-  </style>
 {% endblock -%}
 
 {% block subtitle %}{{ h.dataset_display_name(package) }} {{ g.template_title_delimiter }} {{ h.resource_display_name(res) }}{% endblock %}
@@ -298,90 +18,108 @@
   <li class="active"><a href="">{{ h.resource_display_name(res)|truncate(30) }}</a></li>
 {% endblock %}
 
-{% block content %}
-<div class="modern-resource-container">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-8">
-        <div class="glass-card">
-          <div class="resource-header">
-            <div class="resource-icon">
-              <i class="fa fa-file-o"></i>
-            </div>
-            <div>
-              <h1 class="resource-title">{{ h.resource_display_name(res) | truncate(50) }}</h1>
-              {% block resource_read_url %}
-                {% if res.url and h.is_url(res.url) %}
-                  <div class="resource-url">
-                    <i class="fa fa-link"></i> {{ res.url }}
-                  </div>
-                {% endif %}
-              {% endblock %}
-            </div>
-          </div>
-
-          <div class="action-buttons">
+{% block pre_primary %}
+  {% block resource %}
+    <section class="module module-resource" role="complementary">
+      {% block resource_inner %}
+      <div class="module-content">
+        <div class="actions">
+          {% block resource_actions %}
+          <ul>
+            {% block resource_actions_inner %}
+            {% if h.check_access('package_update', {'id':pkg.id }) and not is_activity_archive %}
+              <li>{% link_for _('Manage'), named_route=pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
+            {% endif %}
             {% if res.url and h.is_url(res.url) %}
-              <div class="download-dropdown">
-                <a class="modern-btn" href="{{ res.url }}">
+              <li>
+                <div class="btn-group">
+                <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
                   {% if res.resource_type in ('listing', 'service') %}
                     <i class="fa fa-eye"></i> {{ _('View') }}
-                  {% elif res.resource_type == 'api' %}
+                  {% elif  res.resource_type == 'api' %}
                     <i class="fa fa-key"></i> {{ _('API Endpoint') }}
+                  {% elif not res.has_views and not res.url_type == 'upload' %}
+                    <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
                   {% else %}
-                    <i class="fa fa-download"></i> {{ _('Download') }}
+                    <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
                   {% endif %}
-                  <i class="fa fa-caret-down"></i>
                 </a>
-                
-                {% if res.datastore_active %}
-                  <div class="dropdown-content">
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}" target="_blank">
-                      <i class="fa fa-file-text-o"></i> CSV
-                    </a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='tsv', bom=True) }}" target="_blank">
-                      <i class="fa fa-file-text-o"></i> TSV
-                    </a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='json') }}" target="_blank">
-                      <i class="fa fa-file-code-o"></i> JSON
-                    </a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='xml') }}" target="_blank">
-                      <i class="fa fa-file-code-o"></i> XML
-                    </a>
-                  </div>
-                {% endif %}
+                {% block download_resource_button %}
+                  {% if res.datastore_active %}
+                <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
+                    <span class="caret"></span>
+                  </button>
+                <ul class="dropdown-menu">
+                  <li>
+                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}"
+                      target="_blank"><span>CSV</span></a>
+                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='tsv', bom=True) }}"
+                      target="_blank"><span>TSV</span></a>
+                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='json') }}"
+                      target="_blank"><span>JSON</span></a>
+                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='xml') }}"
+                      target="_blank"><span>XML</span></a>
+                  </li>
+                </ul>
+                  {% endif %}
+                {% endblock %}
+                </div>
+              </li>
+            {% endif %}
+            {% endblock %}
+          </ul>
+          {% endblock %}
+        </div>
+        {% block resource_content %}
+          {% block package_archive_notice %}
+            {% if is_activity_archive %}
+              <div id="activity-archive-notice" class="alert alert-danger">
+                {% trans url=h.url_for(pkg.type ~ '.read', id=pkg.id) %}
+                You're currently viewing an old version of this dataset. To see the
+                current version, click <a href="{{ url }}">here</a>.
+                {% endtrans %}
               </div>
             {% endif %}
-          </div>
-
-          {% if res.description %}
-            <div class="resource-description">
+          {% endblock %}
+          {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
+          {% block resource_read_url %}
+            {% if res.url and h.is_url(res.url) %}
+              <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ res.url }}" title="{{ res.url }}">{{ res.url }}</a></p>
+            {% elif res.url %}
+              <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
+            {% endif %}
+          {% endblock %}
+          <div class="prose notes" property="rdfs:label">
+            {% if res.description %}
               {{ h.render_markdown(res.description) }}
-            </div>
-          {% endif %}
-        </div>
-
-        {% if not is_activity_archive and (res.has_views or resource_preview) %}
-          <div class="glass-card">
-            <div class="data-preview">
+            {% endif %}
+            {% if not res.description and package.notes %}
+              <h3>{{ _('Dataset description:') }}</h3>
+              <blockquote>{{ h.markdown_extract(h.get_translated(package, 'notes')) }}</blockquote>
+              <p>{% trans dataset=package.title, url=h.url_for(package.type ~ '.read', id=package.id if is_activity_archive else package.name) %}Source: <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
+            {% endif %}
+          </div>
+        {% endblock %}
+      {% if not is_activity_archive %}
+      {% block data_preview %}
+      {% block resource_view %}
+        {% block resource_view_nav %}
+          {% set resource_preview = h.resource_preview(resource, package) %}
+          {% snippet "package/snippets/resource_views_list.html",
+             views=resource_views,
+             pkg=pkg,
+             is_edit=false,
+             view_id=current_resource_view['id'],
+             resource_preview=resource_preview,
+             resource=resource,
+             extra_class="nav-tabs nav-tabs-plain"
+           %}
+        {% endblock %}
+          {% block resource_view_content %}
+            <div class="resource-view">
               {% set resource_preview = h.resource_preview(resource, package) %}
               {% set views_created = res.has_views or resource_preview %}
-              
-              <div class="preview-tabs">
-                {% if resource_preview %}
-                  <button class="preview-tab active">
-                    <i class="fa fa-eye"></i> {{ _("Preview") }}
-                  </button>
-                {% endif %}
-                
-                {% for view in resource_views %}
-                  <button class="preview-tab">
-                    <i class="fa fa-{{ h.resource_view_icon(view) }}"></i> {{ view.title }}
-                  </button>
-                {% endfor %}
-              </div>
-              
-              <div class="preview-content">
+              {% if views_created %}
                 {% if resource_preview and not current_resource_view %}
                   {{ h.resource_preview(resource, package) }}
                 {% else %}
@@ -395,88 +133,95 @@
                     {% endif %}
                   {% endfor %}
                 {% endif %}
-              </div>
+              {% else %}
+                {# Views not created #}
+                <div class="data-viewer-info">
+                  <p>{{ _("There are no views created for this resource yet.") }}</p>
+                  {% if h.check_access('resource_view_create', {'resource_id': resource.id}) %}
+                    <p class="text-muted">
+                      <i class="fa fa-info-circle"></i>
+                      {{ _("Not seeing the views you were expecting?")}}
+                      <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
+                        {{ _('Click here for more information.') }}</a>
+                    </p>
+                    <div id="data-view-info" class="collapse">
+                      <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
+                      <ul>
+                        <li>{{ _("No view has been created that is suitable for this resource")}}</li>
+                        <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
+                        <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
+                      </ul>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endif %}
             </div>
-          </div>
-        {% endif %}
+          {% endblock %}
+        </div>
+      {% endblock %}
+      {% endblock %}
+      {% endif %}
+      {% endblock %}
+    </section>
+  {% endblock %}
+{% endblock %}
 
-        <div class="glass-card">
-          <h2 style="color: white; margin-bottom: 2rem;">
-            <i class="fa fa-info-circle"></i> {{ _('Additional Information') }}
-          </h2>
-          <table class="info-table table table-striped">
+{% block primary_content %}
+  {% block resource_additional_information %}
+    {% if res %}
+      <section class="module">
+        {% block resource_additional_information_inner %}
+        <div class="module-content">
+          <h2>{{ _('Additional Information') }}</h2>
+          <table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more">
+            <thead>
+              <tr>
+                <th scope="col">{{ _('Field') }}</th>
+                <th scope="col">{{ _('Value') }}</th>
+              </tr>
+            </thead>
             <tbody>
               <tr>
-                <th>{{ _('Data last updated') }}</th>
+                <th scope="row">{{ _('Data last updated') }}</th>
                 <td>{{ h.render_datetime(res.last_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
               </tr>
               <tr>
-                <th>{{ _('Metadata last updated') }}</th>
+                <th scope="row">{{ _('Metadata last updated') }}</th>
                 <td>{{ h.render_datetime(res.metadata_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
               </tr>
               <tr>
-                <th>{{ _('Created') }}</th>
+                <th scope="row">{{ _('Created') }}</th>
                 <td>{{ h.render_datetime(res.created) or _('unknown') }}</td>
               </tr>
               <tr>
-                <th>{{ _('Format') }}</th>
-                <td>
-                  <span class="format-badge" style="background: var(--primary-gradient); color: white; padding: 4px 12px; border-radius: 15px; font-size: 0.9em;">
-                    {{ res.format or res.mimetype_inner or res.mimetype or _('unknown') }}
-                  </span>
-                </td>
+                <th scope="row">{{ _('Format') }}</th>
+                <td>{{ res.format or res.mimetype_inner or res.mimetype or _('unknown') }}</td>
               </tr>
               <tr>
-                <th>{{ _('License') }}</th>
+                <th scope="row">{{ _('License') }}</th>
                 <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
               </tr>
               {% for key, value in h.format_resource_items(res.items()) %}
                 {% if key not in ('created', 'metadata modified', 'last modified', 'format') %}
-                  <tr><th>{{ key | capitalize }}</th><td>{{ value }}</td></tr>
+                  <tr class="toggle-more"><th scope="row">{{ key | capitalize }}</th><td>{{ value }}</td></tr>
                 {% endif %}
               {% endfor %}
             </tbody>
           </table>
         </div>
-      </div>
+        {% endblock %}
+      </section>
+    {% endif %}
+  {% endblock %}
+{% endblock %}
 
-      <div class="col-md-4">
-        <div class="sidebar-modern">
-          <h3 style="color: white; margin-bottom: 1.5rem;">
-            <i class="fa fa-files-o"></i> {{ _("Resources") }}
-          </h3>
-          <ul class="resources-nav">
-            {% for resource in pkg.resources %}
-              <li>
-                <a href="{{ h.url_for(pkg.type ~ '_resource.read', id=pkg.name, resource_id=resource.id) }}"
-                   class="{{ 'active' if resource.id == res.id }}">
-                  <i class="fa fa-file-o"></i>
-                  {{ h.resource_display_name(resource)|truncate(25) }}
-                  <span class="format-label">{{ h.get_translated(resource, 'format') }}</span>
-                </a>
-              </li>
-            {% endfor %}
-          </ul>
-        </div>
+{% block secondary_content %}
 
-        <div class="sidebar-modern" style="margin-top: 2rem;">
-          {% snippet "snippets/social.html" %}
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
+  {% block resources_list %}
+    {% snippet "package/snippets/resources.html", pkg=pkg, active=res.id, action='read', is_activity_archive=is_activity_archive %}
+  {% endblock %}
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-  // Preview tabs functionality
-  const tabs = document.querySelectorAll('.preview-tab');
-  tabs.forEach(tab => {
-    tab.addEventListener('click', function() {
-      tabs.forEach(t => t.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-});
-</script>
+  {% block resource_license %}
+    {% snippet "snippets/social.html" %}
+  {% endblock %}
 {% endblock %}

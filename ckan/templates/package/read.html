@@ -457,7 +457,8 @@ class ModernDatasetPage {
         html+= this.dataset.notes ? `<div style="margin-bottom:30px;font-size:1.6rem;line-height:1.8;color:#495057;">${this.dataset.notes}</div>` : `<p style="color:#6c757d;font-size:1.6rem;">Bu dataset için henüz açıklama eklenmemiş.</p>`;
         html+=`<h3 style="color:#667eea;margin-bottom:20px;font-size:1.8rem;font-weight:700;">📋 Veri Seti Bilgileri</h3><div class="metadata-grid">`;
         const pushMeta=(label,val)=>{html+=`<div class="metadata-item"><div class="metadata-label">${label}</div><div class="metadata-value">${val}</div></div>`;};
-        pushMeta('Son Güncelleme',this.formatDate(this.dataset.metadata_modified));
+        // BURASI GÜNCELLENDİ: Son Güncelleme zamanından 3 saat çıkarılıyor
+        pushMeta('Son Güncelleme',this.formatDate(this.dataset.metadata_modified, -3)); 
         pushMeta('Oluşturma Tarihi',this.formatDate(this.dataset.metadata_created));
         pushMeta('Kaynak Sayısı',(this.dataset.num_resources||this.dataset.resources?.length||0)+' dosya');
         if(this.dataset.license_title) pushMeta('Lisans',this.dataset.license_title);
@@ -550,7 +551,29 @@ class ModernDatasetPage {
     }
     /* Yardımcı fonksiyonlar */
     renderError(msg){ document.body.innerHTML=`<div class="modern-container"><div class="glass-card"><div style="padding:40px;text-align:center;color:#dc3545;">${msg}</div></div></div>`; }
-    formatDate(s){ if(!s) return 'Bilinmiyor'; const d=new Date(s); const diff=(Date.now()-d)/60000; if(diff<60) return Math.floor(diff)+' dk önce'; const diffH=diff/60; if(diffH<24) return Math.floor(diffH)+' saat önce'; const diffD=diffH/24; if(diffD<30) return Math.floor(diffD)+' gün önce'; return d.toLocaleDateString('tr-TR',{year:'numeric',month:'long',day:'numeric'}); }
+    // BURASI GÜNCELLENDİ: `hoursOffset` parametresi eklendi
+    formatDate(s, hoursOffset = 0){ 
+        if(!s) return 'Bilinmiyor'; 
+        const d = new Date(s); 
+        // Saat farkını uygula
+        d.setHours(d.getHours() + hoursOffset);
+
+        const now = new Date();
+        const diffMinutes = (now.getTime() - d.getTime()) / (1000 * 60); 
+
+        if(diffMinutes < 60) {
+            return Math.floor(diffMinutes) + ' dk önce';
+        }
+        const diffHours = diffMinutes / 60; 
+        if(diffHours < 24) {
+            return Math.floor(diffHours) + ' saat önce';
+        }
+        const diffDays = diffHours / 24; 
+        if(diffDays < 30) {
+            return Math.floor(diffDays) + ' gün önce';
+        }
+        return d.toLocaleDateString('tr-TR',{year:'numeric',month:'long',day:'numeric'}); 
+    }
     truncate(t,l){ return (!t||t.length<=l)?t:(t.substring(0,l)+'...'); }
 }
 function showTab(name){ document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); event.currentTarget.classList.add('active'); document.getElementById(`${name}-content`).classList.add('active'); }

@@ -1,11 +1,33 @@
 {# Allows the DOCTYPE to be set on a page by page basis #}
 {%- block doctype %}<!DOCTYPE html>{% endblock -%}
+
+<!-- Font Awesome 4.7.0 - CKAN Compatible -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
-body, html, * {
+  
+  body, html, * {
     font-family: 'Montserrat', sans-serif !important;
-}
+  }
+  
+  /* Font Awesome Icon Fix */
+  .fa {
+    font-family: 'FontAwesome' !important;
+    display: inline-block;
+    font-style: normal;
+    font-weight: normal;
+    line-height: 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Ensure Font Awesome loads properly */
+  .fa:before {
+    font-family: 'FontAwesome' !important;
+  }
 </style>
+
 {# Allows custom attributes to be added to the <html> tag #}
 {%- block htmltag -%}
 {% set lang = h.lang() %}
@@ -15,6 +37,10 @@ body, html, * {
 
   {# Allows custom attributes to be added to the <head> tag #}
   <head{% block headtag %}{% endblock %}>
+  
+  <!-- Font Awesome 4.7.0 - Additional Load for Compatibility -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  
   {#
     Add custom meta tags to the page. Call super() to get the default tags
     such as charset, viewport and generator.
@@ -89,6 +115,48 @@ body, html, * {
         {{ g.site_custom_css | safe }}
       </style>
       {%- endif %}
+      
+      <!-- Additional Font Awesome Styles -->
+      <style>
+        /* Font Awesome additional fixes */
+        i.fa {
+          font-family: 'FontAwesome' !important;
+        }
+        
+        /* Modern icon improvements */
+        .fa {
+          vertical-align: middle;
+        }
+        
+        /* CKAN specific icon fixes */
+        .nav .fa,
+        .btn .fa,
+        .dropdown .fa {
+          font-family: 'FontAwesome' !important;
+        }
+        
+        /* Ensure icons show in all contexts */
+        .fa-home:before { content: "\f015"; }
+        .fa-user:before { content: "\f007"; }
+        .fa-search:before { content: "\f002"; }
+        .fa-download:before { content: "\f019"; }
+        .fa-edit:before { content: "\f044"; }
+        .fa-eye:before { content: "\f06e"; }
+        .fa-file:before { content: "\f15b"; }
+        .fa-file-o:before { content: "\f016"; }
+        .fa-table:before { content: "\f0ce"; }
+        .fa-chart-bar:before { content: "\f080"; }
+        .fa-map:before { content: "\f279"; }
+        .fa-plus:before { content: "\f067"; }
+        .fa-minus:before { content: "\f068"; }
+        .fa-times:before { content: "\f00d"; }
+        .fa-check:before { content: "\f00c"; }
+        .fa-arrow-left:before { content: "\f060"; }
+        .fa-arrow-right:before { content: "\f061"; }
+        .fa-cog:before { content: "\f013"; }
+        .fa-info-circle:before { content: "\f05a"; }
+        .fa-exclamation-triangle:before { content: "\f071"; }
+      </style>
     {% endblock %}
   </head>
 
@@ -118,7 +186,7 @@ body, html, * {
     {% endblock -%}
 
     {% block body_extras -%}
-      {# defined in the config.ini under "ckan.template_footer_end" #}
+      {# defined in the config.ini under "ckan.template_head_end" #}
       {{ g.template_footer_end | safe }}
     {% endblock %}
 
@@ -126,5 +194,36 @@ body, html, * {
     {# make sure there are no calls to `asset` tag after this point #}
     {{ h.render_assets('style') }}
     {{ h.render_assets('script') }}
+    
+    <!-- Font Awesome Test Script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Test Font Awesome loading
+        var testIcon = document.createElement('i');
+        testIcon.className = 'fa fa-home';
+        testIcon.style.cssText = 'position:absolute; left:-9999px; font-size:16px;';
+        document.body.appendChild(testIcon);
+        
+        setTimeout(function() {
+          var computed = window.getComputedStyle(testIcon, ':before');
+          var content = computed.getPropertyValue('content');
+          
+          if (content && content !== 'none' && content !== '""' && content !== "''" && content.indexOf('\\') > -1) {
+            console.log('✅ Font Awesome ikonları başarıyla yüklendi!');
+            // Add success class to body
+            document.body.classList.add('fa-loaded');
+          } else {
+            console.warn('⚠️ Font Awesome yüklenemedi, content:', content);
+            // Fallback: try to reload FA
+            var fallbackLink = document.createElement('link');
+            fallbackLink.rel = 'stylesheet';
+            fallbackLink.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+            document.head.appendChild(fallbackLink);
+          }
+          
+          document.body.removeChild(testIcon);
+        }, 500);
+      });
+    </script>
   </body>
 </html>

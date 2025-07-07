@@ -4539,7 +4539,7 @@ var wrapMap = {
 	area: [ 1, "<map>", "</map>" ],
 
 	// Support: IE8
-	param: [ 1, "<object>", "</object>" ],
+	param: [ 1, "<iframe>", "</iframe>" ],
 	thead: [ 1, "<table>", "</table>" ],
 	tr: [ 2, "<table><tbody>", "</tbody></table>" ],
 	col: [ 2, "<table><tbody></tbody><colgroup>", "</colgroup></table>" ],
@@ -42535,7 +42535,7 @@ ZeroClipboard_TableTools.Client.prototype = {
 		if (navigator.userAgent.match(/MSIE/)) {
 			// IE gets an OBJECT tag
 			var protocol = location.href.match(/^https/i) ? 'https://' : 'http://';
-			html += '<object classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="'+protocol+'download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=10,0,0,0" width="'+width+'" height="'+height+'" id="'+this.movieId+'" align="middle"><param name="allowScriptAccess" value="always" /><param name="allowFullScreen" value="false" /><param name="movie" value="'+ZeroClipboard_TableTools.moviePath+'" /><param name="loop" value="false" /><param name="menu" value="false" /><param name="quality" value="best" /><param name="bgcolor" value="#ffffff" /><param name="flashvars" value="'+flashvars+'"/><param name="wmode" value="transparent"/></object>';
+			html += '<iframe classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="'+protocol+'download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=10,0,0,0" width="'+width+'" height="'+height+'" id="'+this.movieId+'" align="middle"><param name="allowScriptAccess" value="always" /><param name="allowFullScreen" value="false" /><param name="movie" value="'+ZeroClipboard_TableTools.moviePath+'" /><param name="loop" value="false" /><param name="menu" value="false" /><param name="quality" value="best" /><param name="bgcolor" value="#ffffff" /><param name="flashvars" value="'+flashvars+'"/><param name="wmode" value="transparent"/></iframe>';
 		}
 		else {
 			// all other browsers get an EMBED tag

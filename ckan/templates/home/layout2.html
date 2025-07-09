@@ -159,21 +159,175 @@ body, html, * {
     background-color: white;
     color: #000;
 }
+
+/* ——— PAYDAŞ SLIDER STİLLERİ ——— */
+.paydas-slider-container {
+    position: relative;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 20px 0;
+}
+
+.paydas-slider-wrapper {
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.paydas-slider-track {
+    display: flex;
+    transition: transform 0.5s ease-in-out;
+}
+
+.paydas-slide {
+    min-width: 200px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    margin: 20px 10px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+}
+
+.paydas-slide:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.paydas-slide img {
+    max-width: 150px;
+    max-height: 70px;
+    object-fit: contain;
+    border-radius: 5px;
+    filter: grayscale(0.3);
+    transition: filter 0.3s ease;
+}
+
+.paydas-slide:hover img {
+    filter: grayscale(0);
+}
+
+.paydas-slider-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(255, 255, 255, 0.9);
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 20px;
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    z-index: 10;
+}
+
+.paydas-slider-nav:hover {
+    background: white;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    transform: translateY(-50%) scale(1.05);
+}
+
+.paydas-slider-nav:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: translateY(-50%) scale(0.95);
+}
+
+.paydas-slider-nav.prev {
+    left: 10px;
+}
+
+.paydas-slider-nav.next {
+    right: 10px;
+}
+
+.paydas-slider-dots {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.paydas-slider-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ccc;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.paydas-slider-dot.active {
+    background: #007bff;
+    transform: scale(1.2);
+}
+
+.paydas-slider-dot:hover {
+    background: #0056b3;
+}
+
+.paydas-counter {
+    text-align: center;
+    margin-top: 15px;
+    color: #666;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Responsive düzenlemeler */
+@media (max-width: 768px) {
+    .paydas-slide {
+        min-width: 160px;
+        height: 100px;
+        margin: 15px 8px;
+    }
+    
+    .paydas-slide img {
+        max-width: 120px;
+        max-height: 60px;
+    }
+    
+    .paydas-slider-nav {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .paydas-slide {
+        min-width: 140px;
+        height: 80px;
+        margin: 10px 5px;
+    }
+    
+    .paydas-slide img {
+        max-width: 100px;
+        max-height: 50px;
+    }
+}
 </style>
 
-{# ——— HERO BLOĞU ÇIKARILDI; header artık index.html’de ——— #}
-
-
+{# ——— HERO BLOĞU ÇIKARILDI; header artık index.html'de ——— #}
 
 <div role="main" style="background-color: white; padding: 20px 0 40px 0;">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
         <div style="text-align:center">
-          <!-- <h1 style="color: black; font-weight: 700 !important; font-size: 24px !important; line-height: 58px !important; text-align: center !important;">
-            TEMATİK VERİLERİMİZ
-          </h1> -->
-          <h1 class="veri-sets-alt-baslik1">6 Ana Tema Altında İzmir’in Tüm Verileri</h1>
+          <h1 class="veri-sets-alt-baslik1">6 Ana Tema Altında İzmir'in Tüm Verileri</h1>
         </div>
         
         <div id="homepage-theme-grid" class="anasayfa-theme-grid">
@@ -182,7 +336,6 @@ body, html, * {
     </div>
   </div>
 </div>
-
 
 <div role="main" class="catg-main" style="padding-bottom:60px;">
   <div class="container">
@@ -201,55 +354,41 @@ body, html, * {
   </div>
 </div>
 
-<!-- <div role="main" class="intro-main">
-  <div class="container">
-    <div class="intro-row">
-      <div class="intro-video-col">
-        <iframe src="https://www.youtube.com/embed/MXWNIhQ1AnA"
-                title="Data İzmir Kullanım Videosu"
-                frameborder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerpolicy="strict-origin-when-cross-origin"
-                allowfullscreen></iframe>
-      </div>
-      <div class="intro-text-col" style="font-family:Montserrat !important">
-        <h3 style="font:600 18px Montserrat,sans-serif !important;margin-bottom:10px;color:black">Data İzmir Platformu Kullanım Rehberi</h3>
-        <h1 style="font:700 44px/54px Montserrat,sans-serif !important;color:black">Data İzmir Platformu Nedir? Kullanım Rehberimiz Yayında!</h1>
-        <p style="font:400 16px/26px Montserrat,sans-serif !important;color:black">
-          İzmir Kalkınma Ajansı, sürdürülebilir kalkınma için yerel potansiyeli harekete geçirirken,
-          Data İzmir Platformu İzmir'e yönelik kanıta dayalı karar süreçleri için veri sunar.
-        </p>
-      </div>
-    </div>
-  </div>
-</div> -->
-
-<div role="main" style="background-color: white; padding: 20px 0 40px 0;">
+<div role="main" style="background-color: white; padding: 40px 0 60px 0;">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
-        <h1 style="color: black; font-weight: 700 !important; font-size: 24px !important; line-height: 58px !important; text-align: center !important;">
+        <h1 style="color: black; font-weight: 700 !important; font-size: 44px !important; line-height: 54px !important; text-align: center !important; margin-bottom: 40px;">
           Veri Paydaşlarımız
         </h1>
 
-        <div class="paydas-logos-container" style="display:flex;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:20px;">
-          {% set all_organizations = h.organizations_available('read', True) %}
-          {% set sorted_organizations = all_organizations|sort(attribute='package_count', reverse=True) %}
-          {% set top_organizations = sorted_organizations[:5] %}
-          {% for organization in top_organizations %}
-            {% set url = h.url_for('organization.read', id=organization.name) %}
-            <a href="{{ url }}" class="paydas-logo" style="display:block;margin:0 15px 25px;text-align:center;text-decoration:none;width:150px;">
-              <img src="{{ organization.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}"
-                   alt="{{ organization.display_name }}"
-                   title="{{ organization.display_name }}"
-                   style="max-width:120px;max-height:80px;border-radius:5px;">
-            </a>
-          {% endfor %}
+        <div class="paydas-slider-container">
+          <div class="paydas-slider-wrapper">
+            <div class="paydas-slider-track" id="paydas-slider-track">
+              <!-- Paydaş logoları buraya JavaScript ile yüklenecek -->
+            </div>
+            
+            <button class="paydas-slider-nav prev" id="paydas-prev" onclick="paydas_slider.prev()">
+              ‹
+            </button>
+            <button class="paydas-slider-nav next" id="paydas-next" onclick="paydas_slider.next()">
+              ›
+            </button>
+          </div>
+          
+          <div class="paydas-slider-dots" id="paydas-dots">
+            <!-- Dots buraya JavaScript ile oluşturulacak -->
+          </div>
+          
+          <div class="paydas-counter" id="paydas-counter">
+            <!-- Sayaç buraya JavaScript ile oluşturulacak -->
+          </div>
         </div>
       </div>
     </div>
   </div>
 </div>
+
 <script>
 document.addEventListener("DOMContentLoaded",function(){
   const itemsPerPage=4,container=document.getElementById("featured-datasets");
@@ -346,5 +485,167 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Hata:', error);
             homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Temalar yüklenirken bir hata oluştu: ${error.message}</p>`;
         });
+});
+
+// Paydaş Slider JavaScript
+const paydas_slider = {
+    currentIndex: 0,
+    itemsPerSlide: 5,
+    organizations: [],
+    totalSlides: 0,
+    autoSlideInterval: null,
+
+    init: function() {
+        this.loadOrganizations();
+        this.setupAutoSlide();
+    },
+
+    loadOrganizations: function() {
+        // Tüm organizasyonları yükle
+        const allOrganizations = {{ h.organizations_available('read', True)|tojson|safe }};
+        this.organizations = allOrganizations.sort((a, b) => (b.package_count || 0) - (a.package_count || 0));
+        this.totalSlides = Math.max(1, Math.ceil(this.organizations.length / this.itemsPerSlide));
+        
+        this.renderSlides();
+        this.renderDots();
+        this.updateCounter();
+        this.updateNavigation();
+    },
+
+    renderSlides: function() {
+        const track = document.getElementById('paydas-slider-track');
+        track.innerHTML = '';
+
+        this.organizations.forEach((org, index) => {
+            const slide = document.createElement('a');
+            slide.href = `/organization/${org.name}`;
+            slide.className = 'paydas-slide';
+            slide.title = org.display_name;
+            
+            const imgSrc = org.image_display_url || '/base/images/placeholder-organization.png';
+            slide.innerHTML = `
+                <img src="${imgSrc}" 
+                     alt="${org.display_name}" 
+                     onerror="this.src='/base/images/placeholder-organization.png'">
+            `;
+            
+            track.appendChild(slide);
+        });
+
+        // Responsive item count ayarlaması
+        this.adjustItemsPerSlide();
+    },
+
+    adjustItemsPerSlide: function() {
+        const screenWidth = window.innerWidth;
+        if (screenWidth <= 480) {
+            this.itemsPerSlide = 2;
+        } else if (screenWidth <= 768) {
+            this.itemsPerSlide = 3;
+        } else if (screenWidth <= 1024) {
+            this.itemsPerSlide = 4;
+        } else {
+            this.itemsPerSlide = 5;
+        }
+        
+        this.totalSlides = Math.max(1, Math.ceil(this.organizations.length / this.itemsPerSlide));
+        this.renderDots();
+        this.updateSlidePosition();
+    },
+
+    renderDots: function() {
+        const dotsContainer = document.getElementById('paydas-dots');
+        dotsContainer.innerHTML = '';
+
+        for (let i = 0; i < this.totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'paydas-slider-dot';
+            if (i === this.currentIndex) dot.classList.add('active');
+            dot.addEventListener('click', () => this.goToSlide(i));
+            dotsContainer.appendChild(dot);
+        }
+    },
+
+    updateSlidePosition: function() {
+        const track = document.getElementById('paydas-slider-track');
+        const slideWidth = 220; // 200px + 20px margin
+        const offset = -this.currentIndex * slideWidth * this.itemsPerSlide;
+        track.style.transform = `translateX(${offset}px)`;
+    },
+
+    updateNavigation: function() {
+        const prevBtn = document.getElementById('paydas-prev');
+        const nextBtn = document.getElementById('paydas-next');
+        
+        prevBtn.disabled = this.currentIndex === 0;
+        nextBtn.disabled = this.currentIndex >= this.totalSlides - 1;
+    },
+
+    updateCounter: function() {
+        const counter = document.getElementById('paydas-counter');
+        const startIndex = this.currentIndex * this.itemsPerSlide + 1;
+        const endIndex = Math.min(startIndex + this.itemsPerSlide - 1, this.organizations.length);
+        counter.textContent = `${startIndex}-${endIndex} / ${this.organizations.length} Paydaş`;
+    },
+
+    prev: function() {
+        if (this.currentIndex > 0) {
+            this.currentIndex--;
+            this.updateSlide();
+            this.resetAutoSlide();
+        }
+    },
+
+    next: function() {
+        if (this.currentIndex < this.totalSlides - 1) {
+            this.currentIndex++;
+            this.updateSlide();
+            this.resetAutoSlide();
+        }
+    },
+
+    goToSlide: function(index) {
+        this.currentIndex = index;
+        this.updateSlide();
+        this.resetAutoSlide();
+    },
+
+    updateSlide: function() {
+        this.updateSlidePosition();
+        this.updateNavigation();
+        this.updateCounter();
+        
+        // Dots güncelle
+        const dots = document.querySelectorAll('.paydas-slider-dot');
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === this.currentIndex);
+        });
+    },
+
+    setupAutoSlide: function() {
+        this.autoSlideInterval = setInterval(() => {
+            if (this.currentIndex < this.totalSlides - 1) {
+                this.next();
+            } else {
+                this.currentIndex = 0;
+                this.updateSlide();
+            }
+        }, 4000); // 4 saniyede bir otomatik geçiş
+    },
+
+    resetAutoSlide: function() {
+        clearInterval(this.autoSlideInterval);
+        this.setupAutoSlide();
+    }
+};
+
+// Slider'ı başlat
+document.addEventListener('DOMContentLoaded', function() {
+    paydas_slider.init();
+});
+
+// Ekran boyutu değiştiğinde slider'ı yeniden ayarla
+window.addEventListener('resize', function() {
+    paydas_slider.adjustItemsPerSlide();
 });
 </script>

@@ -660,7 +660,7 @@ const paydas_slider = {
         
         this.currentX = e.clientX;
         const diff = this.currentX - this.startX;
-        const slideWidth = 310;
+        const slideWidth = 280;
         const moveCount = diff / slideWidth;
         
         const newIndex = this.startTransform - moveCount;
@@ -674,7 +674,7 @@ const paydas_slider = {
         if (!this.isDragging) return;
         
         const diff = this.currentX - this.startX;
-        const slideWidth = 310;
+        const slideWidth = 280;
         const moveCount = Math.round(diff / slideWidth);
         
         this.currentIndex = this.startTransform - moveCount;

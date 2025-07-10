@@ -361,17 +361,6 @@
     .t-formats { width: 8%; } /* Formatlar */
     .t-actions { width: 10%; } /* İşlemler - YENİ SÜTUN */
 
-    /* İşlemler sütunu gizlendiğinde genişlikleri ayarla */
-    .no-actions .t-title { width: 15%; }
-    .no-actions .t-desc { width: 20%; }
-    .no-actions .t-org { width: 11%; }
-    .no-actions .t-user { width: 9%; }
-    .no-actions .t-groups { width: 10%; }
-    .no-actions .t-tags { width: 10%; }
-    .no-actions .t-theme { width: 10%; }
-    .no-actions .t-upd { width: 11%; }
-    .no-actions .t-formats { width: 9%; }
-
     .empty-cell {
       color: #9b98a7;
       font-style: italic;
@@ -557,11 +546,6 @@
     
     var currentThemeSlugFromURL = null; // URL'den alınan temanın slug'ı
     var currentThemeData = null; // URL'deki temaya ait tüm veriler (profil kartı için)
-    
-    // YENİ: Mevcut kullanıcı bilgisi ve yetkileri
-    var currentUser = null;
-    var isLoggedIn = false;
-    var userPermissions = {}; // dataset_id -> boolean (yetkili mi?)
 
     // --- Fonksiyonlar (Orijinal yapı korunarak) ---
 
@@ -721,126 +705,6 @@
       // Tema filtresi için fq parametresi package_search API'sinde doğrudan bulunmadığı için
       // tema filtrelemesini JavaScript'te yapacağız.
       return baseQuery;
-    }
-    
-    // YENİ: Mevcut kullanıcı bilgisini al
-    async function getCurrentUser() {
-      try {
-        const response = await fetch('/api/3/action/user_show?id=me', {
-          credentials: 'include'
-        });
-        const data = await response.json();
-        if (data.success && data.result) {
-          currentUser = data.result;
-          isLoggedIn = true;
-          console.log('✅ Kullanıcı giriş yapmış:', currentUser.name);
-          
-          // Kullanıcının yetkilerini kontrol et
-          await checkUserPermissions();
-        } else {
-          isLoggedIn = false;
-          console.log('❌ Kullanıcı giriş yapmamış');
-          // Giriş yapılmamışsa işlemler sütununu gizle
-          hideActionsColumn();
-        }
-      } catch (error) {
-        console.log('❌ Kullanıcı bilgisi alınamadı:', error);
-        isLoggedIn = false;
-        hideActionsColumn();
-      }
-    }
-    
-    // YENİ: Kullanıcının her dataset için yetkilerini kontrol et
-    async function checkUserPermissions() {
-      if (!currentUser || !allDatasets.length) return;
-      
-      // Sysadmin ise tüm datasetler için yetki ver
-      if (currentUser.sysadmin) {
-        allDatasets.forEach(pkg => {
-          userPermissions[pkg.id] = true;
-        });
-        return;
-      }
-      
-      // Her dataset için yetki kontrolü yap
-      for (const pkg of allDatasets) {
-        try {
-          // Dataset sahibi mi?
-          if (pkg.creator_user_id === currentUser.id) {
-            userPermissions[pkg.id] = true;
-            continue;
-          }
-          
-          // Organizasyon üyesi mi ve yetkisi var mı?
-          if (pkg.organization && currentUser.organizations) {
-            const userOrg = currentUser.organizations.find(org => 
-              org.name === pkg.organization.name && 
-              (org.capacity === 'admin' || org.capacity === 'editor')
-            );
-            if (userOrg) {
-              userPermissions[pkg.id] = true;
-              continue;
-            }
-          }
-          
-          // Collaborator olarak yetkisi var mı?
-          const authResponse = await fetch('/api/3/action/package_collaborator_list', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ id: pkg.id })
-          });
-          
-          const authData = await authResponse.json();
-          if (authData.success && authData.result) {
-            const isCollaborator = authData.result.some(collab => 
-              collab.user_id === currentUser.id && 
-              (collab.capacity === 'admin' || collab.capacity === 'editor')
-            );
-            if (isCollaborator) {
-              userPermissions[pkg.id] = true;
-              continue;
-            }
-          }
-          
-          // Yetki yok
-          userPermissions[pkg.id] = false;
-          
-        } catch (error) {
-          console.warn('Yetki kontrolü hatası:', pkg.name, error);
-          userPermissions[pkg.id] = false;
-        }
-      }
-      
-      // Hiçbir dataset için yetkisi yoksa işlemler sütununu gizle
-      const hasAnyPermission = Object.values(userPermissions).some(perm => perm === true);
-      if (!hasAnyPermission) {
-        hideActionsColumn();
-      }
-    }
-    
-    // YENİ: İşlemler sütununu gizle
-    function hideActionsColumn() {
-      // Tabloya no-actions class'ı ekle
-      document.querySelector('.dataset-table').classList.add('no-actions');
-      
-      // İşlemler başlığını gizle
-      const actionsHeader = document.querySelector('.t-actions');
-      if (actionsHeader) {
-        actionsHeader.style.display = 'none';
-      }
-    }
-    
-    // YENİ: İşlemler sütununu göster
-    function showActionsColumn() {
-      // Tabloya no-actions class'ını kaldır
-      document.querySelector('.dataset-table').classList.remove('no-actions');
-      
-      // İşlemler başlığını göster
-      const actionsHeader = document.querySelector('.t-actions');
-      if (actionsHeader) {
-        actionsHeader.style.display = '';
-      }
     }
     
     async function loadProfileData() {
@@ -1072,29 +936,19 @@
         var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
         var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
         
-        // YENİ: İşlemler sütunu - yetki kontrolü ile
-        var actions = '';
-        if (isLoggedIn) {
-          // Kullanıcı bu dataset için yetkili mi?
-          if (userPermissions[pkg.id]) {
-            var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
-            var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
-            actions = `
-              <div class="action-buttons">
-                <a href="${editLink}" class="action-btn edit-btn" title="Düzenle">
-                  ✏️ Düzenle
-                </a>
-                <a href="${deleteLink}" class="action-btn delete-btn" title="Sil" onclick="return confirmDelete('${title.replace(/'/g, "\\'")}')">
-                  🗑️ Sil
-                </a>
-              </div>
-            `;
-          } else {
-            actions = '<span class="empty-cell" style="font-size:11px;">Yetkiniz yok</span>';
-          }
-        }
-        
-        var actionsCell = isLoggedIn ? `<td class="t-actions">${actions}</td>` : '';
+        // YENİ: İşlemler sütunu
+        var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
+        var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
+        var actions = `
+          <div class="action-buttons">
+            <a href="${editLink}" class="action-btn edit-btn" title="Düzenle">
+              ✏️ Düzenle
+            </a>
+            <a href="${deleteLink}" class="action-btn delete-btn" title="Sil" onclick="return confirmDelete('${title.replace(/'/g, "\\'")}')">
+              🗑️ Sil
+            </a>
+          </div>
+        `;
         
         return `<tr>
           <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
@@ -1106,13 +960,12 @@
           <td class="t-theme">${theme}</td>
           <td class="t-upd">${upd}</td>
           <td class="t-formats">${formats}</td>
-          ${actionsCell}
+          <td class="t-actions">${actions}</td>
         </tr>`;
       }).join('');
       
-      // colspan değeri login durumuna göre ayarlanır
-      var colspanValue = isLoggedIn ? "10" : "9";
-      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="${colspanValue}" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
+      // colspan değeri 9'dan 10'a çıkarıldı (yeni işlemler sütunu için)
+      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="10" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
     }
     
     async function filterByUserPath() {
@@ -1140,9 +993,6 @@
     var datasetThemeMap = {}; // dataset_id'den tema adına eşleşme
     
     async function initializeData() {
-        // İlk olarak mevcut kullanıcı bilgisini al
-        await getCurrentUser();
-        
         // CKAN API'nizin doğru temel URL'si (eğer farklıysa bu alana domaininizi yazın)
         const ckan_api_base = "/api/3/action/"; // CKAN'ın varsayılan API yolu
         // Eğer tarayıcıda doğrudan domain belirtmeniz gerekiyorsa:
@@ -1275,6 +1125,7 @@
             };
 
             // Eğer grup sayfasındaysak, ilgili grubu seçili yap
+            const pathInfo = getPathInfo();
             if (pathInfo.type === 'group' && pathInfo.name) {
                 const groupInfo = allDatasets[0]?.groups.find(g => g.name === pathInfo.name);
                 if (groupInfo) {
@@ -1293,18 +1144,11 @@
             allDatasets.forEach(pkg => {
                 pkg.creatorUsername = userCache[pkg.creator_user_id] || 'Bilinmiyor'
             });
-            
-            // Kullanıcı yetkilerini kontrol et ve tabloyu tekrar render et
-            if (isLoggedIn) {
-                await checkUserPermissions();
-            }
-            
             renderTable();
 
         } catch (error) {
             console.error('Veri yüklenirken hata:', error);
-            var colspanValue = isLoggedIn ? "10" : "9";
-            document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="${colspanValue}" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+            document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="10" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
         }
     }
 

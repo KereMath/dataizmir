@@ -163,7 +163,7 @@ body, html, * {
 /* ——— YENİ PAYDAŞ SLIDER STİLLERİ ——— */
 .paydas-slider-container {
     position: relative;
-    max-width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 20px 0;
 }
@@ -174,6 +174,7 @@ body, html, * {
     border-radius: 12px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    padding: 0 20px; /* Kenarlardan boşluk */
 }
 
 .paydas-slider-track {
@@ -183,13 +184,13 @@ body, html, * {
 }
 
 .paydas-slide {
-    min-width: 280px;
+    width: 280px; /* Sabit genişlik */
     height: 160px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: white;
-    margin: 20px 15px;
+    margin: 20px 10px; /* Sağ sol 10px margin */
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -246,11 +247,11 @@ body, html, * {
 }
 
 /* Responsive düzenlemeler */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .paydas-slide {
-        min-width: 220px;
+        width: 240px;
         height: 140px;
-        margin: 15px 12px;
+        margin: 15px 8px;
     }
     
     .paydas-slide img {
@@ -259,16 +260,29 @@ body, html, * {
     }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
     .paydas-slide {
-        min-width: 180px;
+        width: 200px;
         height: 120px;
-        margin: 10px 8px;
+        margin: 10px 6px;
     }
     
     .paydas-slide img {
         max-width: 150px;
-        max-height: 75px;
+        max-height: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .paydas-slide {
+        width: 160px;
+        height: 100px;
+        margin: 10px 5px;
+    }
+    
+    .paydas-slide img {
+        max-width: 120px;
+        max-height: 60px;
     }
 }
 </style>
@@ -439,7 +453,7 @@ const paydas_slider = {
     currentX: 0,
     translateX: 0,
     visibleCount: 4,
-    slideWidth: 310, // 280px + 30px margin
+    slideWidth: 300, // 280px genişlik + 20px margin (10px sağ + 10px sol)
     
     init: function() {
         this.loadOrganizations();
@@ -453,20 +467,27 @@ const paydas_slider = {
     
     calculateVisibleCount: function() {
         const wrapper = document.getElementById('paydas-slider-wrapper');
-        const wrapperWidth = wrapper ? wrapper.offsetWidth : window.innerWidth;
+        const wrapperWidth = wrapper ? wrapper.offsetWidth - 40 : window.innerWidth - 40; // Padding çıkar
         
+        // Her cihaz için görünür kart sayısını ve slide genişliğini hesapla
         if (wrapperWidth < 480) {
             this.visibleCount = 2;
-            this.slideWidth = 210;
+            this.slideWidth = 170; // 160px + 10px margin
         } else if (wrapperWidth < 768) {
             this.visibleCount = 3;
-            this.slideWidth = 260;
-        } else if (wrapperWidth < 1200) {
-            this.visibleCount = 4;
-            this.slideWidth = 310;
+            this.slideWidth = 212; // 200px + 12px margin
+        } else if (wrapperWidth < 1024) {
+            this.visibleCount = 3;
+            this.slideWidth = 256; // 240px + 16px margin
         } else {
             this.visibleCount = 4;
-            this.slideWidth = 310;
+            this.slideWidth = 300; // 280px + 20px margin
+        }
+        
+        // Tam sayıda kart sığacak şekilde ayarla
+        const totalVisibleWidth = this.visibleCount * this.slideWidth;
+        if (totalVisibleWidth > wrapperWidth) {
+            this.visibleCount = Math.floor(wrapperWidth / this.slideWidth);
         }
     },
     
@@ -531,17 +552,22 @@ const paydas_slider = {
         if (pageIndex >= totalPages) pageIndex = totalPages - 1;
         
         this.currentPage = pageIndex;
-        this.translateX = -(pageIndex * this.visibleCount * this.slideWidth);
         
-        // Son sayfada yarıda kalan kutular için ayarlama
+        // Sayfa başlangıç pozisyonunu hesapla
+        const startIndex = pageIndex * this.visibleCount;
+        
+        // Son sayfada eksik kart varsa pozisyonu ayarla
         if (pageIndex === totalPages - 1) {
-            const remainingSlides = this.organizations.length % this.visibleCount;
-            if (remainingSlides !== 0) {
-                const lastPageStartIndex = pageIndex * this.visibleCount;
-                const totalSlides = this.organizations.length;
-                const maxTranslate = -((totalSlides - this.visibleCount) * this.slideWidth);
-                this.translateX = Math.max(this.translateX, maxTranslate);
+            const remainingSlides = this.organizations.length - startIndex;
+            if (remainingSlides < this.visibleCount) {
+                // Son sayfada görünen kartları tam göster
+                const lastFullIndex = Math.max(0, this.organizations.length - this.visibleCount);
+                this.translateX = -(lastFullIndex * this.slideWidth);
+            } else {
+                this.translateX = -(startIndex * this.slideWidth);
             }
+        } else {
+            this.translateX = -(startIndex * this.slideWidth);
         }
         
         this.updateSlidePosition(true);

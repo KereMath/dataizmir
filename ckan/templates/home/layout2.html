@@ -160,7 +160,7 @@ body, html, * {
     color: #000;
 }
 
-/* ——— PAYDAŞ SLIDER STİLLERİ ——— */
+/* ——— YENİ PAYDAŞ SLIDER STİLLERİ ——— */
 .paydas-slider-container {
     position: relative;
     max-width: 100%;
@@ -174,11 +174,17 @@ body, html, * {
     border-radius: 12px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    cursor: grab;
+    user-select: none;
+}
+
+.paydas-slider-wrapper:active {
+    cursor: grabbing;
 }
 
 .paydas-slider-track {
     display: flex;
-    transition: transform 0.5s ease-in-out;
+    transition: transform 0.3s ease-in-out;
 }
 
 .paydas-slide {
@@ -193,6 +199,7 @@ body, html, * {
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-decoration: none;
+    flex-shrink: 0;
 }
 
 .paydas-slide:hover {
@@ -211,46 +218,6 @@ body, html, * {
 
 .paydas-slide:hover img {
     filter: grayscale(0);
-}
-
-.paydas-slider-nav {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    background: rgba(255, 255, 255, 0.9);
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 20px;
-    color: #333;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    z-index: 10;
-}
-
-.paydas-slider-nav:hover {
-    background: white;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    transform: translateY(-50%) scale(1.05);
-}
-
-.paydas-slider-nav:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: translateY(-50%) scale(0.95);
-}
-
-.paydas-slider-nav.prev {
-    left: 10px;
-}
-
-.paydas-slider-nav.next {
-    right: 10px;
 }
 
 .paydas-slider-dots {
@@ -278,14 +245,6 @@ body, html, * {
     background: #0056b3;
 }
 
-.paydas-counter {
-    text-align: center;
-    margin-top: 15px;
-    color: #666;
-    font-size: 14px;
-    font-weight: 500;
-}
-
 /* Responsive düzenlemeler */
 @media (max-width: 768px) {
     .paydas-slide {
@@ -297,12 +256,6 @@ body, html, * {
     .paydas-slide img {
         max-width: 120px;
         max-height: 60px;
-    }
-    
-    .paydas-slider-nav {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
     }
 }
 
@@ -363,25 +316,14 @@ body, html, * {
         </h1>
 
         <div class="paydas-slider-container">
-          <div class="paydas-slider-wrapper">
+          <div class="paydas-slider-wrapper" id="paydas-slider-wrapper">
             <div class="paydas-slider-track" id="paydas-slider-track">
               <!-- Paydaş logoları buraya JavaScript ile yüklenecek -->
             </div>
-            
-            <button class="paydas-slider-nav prev" id="paydas-prev" onclick="paydas_slider.prev()">
-              ‹
-            </button>
-            <button class="paydas-slider-nav next" id="paydas-next" onclick="paydas_slider.next()">
-              ›
-            </button>
           </div>
           
           <div class="paydas-slider-dots" id="paydas-dots">
             <!-- Dots buraya JavaScript ile oluşturulacak -->
-          </div>
-          
-          <div class="paydas-counter" id="paydas-counter">
-            <!-- Sayaç buraya JavaScript ile oluşturulacak -->
           </div>
         </div>
       </div>
@@ -487,36 +429,41 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 });
 
-// Paydaş Slider JavaScript
+// Yeni Paydaş Slider JavaScript
 const paydas_slider = {
     currentIndex: 0,
-    itemsPerSlide: 5,
     organizations: [],
-    totalSlides: 0,
     autoSlideInterval: null,
+    isDragging: false,
+    startX: 0,
+    currentX: 0,
+    startTransform: 0,
+    visibleCount: 5,
 
     init: function() {
         this.loadOrganizations();
         this.setupAutoSlide();
+        this.setupDragHandlers();
+        this.setupResponsive();
     },
 
     loadOrganizations: function() {
-        // Tüm organizasyonları yükle
         const allOrganizations = {{ h.organizations_available('read', True)|tojson|safe }};
         this.organizations = allOrganizations.sort((a, b) => (b.package_count || 0) - (a.package_count || 0));
-        this.totalSlides = Math.max(1, Math.ceil(this.organizations.length / this.itemsPerSlide));
         
         this.renderSlides();
         this.renderDots();
-        this.updateCounter();
-        this.updateNavigation();
+        this.updateSlidePosition();
     },
 
     renderSlides: function() {
         const track = document.getElementById('paydas-slider-track');
         track.innerHTML = '';
 
-        this.organizations.forEach((org, index) => {
+        // Sürekli döngü için organizasyonları çoğalt
+        const repeatedOrgs = [...this.organizations, ...this.organizations, ...this.organizations];
+        
+        repeatedOrgs.forEach((org, index) => {
             const slide = document.createElement('a');
             slide.href = `/organization/${org.name}`;
             slide.className = 'paydas-slide';
@@ -532,120 +479,186 @@ const paydas_slider = {
             track.appendChild(slide);
         });
 
-        // Responsive item count ayarlaması
-        this.adjustItemsPerSlide();
-    },
-
-    adjustItemsPerSlide: function() {
-        const screenWidth = window.innerWidth;
-        if (screenWidth <= 480) {
-            this.itemsPerSlide = 2;
-        } else if (screenWidth <= 768) {
-            this.itemsPerSlide = 3;
-        } else if (screenWidth <= 1024) {
-            this.itemsPerSlide = 4;
-        } else {
-            this.itemsPerSlide = 5;
-        }
-        
-        this.totalSlides = Math.max(1, Math.ceil(this.organizations.length / this.itemsPerSlide));
-        this.renderDots();
-        this.updateSlidePosition();
+        // Başlangıç pozisyonunu ortaya ayarla
+        this.currentIndex = this.organizations.length;
     },
 
     renderDots: function() {
         const dotsContainer = document.getElementById('paydas-dots');
         dotsContainer.innerHTML = '';
 
-        for (let i = 0; i < this.totalSlides; i++) {
+        this.organizations.forEach((org, index) => {
             const dot = document.createElement('div');
             dot.className = 'paydas-slider-dot';
-            if (i === this.currentIndex) dot.classList.add('active');
-            dot.addEventListener('click', () => this.goToSlide(i));
+            dot.addEventListener('click', () => this.goToSlide(index));
             dotsContainer.appendChild(dot);
-        }
+        });
+        
+        this.updateDots();
+    },
+
+    updateDots: function() {
+        const dots = document.querySelectorAll('.paydas-slider-dot');
+        const activeIndex = this.currentIndex % this.organizations.length;
+        
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === activeIndex);
+        });
     },
 
     updateSlidePosition: function() {
         const track = document.getElementById('paydas-slider-track');
         const slideWidth = 220; // 200px + 20px margin
-        const offset = -this.currentIndex * slideWidth * this.itemsPerSlide;
+        const offset = -this.currentIndex * slideWidth;
         track.style.transform = `translateX(${offset}px)`;
-    },
-
-    updateNavigation: function() {
-        const prevBtn = document.getElementById('paydas-prev');
-        const nextBtn = document.getElementById('paydas-next');
-        
-        prevBtn.disabled = this.currentIndex === 0;
-        nextBtn.disabled = this.currentIndex >= this.totalSlides - 1;
-    },
-
-    updateCounter: function() {
-        const counter = document.getElementById('paydas-counter');
-        const startIndex = this.currentIndex * this.itemsPerSlide + 1;
-        const endIndex = Math.min(startIndex + this.itemsPerSlide - 1, this.organizations.length);
-        counter.textContent = `${startIndex}-${endIndex} / ${this.organizations.length} Paydaş`;
-    },
-
-    prev: function() {
-        if (this.currentIndex > 0) {
-            this.currentIndex--;
-            this.updateSlide();
-            this.resetAutoSlide();
-        }
+        this.updateDots();
     },
 
     next: function() {
-        if (this.currentIndex < this.totalSlides - 1) {
-            this.currentIndex++;
-            this.updateSlide();
-            this.resetAutoSlide();
-        }
+        this.currentIndex++;
+        this.updateSlidePosition();
+        this.checkInfiniteLoop();
+    },
+
+    prev: function() {
+        this.currentIndex--;
+        this.updateSlidePosition();
+        this.checkInfiniteLoop();
     },
 
     goToSlide: function(index) {
-        this.currentIndex = index;
-        this.updateSlide();
+        // En yakın kopyayı bul
+        const currentReal = this.currentIndex % this.organizations.length;
+        const diff = index - currentReal;
+        
+        if (Math.abs(diff) <= this.organizations.length / 2) {
+            this.currentIndex += diff;
+        } else {
+            this.currentIndex += diff > 0 ? diff - this.organizations.length : diff + this.organizations.length;
+        }
+        
+        this.updateSlidePosition();
         this.resetAutoSlide();
     },
 
-    updateSlide: function() {
-        this.updateSlidePosition();
-        this.updateNavigation();
-        this.updateCounter();
+    checkInfiniteLoop: function() {
+        // Eğer ilk kopyaya geçtiyse, orijinal pozisyona sıçra
+        if (this.currentIndex <= 0) {
+            setTimeout(() => {
+                const track = document.getElementById('paydas-slider-track');
+                track.style.transition = 'none';
+                this.currentIndex = this.organizations.length;
+                this.updateSlidePosition();
+                setTimeout(() => {
+                    track.style.transition = 'transform 0.3s ease-in-out';
+                }, 10);
+            }, 300);
+        }
         
-        // Dots güncelle
-        const dots = document.querySelectorAll('.paydas-slider-dot');
-        dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === this.currentIndex);
-        });
+        // Eğer son kopyaya geçtiyse, orijinal pozisyona sıçra
+        if (this.currentIndex >= this.organizations.length * 2) {
+            setTimeout(() => {
+                const track = document.getElementById('paydas-slider-track');
+                track.style.transition = 'none';
+                this.currentIndex = this.organizations.length;
+                this.updateSlidePosition();
+                setTimeout(() => {
+                    track.style.transition = 'transform 0.3s ease-in-out';
+                }, 10);
+            }, 300);
+        }
     },
 
     setupAutoSlide: function() {
         this.autoSlideInterval = setInterval(() => {
-            if (this.currentIndex < this.totalSlides - 1) {
+            if (!this.isDragging) {
                 this.next();
-            } else {
-                this.currentIndex = 0;
-                this.updateSlide();
             }
-        }, 4000); // 4 saniyede bir otomatik geçiş
+        }, 3000);
     },
 
     resetAutoSlide: function() {
         clearInterval(this.autoSlideInterval);
         this.setupAutoSlide();
+    },
+
+    setupDragHandlers: function() {
+        const wrapper = document.getElementById('paydas-slider-wrapper');
+        const track = document.getElementById('paydas-slider-track');
+        
+        // Mouse events
+        wrapper.addEventListener('mousedown', (e) => this.startDrag(e));
+        document.addEventListener('mousemove', (e) => this.drag(e));
+        document.addEventListener('mouseup', () => this.endDrag());
+        
+        // Touch events
+        wrapper.addEventListener('touchstart', (e) => this.startDrag(e.touches[0]));
+        document.addEventListener('touchmove', (e) => this.drag(e.touches[0]));
+        document.addEventListener('touchend', () => this.endDrag());
+        
+        // Prevent default link behavior during drag
+        wrapper.addEventListener('click', (e) => {
+            if (this.isDragging) {
+                e.preventDefault();
+            }
+        });
+    },
+
+    startDrag: function(e) {
+        this.isDragging = true;
+        this.startX = e.clientX;
+        this.currentX = e.clientX;
+        this.startTransform = this.currentIndex;
+        
+        const track = document.getElementById('paydas-slider-track');
+        track.style.transition = 'none';
+        
+        clearInterval(this.autoSlideInterval);
+    },
+
+    drag: function(e) {
+        if (!this.isDragging) return;
+        
+        this.currentX = e.clientX;
+        const diff = this.currentX - this.startX;
+        const slideWidth = 220;
+        const moveCount = diff / slideWidth;
+        
+        const newIndex = this.startTransform - moveCount;
+        
+        const track = document.getElementById('paydas-slider-track');
+        const offset = -newIndex * slideWidth;
+        track.style.transform = `translateX(${offset}px)`;
+    },
+
+    endDrag: function() {
+        if (!this.isDragging) return;
+        
+        const diff = this.currentX - this.startX;
+        const slideWidth = 220;
+        const moveCount = Math.round(diff / slideWidth);
+        
+        this.currentIndex = this.startTransform - moveCount;
+        
+        const track = document.getElementById('paydas-slider-track');
+        track.style.transition = 'transform 0.3s ease-in-out';
+        
+        this.updateSlidePosition();
+        this.checkInfiniteLoop();
+        
+        this.isDragging = false;
+        this.setupAutoSlide();
+    },
+
+    setupResponsive: function() {
+        window.addEventListener('resize', () => {
+            this.updateSlidePosition();
+        });
     }
 };
 
 // Slider'ı başlat
 document.addEventListener('DOMContentLoaded', function() {
     paydas_slider.init();
-});
-
-// Ekran boyutu değiştiğinde slider'ı yeniden ayarla
-window.addEventListener('resize', function() {
-    paydas_slider.adjustItemsPerSlide();
 });
 </script>

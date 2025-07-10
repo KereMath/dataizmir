@@ -181,10 +181,11 @@ body, html, * {
     display: flex;
     transition: none;
     will-change: transform;
+    padding: 0 50%; /* Ortalamak için */
 }
 
 .paydas-slide {
-    width: 260px; /* Sabit genişlik */
+    width: 280px; /* Sabit genişlik */
     height: 160px;
     display: flex;
     align-items: center;
@@ -443,9 +444,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 });
 
-// Yeni Paydaş Slider JavaScript - Tamamen yenilendi
+// Yeni Paydaş Slider JavaScript - Tek tek hareket eden versiyon
 const paydas_slider = {
-    currentPage: 0,
+    currentIndex: 0,
     organizations: [],
     autoSlideInterval: null,
     isDragging: false,
@@ -453,42 +454,40 @@ const paydas_slider = {
     currentX: 0,
     translateX: 0,
     visibleCount: 4,
-    slideWidth: 300, // 280px genişlik + 20px margin (10px sağ + 10px sol)
+    slideWidth: 300, // 280px genişlik + 20px margin
     
     init: function() {
         this.loadOrganizations();
         this.setupEventListeners();
-        this.calculateVisibleCount();
+        this.calculateDimensions();
         window.addEventListener('resize', () => {
-            this.calculateVisibleCount();
-            this.goToPage(this.currentPage);
+            this.calculateDimensions();
+            this.updateSlidePosition(false);
         });
     },
     
-    calculateVisibleCount: function() {
+    calculateDimensions: function() {
         const wrapper = document.getElementById('paydas-slider-wrapper');
         const wrapperWidth = wrapper ? wrapper.offsetWidth - 40 : window.innerWidth - 40; // Padding çıkar
         
-        // Her cihaz için görünür kart sayısını ve slide genişliğini hesapla
+        // Her cihaz için görünür kart sayısını hesapla
         if (wrapperWidth < 480) {
-            this.visibleCount = 2;
-            this.slideWidth = 170; // 160px + 10px margin
+            this.visibleCount = Math.floor(wrapperWidth / 170);
+            this.slideWidth = 170;
         } else if (wrapperWidth < 768) {
-            this.visibleCount = 3;
-            this.slideWidth = 212; // 200px + 12px margin
+            this.visibleCount = Math.floor(wrapperWidth / 212);
+            this.slideWidth = 212;
         } else if (wrapperWidth < 1024) {
-            this.visibleCount = 3;
-            this.slideWidth = 256; // 240px + 16px margin
+            this.visibleCount = Math.floor(wrapperWidth / 256);
+            this.slideWidth = 256;
         } else {
+            // Büyük ekranlar için tam 4 kutu göster
+            this.slideWidth = Math.floor(wrapperWidth / 4);
             this.visibleCount = 4;
-            this.slideWidth = 300; // 280px + 20px margin
         }
         
-        // Tam sayıda kart sığacak şekilde ayarla
-        const totalVisibleWidth = this.visibleCount * this.slideWidth;
-        if (totalVisibleWidth > wrapperWidth) {
-            this.visibleCount = Math.floor(wrapperWidth / this.slideWidth);
-        }
+        // Maksimum genişliği sınırla
+        if (this.slideWidth > 300) this.slideWidth = 300;
     },
     
     loadOrganizations: function() {
@@ -497,7 +496,7 @@ const paydas_slider = {
         
         this.renderSlides();
         this.renderDots();
-        this.goToPage(0);
+        this.updateSlidePosition(false);
         this.setupAutoSlide();
     },
     
@@ -505,7 +504,10 @@ const paydas_slider = {
         const track = document.getElementById('paydas-slider-track');
         track.innerHTML = '';
         
-        this.organizations.forEach((org, index) => {
+        // Sonsuz döngü için organizasyonları çoğalt
+        const repeatedOrgs = [...this.organizations, ...this.organizations, ...this.organizations];
+        
+        repeatedOrgs.forEach((org, index) => {
             const slide = document.createElement('a');
             slide.href = `/organization/${org.name}`;
             slide.className = 'paydas-slide';
@@ -520,94 +522,103 @@ const paydas_slider = {
             
             track.appendChild(slide);
         });
+        
+        // Başlangıç pozisyonunu ortaya ayarla
+        this.currentIndex = this.organizations.length;
     },
     
     renderDots: function() {
         const dotsContainer = document.getElementById('paydas-dots');
         dotsContainer.innerHTML = '';
         
-        const totalPages = Math.ceil(this.organizations.length / this.visibleCount);
-        
-        for (let i = 0; i < totalPages; i++) {
+        this.organizations.forEach((org, index) => {
             const dot = document.createElement('div');
             dot.className = 'paydas-slider-dot';
-            if (i === 0) dot.classList.add('active');
-            dot.addEventListener('click', () => this.goToPage(i));
+            dot.addEventListener('click', () => this.goToSlide(index));
             dotsContainer.appendChild(dot);
-        }
+        });
+        
+        this.updateDots();
     },
     
     updateDots: function() {
         const dots = document.querySelectorAll('.paydas-slider-dot');
+        const activeIndex = this.currentIndex % this.organizations.length;
+        
         dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === this.currentPage);
+            dot.classList.toggle('active', index === activeIndex);
         });
     },
     
-    goToPage: function(pageIndex) {
-        const totalPages = Math.ceil(this.organizations.length / this.visibleCount);
-        
-        // Sayfa sınırlarını kontrol et
-        if (pageIndex < 0) pageIndex = 0;
-        if (pageIndex >= totalPages) pageIndex = totalPages - 1;
-        
-        this.currentPage = pageIndex;
-        
-        // Sayfa başlangıç pozisyonunu hesapla
-        const startIndex = pageIndex * this.visibleCount;
-        
-        // Son sayfada eksik kart varsa pozisyonu ayarla
-        if (pageIndex === totalPages - 1) {
-            const remainingSlides = this.organizations.length - startIndex;
-            if (remainingSlides < this.visibleCount) {
-                // Son sayfada görünen kartları tam göster
-                const lastFullIndex = Math.max(0, this.organizations.length - this.visibleCount);
-                this.translateX = -(lastFullIndex * this.slideWidth);
-            } else {
-                this.translateX = -(startIndex * this.slideWidth);
-            }
-        } else {
-            this.translateX = -(startIndex * this.slideWidth);
-        }
-        
-        this.updateSlidePosition(true);
-        this.updateDots();
-    },
-    
-    updateSlidePosition: function(animate = false) {
+    updateSlidePosition: function(animate = true) {
         const track = document.getElementById('paydas-slider-track');
+        
+        // Görünen alanın ortasını hesapla
+        const wrapper = document.getElementById('paydas-slider-wrapper');
+        const wrapperWidth = wrapper.offsetWidth - 40; // padding çıkar
+        const centerOffset = (wrapperWidth - this.slideWidth) / 2;
+        
+        // Slide'ı ortala
+        this.translateX = -(this.currentIndex * this.slideWidth) + centerOffset;
+        
         if (animate) {
             track.style.transition = 'transform 0.3s ease-in-out';
         } else {
             track.style.transition = 'none';
         }
+        
         track.style.transform = `translateX(${this.translateX}px)`;
+        this.updateDots();
+        this.checkInfiniteLoop();
     },
     
-    nextPage: function() {
-        const totalPages = Math.ceil(this.organizations.length / this.visibleCount);
-        if (this.currentPage < totalPages - 1) {
-            this.goToPage(this.currentPage + 1);
-        } else {
-            this.goToPage(0); // Son sayfadan ilk sayfaya dön
-        }
+    next: function() {
+        this.currentIndex++;
+        this.updateSlidePosition();
     },
     
-    prevPage: function() {
-        const totalPages = Math.ceil(this.organizations.length / this.visibleCount);
-        if (this.currentPage > 0) {
-            this.goToPage(this.currentPage - 1);
+    prev: function() {
+        this.currentIndex--;
+        this.updateSlidePosition();
+    },
+    
+    goToSlide: function(index) {
+        // En yakın kopyayı bul
+        const currentReal = this.currentIndex % this.organizations.length;
+        const diff = index - currentReal;
+        
+        if (Math.abs(diff) <= this.organizations.length / 2) {
+            this.currentIndex += diff;
         } else {
-            this.goToPage(totalPages - 1); // İlk sayfadan son sayfaya dön
+            this.currentIndex += diff > 0 ? diff - this.organizations.length : diff + this.organizations.length;
         }
+        
+        this.updateSlidePosition();
+        this.resetAutoSlide();
+    },
+    
+    checkInfiniteLoop: function() {
+        setTimeout(() => {
+            const track = document.getElementById('paydas-slider-track');
+            
+            if (this.currentIndex <= 0) {
+                track.style.transition = 'none';
+                this.currentIndex = this.organizations.length;
+                this.updateSlidePosition(false);
+            } else if (this.currentIndex >= this.organizations.length * 2) {
+                track.style.transition = 'none';
+                this.currentIndex = this.organizations.length;
+                this.updateSlidePosition(false);
+            }
+        }, 300);
     },
     
     setupAutoSlide: function() {
         this.autoSlideInterval = setInterval(() => {
             if (!this.isDragging) {
-                this.nextPage();
+                this.next();
             }
-        }, 4000);
+        }, 3000);
     },
     
     resetAutoSlide: function() {
@@ -617,14 +628,13 @@ const paydas_slider = {
     
     setupEventListeners: function() {
         const wrapper = document.getElementById('paydas-slider-wrapper');
-        const track = document.getElementById('paydas-slider-track');
         
         let isMouseDown = false;
         let hasMoved = false;
         
         // Mouse events
         wrapper.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return; // Sadece sol tık
+            if (e.button !== 0) return;
             isMouseDown = true;
             hasMoved = false;
             this.startDrag(e.clientX);
@@ -642,7 +652,6 @@ const paydas_slider = {
             isMouseDown = false;
             this.endDrag();
             
-            // Eğer hareket etmediyse ve sol tık ise linke git
             if (!hasMoved && e.button === 0) {
                 const link = e.target.closest('.paydas-slide');
                 if (link && link.href) {
@@ -665,7 +674,6 @@ const paydas_slider = {
             this.endDrag();
         });
         
-        // Link tıklamalarını kontrol et
         wrapper.addEventListener('click', (e) => {
             if (this.isDragging || hasMoved) {
                 e.preventDefault();
@@ -686,34 +694,20 @@ const paydas_slider = {
         
         this.currentX = clientX;
         const diff = this.currentX - this.startX;
-        const newTranslate = this.translateX + diff;
         
-        // Sınırları kontrol et
-        const maxTranslate = 0;
-        const minTranslate = -((this.organizations.length - this.visibleCount) * this.slideWidth);
-        
-        if (newTranslate <= maxTranslate && newTranslate >= minTranslate) {
-            const track = document.getElementById('paydas-slider-track');
-            track.style.transform = `translateX(${newTranslate}px)`;
-        }
+        const track = document.getElementById('paydas-slider-track');
+        track.style.transition = 'none';
+        track.style.transform = `translateX(${this.translateX + diff}px)`;
     },
     
     endDrag: function() {
         if (!this.isDragging) return;
         
         const diff = this.currentX - this.startX;
-        const threshold = this.slideWidth / 3;
+        const slidesMoved = Math.round(-diff / this.slideWidth);
         
-        if (Math.abs(diff) > threshold) {
-            if (diff > 0) {
-                this.prevPage();
-            } else {
-                this.nextPage();
-            }
-        } else {
-            // Küçük hareket, mevcut sayfaya geri dön
-            this.goToPage(this.currentPage);
-        }
+        this.currentIndex += slidesMoved;
+        this.updateSlidePosition();
         
         this.isDragging = false;
         this.resetAutoSlide();

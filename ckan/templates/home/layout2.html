@@ -163,7 +163,7 @@ body, html, * {
 /* ——— YENİ PAYDAŞ SLIDER STİLLERİ ——— */
 .paydas-slider-container {
     position: relative;
-    max-width: 1200px;
+    max-width: 100%;
     margin: 0 auto;
     padding: 20px 0;
 }
@@ -171,17 +171,21 @@ body, html, * {
 .paydas-slider-wrapper {
     position: relative;
     overflow: hidden;
+    margin: 0 auto;
+    max-width: 1160px; /* 4 * 280px + 4 * 10px padding */
+}
+
+.paydas-slider-mask {
+    overflow: hidden;
     border-radius: 12px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    padding: 0 20px; /* Kenarlardan boşluk */
 }
 
 .paydas-slider-track {
     display: flex;
-    transition: none;
+    transition: transform 0.3s ease-in-out;
     will-change: transform;
-    padding: 0 50%; /* Ortalamak için */
 }
 
 .paydas-slide {
@@ -332,8 +336,10 @@ body, html, * {
 
         <div class="paydas-slider-container">
           <div class="paydas-slider-wrapper" id="paydas-slider-wrapper">
-            <div class="paydas-slider-track" id="paydas-slider-track">
-              <!-- Paydaş logoları buraya JavaScript ile yüklenecek -->
+            <div class="paydas-slider-mask">
+              <div class="paydas-slider-track" id="paydas-slider-track">
+                <!-- Paydaş logoları buraya JavaScript ile yüklenecek -->
+              </div>
             </div>
           </div>
           
@@ -555,7 +561,7 @@ const paydas_slider = {
         
         // Görünen alanın ortasını hesapla
         const wrapper = document.getElementById('paydas-slider-wrapper');
-        const wrapperWidth = wrapper.offsetWidth - 30; // padding çıkar
+        const wrapperWidth = wrapper.offsetWidth - 40; // padding çıkar
         const centerOffset = (wrapperWidth - this.slideWidth) / 2;
         
         // Slide'ı ortala

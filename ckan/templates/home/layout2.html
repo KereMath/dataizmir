@@ -161,6 +161,11 @@ body, html, * {
 }
 
 /* ——— YENİ PAYDAŞ SLIDER STİLLERİ ——— */
+.paydas-section {
+    background-color: transparent;
+    padding: 40px 0 60px 0;
+}
+
 .paydas-slider-container {
     position: relative;
     max-width: 100%;
@@ -171,15 +176,13 @@ body, html, * {
 .paydas-slider-wrapper {
     position: relative;
     overflow: hidden;
-    margin: 0 auto;
-    max-width: 1160px; /* 4 * 280px + 4 * 10px padding */
+    margin: 0 60px; /* Ok butonları için alan */
+    max-width: 1160px;
 }
 
 .paydas-slider-mask {
     overflow: hidden;
     border-radius: 12px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
 
 .paydas-slider-track {
@@ -189,14 +192,15 @@ body, html, * {
 }
 
 .paydas-slide {
-    width: 280px; /* Sabit genişlik */
+    width: 280px;
     height: 160px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: white;
-    margin: 20px 10px; /* Sağ sol 10px margin */
+    margin: 20px 10px;
     border-radius: 10px;
+    border: 0.5px solid #000;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-decoration: none;
@@ -216,7 +220,6 @@ body, html, * {
     max-width: 220px;
     max-height: 100px;
     object-fit: contain;
-    border-radius: 5px;
     filter: grayscale(0.3);
     transition: filter 0.3s ease;
     pointer-events: none;
@@ -226,32 +229,66 @@ body, html, * {
     filter: grayscale(0);
 }
 
-.paydas-slider-dots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 20px;
-}
-
-.paydas-slider-dot {
-    width: 12px;
-    height: 12px;
+/* Ok butonları */
+.paydas-nav-button {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 50px;
+    height: 50px;
     border-radius: 50%;
-    background: #ccc;
+    background: white;
+    border: 2px solid #007bff;
+    color: #007bff;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
     transition: all 0.3s ease;
+    z-index: 2;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
-.paydas-slider-dot.active {
+.paydas-nav-button:hover {
     background: #007bff;
-    transform: scale(1.2);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
 }
 
-.paydas-slider-dot:hover {
-    background: #0056b3;
+.paydas-nav-button.prev {
+    left: -60px;
+}
+
+.paydas-nav-button.next {
+    right: -60px;
+}
+
+.paydas-nav-button:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+.paydas-nav-button:disabled:hover {
+    background: white;
+    color: #007bff;
 }
 
 /* Responsive düzenlemeler */
+@media (max-width: 1200px) {
+    .paydas-slider-wrapper {
+        margin: 0 40px;
+    }
+    
+    .paydas-nav-button.prev {
+        left: -40px;
+    }
+    
+    .paydas-nav-button.next {
+        right: -40px;
+    }
+}
+
 @media (max-width: 1024px) {
     .paydas-slide {
         width: 240px;
@@ -266,6 +303,24 @@ body, html, * {
 }
 
 @media (max-width: 768px) {
+    .paydas-slider-wrapper {
+        margin: 0 30px;
+    }
+    
+    .paydas-nav-button {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+    
+    .paydas-nav-button.prev {
+        left: -30px;
+    }
+    
+    .paydas-nav-button.next {
+        right: -30px;
+    }
+    
     .paydas-slide {
         width: 200px;
         height: 120px;
@@ -326,7 +381,7 @@ body, html, * {
   </div>
 </div>
 
-<div role="main" style="background-color: white; padding: 40px 0 60px 0;">
+<div role="main" class="paydas-section">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
@@ -335,16 +390,15 @@ body, html, * {
         </h1>
 
         <div class="paydas-slider-container">
+          <button class="paydas-nav-button prev" id="paydas-prev-btn">‹</button>
+          <button class="paydas-nav-button next" id="paydas-next-btn">›</button>
+          
           <div class="paydas-slider-wrapper" id="paydas-slider-wrapper">
             <div class="paydas-slider-mask">
               <div class="paydas-slider-track" id="paydas-slider-track">
                 <!-- Paydaş logoları buraya JavaScript ile yüklenecek -->
               </div>
             </div>
-          </div>
-          
-          <div class="paydas-slider-dots" id="paydas-dots">
-            <!-- Dots buraya JavaScript ile oluşturulacak -->
           </div>
         </div>
       </div>
@@ -450,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 });
 
-// Yeni Paydaş Slider JavaScript - Tek tek hareket eden versiyon
+// Yeni Paydaş Slider JavaScript - Circular carousel
 const paydas_slider = {
     currentIndex: 0,
     organizations: [],
@@ -460,7 +514,7 @@ const paydas_slider = {
     currentX: 0,
     translateX: 0,
     visibleCount: 4,
-    slideWidth: 300, // 280px genişlik + 20px margin
+    slideWidth: 300,
     
     init: function() {
         this.loadOrganizations();
@@ -474,26 +528,21 @@ const paydas_slider = {
     
     calculateDimensions: function() {
         const wrapper = document.getElementById('paydas-slider-wrapper');
-        const wrapperWidth = wrapper ? wrapper.offsetWidth - 40 : window.innerWidth - 40; // Padding çıkar
+        const wrapperWidth = wrapper ? wrapper.offsetWidth : window.innerWidth - 120;
         
-        // Her cihaz için görünür kart sayısını hesapla
         if (wrapperWidth < 480) {
-            this.visibleCount = Math.floor(wrapperWidth / 170);
+            this.visibleCount = 2;
             this.slideWidth = 170;
         } else if (wrapperWidth < 768) {
-            this.visibleCount = Math.floor(wrapperWidth / 212);
+            this.visibleCount = 3;
             this.slideWidth = 212;
         } else if (wrapperWidth < 1024) {
-            this.visibleCount = Math.floor(wrapperWidth / 256);
+            this.visibleCount = 3;
             this.slideWidth = 256;
         } else {
-            // Büyük ekranlar için tam 4 kutu göster
-            this.slideWidth = Math.floor(wrapperWidth / 4);
             this.visibleCount = 4;
+            this.slideWidth = 300;
         }
-        
-        // Maksimum genişliği sınırla
-        if (this.slideWidth > 300) this.slideWidth = 300;
     },
     
     loadOrganizations: function() {
@@ -501,7 +550,6 @@ const paydas_slider = {
         this.organizations = allOrganizations.sort((a, b) => (b.package_count || 0) - (a.package_count || 0));
         
         this.renderSlides();
-        this.renderDots();
         this.updateSlidePosition(false);
         this.setupAutoSlide();
     },
@@ -510,7 +558,7 @@ const paydas_slider = {
         const track = document.getElementById('paydas-slider-track');
         track.innerHTML = '';
         
-        // Sonsuz döngü için organizasyonları çoğalt
+        // Circular için organizasyonları üç kere kopyala
         const repeatedOrgs = [...this.organizations, ...this.organizations, ...this.organizations];
         
         repeatedOrgs.forEach((org, index) => {
@@ -533,39 +581,10 @@ const paydas_slider = {
         this.currentIndex = this.organizations.length;
     },
     
-    renderDots: function() {
-        const dotsContainer = document.getElementById('paydas-dots');
-        dotsContainer.innerHTML = '';
-        
-        this.organizations.forEach((org, index) => {
-            const dot = document.createElement('div');
-            dot.className = 'paydas-slider-dot';
-            dot.addEventListener('click', () => this.goToSlide(index));
-            dotsContainer.appendChild(dot);
-        });
-        
-        this.updateDots();
-    },
-    
-    updateDots: function() {
-        const dots = document.querySelectorAll('.paydas-slider-dot');
-        const activeIndex = this.currentIndex % this.organizations.length;
-        
-        dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === activeIndex);
-        });
-    },
-    
     updateSlidePosition: function(animate = true) {
         const track = document.getElementById('paydas-slider-track');
         
-        // Görünen alanın ortasını hesapla
-        const wrapper = document.getElementById('paydas-slider-wrapper');
-        const wrapperWidth = wrapper.offsetWidth - 40; // padding çıkar
-        const centerOffset = (wrapperWidth - this.slideWidth) / 2;
-        
-        // Slide'ı ortala
-        this.translateX = -(this.currentIndex * this.slideWidth) + centerOffset;
+        this.translateX = -(this.currentIndex * this.slideWidth);
         
         if (animate) {
             track.style.transition = 'transform 0.3s ease-in-out';
@@ -574,7 +593,6 @@ const paydas_slider = {
         }
         
         track.style.transform = `translateX(${this.translateX}px)`;
-        this.updateDots();
         this.checkInfiniteLoop();
     },
     
@@ -586,21 +604,6 @@ const paydas_slider = {
     prev: function() {
         this.currentIndex--;
         this.updateSlidePosition();
-    },
-    
-    goToSlide: function(index) {
-        // En yakın kopyayı bul
-        const currentReal = this.currentIndex % this.organizations.length;
-        const diff = index - currentReal;
-        
-        if (Math.abs(diff) <= this.organizations.length / 2) {
-            this.currentIndex += diff;
-        } else {
-            this.currentIndex += diff > 0 ? diff - this.organizations.length : diff + this.organizations.length;
-        }
-        
-        this.updateSlidePosition();
-        this.resetAutoSlide();
     },
     
     checkInfiniteLoop: function() {
@@ -634,6 +637,19 @@ const paydas_slider = {
     
     setupEventListeners: function() {
         const wrapper = document.getElementById('paydas-slider-wrapper');
+        const prevBtn = document.getElementById('paydas-prev-btn');
+        const nextBtn = document.getElementById('paydas-next-btn');
+        
+        // Button clicks
+        prevBtn.addEventListener('click', () => {
+            this.prev();
+            this.resetAutoSlide();
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            this.next();
+            this.resetAutoSlide();
+        });
         
         let isMouseDown = false;
         let hasMoved = false;
@@ -710,11 +726,17 @@ const paydas_slider = {
         if (!this.isDragging) return;
         
         const diff = this.currentX - this.startX;
-        const slidesMoved = Math.round(-diff / this.slideWidth);
+        const threshold = this.slideWidth / 3;
         
-        this.currentIndex += slidesMoved;
+        if (Math.abs(diff) > threshold) {
+            if (diff > 0) {
+                this.currentIndex--;
+            } else {
+                this.currentIndex++;
+            }
+        }
+        
         this.updateSlidePosition();
-        
         this.isDragging = false;
         this.resetAutoSlide();
     }

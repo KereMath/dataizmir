@@ -174,17 +174,12 @@ body, html, * {
     border-radius: 12px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    cursor: grab;
-    user-select: none;
-}
-
-.paydas-slider-wrapper.dragging {
-    cursor: grabbing;
 }
 
 .paydas-slider-track {
     display: flex;
-    transition: transform 0.3s ease-in-out;
+    transition: none;
+    will-change: transform;
 }
 
 .paydas-slide {
@@ -200,6 +195,10 @@ body, html, * {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     text-decoration: none;
     flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .paydas-slide:hover {
@@ -214,6 +213,7 @@ body, html, * {
     border-radius: 5px;
     filter: grayscale(0.3);
     transition: filter 0.3s ease;
+    pointer-events: none;
 }
 
 .paydas-slide:hover img {
@@ -429,41 +429,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 });
 
-// Yeni Paydaş Slider JavaScript
+// Yeni Paydaş Slider JavaScript - Tamamen yenilendi
 const paydas_slider = {
-    currentIndex: 0,
+    currentPage: 0,
     organizations: [],
     autoSlideInterval: null,
     isDragging: false,
     startX: 0,
     currentX: 0,
-    startTransform: 0,
-    visibleCount: 5,
-
+    translateX: 0,
+    visibleCount: 4,
+    slideWidth: 310, // 280px + 30px margin
+    
     init: function() {
         this.loadOrganizations();
-        this.setupAutoSlide();
-        this.setupDragHandlers();
-        this.setupResponsive();
+        this.setupEventListeners();
+        this.calculateVisibleCount();
+        window.addEventListener('resize', () => {
+            this.calculateVisibleCount();
+            this.goToPage(this.currentPage);
+        });
     },
-
+    
+    calculateVisibleCount: function() {
+        const wrapper = document.getElementById('paydas-slider-wrapper');
+        const wrapperWidth = wrapper ? wrapper.offsetWidth : window.innerWidth;
+        
+        if (wrapperWidth < 480) {
+            this.visibleCount = 2;
+            this.slideWidth = 210;
+        } else if (wrapperWidth < 768) {
+            this.visibleCount = 3;
+            this.slideWidth = 260;
+        } else if (wrapperWidth < 1200) {
+            this.visibleCount = 4;
+            this.slideWidth = 310;
+        } else {
+            this.visibleCount = 4;
+            this.slideWidth = 310;
+        }
+    },
+    
     loadOrganizations: function() {
         const allOrganizations = {{ h.organizations_available('read', True)|tojson|safe }};
         this.organizations = allOrganizations.sort((a, b) => (b.package_count || 0) - (a.package_count || 0));
         
         this.renderSlides();
         this.renderDots();
-        this.updateSlidePosition();
+        this.goToPage(0);
+        this.setupAutoSlide();
     },
-
+    
     renderSlides: function() {
         const track = document.getElementById('paydas-slider-track');
         track.innerHTML = '';
-
-        // Sürekli döngü için organizasyonları çoğalt
-        const repeatedOrgs = [...this.organizations, ...this.organizations, ...this.organizations];
         
-        repeatedOrgs.forEach((org, index) => {
+        this.organizations.forEach((org, index) => {
             const slide = document.createElement('a');
             slide.href = `/organization/${org.name}`;
             slide.className = 'paydas-slide';
@@ -478,229 +499,198 @@ const paydas_slider = {
             
             track.appendChild(slide);
         });
-
-        // Başlangıç pozisyonunu ortaya ayarla
-        this.currentIndex = this.organizations.length;
     },
-
+    
     renderDots: function() {
         const dotsContainer = document.getElementById('paydas-dots');
         dotsContainer.innerHTML = '';
-
-        this.organizations.forEach((org, index) => {
+        
+        const totalPages = Math.ceil(this.organizations.length / this.visibleCount);
+        
+        for (let i = 0; i < totalPages; i++) {
             const dot = document.createElement('div');
             dot.className = 'paydas-slider-dot';
-            dot.addEventListener('click', () => this.goToSlide(index));
+            if (i === 0) dot.classList.add('active');
+            dot.addEventListener('click', () => this.goToPage(i));
             dotsContainer.appendChild(dot);
-        });
-        
-        this.updateDots();
+        }
     },
-
+    
     updateDots: function() {
         const dots = document.querySelectorAll('.paydas-slider-dot');
-        const activeIndex = this.currentIndex % this.organizations.length;
-        
         dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === activeIndex);
+            dot.classList.toggle('active', index === this.currentPage);
         });
     },
-
-    updateSlidePosition: function() {
-        const track = document.getElementById('paydas-slider-track');
-        const slideWidth = 310; // 280px + 30px margin
-        const offset = -this.currentIndex * slideWidth;
-        track.style.transform = `translateX(${offset}px)`;
+    
+    goToPage: function(pageIndex) {
+        const totalPages = Math.ceil(this.organizations.length / this.visibleCount);
+        
+        // Sayfa sınırlarını kontrol et
+        if (pageIndex < 0) pageIndex = 0;
+        if (pageIndex >= totalPages) pageIndex = totalPages - 1;
+        
+        this.currentPage = pageIndex;
+        this.translateX = -(pageIndex * this.visibleCount * this.slideWidth);
+        
+        // Son sayfada yarıda kalan kutular için ayarlama
+        if (pageIndex === totalPages - 1) {
+            const remainingSlides = this.organizations.length % this.visibleCount;
+            if (remainingSlides !== 0) {
+                const lastPageStartIndex = pageIndex * this.visibleCount;
+                const totalSlides = this.organizations.length;
+                const maxTranslate = -((totalSlides - this.visibleCount) * this.slideWidth);
+                this.translateX = Math.max(this.translateX, maxTranslate);
+            }
+        }
+        
+        this.updateSlidePosition(true);
         this.updateDots();
     },
-
-    next: function() {
-        this.currentIndex++;
-        this.updateSlidePosition();
-        this.checkInfiniteLoop();
-    },
-
-    prev: function() {
-        this.currentIndex--;
-        this.updateSlidePosition();
-        this.checkInfiniteLoop();
-    },
-
-    goToSlide: function(index) {
-        // En yakın kopyayı bul
-        const currentReal = this.currentIndex % this.organizations.length;
-        const diff = index - currentReal;
-        
-        if (Math.abs(diff) <= this.organizations.length / 2) {
-            this.currentIndex += diff;
+    
+    updateSlidePosition: function(animate = false) {
+        const track = document.getElementById('paydas-slider-track');
+        if (animate) {
+            track.style.transition = 'transform 0.3s ease-in-out';
         } else {
-            this.currentIndex += diff > 0 ? diff - this.organizations.length : diff + this.organizations.length;
+            track.style.transition = 'none';
         }
-        
-        this.updateSlidePosition();
-        this.resetAutoSlide();
+        track.style.transform = `translateX(${this.translateX}px)`;
     },
-
-    checkInfiniteLoop: function() {
-        // Eğer ilk kopyaya geçtiyse, orijinal pozisyona sıçra
-        if (this.currentIndex <= 0) {
-            setTimeout(() => {
-                const track = document.getElementById('paydas-slider-track');
-                track.style.transition = 'none';
-                this.currentIndex = this.organizations.length;
-                this.updateSlidePosition();
-                setTimeout(() => {
-                    track.style.transition = 'transform 0.3s ease-in-out';
-                }, 10);
-            }, 300);
-        }
-        
-        // Eğer son kopyaya geçtiyse, orijinal pozisyona sıçra
-        if (this.currentIndex >= this.organizations.length * 2) {
-            setTimeout(() => {
-                const track = document.getElementById('paydas-slider-track');
-                track.style.transition = 'none';
-                this.currentIndex = this.organizations.length;
-                this.updateSlidePosition();
-                setTimeout(() => {
-                    track.style.transition = 'transform 0.3s ease-in-out';
-                }, 10);
-            }, 300);
+    
+    nextPage: function() {
+        const totalPages = Math.ceil(this.organizations.length / this.visibleCount);
+        if (this.currentPage < totalPages - 1) {
+            this.goToPage(this.currentPage + 1);
+        } else {
+            this.goToPage(0); // Son sayfadan ilk sayfaya dön
         }
     },
-
+    
+    prevPage: function() {
+        const totalPages = Math.ceil(this.organizations.length / this.visibleCount);
+        if (this.currentPage > 0) {
+            this.goToPage(this.currentPage - 1);
+        } else {
+            this.goToPage(totalPages - 1); // İlk sayfadan son sayfaya dön
+        }
+    },
+    
     setupAutoSlide: function() {
         this.autoSlideInterval = setInterval(() => {
             if (!this.isDragging) {
-                this.next();
+                this.nextPage();
             }
-        }, 3000);
+        }, 4000);
     },
-
+    
     resetAutoSlide: function() {
         clearInterval(this.autoSlideInterval);
         this.setupAutoSlide();
     },
-
-    setupDragHandlers: function() {
+    
+    setupEventListeners: function() {
         const wrapper = document.getElementById('paydas-slider-wrapper');
+        const track = document.getElementById('paydas-slider-track');
+        
+        let isMouseDown = false;
+        let hasMoved = false;
         
         // Mouse events
         wrapper.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // Sadece sol tık
+            isMouseDown = true;
+            hasMoved = false;
+            this.startDrag(e.clientX);
             e.preventDefault();
-            this.startDrag(e);
         });
         
         document.addEventListener('mousemove', (e) => {
-            if (this.isDragging) {
-                e.preventDefault();
-                this.drag(e);
-            }
+            if (!isMouseDown) return;
+            hasMoved = true;
+            this.drag(e.clientX);
         });
         
         document.addEventListener('mouseup', (e) => {
-            if (this.isDragging) {
-                e.preventDefault();
-                this.endDrag();
+            if (!isMouseDown) return;
+            isMouseDown = false;
+            this.endDrag();
+            
+            // Eğer hareket etmediyse ve sol tık ise linke git
+            if (!hasMoved && e.button === 0) {
+                const link = e.target.closest('.paydas-slide');
+                if (link && link.href) {
+                    window.location.href = link.href;
+                }
             }
         });
         
         // Touch events
         wrapper.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            this.startDrag(e.touches[0]);
+            this.startDrag(e.touches[0].clientX);
         });
         
-        document.addEventListener('touchmove', (e) => {
-            if (this.isDragging) {
-                e.preventDefault();
-                this.drag(e.touches[0]);
-            }
-        });
-        
-        document.addEventListener('touchend', (e) => {
-            if (this.isDragging) {
-                e.preventDefault();
-                this.endDrag();
-            }
-        });
-        
-        // Prevent context menu on right click
-        wrapper.addEventListener('contextmenu', (e) => {
+        wrapper.addEventListener('touchmove', (e) => {
+            this.drag(e.touches[0].clientX);
             e.preventDefault();
         });
         
-        // Prevent default link behavior during drag
+        wrapper.addEventListener('touchend', (e) => {
+            this.endDrag();
+        });
+        
+        // Link tıklamalarını kontrol et
         wrapper.addEventListener('click', (e) => {
-            if (this.isDragging) {
+            if (this.isDragging || hasMoved) {
                 e.preventDefault();
                 e.stopPropagation();
             }
         });
     },
-
-    startDrag: function(e) {
+    
+    startDrag: function(clientX) {
         this.isDragging = true;
-        this.startX = e.clientX;
-        this.currentX = e.clientX;
-        this.startTransform = this.currentIndex;
-        
-        const track = document.getElementById('paydas-slider-track');
-        const wrapper = document.getElementById('paydas-slider-wrapper');
-        
-        track.style.transition = 'none';
-        wrapper.classList.add('dragging');
-        document.body.style.userSelect = 'none';
-        
+        this.startX = clientX;
+        this.currentX = clientX;
         clearInterval(this.autoSlideInterval);
     },
-
-    drag: function(e) {
+    
+    drag: function(clientX) {
         if (!this.isDragging) return;
         
-        this.currentX = e.clientX;
+        this.currentX = clientX;
         const diff = this.currentX - this.startX;
-        const slideWidth = 210;
-        const moveCount = diff / slideWidth;
+        const newTranslate = this.translateX + diff;
         
-        const newIndex = this.startTransform - moveCount;
+        // Sınırları kontrol et
+        const maxTranslate = 0;
+        const minTranslate = -((this.organizations.length - this.visibleCount) * this.slideWidth);
         
-        const track = document.getElementById('paydas-slider-track');
-        const offset = -newIndex * slideWidth;
-        track.style.transform = `translateX(${offset}px)`;
+        if (newTranslate <= maxTranslate && newTranslate >= minTranslate) {
+            const track = document.getElementById('paydas-slider-track');
+            track.style.transform = `translateX(${newTranslate}px)`;
+        }
     },
-
+    
     endDrag: function() {
         if (!this.isDragging) return;
         
         const diff = this.currentX - this.startX;
-        const slideWidth = 210;
-        const moveCount = Math.round(diff / slideWidth);
+        const threshold = this.slideWidth / 3;
         
-        this.currentIndex = this.startTransform - moveCount;
-        
-        const track = document.getElementById('paydas-slider-track');
-        const wrapper = document.getElementById('paydas-slider-wrapper');
-        
-        track.style.transition = 'transform 0.3s ease-in-out';
-        wrapper.classList.remove('dragging');
-        document.body.style.userSelect = '';
-        
-        this.updateSlidePosition();
-        this.checkInfiniteLoop();
+        if (Math.abs(diff) > threshold) {
+            if (diff > 0) {
+                this.prevPage();
+            } else {
+                this.nextPage();
+            }
+        } else {
+            // Küçük hareket, mevcut sayfaya geri dön
+            this.goToPage(this.currentPage);
+        }
         
         this.isDragging = false;
-        
-        // Kısa bir gecikme sonrası otomatik geçişi yeniden başlat
-        setTimeout(() => {
-            this.setupAutoSlide();
-        }, 100);
-    },
-
-    setupResponsive: function() {
-        window.addEventListener('resize', () => {
-            this.updateSlidePosition();
-        });
+        this.resetAutoSlide();
     }
 };
 

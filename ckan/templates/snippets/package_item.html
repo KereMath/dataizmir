@@ -999,6 +999,7 @@
         
         // NEW: Conditionally render actions based on user permissions
         let actionsHtml = '';
+        // Only attempt to show actions if a user is logged in
         if (isUserLoggedIn) {
           const canEdit = await canModifyDataset(pkg.id); // Check permission for this specific dataset
           if (canEdit) {

@@ -5,717 +5,739 @@
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
 body, html, * {
-    font-family: 'Montserrat', sans-serif !important;
+    font-family: 'Montserrat', sans-serif !important;
 }
 
 /* ——— VAR OLAN STILLER (popüler & kategori) ——— */
 .pop-main { background:url("../../populer_veri_setleri_zemin.png") center/220% auto no-repeat!important; }
 .catg-main{ background:url("../../kategoriler_zemin.png") center/170% auto no-repeat!important; }
 .card-grid{
-    display:grid;
-    grid-template-columns:repeat(5,1fr);   /* her satırda 5 */
-    grid-auto-rows:auto;                   /* satır yüksekliği içeriğe göre */
-    gap:1rem;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);   /* her satırda 5 */
+    grid-auto-rows:auto;                   /* satır yüksekliği içeriğe göre */
+    gap:1rem;
 }
 
-.card-grid-popular           { text-align:justify; display:grid; grid-template-columns:repeat(4,1fr); grid-gap:1rem; grid-auto-flow:dense; visibility:hidden; opacity:0; transition:opacity .5s }
-@media (max-width:767px)     { .card-grid-popular{ grid-template-columns:repeat(1,1fr)!important; padding:10px!important } }
+.card-grid-popular           { text-align:justify; display:grid; grid-template-columns:repeat(4,1fr); grid-gap:1rem; grid-auto-flow:dense; visibility:hidden; opacity:0; transition:opacity .5s }
+@media (max-width:767px)     { .card-grid-popular{ grid-template-columns:repeat(1,1fr)!important; padding:10px!important } }
 .card-grid-popular .card-grid-item{ min-width:150px; min-height:200px; border:none; padding:20px; text-decoration:none; transition:.2s; font:700 18px/1 Montserrat,sans-serif; background:#fff; border-radius:20px; color:#0a1458 }
 .card-grid-popular .card-grid-item:hover{ color:#fff }
 
-.pagination-container          { display:flex; justify-content:center; align-items:center; margin-top:20px; width:100%; grid-column:1/-1; visibility:hidden; opacity:0; transition:opacity .5s }
-.pagination-nav-button         { width:14px; height:12px; background:transparent; color:#101752; border:none; cursor:pointer; padding:0; margin:0 10px; display:flex; justify-content:center; align-items:center; font-size:14px }
+.pagination-container          { display:flex; justify-content:center; align-items:center; margin-top:20px; width:100%; grid-column:1/-1; visibility:hidden; opacity:0; transition:opacity .5s }
+.pagination-nav-button         { width:14px; height:12px; background:transparent; color:#101752; border:none; cursor:pointer; padding:0; margin:0 10px; display:flex; justify-content:center; align-items:center; font-size:14px }
 .pagination-nav-button:disabled{ opacity:.3; cursor:default }
-.pagination-page-indicator     { font:600 16px Montserrat,sans-serif; color:#101752; margin:0 5px }
+.pagination-page-indicator     { font:600 16px Montserrat,sans-serif; color:#101752; margin:0 5px }
 
-.veri-sets-ust-baslik          { font:600 18px Montserrat,sans-serif; color:black; margin-bottom:10px }
-.veri-sets-alt-baslik          { font:700 44px/54px Montserrat,sans-serif; color:black; margin-bottom:20px }
-.veri-sets-alt-baslik1         { font:700 44px/54px Montserrat,sans-serif; color:black; margin-bottom:20px }
+.veri-sets-ust-baslik          { font:600 18px Montserrat,sans-serif; color:black; margin-bottom:10px }
+.veri-sets-alt-baslik          { font:700 44px/54px Montserrat,sans-serif; color:black; margin-bottom:20px }
+.veri-sets-alt-baslik1         { font:700 44px/54px Montserrat,sans-serif; color:black; margin-bottom:20px }
 
 
 /* ——— INTRO BÖLÜMÜ ——— */
-.intro-main                    { background:#EEF1F6; }
-.intro-row                     { display:flex; flex-wrap:wrap; justify-content:center; padding:40px 0 }
-.intro-video-col               { flex:0 0 50%; max-width:50%; padding:20px 50px }
-.intro-text-col                { flex:1 1 50%;  padding:0 }
+.intro-main                    { background:#EEF1F6; }
+.intro-row                     { display:flex; flex-wrap:wrap; justify-content:center; padding:40px 0 }
+.intro-video-col               { flex:0 0 50%; max-width:50%; padding:20px 50px }
+.intro-text-col                { flex:1 1 50%;  padding:0 }
 @media (max-width:991px){
-  .intro-video-col, .intro-text-col{ flex:0 0 90%; max-width:90%; padding:20px }
+  .intro-video-col, .intro-text-col{ flex:0 0 90%; max-width:90%; padding:20px }
 }
 .intro-video-col iframe{
-  width:100%; height:268px; max-width:448px;
-  border-radius:8px;
-  box-shadow:0 24px 48px 0 #00000052;
-  transition:box-shadow .3s ease, transform .3s ease;
+  width:100%; height:268px; max-width:448px;
+  border-radius:8px;
+  box-shadow:0 24px 48px 0 #00000052;
+  transition:box-shadow .3s ease, transform .3s ease;
 }
 .intro-video-col iframe:hover{
-  transform:translateY(-4px);
-  box-shadow:0 32px 64px 0 #00000052;
+  transform:translateY(-4px);
+  box-shadow:0 32px 64px 0 #00000052;
 }
 
 /* ——— ANASAYFA TEMA KARTLARI (YENİ EKLENEN) ——— */
 .anasayfa-theme-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center; /* Kartları ortala */
-    gap: 20px; /* Kartlar arası boşluk */
-    padding: 20px 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Kartları ortala */
+    gap: 20px; /* Kartlar arası boşluk */
+    padding: 20px 0;
 }
 
 .anasayfa-theme-card {
-    flex: 1 1 calc(33.333% - 40px); /* Her satırda 3 kart (gap dahil) */
-    max-width: 350px;
-    color: white;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    text-decoration: none !important; /* Link olduğu için alt çizgiyi kaldır */
+    flex: 1 1 calc(33.333% - 40px); /* Her satırda 3 kart (gap dahil) */
+    max-width: 350px;
+    color: white;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    text-decoration: none !important; /* Link olduğu için alt çizgiyi kaldır */
 }
 
 @media (max-width: 991px) {
-    .anasayfa-theme-card {
-        flex: 1 1 calc(50% - 40px); /* Tabletlerde 2 kart */
-    }
+    .anasayfa-theme-card {
+        flex: 1 1 calc(50% - 40px); /* Tabletlerde 2 kart */
+    }
 }
 
 @media (max-width: 767px) {
-    .anasayfa-theme-card {
-        flex: 1 1 90%; /* Mobil cihazlarda tek kart */
-        max-width: unset; /* Mobil cihazlarda tam genişlik */
-    }
+    .anasayfa-theme-card {
+        flex: 1 1 90%; /* Mobil cihazlarda tek kart */
+        max-width: unset; /* Mobil cihazlarda tam genişlik */
+    }
 }
 
 .anasayfa-theme-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
 }
 
 .anasayfa-theme-card .card-header .title {
-    font-size: 18px !important; /* Font büyüklüğünü artır */
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    margin: 0 0 10px 0;
-    display: flex;
-    align-items: center;
+    font-size: 18px !important; /* Font büyüklüğünü artır */
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
 }
 .anasayfa-theme-card .card-header .title .fa {
-    margin-right: 10px;
-    font-size: 24px; /* İkonu biraz büyüt */
+    margin-right: 10px;
+    font-size: 24px; /* İkonu biraz büyüt */
 }
 
 .anasayfa-theme-card .card-body .description {
-    font-size: 14px !important;
-    margin: 0;
-    min-height: 40px; /* Açıklama alanı için minimum yükseklik */
-    line-height: 1.5;
+    font-size: 14px !important;
+    margin: 0;
+    min-height: 40px; /* Açıklama alanı için minimum yükseklik */
+    line-height: 1.5;
 }
 
 .anasayfa-theme-card .card-body .meta-info {
-    font-size: 12px !important;
-    opacity: 0.8;
-    margin-top: 10px;
+    font-size: 12px !important;
+    opacity: 0.8;
+    margin-top: 10px;
 }
 
 .anasayfa-theme-card .card-stats {
-    display: flex;
-    justify-content: flex-start;
-    gap: 30px;
-    margin: 20px 0;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: flex-start;
+    gap: 30px;
+    margin: 20px 0;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .anasayfa-theme-card .stat-item .number {
-    font-size: 28px !important;
-    font-weight: 700 !important;
-    display: block;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    display: block;
 }
 
 .anasayfa-theme-card .stat-item .label {
-    font-size: 14px !important;
-    opacity: 0.8;
+    font-size: 14px !important;
+    opacity: 0.8;
 }
 
 .anasayfa-theme-card .card-footer {
-    margin-top: auto;
+    margin-top: auto;
 }
 
 .anasayfa-theme-card .btn-details {
-    display: block;
-    width: 100%;
-    text-align: center;
-    background-color: rgba(255, 255, 255, 0.9);
-    color: #333;
-    padding: 12px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600 !important;
-    transition: background-color 0.2s;
+    display: block;
+    width: 100%;
+    text-align: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+    padding: 12px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-weight: 600 !important;
+    transition: background-color 0.2s;
 }
 
 .anasayfa-theme-card .btn-details:hover {
-    background-color: white;
-    color: #000;
+    background-color: white;
+    color: #000;
 }
 
 /* ——— YENİ PAYDAŞ SLIDER STİLLERİ ——— */
 .paydas-slider-container {
-    position: relative;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px 0;
+    position: relative;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px 0;
 }
 
 .paydas-slider-wrapper {
-    position: relative;
-    overflow: hidden;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    padding: 0 20px; /* Kenarlardan boşluk */
+    position: relative;
+    overflow: hidden;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    /* padding: 0 20px; /* Kenarlardan boşluk - Kaldırıldı */
 }
 
 .paydas-slider-track {
-    display: flex;
-    transition: none;
-    will-change: transform;
-    padding: 0 50%; /* Ortalamak için */
+    display: flex;
+    transition: none;
+    will-change: transform;
+    /* padding: 0 50%; /* Ortalamak için - Kaldırıldı */
 }
 
 .paydas-slide {
-    width: 280px; /* Sabit genişlik */
-    height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    margin: 20px 10px; /* Sağ sol 10px margin */
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    text-decoration: none;
-    flex-shrink: 0;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
+    min-width: 280px; /* Sabit genişlik */
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    margin: 20px 10px; /* Sağ sol 10px margin */
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    text-decoration: none;
+    flex-shrink: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .paydas-slide:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
 }
 
 .paydas-slide img {
-    max-width: 220px;
-    max-height: 100px;
-    object-fit: contain;
-    border-radius: 5px;
-    filter: grayscale(0.3);
-    transition: filter 0.3s ease;
-    pointer-events: none;
+    max-width: 220px;
+    max-height: 100px;
+    object-fit: contain;
+    border-radius: 5px;
+    filter: grayscale(0.3);
+    transition: filter 0.3s ease;
+    pointer-events: none;
 }
 
 .paydas-slide:hover img {
-    filter: grayscale(0);
+    filter: grayscale(0);
 }
 
 .paydas-slider-dots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 20px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 20px;
 }
 
 .paydas-slider-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #ccc;
-    cursor: pointer;
-    transition: all 0.3s ease;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #ccc;
+    cursor: pointer;
+    transition: all 0.3s ease;
 }
 
 .paydas-slider-dot.active {
-    background: #007bff;
-    transform: scale(1.2);
+    background: #007bff;
+    transform: scale(1.2);
 }
 
 .paydas-slider-dot:hover {
-    background: #0056b3;
+    background: #0056b3;
 }
 
 /* Responsive düzenlemeler */
 @media (max-width: 1024px) {
-    .paydas-slide {
-        width: 240px;
-        height: 140px;
-        margin: 15px 8px;
-    }
-    
-    .paydas-slide img {
-        max-width: 180px;
-        max-height: 90px;
-    }
+    .paydas-slide {
+        min-width: 240px;
+        height: 140px;
+        margin: 15px 8px;
+    }
+    
+    .paydas-slide img {
+        max-width: 180px;
+        max-height: 90px;
+    }
 }
 
 @media (max-width: 768px) {
-    .paydas-slide {
-        width: 200px;
-        height: 120px;
-        margin: 10px 6px;
-    }
-    
-    .paydas-slide img {
-        max-width: 150px;
-        max-height: 80px;
-    }
+    .paydas-slide {
+        min-width: 200px;
+        height: 120px;
+        margin: 10px 6px;
+    }
+    
+    .paydas-slide img {
+        max-width: 150px;
+        max-height: 80px;
+    }
 }
 
 @media (max-width: 480px) {
-    .paydas-slide {
-        width: 160px;
-        height: 100px;
-        margin: 10px 5px;
-    }
-    
-    .paydas-slide img {
-        max-width: 120px;
-        max-height: 60px;
-    }
+    .paydas-slide {
+        min-width: 160px;
+        height: 100px;
+        margin: 10px 5px;
+    }
+    
+    .paydas-slide img {
+        max-width: 120px;
+        max-height: 60px;
+    }
 }
 </style>
 
 {# ——— HERO BLOĞU ÇIKARILDI; header artık index.html'de ——— #}
 
 <div role="main" style="background-color: white; padding: 20px 0 40px 0;">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <div style="text-align:center">
-          <h1 class="veri-sets-alt-baslik1">6 Ana Tema Altında İzmir'in Tüm Verileri</h1>
-        </div>
-        
-        <div id="homepage-theme-grid" class="anasayfa-theme-grid">
-          </div>
-      </div>
-    </div>
-  </div>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <div style="text-align:center">
+          <h1 class="veri-sets-alt-baslik1">6 Ana Tema Altında İzmir'in Tüm Verileri</h1>
+        </div>
+        
+        <div id="homepage-theme-grid" class="anasayfa-theme-grid">
+          </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div role="main" class="catg-main" style="padding-bottom:60px;">
-  <div class="container">
-    <div class="category-header" style="text-align:center;margin-bottom:30px">
-      <h3 style="font:600 18px Montserrat,sans-serif !important;margin-bottom:15px;color:black">Veri Kategorilerimiz</h3>
-      <h1 style="font:700 44px/54px Montserrat,sans-serif !important;color:black">
-        Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi İnceleyin…
-      </h1>
-    </div>
+  <div class="container">
+    <div class="category-header" style="text-align:center;margin-bottom:30px">
+      <h3 style="font:600 18px Montserrat,sans-serif !important;margin-bottom:15px;color:black">Veri Kategorilerimiz</h3>
+      <h1 style="font:700 44px/54px Montserrat,sans-serif !important;color:black">
+        Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi İnceleyin…
+      </h1>
+    </div>
 
-    <div class="row row2" style="margin-top:30px">
-      <div class="card-grid">
-        {% snippet 'home/snippets/featured_group.html' %}
-      </div>
-    </div>
-  </div>
+    <div class="row row2" style="margin-top:30px">
+      <div class="card-grid">
+        {% snippet 'home/snippets/featured_group.html' %}
+      </div>
+    </div>
+  </div>
 </div>
 
 <div role="main" style="background-color: white; padding: 40px 0 60px 0;">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <h1 style="color: black; font-weight: 700 !important; font-size: 44px !important; line-height: 54px !important; text-align: center !important; margin-bottom: 40px;">
-          Veri Paydaşlarımız
-        </h1>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-12">
+        <h1 style="color: black; font-weight: 700 !important; font-size: 44px !important; line-height: 54px !important; text-align: center !important; margin-bottom: 40px;">
+          Veri Paydaşlarımız
+        </h1>
 
-        <div class="paydas-slider-container">
-          <div class="paydas-slider-wrapper" id="paydas-slider-wrapper">
-            <div class="paydas-slider-track" id="paydas-slider-track">
-              <!-- Paydaş logoları buraya JavaScript ile yüklenecek -->
-            </div>
-          </div>
-          
-          <div class="paydas-slider-dots" id="paydas-dots">
-            <!-- Dots buraya JavaScript ile oluşturulacak -->
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+        <div class="paydas-slider-container">
+          <div class="paydas-slider-wrapper" id="paydas-slider-wrapper">
+            <div class="paydas-slider-track" id="paydas-slider-track">
+                          </div>
+          </div>
+          
+          <div class="paydas-slider-dots" id="paydas-dots">
+                      </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
 document.addEventListener("DOMContentLoaded",function(){
-  const itemsPerPage=4,container=document.getElementById("featured-datasets");
-  const allItems=[...container.querySelectorAll(".card-grid-item")];
-  const totalItems=allItems.length,totalPages=Math.max(1,Math.ceil(totalItems/itemsPerPage));
-  const paginationContainer=document.getElementById("pagination-container");
-  let currentPage=1;
+  const itemsPerPage=4,container=document.getElementById("featured-datasets");
+  const allItems=[...container.querySelectorAll(".card-grid-item")];
+  const totalItems=allItems.length,totalPages=Math.max(1,Math.ceil(totalItems/itemsPerPage));
+  const paginationContainer=document.getElementById("pagination-container");
+  let currentPage=1;
 
-  function resetAll(){allItems.forEach(i=>i.style.display="none")}
-  function showPage(p){
-    resetAll();
-    const s=(p-1)*itemsPerPage,e=Math.min(s+itemsPerPage,totalItems);
-    for(let i=s;i<e;i++) allItems[i].style.display="block";
-    updateControls(p); currentPage=p;
-  }
-  function btn(html,disabled,cb){
-    const b=document.createElement("button");
-    b.className="pagination-nav-button"; b.innerHTML=html; b.disabled=disabled; b.onclick=cb; return b;
-  }
-  function updateControls(p){
-    paginationContainer.innerHTML="";
-    if(totalPages<=1){paginationContainer.style.display="none";return}
-    paginationContainer.style.display="flex";
-    paginationContainer.appendChild(btn("←",p===1,()=>showPage(p-1)));
-    const ind=document.createElement("span");
-    ind.className="pagination-page-indicator"; ind.textContent=`${p}/${totalPages}`; paginationContainer.appendChild(ind);
-    paginationContainer.appendChild(btn("→",p===totalPages,()=>showPage(p+1)));
-  }
+  function resetAll(){allItems.forEach(i=>i.style.display="none")}
+  function showPage(p){
+    resetAll();
+    const s=(p-1)*itemsPerPage,e=Math.min(s+itemsPerPage,totalItems);
+    for(let i=s;i<e;i++) allItems[i].style.display="block";
+    updateControls(p); currentPage=p;
+  }
+  function btn(html,disabled,cb){
+    const b=document.createElement("button");
+    b.className="pagination-nav-button"; b.innerHTML=html; b.disabled=disabled; b.onclick=cb; return b;
+  }
+  function updateControls(p){
+    paginationContainer.innerHTML="";
+    if(totalPages<=1){paginationContainer.style.display="none";return}
+    paginationContainer.style.display="flex";
+    paginationContainer.appendChild(btn("←",p===1,()=>showPage(p-1)));
+    const ind=document.createElement("span");
+    ind.className="pagination-page-indicator"; ind.textContent=`${p}/${totalPages}`; paginationContainer.appendChild(ind);
+    paginationContainer.appendChild(btn("→",p===totalPages,()=>showPage(p+1)));
+  }
 
-  setTimeout(()=>{showPage(1); container.style.visibility=paginationContainer.style.visibility="visible";
-                   container.style.opacity =paginationContainer.style.opacity ="1";},500);
-  window.paginationData={showPage,currentPage,totalPages,totalItems};
+  setTimeout(()=>{showPage(1); container.style.visibility=paginationContainer.style.visibility="visible";
+                   container.style.opacity =paginationContainer.style.opacity ="1";},500);
+  window.paginationData={showPage,currentPage,totalPages,totalItems};
 });
 
 // Anasayfa Tematik Verilerimiz için JS
 document.addEventListener('DOMContentLoaded', function() {
-    const apiUrl = '/api/3/action/theme_category_list';
-    const homepageThemeGrid = document.getElementById('homepage-theme-grid');
+    const apiUrl = '/api/3/action/theme_category_list';
+    const homepageThemeGrid = document.getElementById('homepage-theme-grid');
 
-    function formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        const options = { day: 'numeric', month: 'short', year: 'numeric' };
-        return new Date(dateString).toLocaleDateString('tr-TR', options);
-    }
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const options = { day: 'numeric', month: 'short', year: 'numeric' };
+        return new Date(dateString).toLocaleDateString('tr-TR', options);
+    }
 
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) { throw new Error(`Sunucuya ulaşılamadı. Durum: ${response.status}`); }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                // Sadece ilk 6 temayı al
-                const categories = data.result.slice(0, 6); 
-                if (categories && categories.length > 0) {
-                    homepageThemeGrid.innerHTML = ''; 
-                    categories.forEach(category => {
-                        const card = document.createElement('a'); // Link olarak değişti
-                        card.href = `/temalar/${category.slug}`; // Detay sayfasına yönlendir
-                        card.className = 'anasayfa-theme-card';
-                        card.style.backgroundColor = category.color || '#6c757d'; 
+    fetch(apiUrl)
+        .then(response => {
+            if (!response.ok) { throw new Error(`Sunucuya ulaşılamadı. Durum: ${response.status}`); }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                // Sadece ilk 6 temayı al
+                const categories = data.result.slice(0, 6); 
+                if (categories && categories.length > 0) {
+                    homepageThemeGrid.innerHTML = ''; 
+                    categories.forEach(category => {
+                        const card = document.createElement('a'); // Link olarak değişti
+                        card.href = `/temalar/${category.slug}`; // Detay sayfasına yönlendir
+                        card.className = 'anasayfa-theme-card';
+                        card.style.backgroundColor = category.color || '#6c757d'; 
 
-                        const iconHtml = category.icon ? `<i class="fa fa-${category.icon}"></i>` : '';
+                        const iconHtml = category.icon ? `<i class="fa fa-${category.icon}"></i>` : '';
 
-                        card.innerHTML = `
-                            <div class="card-header">
-                                <h3 class="title">${iconHtml} ${category.name}</h3>
-                            </div>
-                            <div class="card-body">
-                                <p class="description">${category.description || 'Açıklama mevcut değil.'}</p>
-                                <p class="meta-info">Son Güncelleme: ${formatDate(category.created_at)}</p>
-                            </div>
-                            <div class="card-stats">
-                                <div class="stat-item">
-                                    <span class="number">${category.dataset_count}</span>
-                                    <span class="label" style="font-size:30px !important;">Veri Seti</span>
-                                </div>
-                            </div>
-                            <div class="card-footer">
-                                <span class="btn-details">Detaylı İncele</span>
-                            </div>
-                        `;
-                        
-                        homepageThemeGrid.appendChild(card);
-                    });
-                } else {
-                    homepageThemeGrid.innerHTML = '<p style="text-align:center; color: #555;">Gösterilecek tema bulunamadı.</p>';
-                }
-            } else {
-                homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Bir hata oluştu: ${data.error ? data.error.message : 'API bilinmeyen bir hata döndürdü.'}</p>`;
-            }
-        })
-        .catch(error => {
-            console.error('Hata:', error);
-            homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Temalar yüklenirken bir hata oluştu: ${error.message}</p>`;
-        });
+                        card.innerHTML = `
+                            <div class="card-header">
+                                <h3 class="title">${iconHtml} ${category.name}</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="description">${category.description || 'Açıklama mevcut değil.'}</p>
+                                <p class="meta-info">Son Güncelleme: ${formatDate(category.created_at)}</p>
+                            </div>
+                            <div class="card-stats">
+                                <div class="stat-item">
+                                    <span class="number">${category.dataset_count}</span>
+                                    <span class="label" style="font-size:30px !important;">Veri Seti</span>
+                                </div>
+                            </div>
+                            <div class="card-footer">
+                                <span class="btn-details">Detaylı İncele</span>
+                            </div>
+                        `;
+                        
+                        homepageThemeGrid.appendChild(card);
+                    });
+                } else {
+                    homepageThemeGrid.innerHTML = '<p style="text-align:center; color: #555;">Gösterilecek tema bulunamadı.</p>';
+                }
+            } else {
+                homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Bir hata oluştu: ${data.error ? data.error.message : 'API bilinmeyen bir hata döndürdü.'}</p>`;
+            }
+        })
+        .catch(error => {
+            console.error('Hata:', error);
+            homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Temalar yüklenirken bir hata oluştu: ${error.message}</p>`;
+        });
 });
 
 // Yeni Paydaş Slider JavaScript - Tek tek hareket eden versiyon
 const paydas_slider = {
-    currentIndex: 0,
-    organizations: [],
-    autoSlideInterval: null,
-    isDragging: false,
-    startX: 0,
-    currentX: 0,
-    translateX: 0,
-    visibleCount: 4,
-    slideWidth: 300, // 280px genişlik + 20px margin
-    
-    init: function() {
-        this.loadOrganizations();
-        this.setupEventListeners();
-        this.calculateDimensions();
-        window.addEventListener('resize', () => {
-            this.calculateDimensions();
-            this.updateSlidePosition(false);
-        });
-    },
-    
-    calculateDimensions: function() {
-        const wrapper = document.getElementById('paydas-slider-wrapper');
-        const wrapperWidth = wrapper ? wrapper.offsetWidth - 40 : window.innerWidth - 40; // Padding çıkar
-        
-        // Her cihaz için görünür kart sayısını hesapla
-        if (wrapperWidth < 480) {
-            this.visibleCount = Math.floor(wrapperWidth / 170);
-            this.slideWidth = 170;
-        } else if (wrapperWidth < 768) {
-            this.visibleCount = Math.floor(wrapperWidth / 212);
-            this.slideWidth = 212;
-        } else if (wrapperWidth < 1024) {
-            this.visibleCount = Math.floor(wrapperWidth / 256);
-            this.slideWidth = 256;
-        } else {
-            // Büyük ekranlar için tam 4 kutu göster
-            this.slideWidth = Math.floor(wrapperWidth / 4);
-            this.visibleCount = 4;
-        }
-        
-        // Maksimum genişliği sınırla
-        if (this.slideWidth > 300) this.slideWidth = 300;
-    },
-    
-    loadOrganizations: function() {
-        const allOrganizations = {{ h.organizations_available('read', True)|tojson|safe }};
-        this.organizations = allOrganizations.sort((a, b) => (b.package_count || 0) - (a.package_count || 0));
-        
-        this.renderSlides();
-        this.renderDots();
-        this.updateSlidePosition(false);
-        this.setupAutoSlide();
-    },
-    
-    renderSlides: function() {
-        const track = document.getElementById('paydas-slider-track');
-        track.innerHTML = '';
-        
-        // Sonsuz döngü için organizasyonları çoğalt
-        const repeatedOrgs = [...this.organizations, ...this.organizations, ...this.organizations];
-        
-        repeatedOrgs.forEach((org, index) => {
-            const slide = document.createElement('a');
-            slide.href = `/organization/${org.name}`;
-            slide.className = 'paydas-slide';
-            slide.title = org.display_name;
-            
-            const imgSrc = org.image_display_url || '/base/images/placeholder-organization.png';
-            slide.innerHTML = `
-                <img src="${imgSrc}" 
-                     alt="${org.display_name}" 
-                     onerror="this.src='/base/images/placeholder-organization.png'">
-            `;
-            
-            track.appendChild(slide);
-        });
-        
-        // Başlangıç pozisyonunu ortaya ayarla
-        this.currentIndex = this.organizations.length;
-    },
-    
-    renderDots: function() {
-        const dotsContainer = document.getElementById('paydas-dots');
-        dotsContainer.innerHTML = '';
-        
-        this.organizations.forEach((org, index) => {
-            const dot = document.createElement('div');
-            dot.className = 'paydas-slider-dot';
-            dot.addEventListener('click', () => this.goToSlide(index));
-            dotsContainer.appendChild(dot);
-        });
-        
-        this.updateDots();
-    },
-    
-    updateDots: function() {
-        const dots = document.querySelectorAll('.paydas-slider-dot');
-        const activeIndex = this.currentIndex % this.organizations.length;
-        
-        dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === activeIndex);
-        });
-    },
-    
-    updateSlidePosition: function(animate = true) {
-        const track = document.getElementById('paydas-slider-track');
-        
-        // Görünen alanın ortasını hesapla
-        const wrapper = document.getElementById('paydas-slider-wrapper');
-        const wrapperWidth = wrapper.offsetWidth-130; // padding çıkar
-        const centerOffset = (wrapperWidth - this.slideWidth) / 2;
-        
-        // Slide'ı ortala
-        this.translateX = -(this.currentIndex * this.slideWidth) + centerOffset;
-        
-        if (animate) {
-            track.style.transition = 'transform 0.3s ease-in-out';
-        } else {
-            track.style.transition = 'none';
-        }
-        
-        track.style.transform = `translateX(${this.translateX}px)`;
-        this.updateDots();
-        this.checkInfiniteLoop();
-    },
-    
-    next: function() {
-        this.currentIndex++;
-        this.updateSlidePosition();
-    },
-    
-    prev: function() {
-        this.currentIndex--;
-        this.updateSlidePosition();
-    },
-    
-    goToSlide: function(index) {
-        // En yakın kopyayı bul
-        const currentReal = this.currentIndex % this.organizations.length;
-        const diff = index - currentReal;
-        
-        if (Math.abs(diff) <= this.organizations.length / 2) {
-            this.currentIndex += diff;
-        } else {
-            this.currentIndex += diff > 0 ? diff - this.organizations.length : diff + this.organizations.length;
-        }
-        
-        this.updateSlidePosition();
-        this.resetAutoSlide();
-    },
-    
-    checkInfiniteLoop: function() {
-        setTimeout(() => {
-            const track = document.getElementById('paydas-slider-track');
-            
-            if (this.currentIndex <= 0) {
-                track.style.transition = 'none';
-                this.currentIndex = this.organizations.length;
-                this.updateSlidePosition(false);
-            } else if (this.currentIndex >= this.organizations.length * 2) {
-                track.style.transition = 'none';
-                this.currentIndex = this.organizations.length;
-                this.updateSlidePosition(false);
-            }
-        }, 300);
-    },
-    
-    setupAutoSlide: function() {
-        this.autoSlideInterval = setInterval(() => {
-            if (!this.isDragging) {
-                this.next();
-            }
-        }, 3000);
-    },
-    
-    resetAutoSlide: function() {
-        clearInterval(this.autoSlideInterval);
-        this.setupAutoSlide();
-    },
-    
-    setupEventListeners: function() {
-        const wrapper = document.getElementById('paydas-slider-wrapper');
-        
-        let isMouseDown = false;
-        let hasMoved = false;
-        
-        // Mouse events
-        wrapper.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return;
-            isMouseDown = true;
-            hasMoved = false;
-            this.startDrag(e.clientX);
-            e.preventDefault();
-        });
-        
-        document.addEventListener('mousemove', (e) => {
-            if (!isMouseDown) return;
-            hasMoved = true;
-            this.drag(e.clientX);
-        });
-        
-        document.addEventListener('mouseup', (e) => {
-            if (!isMouseDown) return;
-            isMouseDown = false;
-            this.endDrag();
-            
-            if (!hasMoved && e.button === 0) {
-                const link = e.target.closest('.paydas-slide');
-                if (link && link.href) {
-                    window.location.href = link.href;
-                }
-            }
-        });
-        
-        // Touch events
-        wrapper.addEventListener('touchstart', (e) => {
-            this.startDrag(e.touches[0].clientX);
-        });
-        
-        wrapper.addEventListener('touchmove', (e) => {
-            this.drag(e.touches[0].clientX);
-            e.preventDefault();
-        });
-        
-        wrapper.addEventListener('touchend', (e) => {
-            this.endDrag();
-        });
-        
-        wrapper.addEventListener('click', (e) => {
-            if (this.isDragging || hasMoved) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        });
-    },
-    
-    startDrag: function(clientX) {
-        this.isDragging = true;
-        this.startX = clientX;
-        this.currentX = clientX;
-        clearInterval(this.autoSlideInterval);
-    },
-    
-    drag: function(clientX) {
-        if (!this.isDragging) return;
-        
-        this.currentX = clientX;
-        const diff = this.currentX - this.startX;
-        
-        const track = document.getElementById('paydas-slider-track');
-        track.style.transition = 'none';
-        track.style.transform = `translateX(${this.translateX + diff}px)`;
-    },
-    
-    endDrag: function() {
-        if (!this.isDragging) return;
-        
-        const diff = this.currentX - this.startX;
-        const slidesMoved = Math.round(-diff / this.slideWidth);
-        
-        this.currentIndex += slidesMoved;
-        this.updateSlidePosition();
-        
-        this.isDragging = false;
-        this.resetAutoSlide();
-    }
+    currentIndex: 0,
+    organizations: [],
+    autoSlideInterval: null,
+    isDragging: false,
+    startX: 0,
+    currentX: 0,
+    translateX: 0,
+    slideWidth: 0, // Dinamik olarak hesaplanacak
+    
+    init: function() {
+        this.loadOrganizations();
+        this.setupEventListeners();
+        window.addEventListener('resize', () => {
+            this.calculateSlideWidth();
+            this.updateSlidePosition(false);
+        });
+    },
+    
+    calculateSlideWidth: function() {
+        const slideElement = document.querySelector('.paydas-slide');
+        if (slideElement) {
+            // min-width + margin-left + margin-right
+            const style = getComputedStyle(slideElement);
+            this.slideWidth = slideElement.offsetWidth + parseFloat(style.marginLeft) + parseFloat(style.marginRight);
+        } else {
+            // Varsayılan değerler
+            const wrapperWidth = document.getElementById('paydas-slider-wrapper').offsetWidth;
+            if (wrapperWidth < 480) this.slideWidth = 170;
+            else if (wrapperWidth < 768) this.slideWidth = 212;
+            else if (wrapperWidth < 1024) this.slideWidth = 256;
+            else this.slideWidth = 300;
+        }
+    },
+    
+    loadOrganizations: function() {
+        const allOrganizations = {{ h.organizations_available('read', True)|tojson|safe }};
+        this.organizations = allOrganizations.sort((a, b) => (b.package_count || 0) - (a.package_count || 0));
+        
+        this.renderSlides();
+        this.calculateSlideWidth(); // Slaytlar render edildikten sonra genişliği hesapla
+        this.renderDots();
+        this.updateSlidePosition(false);
+        this.setupAutoSlide();
+    },
+    
+    renderSlides: function() {
+        const track = document.getElementById('paydas-slider-track');
+        track.innerHTML = '';
+        
+        // Sonsuz döngü için organizasyonları çoğalt
+        // Başlangıçta ve sonda yeterli sayıda kopya ekle
+        const buffer = 5; // Yeterli tampon sağlamak için
+        const repeatedOrgs = [
+            ...this.organizations.slice(-buffer), 
+            ...this.organizations, 
+            ...this.organizations.slice(0, buffer)
+        ];
+        
+        repeatedOrgs.forEach((org, index) => {
+            const slide = document.createElement('a');
+            slide.href = `/organization/${org.name}`;
+            slide.className = 'paydas-slide';
+            slide.title = org.display_name;
+            
+            const imgSrc = org.image_display_url || '/base/images/placeholder-organization.png';
+            slide.innerHTML = `
+                <img src="${imgSrc}" 
+                     alt="${org.display_name}" 
+                     onerror="this.src='/base/images/placeholder-organization.png'">
+            `;
+            
+            track.appendChild(slide);
+        });
+        
+        // Başlangıç pozisyonunu gerçek organizasyonların başına ayarla
+        this.currentIndex = buffer;
+    },
+    
+    renderDots: function() {
+        const dotsContainer = document.getElementById('paydas-dots');
+        dotsContainer.innerHTML = '';
+        
+        this.organizations.forEach((org, index) => {
+            const dot = document.createElement('div');
+            dot.className = 'paydas-slider-dot';
+            dot.addEventListener('click', () => this.goToSlide(index));
+            dotsContainer.appendChild(dot);
+        });
+        
+        this.updateDots();
+    },
+    
+    updateDots: function() {
+        const dots = document.querySelectorAll('.paydas-slider-dot');
+        const activeIndex = (this.currentIndex - 5) % this.organizations.length; // buffer'ı çıkar
+        
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === activeIndex);
+        });
+    },
+    
+    updateSlidePosition: function(animate = true) {
+        const track = document.getElementById('paydas-slider-track');
+        const wrapper = document.getElementById('paydas-slider-wrapper');
+        
+        // Wrapper genişliğine göre ortalanacak boşluğu hesapla
+        const wrapperWidth = wrapper.offsetWidth;
+        const totalSlidesWidth = this.organizations.length * this.slideWidth;
+        
+        let offset = 0;
+        if (wrapperWidth > this.slideWidth) {
+            // Ekran genişliği bir veya daha fazla slaytı tam gösteriyorsa, ortala
+            const slidesInView = Math.floor(wrapperWidth / this.slideWidth);
+            if (slidesInView >= this.organizations.length) {
+                // Tüm slaytlar sığıyorsa, hepsini ortala
+                offset = (wrapperWidth - totalSlidesWidth) / 2;
+                this.translateX = offset - (this.currentIndex * this.slideWidth);
+            } else {
+                // Slaytları ortadan kesmeden kaydırma için
+                // Görünen alandaki ilk slaytın başlangıcını ortala
+                offset = (wrapperWidth - (slidesInView * this.slideWidth)) / 2;
+                this.translateX = -(this.currentIndex * this.slideWidth) + offset;
+            }
+        } else {
+            // Sadece bir slayt sığıyorsa veya daha az, sola yasla
+            this.translateX = -(this.currentIndex * this.slideWidth);
+        }
+        
+        if (animate) {
+            track.style.transition = 'transform 0.3s ease-in-out';
+        } else {
+            track.style.transition = 'none';
+        }
+        
+        track.style.transform = `translateX(${this.translateX}px)`;
+        this.updateDots();
+        this.checkInfiniteLoop();
+    },
+    
+    next: function() {
+        this.currentIndex++;
+        this.updateSlidePosition();
+    },
+    
+    prev: function() {
+        this.currentIndex--;
+        this.updateSlidePosition();
+    },
+    
+    goToSlide: function(index) {
+        const buffer = 5;
+        this.currentIndex = index + buffer; // Hedef indeksi buffer ile ayarla
+        this.updateSlidePosition();
+        this.resetAutoSlide();
+    },
+    
+    checkInfiniteLoop: function() {
+        const buffer = 5;
+        const totalOrgs = this.organizations.length;
+        
+        setTimeout(() => {
+            const track = document.getElementById('paydas-slider-track');
+            
+            if (this.currentIndex >= totalOrgs + buffer) {
+                // Sona ulaştığında, başa dön (kopya kısmı)
+                this.currentIndex = buffer + (this.currentIndex - (totalOrgs + buffer));
+                track.style.transition = 'none';
+                this.updateSlidePosition(false);
+            } else if (this.currentIndex < buffer) {
+                // Başa ulaştığında, sona dön (kopya kısmı)
+                this.currentIndex = totalOrgs + buffer + (this.currentIndex - buffer);
+                track.style.transition = 'none';
+                this.updateSlidePosition(false);
+            }
+        }, 300); // Transition süresiyle eşleşmeli
+    },
+    
+    setupAutoSlide: function() {
+        if (this.organizations.length <= 1) return; // Sadece bir veya sıfır öge varsa oto-kaydırma yapma
+        this.autoSlideInterval = setInterval(() => {
+            if (!this.isDragging) {
+                this.next();
+            }
+        }, 3000);
+    },
+    
+    resetAutoSlide: function() {
+        clearInterval(this.autoSlideInterval);
+        this.setupAutoSlide();
+    },
+    
+    setupEventListeners: function() {
+        const wrapper = document.getElementById('paydas-slider-wrapper');
+        
+        let isMouseDown = false;
+        let hasMoved = false;
+        
+        // Mouse events
+        wrapper.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return;
+            isMouseDown = true;
+            hasMoved = false;
+            this.startDrag(e.clientX);
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isMouseDown) return;
+            hasMoved = true;
+            this.drag(e.clientX);
+        });
+        
+        document.addEventListener('mouseup', (e) => {
+            if (!isMouseDown) return;
+            isMouseDown = false;
+            this.endDrag();
+            
+            // Tıklama ve sürüklemeyi ayırt et
+            if (!hasMoved && e.button === 0) {
+                const link = e.target.closest('.paydas-slide');
+                if (link && link.href) {
+                    window.location.href = link.href;
+                }
+            }
+        });
+        
+        // Touch events
+        wrapper.addEventListener('touchstart', (e) => {
+            this.startDrag(e.touches[0].clientX);
+            hasMoved = false; // Dokunma başlangıcında da hasMoved'ı sıfırla
+        });
+        
+        wrapper.addEventListener('touchmove', (e) => {
+            this.drag(e.touches[0].clientX);
+            hasMoved = true;
+            e.preventDefault(); // Varsayılan kaydırma davranışını engelle
+        });
+        
+        wrapper.addEventListener('touchend', (e) => {
+            this.endDrag();
+            if (!hasMoved) { // Eğer sürükleme yapılmadıysa, tıklama olayını simüle et
+                const link = e.target.closest('.paydas-slide');
+                if (link && link.href) {
+                    window.location.href = link.href;
+                }
+            }
+        });
+        
+        wrapper.addEventListener('click', (e) => {
+            if (hasMoved) { // Eğer sürükleme yapıldıysa tıklama olayını engelle
+                e.preventDefault();
+                e.stopPropagation();
+            }
+        }, true); // Yakalama aşamasında dinle
+    },
+    
+    startDrag: function(clientX) {
+        this.isDragging = true;
+        this.startX = clientX;
+        this.currentX = clientX;
+        clearInterval(this.autoSlideInterval);
+    },
+    
+    drag: function(clientX) {
+        if (!this.isDragging) return;
+        
+        this.currentX = clientX;
+        const diff = this.currentX - this.startX;
+        
+        const track = document.getElementById('paydas-slider-track');
+        track.style.transition = 'none';
+        // Sadece sürükleme anında translateX değerini ayarla
+        track.style.transform = `translateX(${this.translateX + diff}px)`;
+    },
+    
+    endDrag: function() {
+        if (!this.isDragging) return;
+        
+        const diff = this.currentX - this.startX;
+        // Sürükleme mesafesine göre kaç slayt kaydırılacağını hesapla
+        // Yuvarlama, her zaman bir sonraki tam slayta geçmesini sağlar
+        const slidesToMove = Math.round(-diff / this.slideWidth);
+        
+        this.currentIndex += slidesToMove;
+        
+        this.updateSlidePosition();
+        
+        this.isDragging = false;
+        this.resetAutoSlide();
+    }
 };
 
 // Slider'ı başlat
 document.addEventListener('DOMContentLoaded', function() {
-    paydas_slider.init();
+    paydas_slider.init();
 });
 </script>

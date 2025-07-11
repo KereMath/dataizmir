@@ -17,7 +17,7 @@
 
     /*========== HEADER ==========*/
     .login-header{
-      position:fixed;top:0;left:0;width:100%;
+      position:fixed;top:0;left:0;width:50%;
       height:132px;
       background:#F8F7FA;
       display:flex;align-items:center;
@@ -34,7 +34,7 @@
       display:flex;overflow:hidden;
     }
     .login-bg{
-      flex:0 0 65vw;
+      flex:0 0 50vw;
       background: url('/bground.png') center/100% 100% no-repeat;
       background-color:#F8F7FA;
     }
@@ -53,23 +53,26 @@
       color: var(--Light-Text-Primary, #222);
       font-feature-settings: 'liga' off, 'clig' off;
       font-family: 'Labrada', serif;
-      font-size: 24px;
+      font-size: 36px;
       font-style: normal;
       font-weight: 500;
-      line-height: 38px; /* 158.333% */
-      margin-bottom: 4px;
+      line-height: 48px; /* 158.333% */
+      margin-bottom: 24px;
     }
     .login-welcome-desc {
       color: var(--Light-Text-Secondary, #666);
       font-feature-settings: 'liga' off, 'clig' off;
       font-family: 'Labrada', serif;
-      font-size: 15px;
+      font-size: 24px;
       font-style: normal;
       font-weight: 400;
-      line-height: 22px; /* 146.667% */
+      line-height: 32px; /* 146.667% */
       margin-bottom: 0;
     }
-
+label {
+    cursor: pointer;
+    font-size: 18px !important;
+}
     /*========== FORM TASARIMI ==========*/
     .login-box{width:100%;max-width:360px}
     .login-box h1{margin:0 0 1.5rem;font-size:1.8rem;text-align:center}
@@ -78,7 +81,7 @@
     .login-box button{
       width:100%;margin-top:1.4rem;padding:.6rem 1rem;
       border:none;border-radius:4px;cursor:pointer;
-      background:#007acc;color:#fff;font-size:1rem;
+      background:#007acc;color:#fff;font-size:2rem;
     }
 
     @media (max-width: 1100px) {

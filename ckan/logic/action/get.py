@@ -31,8 +31,6 @@ from sqlalchemy import and_
 from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
 from ckan.model import meta, Session
 from ckan.common import _
-from ckan.logic import ValidationError, NotAuthorized, NotFound, _check_access, _
-from ckan import logic # Import ckan.logic for _check_access etc.
 
 log = logging.getLogger('ckan.logic')
 
@@ -3662,6 +3660,7 @@ def api_token_list(context, data_dict):
     return model_dictize.api_token_list_dictize(tokens, context)
 
 # Theme GET Actions
+
 @logic.side_effect_free
 def theme_category_list(context, data_dict):
     """Tüm kategorileri listele"""
@@ -3684,18 +3683,16 @@ def theme_category_list(context, data_dict):
                 'description': cat.description,
                 'color': cat.color,
                 'icon': cat.icon,
-                'background_image': cat.background_image,
-                'opacity': cat.opacity, # YENİ EKLENDİ
+                'background_image': cat.background_image, # YENİ EKLENDİ
                 'dataset_count': dataset_count,
                 'created_at': cat.created_at.isoformat() if cat.created_at else None
             })
         
         return result
     except Exception as e:
-        log.error(f"Error fetching categories in theme_category_list: {e}", exc_info=True)
         raise logic.ValidationError(f'Error fetching categories: {str(e)}')
 
-@logic.side_effect_free  
+@logic.side_effect_free  
 def theme_category_show(context, data_dict):
     """Bir kategorinin detayını ve dataset'lerini göster"""
     from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
@@ -3727,10 +3724,8 @@ def theme_category_show(context, data_dict):
                     'title': dataset['title'],
                     'notes': dataset.get('notes', '')[:200] + '...' if dataset.get('notes', '') else ''
                 })
-            except Exception as e:
-                # Log the error but continue if a dataset is not found or has issues
-                log.warning(f"Could not retrieve details for dataset_id '{dataset_id}' during theme_category_show: {e}")
-                continue # Continue to the next dataset
+            except:
+                continue
         
         return {
             'category': {
@@ -3740,8 +3735,7 @@ def theme_category_show(context, data_dict):
                 'description': category.description,
                 'color': category.color,
                 'icon': category.icon,
-                'background_image': category.background_image,
-                'opacity': category.opacity, # YENİ EKLENDİ
+                'background_image': category.background_image, # YENİ EKLENDİ
                 'created_at': category.created_at.isoformat() if category.created_at else None
             },
             'datasets': datasets
@@ -3749,7 +3743,6 @@ def theme_category_show(context, data_dict):
     except Exception as e:
         if isinstance(e, NotFound):
             raise
-        log.error(f"Error fetching category details in theme_category_show for slug '{slug}': {e}", exc_info=True)
         raise ValidationError(f'Error fetching category: {str(e)}')
 
 @logic.side_effect_free
@@ -3781,13 +3774,11 @@ def get_dataset_theme(context, data_dict):
             'description': theme.description,
             'color': theme.color,
             'icon': theme.icon,
-            'background_image': theme.background_image,
-            'opacity': theme.opacity, # YENİ EKLENDİ
+            'background_image': theme.background_image, # YENİ EKLENDİ
             'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
             'assigned_by': assignment.assigned_by
         }
     except Exception as e:
-        log.error(f"Error fetching dataset theme for dataset_id '{dataset_id}': {e}", exc_info=True)
         raise ValidationError(f'Error fetching dataset theme: {str(e)}')
 
 @logic.side_effect_free
@@ -3820,7 +3811,6 @@ def get_theme_users(context, data_dict):
         
         return users
     except Exception as e:
-        log.error(f"Error fetching theme users for theme_slug '{theme_slug}': {e}", exc_info=True)
         raise ValidationError(f'Error fetching theme users: {str(e)}')
 
 @logic.side_effect_free
@@ -3852,5 +3842,4 @@ def get_user_themes(context, data_dict):
         
         return themes
     except Exception as e:
-        log.error(f"Error fetching user themes for user_id '{user_id}': {e}", exc_info=True)
         raise ValidationError(f'Error fetching user themes: {str(e)}')

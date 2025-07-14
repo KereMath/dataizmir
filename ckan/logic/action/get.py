@@ -31,6 +31,8 @@ from sqlalchemy import and_
 from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
 from ckan.model import meta, Session
 from ckan.common import _
+from ckan.logic import ValidationError, NotAuthorized, NotFound, _check_access, _
+from ckan import logic # Import ckan.logic for _check_access etc.
 
 log = logging.getLogger('ckan.logic')
 

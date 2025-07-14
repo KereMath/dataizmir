@@ -14,6 +14,7 @@ theme_category_table = Table(
     Column('description', Text),
     Column('color', String(7), default='#333333'),
     Column('icon', String(100)),
+    Column('background_image', Text), # YENİ EKLENDİ
     Column('created_at', DateTime, default=datetime.datetime.utcnow)
 )
 
@@ -37,12 +38,13 @@ user_theme_table = Table(
 )
 
 class ThemeCategory(DomainObject):
-    def __init__(self, slug=None, name=None, description=None, color='#333333', icon=None):
+    def __init__(self, slug=None, name=None, description=None, color='#333333', icon=None, background_image=None): # YENİ EKLENDİ
         self.slug = slug
         self.name = name  
         self.description = description
         self.color = color
         self.icon = icon
+        self.background_image = background_image # YENİ EKLENDİ
 
 class DatasetThemeAssignment(DomainObject):
     def __init__(self, dataset_id=None, theme_slug=None, assigned_by=None):

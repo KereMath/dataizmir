@@ -11,7 +11,6 @@ from ckan.common import config
 import ckan.common as converters
 import six
 from six import text_type
-
 import ckan.lib.helpers as h
 import ckan.plugins as plugins
 import ckan.logic as logic
@@ -1429,7 +1428,9 @@ def theme_category_update(context, data_dict):
     """Kategori güncelle"""
     from ckan.model.theme import ThemeCategory
     from ckan.model import Session, User
-    
+    from ckan.logic import ValidationError, NotAuthorized, NotFound, _
+    from ckan import logic # Ensure ckan.logic is imported for _check_access etc.
+
     # Yetkilendirme kontrolü
     user_obj = context.get('auth_user_obj')
     if not user_obj and context.get('user'):
@@ -1449,22 +1450,24 @@ def theme_category_update(context, data_dict):
         # Kullanıcının atanmış temalarını ve rollerini çek
         user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
         current_user_assignment = next((t for t in user_themes if t['theme_slug'] == slug), None)
-        
+
         if current_user_assignment:
             assigned_role = current_user_assignment['role']
             if assigned_role in ['admin', 'editor']: # admin veya editor ise izin ver
                 is_theme_authorized_for_update = True
 
     if not is_theme_authorized_for_update:
+        log.warning(f"User {user_obj.name if user_obj else 'anonymous'} not authorized to update theme {slug}.")
         raise NotAuthorized(_('Bu temayı güncellemek için yetkiniz yok.'))
-    
+
     try:
         session = Session()
-        
+
         category = session.query(ThemeCategory).filter_by(slug=slug).first()
         if not category:
+            log.error(f"Theme category with slug '{slug}' not found for update.")
             raise NotFound('Theme category not found')
-        
+
         # Güncellenebilir alanlar
         if 'name' in data_dict:
             category.name = data_dict['name']
@@ -1474,11 +1477,20 @@ def theme_category_update(context, data_dict):
             category.color = data_dict['color']
         if 'icon' in data_dict:
             category.icon = data_dict['icon']
-        if 'background_image' in data_dict: # BURADA YENİ EKLENDİ
+        if 'background_image' in data_dict:
+            log.info(f"Action: Attempting to set background_image for {slug} to: '{data_dict['background_image']}'")
             category.background_image = data_dict['background_image']
-        
+        elif 'background_image' not in data_dict and category.background_image:
+             # This handles cases where background_image might be implicitly cleared by the form
+             # and ensures the DB field becomes NULL if no new image is provided and no explicit clear was sent.
+             # However, the plugin.py handles explicit clears with 'clear_background_image' checkbox.
+             # It's safer to only assign if 'background_image' is actually in data_dict.
+            pass
+
+
         session.commit()
-        
+        log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}'")
+
         return {
             'id': category.id,
             'slug': category.slug,
@@ -1486,15 +1498,15 @@ def theme_category_update(context, data_dict):
             'description': category.description,
             'color': category.color,
             'icon': category.icon,
-            'background_image': category.background_image, # BURADA YENİ EKLENDİ
+            'background_image': category.background_image,
             'created_at': category.created_at.isoformat() if category.created_at else None
         }
     except Exception as e:
         session.rollback()
-        if isinstance(e, (ValidationError, NotFound)):
+        log.error(f"Error during theme_category_update for {slug}: {e}", exc_info=True)
+        if isinstance(e, (ValidationError, NotFound, NotAuthorized)): # Added NotAuthorized here
             raise
         raise ValidationError(f'Error updating category: {str(e)}')
-
 def remove_dataset_theme(context, data_dict):
     """Dataset'ten tema kaldır"""
     from ckan.model.theme import DatasetThemeAssignment

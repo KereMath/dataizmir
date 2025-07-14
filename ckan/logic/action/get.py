@@ -3692,6 +3692,8 @@ def theme_category_list(context, data_dict):
     except Exception as e:
         raise logic.ValidationError(f'Error fetching categories: {str(e)}')
 
+
+
 @logic.side_effect_free  
 def theme_category_show(context, data_dict):
     """Bir kategorinin detayını ve dataset'lerini göster"""
@@ -3724,8 +3726,10 @@ def theme_category_show(context, data_dict):
                     'title': dataset['title'],
                     'notes': dataset.get('notes', '')[:200] + '...' if dataset.get('notes', '') else ''
                 })
-            except:
-                continue
+            except Exception as e:
+                # Log the error but continue if a dataset is not found or has issues
+                log.warning(f"Could not retrieve details for dataset_id '{dataset_id}' during theme_category_show: {e}")
+                continue # Continue to the next dataset
         
         return {
             'category': {
@@ -3735,7 +3739,8 @@ def theme_category_show(context, data_dict):
                 'description': category.description,
                 'color': category.color,
                 'icon': category.icon,
-                'background_image': category.background_image, # YENİ EKLENDİ
+                'background_image': category.background_image,
+                'opacity': category.opacity, # BURASI EKLENDİ (ÖNCEKİ VERSİYONDA EKSİKTİ!)
                 'created_at': category.created_at.isoformat() if category.created_at else None
             },
             'datasets': datasets
@@ -3743,7 +3748,9 @@ def theme_category_show(context, data_dict):
     except Exception as e:
         if isinstance(e, NotFound):
             raise
+        log.error(f"Error fetching category details in theme_category_show for slug '{slug}': {e}", exc_info=True)
         raise ValidationError(f'Error fetching category: {str(e)}')
+
 
 @logic.side_effect_free
 def get_dataset_theme(context, data_dict):
@@ -3774,12 +3781,15 @@ def get_dataset_theme(context, data_dict):
             'description': theme.description,
             'color': theme.color,
             'icon': theme.icon,
-            'background_image': theme.background_image, # YENİ EKLENDİ
+            'background_image': theme.background_image,
+            'opacity': theme.opacity, # BURASI EKLENDİ (ÖNCEKİ VERSİYONDA EKSİKTİ!)
             'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
             'assigned_by': assignment.assigned_by
         }
     except Exception as e:
+        log.error(f"Error fetching dataset theme for dataset_id '{dataset_id}': {e}", exc_info=True)
         raise ValidationError(f'Error fetching dataset theme: {str(e)}')
+
 
 @logic.side_effect_free
 def get_theme_users(context, data_dict):

@@ -3659,6 +3659,7 @@ def api_token_list(context, data_dict):
     )
     return model_dictize.api_token_list_dictize(tokens, context)
 
+# Theme GET Actions
 
 @logic.side_effect_free
 def theme_category_list(context, data_dict):
@@ -3682,6 +3683,7 @@ def theme_category_list(context, data_dict):
                 'description': cat.description,
                 'color': cat.color,
                 'icon': cat.icon,
+                'background_image': cat.background_image, # YENİ EKLENDİ
                 'dataset_count': dataset_count,
                 'created_at': cat.created_at.isoformat() if cat.created_at else None
             })
@@ -3689,8 +3691,6 @@ def theme_category_list(context, data_dict):
         return result
     except Exception as e:
         raise logic.ValidationError(f'Error fetching categories: {str(e)}')
-
-# Theme GET Actions
 
 @logic.side_effect_free  
 def theme_category_show(context, data_dict):
@@ -3735,6 +3735,7 @@ def theme_category_show(context, data_dict):
                 'description': category.description,
                 'color': category.color,
                 'icon': category.icon,
+                'background_image': category.background_image, # YENİ EKLENDİ
                 'created_at': category.created_at.isoformat() if category.created_at else None
             },
             'datasets': datasets
@@ -3773,6 +3774,7 @@ def get_dataset_theme(context, data_dict):
             'description': theme.description,
             'color': theme.color,
             'icon': theme.icon,
+            'background_image': theme.background_image, # YENİ EKLENDİ
             'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
             'assigned_by': assignment.assigned_by
         }

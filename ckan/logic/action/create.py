@@ -1677,7 +1677,8 @@ def theme_category_create(context, data_dict):
             name=data_dict['name'],
             description=data_dict.get('description', ''),
             color=data_dict.get('color', '#333333'),
-            icon=data_dict.get('icon', '')
+            icon=data_dict.get('icon', ''),
+            background_image=data_dict.get('background_image', '') # BURADA YENİ EKLENDİ
         )
         
         session.add(category)
@@ -1690,6 +1691,7 @@ def theme_category_create(context, data_dict):
             'description': category.description,
             'color': category.color,
             'icon': category.icon,
+            'background_image': category.background_image, # BURADA YENİ EKLENDİ
             'created_at': category.created_at.isoformat() if category.created_at else None
         }
     except Exception as e:

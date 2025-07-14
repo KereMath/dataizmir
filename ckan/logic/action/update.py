@@ -1423,8 +1423,6 @@ def config_option_update(context, data_dict):
 
     return data
 
-
-
 # Theme UPDATE Actions
 
 def theme_category_update(context, data_dict):
@@ -1460,13 +1458,6 @@ def theme_category_update(context, data_dict):
     if not is_theme_authorized_for_update:
         raise NotAuthorized(_('Bu temayı güncellemek için yetkiniz yok.'))
     
-    # Zorunlu alanları kontrol et (eğer bunlar yoksa ValidationError fırlat)
-    # Bu kısmı _validate ile de yapabilirsiniz.
-    # required_fields = ['name'] # name zorunlu ise
-    # for field in required_fields:
-    #     if field in data_dict and not data_dict.get(field):
-    #         raise ValidationError(f'{field} cannot be empty')
-
     try:
         session = Session()
         
@@ -1483,6 +1474,8 @@ def theme_category_update(context, data_dict):
             category.color = data_dict['color']
         if 'icon' in data_dict:
             category.icon = data_dict['icon']
+        if 'background_image' in data_dict: # BURADA YENİ EKLENDİ
+            category.background_image = data_dict['background_image']
         
         session.commit()
         
@@ -1493,6 +1486,7 @@ def theme_category_update(context, data_dict):
             'description': category.description,
             'color': category.color,
             'icon': category.icon,
+            'background_image': category.background_image, # BURADA YENİ EKLENDİ
             'created_at': category.created_at.isoformat() if category.created_at else None
         }
     except Exception as e:
@@ -1500,8 +1494,6 @@ def theme_category_update(context, data_dict):
         if isinstance(e, (ValidationError, NotFound)):
             raise
         raise ValidationError(f'Error updating category: {str(e)}')
-
-
 
 def remove_dataset_theme(context, data_dict):
     """Dataset'ten tema kaldır"""
@@ -1602,4 +1594,4 @@ def update_user_theme_role(context, data_dict):
         session.rollback()
         if isinstance(e, (ValidationError, NotFound)):
             raise
-        raise ValidationError(f'Error updating user theme role: {str(e)}')        
+        raise ValidationError(f'Error updating user theme role: {str(e)}')

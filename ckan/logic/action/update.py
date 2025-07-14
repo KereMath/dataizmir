@@ -1422,74 +1422,238 @@ def config_option_update(context, data_dict):
 
     return data
 
-# Theme UPDATE Actions
 
-def theme_category_update(context, data_dict):
-    """Kategori güncelle"""
-    from ckan.model.theme import ThemeCategory
-    from ckan.model import Session, User
-    from ckan.logic import ValidationError, NotAuthorized, NotFound, _
-    from ckan import logic # Ensure ckan.logic is imported for _check_access etc.
+@logic.side_effect_free
+def theme_category_list(context, data_dict):
+    """Tüm kategorileri listele"""
+    try:
+        from ckan.model import Session
+        from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+        
+        session = Session()
+        categories = session.query(ThemeCategory).all()
+        
+        result = []
+        for cat in categories:
+            # Her kategorideki dataset sayısını da al
+            dataset_count = session.query(DatasetThemeAssignment).filter_by(theme_slug=cat.slug).count()
+            
+            result.append({
+                'id': cat.id,
+                'slug': cat.slug,
+                'name': cat.name,
+                'description': cat.description,
+                'color': cat.color,
+                'icon': cat.icon,
+                'background_image': cat.background_image,
+                'opacity': cat.opacity, # Burası eklendi
+                'dataset_count': dataset_count,
+                'created_at': cat.created_at.isoformat() if cat.created_at else None
+            })
+        
+        return result
+    except Exception as e:
+        log.error(f"Error fetching categories in theme_category_list: {e}", exc_info=True)
+        raise logic.ValidationError(f'Error fetching categories: {str(e)}')
 
-    # Yetkilendirme kontrolü
-    user_obj = context.get('auth_user_obj')
-    if not user_obj and context.get('user'):
-        user_obj = Session.query(User).filter_by(name=context['user']).first()
-
-    is_sysadmin = user_obj and user_obj.sysadmin
-    is_theme_authorized_for_update = False
-
+@logic.side_effect_free  
+def theme_category_show(context, data_dict):
+    """Bir kategorinin detayını ve dataset'lerini göster"""
+    from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+    from ckan.model import Session
+    
     slug = data_dict.get('slug')
     if not slug:
         raise ValidationError('slug parameter required')
+    
+    try:
+        session = Session()
+        
+        category = session.query(ThemeCategory).filter_by(slug=slug).first()
+        if not category:
+            raise NotFound('Theme category not found')
+        
+        # Bu kategorideki dataset'leri al
+        assignments = session.query(DatasetThemeAssignment).filter_by(theme_slug=slug).all()
+        dataset_ids = [a.dataset_id for a in assignments]
+        
+        # CKAN'dan dataset bilgilerini al
+        datasets = []
+        for dataset_id in dataset_ids:
+            try:
+                dataset = logic.get_action('package_show')(context, {'id': dataset_id})
+                datasets.append({
+                    'id': dataset['id'],
+                    'name': dataset['name'], 
+                    'title': dataset['title'],
+                    'notes': dataset.get('notes', '')[:200] + '...' if dataset.get('notes', '') else ''
+                })
+            except Exception as e:
+                # Log the error but continue if a dataset is not found or has issues
+                log.warning(f"Could not retrieve details for dataset_id '{dataset_id}' during theme_category_show: {e}")
+                continue # Continue to the next dataset
+        
+        return {
+            'category': {
+                'id': category.id,
+                'slug': category.slug,
+                'name': category.name,
+                'description': category.description,
+                'color': category.color,
+                'icon': category.icon,
+                'background_image': category.background_image,
+                'opacity': category.opacity, # Burası eklendi
+                'created_at': category.created_at.isoformat() if category.created_at else None
+            },
+            'datasets': datasets
+        }
+    except Exception as e:
+        if isinstance(e, NotFound):
+            raise
+        log.error(f"Error fetching category details in theme_category_show for slug '{slug}': {e}", exc_info=True)
+        raise ValidationError(f'Error fetching category: {str(e)}')
 
-    if is_sysadmin:
-        is_theme_authorized_for_update = True
-    elif user_obj:
-        user_id = user_obj.id
-        # Kullanıcının atanmış temalarını ve rollerini çek
-        user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
-        current_user_assignment = next((t for t in user_themes if t['theme_slug'] == slug), None)
+@logic.side_effect_free
+def get_dataset_theme(context, data_dict):
+    """Dataset'in temasını getir"""
+    from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
+    from ckan.model import Session
+    
+    dataset_id = data_dict.get('dataset_id')
+    
+    if not dataset_id:
+        raise ValidationError('dataset_id is required')
+    
+    try:
+        session = Session()
+        
+        assignment = session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
+        if not assignment:
+            return None
+        
+        theme = session.query(ThemeCategory).filter_by(slug=assignment.theme_slug).first()
+        if not theme:
+            return None
+        
+        return {
+            'id': theme.id,
+            'slug': theme.slug,
+            'name': theme.name,
+            'description': theme.description,
+            'color': theme.color,
+            'icon': theme.icon,
+            'background_image': theme.background_image,
+            'opacity': theme.opacity, # Burası eklendi
+            'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+            'assigned_by': assignment.assigned_by
+        }
+    except Exception as e:
+        log.error(f"Error fetching dataset theme for dataset_id '{dataset_id}': {e}", exc_info=True)
+        raise ValidationError(f'Error fetching dataset theme: {str(e)}')
 
-        if current_user_assignment:
-            assigned_role = current_user_assignment['role']
-            if assigned_role in ['admin', 'editor']: # admin veya editor ise izin ver
-                is_theme_authorized_for_update = True
+@logic.side_effect_free
+def get_theme_users(context, data_dict):
+    """Bir temanın kullanıcılarını getir"""
+    from ckan.model.theme import UserThemeAssignment
+    from ckan.model import Session, User
+    
+    theme_slug = data_dict.get('theme_slug')
+    if not theme_slug:
+        raise ValidationError('theme_slug is required')
+    
+    try:
+        session = Session()
+        
+        assignments = session.query(UserThemeAssignment).filter_by(theme_slug=theme_slug).all()
+        
+        users = []
+        for assignment in assignments:
+            user = session.query(User).filter_by(id=assignment.user_id).first()
+            if user:
+                users.append({
+                    'user_id': user.id,
+                    'user_name': user.name,
+                    'display_name': user.display_name or user.name,
+                    'role': assignment.role,
+                    'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+                    'assigned_by': assignment.assigned_by
+                })
+        
+        return users
+    except Exception as e:
+        log.error(f"Error fetching theme users for theme_slug '{theme_slug}': {e}", exc_info=True)
+        raise ValidationError(f'Error fetching theme users: {str(e)}')
 
-    if not is_theme_authorized_for_update:
-        log.warning(f"User {user_obj.name if user_obj else 'anonymous'} not authorized to update theme {slug}.")
-        raise NotAuthorized(_('Bu temayı güncellemek için yetkiniz yok.'))
+@logic.side_effect_free
+def get_user_themes(context, data_dict):
+    """Bir kullanıcının temalarını getir"""
+    from ckan.model.theme import UserThemeAssignment, ThemeCategory
+    from ckan.model import Session
+    
+    user_id = data_dict.get('user_id')
+    if not user_id:
+        raise ValidationError('user_id is required')
+    
+    try:
+        session = Session()
+        
+        assignments = session.query(UserThemeAssignment).filter_by(user_id=user_id).all()
+        
+        themes = []
+        for assignment in assignments:
+            theme = session.query(ThemeCategory).filter_by(slug=assignment.theme_slug).first()
+            if theme:
+                themes.append({
+                    'theme_slug': theme.slug,
+                    'theme_name': theme.name,
+                    'role': assignment.role,
+                    'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
+                    'assigned_by': assignment.assigned_by
+                })
+        
+        return themes
+    except Exception as e:
+        log.error(f"Error fetching user themes for user_id '{user_id}': {e}", exc_info=True)
+        raise ValidationError(f'Error fetching user themes: {str(e)}')
+
+
+# --- Theme CREATE Actions ---
+
+def theme_category_create(context, data_dict):
+    """Yeni kategori oluştur"""
+    from ckan.model.theme import ThemeCategory
+    from ckan.model import Session
+    from ckan.logic import ValidationError, _check_access # _check_access'i import ettiğinizden emin olun
+
+    _check_access('sysadmin', context, data_dict)
+
+    # Zorunlu alanları kontrol et
+    required_fields = ['slug', 'name']
+    for field in required_fields:
+        if not data_dict.get(field):
+            raise ValidationError(f'{field} is required')
 
     try:
         session = Session()
 
-        category = session.query(ThemeCategory).filter_by(slug=slug).first()
-        if not category:
-            log.error(f"Theme category with slug '{slug}' not found for update.")
-            raise NotFound('Theme category not found')
+        # Slug benzersiz mi kontrol et
+        existing = session.query(ThemeCategory).filter_by(slug=data_dict['slug']).first()
+        if existing:
+            raise ValidationError('Slug already exists')
 
-        # Güncellenebilir alanlar
-        if 'name' in data_dict:
-            category.name = data_dict['name']
-        if 'description' in data_dict:
-            category.description = data_dict['description']
-        if 'color' in data_dict:
-            category.color = data_dict['color']
-        if 'icon' in data_dict:
-            category.icon = data_dict['icon']
+        # Yeni kategori oluştur
+        category = ThemeCategory(
+            slug=data_dict['slug'],
+            name=data_dict['name'],
+            description=data_dict.get('description', ''),
+            color=data_dict.get('color', '#333333'),
+            icon=data_dict.get('icon', ''),
+            background_image=data_dict.get('background_image', ''),
+            opacity=data_dict.get('opacity', 1.0) # Burası eklendi
+        )
 
-        # CRITICAL FIX: Ensure background_image is handled correctly
-        # The 'background_image' will be present in data_dict if a new file was uploaded
-        # OR if the 'clear_background_image' checkbox was used (in which case it's None)
-        # OR if no image changes were made (in which case it's the old path).
-        # We simply assign whatever is in data_dict for 'background_image'.
-        if 'background_image' in data_dict:
-            log.info(f"Action: Attempting to set background_image for {slug} to: '{data_dict['background_image']}'")
-            category.background_image = data_dict['background_image']
-
-
+        session.add(category)
         session.commit()
-        log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}'")
 
         return {
             'id': category.id,
@@ -1499,26 +1663,26 @@ def theme_category_update(context, data_dict):
             'color': category.color,
             'icon': category.icon,
             'background_image': category.background_image,
+            'opacity': category.opacity, # Burası da eklendi
             'created_at': category.created_at.isoformat() if category.created_at else None
         }
     except Exception as e:
         session.rollback()
-        log.error(f"Error during theme_category_update for {slug}: {e}", exc_info=True)
-        if isinstance(e, (ValidationError, NotFound, NotAuthorized)):
+        if isinstance(e, ValidationError):
             raise
-        raise ValidationError(f'Error updating category: {str(e)}')
+        raise ValidationError(f'Error creating category: {str(e)}')
 
 
-def remove_dataset_theme(context, data_dict):
-    """Dataset'ten tema kaldır"""
-    from ckan.model.theme import DatasetThemeAssignment
+def assign_dataset_theme(context, data_dict):
+    """Dataset'e tema ata"""
+    from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
     from ckan.model import Session, User
-    from ckan.logic import ValidationError, NotAuthorized, NotFound, _check_access, _ # Added _check_access, _
-
+    
     dataset_id = data_dict.get('dataset_id')
-
-    if not dataset_id:
-        raise ValidationError('dataset_id is required')
+    theme_slug = data_dict.get('theme_slug')
+    
+    if not dataset_id or not theme_slug:
+        raise ValidationError('dataset_id and theme_slug are required')
 
     # Yetkilendirme kontrolü
     user_obj = context.get('auth_user_obj')
@@ -1526,18 +1690,10 @@ def remove_dataset_theme(context, data_dict):
         user_obj = Session.query(User).filter_by(name=context['user']).first()
 
     is_sysadmin = user_obj and user_obj.sysadmin
-    is_theme_authorized_for_removal = False
-
-    # Tema slug'ı doğrudan data_dict'te olmayabilir, mevcut atamadan bulmalıyız
-    current_assignment = Session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
-    theme_slug = current_assignment.theme_slug if current_assignment else None
-
-    if not theme_slug: # Tema ataması yoksa kaldıracak bir şey de yoktur
-        return {'success': True, 'dataset_id': dataset_id, 'message': 'No theme assigned to this dataset to remove.'}
-
+    is_theme_authorized_for_assignment = False
 
     if is_sysadmin:
-        is_theme_authorized_for_removal = True
+        is_theme_authorized_for_assignment = True
     elif user_obj:
         user_id = user_obj.id
         user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
@@ -1545,7 +1701,7 @@ def remove_dataset_theme(context, data_dict):
         if current_user_assignment:
             assigned_role = current_user_assignment['role']
             if assigned_role in ['admin', 'editor']: # Temanın admini veya editörü ise izin ver
-                is_theme_authorized_for_removal = True
+                is_theme_authorized_for_assignment = True
 
     # Kullanıcının veri setini güncelleme yetkisi olmalı
     is_package_update_authorized = False
@@ -1553,163 +1709,98 @@ def remove_dataset_theme(context, data_dict):
         _check_access('package_update', context, {'id': dataset_id})
         is_package_update_authorized = True
     except NotAuthorized:
-        pass
+        pass # Yetkisi yoksa NotAuthorized istisnası fırlatılır, biz sadece kontrol ediyoruz
 
     # Hem tema hem de veri seti için yetki kontrolü
-    if not (is_theme_authorized_for_removal and is_package_update_authorized):
-        raise NotAuthorized(_('Bu temadan veri seti kaldırmak için yetkiniz yok veya veri setini düzenleme yetkiniz yok.'))
-
+    if not (is_theme_authorized_for_assignment and is_package_update_authorized):
+        raise NotAuthorized(_('Bu temaya veri seti atamak için yetkiniz yok veya veri setini düzenleme yetkiniz yok.'))
+    
     try:
         session = Session()
-
+        
+        theme = session.query(ThemeCategory).filter_by(slug=theme_slug).first()
+        if not theme:
+            raise NotFound('Theme category not found')
+        
         assignment = session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
+        
         if assignment:
-            session.delete(assignment)
-            session.commit()
-
-        return {'success': True, 'dataset_id': dataset_id}
-    except Exception as e:
-        session.rollback()
-        raise ValidationError(f'Error removing theme: {str(e)}')
-
-
-def update_user_theme_role(context, data_dict):
-    """Kullanıcının tema rolünü güncelle"""
-    from ckan.model.theme import UserThemeAssignment
-    from ckan.model import Session
-    from ckan.logic import ValidationError, NotAuthorized, NotFound, _check_access, _ # Added _check_access, _
-
-    _check_access('sysadmin', context, data_dict)
-
-    user_id = data_dict.get('user_id')
-    theme_slug = data_dict.get('theme_slug')
-    new_role = data_dict.get('role')
-
-    if not user_id or not theme_slug or not new_role:
-        raise ValidationError('user_id, theme_slug and role are required')
-
-    if new_role not in ['member', 'editor', 'admin']:
-        raise ValidationError('role must be one of: member, editor, admin')
-
-    try:
-        session = Session()
-
-        assignment = session.query(UserThemeAssignment).filter_by(
-            user_id=user_id,
-            theme_slug=theme_slug
-        ).first()
-
-        if not assignment:
-            raise NotFound('User theme assignment not found')
-
-        assignment.role = new_role
-        assignment.assigned_by = context.get('user')
+            assignment.theme_slug = theme_slug
+            assignment.assigned_by = context.get('user')
+        else:
+            assignment = DatasetThemeAssignment(
+                dataset_id=dataset_id,
+                theme_slug=theme_slug, 
+                assigned_by=context.get('user')
+            )
+            session.add(assignment)
+        
         session.commit()
-
-        return {'success': True, 'role': new_role}
+        
+        return {'success': True, 'dataset_id': dataset_id, 'theme_slug': theme_slug}
     except Exception as e:
         session.rollback()
         if isinstance(e, (ValidationError, NotFound)):
             raise
-        raise ValidationError(f'Error updating user theme role: {str(e)}')
+        raise ValidationError(f'Error assigning theme: {str(e)}')
 
-def remove_dataset_theme(context, data_dict):
-    """Dataset'ten tema kaldır"""
-    from ckan.model.theme import DatasetThemeAssignment
+def assign_user_to_theme(context, data_dict):
+    """Kullanıcıyı temaya ata"""
+    from ckan.model.theme import ThemeCategory, UserThemeAssignment
     from ckan.model import Session, User
     
-    dataset_id = data_dict.get('dataset_id')
-    
-    if not dataset_id:
-        raise ValidationError('dataset_id is required')
-
-    # Yetkilendirme kontrolü
-    user_obj = context.get('auth_user_obj')
-    if not user_obj and context.get('user'):
-        user_obj = Session.query(User).filter_by(name=context['user']).first()
-
-    is_sysadmin = user_obj and user_obj.sysadmin
-    is_theme_authorized_for_removal = False
-
-    # Tema slug'ı doğrudan data_dict'te olmayabilir, mevcut atamadan bulmalıyız
-    current_assignment = Session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
-    theme_slug = current_assignment.theme_slug if current_assignment else None
-
-    if not theme_slug: # Tema ataması yoksa kaldıracak bir şey de yoktur
-        return {'success': True, 'dataset_id': dataset_id, 'message': 'No theme assigned to this dataset to remove.'}
-
-
-    if is_sysadmin:
-        is_theme_authorized_for_removal = True
-    elif user_obj:
-        user_id = user_obj.id
-        user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
-        current_user_assignment = next((t for t in user_themes if t['theme_slug'] == theme_slug), None)
-        if current_user_assignment:
-            assigned_role = current_user_assignment['role']
-            if assigned_role in ['admin', 'editor']: # Temanın admini veya editörü ise izin ver
-                is_theme_authorized_for_removal = True
-    
-    # Kullanıcının veri setini güncelleme yetkisi olmalı
-    is_package_update_authorized = False
-    try:
-        _check_access('package_update', context, {'id': dataset_id})
-        is_package_update_authorized = True
-    except NotAuthorized:
-        pass
-
-    # Hem tema hem de veri seti için yetki kontrolü
-    if not (is_theme_authorized_for_removal and is_package_update_authorized):
-        raise NotAuthorized(_('Bu temadan veri seti kaldırmak için yetkiniz yok veya veri setini düzenleme yetkiniz yok.'))
-    
-    try:
-        session = Session()
-        
-        assignment = session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
-        if assignment:
-            session.delete(assignment)
-            session.commit()
-        
-        return {'success': True, 'dataset_id': dataset_id}
-    except Exception as e:
-        session.rollback()
-        raise ValidationError(f'Error removing theme: {str(e)}')
-        
-def update_user_theme_role(context, data_dict):
-    """Kullanıcının tema rolünü güncelle"""
-    from ckan.model.theme import UserThemeAssignment
-    from ckan.model import Session
-    
     _check_access('sysadmin', context, data_dict)
     
     user_id = data_dict.get('user_id')
     theme_slug = data_dict.get('theme_slug')
-    new_role = data_dict.get('role')
+    role = data_dict.get('role', 'member')
     
-    if not user_id or not theme_slug or not new_role:
-        raise ValidationError('user_id, theme_slug and role are required')
+    if not user_id or not theme_slug:
+        raise ValidationError('user_id and theme_slug are required')
     
-    if new_role not in ['member', 'editor', 'admin']:
+    if role not in ['member', 'editor', 'admin']:
         raise ValidationError('role must be one of: member, editor, admin')
     
     try:
         session = Session()
         
+        # Kullanıcı ve tema var mı kontrol et
+        user = session.query(User).filter_by(id=user_id).first()
+        if not user:
+            raise NotFound('User not found')
+            
+        theme = session.query(ThemeCategory).filter_by(slug=theme_slug).first()
+        if not theme:
+            raise NotFound('Theme category not found')
+        
+        # Mevcut assignment varsa güncelle, yoksa yeni oluştur
         assignment = session.query(UserThemeAssignment).filter_by(
-            user_id=user_id,
+            user_id=user_id, 
             theme_slug=theme_slug
         ).first()
         
-        if not assignment:
-            raise NotFound('User theme assignment not found')
+        if assignment:
+            assignment.role = role
+            assignment.assigned_by = context.get('user')
+        else:
+            assignment = UserThemeAssignment(
+                user_id=user_id,
+                theme_slug=theme_slug,
+                role=role,
+                assigned_by=context.get('user')
+            )
+            session.add(assignment)
         
-        assignment.role = new_role
-        assignment.assigned_by = context.get('user')
         session.commit()
         
-        return {'success': True, 'role': new_role}
+        return {
+            'success': True, 
+            'user_id': user_id, 
+            'theme_slug': theme_slug, 
+            'role': role
+        }
     except Exception as e:
         session.rollback()
         if isinstance(e, (ValidationError, NotFound)):
             raise
-        raise ValidationError(f'Error updating user theme role: {str(e)}')
+        raise ValidationError(f'Error assigning user to theme: {str(e)}')

@@ -1477,15 +1477,15 @@ def theme_category_update(context, data_dict):
             category.color = data_dict['color']
         if 'icon' in data_dict:
             category.icon = data_dict['icon']
+
+        # CRITICAL FIX: Ensure background_image is handled correctly
+        # The 'background_image' will be present in data_dict if a new file was uploaded
+        # OR if the 'clear_background_image' checkbox was used (in which case it's None)
+        # OR if no image changes were made (in which case it's the old path).
+        # We simply assign whatever is in data_dict for 'background_image'.
         if 'background_image' in data_dict:
             log.info(f"Action: Attempting to set background_image for {slug} to: '{data_dict['background_image']}'")
             category.background_image = data_dict['background_image']
-        elif 'background_image' not in data_dict and category.background_image:
-             # This handles cases where background_image might be implicitly cleared by the form
-             # and ensures the DB field becomes NULL if no new image is provided and no explicit clear was sent.
-             # However, the plugin.py handles explicit clears with 'clear_background_image' checkbox.
-             # It's safer to only assign if 'background_image' is actually in data_dict.
-            pass
 
 
         session.commit()
@@ -1504,9 +1504,115 @@ def theme_category_update(context, data_dict):
     except Exception as e:
         session.rollback()
         log.error(f"Error during theme_category_update for {slug}: {e}", exc_info=True)
-        if isinstance(e, (ValidationError, NotFound, NotAuthorized)): # Added NotAuthorized here
+        if isinstance(e, (ValidationError, NotFound, NotAuthorized)):
             raise
         raise ValidationError(f'Error updating category: {str(e)}')
+
+
+def remove_dataset_theme(context, data_dict):
+    """Dataset'ten tema kaldır"""
+    from ckan.model.theme import DatasetThemeAssignment
+    from ckan.model import Session, User
+    from ckan.logic import ValidationError, NotAuthorized, NotFound, _check_access, _ # Added _check_access, _
+
+    dataset_id = data_dict.get('dataset_id')
+
+    if not dataset_id:
+        raise ValidationError('dataset_id is required')
+
+    # Yetkilendirme kontrolü
+    user_obj = context.get('auth_user_obj')
+    if not user_obj and context.get('user'):
+        user_obj = Session.query(User).filter_by(name=context['user']).first()
+
+    is_sysadmin = user_obj and user_obj.sysadmin
+    is_theme_authorized_for_removal = False
+
+    # Tema slug'ı doğrudan data_dict'te olmayabilir, mevcut atamadan bulmalıyız
+    current_assignment = Session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
+    theme_slug = current_assignment.theme_slug if current_assignment else None
+
+    if not theme_slug: # Tema ataması yoksa kaldıracak bir şey de yoktur
+        return {'success': True, 'dataset_id': dataset_id, 'message': 'No theme assigned to this dataset to remove.'}
+
+
+    if is_sysadmin:
+        is_theme_authorized_for_removal = True
+    elif user_obj:
+        user_id = user_obj.id
+        user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
+        current_user_assignment = next((t for t in user_themes if t['theme_slug'] == theme_slug), None)
+        if current_user_assignment:
+            assigned_role = current_user_assignment['role']
+            if assigned_role in ['admin', 'editor']: # Temanın admini veya editörü ise izin ver
+                is_theme_authorized_for_removal = True
+
+    # Kullanıcının veri setini güncelleme yetkisi olmalı
+    is_package_update_authorized = False
+    try:
+        _check_access('package_update', context, {'id': dataset_id})
+        is_package_update_authorized = True
+    except NotAuthorized:
+        pass
+
+    # Hem tema hem de veri seti için yetki kontrolü
+    if not (is_theme_authorized_for_removal and is_package_update_authorized):
+        raise NotAuthorized(_('Bu temadan veri seti kaldırmak için yetkiniz yok veya veri setini düzenleme yetkiniz yok.'))
+
+    try:
+        session = Session()
+
+        assignment = session.query(DatasetThemeAssignment).filter_by(dataset_id=dataset_id).first()
+        if assignment:
+            session.delete(assignment)
+            session.commit()
+
+        return {'success': True, 'dataset_id': dataset_id}
+    except Exception as e:
+        session.rollback()
+        raise ValidationError(f'Error removing theme: {str(e)}')
+
+
+def update_user_theme_role(context, data_dict):
+    """Kullanıcının tema rolünü güncelle"""
+    from ckan.model.theme import UserThemeAssignment
+    from ckan.model import Session
+    from ckan.logic import ValidationError, NotAuthorized, NotFound, _check_access, _ # Added _check_access, _
+
+    _check_access('sysadmin', context, data_dict)
+
+    user_id = data_dict.get('user_id')
+    theme_slug = data_dict.get('theme_slug')
+    new_role = data_dict.get('role')
+
+    if not user_id or not theme_slug or not new_role:
+        raise ValidationError('user_id, theme_slug and role are required')
+
+    if new_role not in ['member', 'editor', 'admin']:
+        raise ValidationError('role must be one of: member, editor, admin')
+
+    try:
+        session = Session()
+
+        assignment = session.query(UserThemeAssignment).filter_by(
+            user_id=user_id,
+            theme_slug=theme_slug
+        ).first()
+
+        if not assignment:
+            raise NotFound('User theme assignment not found')
+
+        assignment.role = new_role
+        assignment.assigned_by = context.get('user')
+        session.commit()
+
+        return {'success': True, 'role': new_role}
+    except Exception as e:
+        session.rollback()
+        if isinstance(e, (ValidationError, NotFound)):
+            raise
+        raise ValidationError(f'Error updating user theme role: {str(e)}')
+
 def remove_dataset_theme(context, data_dict):
     """Dataset'ten tema kaldır"""
     from ckan.model.theme import DatasetThemeAssignment

@@ -1804,3 +1804,93 @@ def assign_user_to_theme(context, data_dict):
         if isinstance(e, (ValidationError, NotFound)):
             raise
         raise ValidationError(f'Error assigning user to theme: {str(e)}')
+
+
+
+def theme_category_update(context, data_dict):
+    """Kategori güncelle"""
+    from ckan.model.theme import ThemeCategory
+    from ckan.model import Session, User
+    from ckan.logic import ValidationError, NotAuthorized, NotFound, _
+    from ckan import logic # Ensure ckan.logic is imported for _check_access etc.
+
+    # Yetkilendirme kontrolü
+    user_obj = context.get('auth_user_obj')
+    if not user_obj and context.get('user'):
+        user_obj = Session.query(User).filter_by(name=context['user']).first()
+
+    is_sysadmin = user_obj and user_obj.sysadmin
+    is_theme_authorized_for_update = False
+
+    slug = data_dict.get('slug')
+    if not slug:
+        raise ValidationError('slug parameter required')
+
+    if is_sysadmin:
+        is_theme_authorized_for_update = True
+    elif user_obj:
+        user_id = user_obj.id
+        # Kullanıcının atanmış temalarını ve rollerini çek
+        user_themes = logic.get_action('get_user_themes')(context, {'user_id': user_id})
+        current_user_assignment = next((t for t in user_themes if t['theme_slug'] == slug), None)
+
+        if current_user_assignment:
+            assigned_role = current_user_assignment['role']
+            if assigned_role in ['admin', 'editor']: # admin veya editor ise izin ver
+                is_theme_authorized_for_update = True
+
+    if not is_theme_authorized_for_update:
+        log.warning(f"User {user_obj.name if user_obj else 'anonymous'} not authorized to update theme {slug}.")
+        raise NotAuthorized(_('Bu temayı güncellemek için yetkiniz yok.'))
+
+    try:
+        session = Session()
+
+        category = session.query(ThemeCategory).filter_by(slug=slug).first()
+        if not category:
+            log.error(f"Theme category with slug '{slug}' not found for update.")
+            raise NotFound('Theme category not found')
+
+        # Güncellenebilir alanlar
+        if 'name' in data_dict:
+            category.name = data_dict['name']
+        if 'description' in data_dict:
+            category.description = data_dict['description']
+        if 'color' in data_dict:
+            category.color = data_dict['color']
+        if 'icon' in data_dict:
+            category.icon = data_dict['icon']
+        if 'opacity' in data_dict: # Bu satır EKLE (EKSİKTİ!)
+            category.opacity = data_dict['opacity'] # Bu satır EKLE (EKSİKTİ!)
+
+        # CRITICAL FIX: Ensure background_image is handled correctly
+        # The 'background_image' will be present in data_dict if a new file was uploaded
+        # OR if the 'clear_background_image' checkbox was used (in which case it's None)
+        # OR if no image changes were made (in which case it's the old path).
+        # We simply assign whatever is in data_dict for 'background_image'.
+        if 'background_image' in data_dict:
+            log.info(f"Action: Attempting to set background_image for {slug} to: '{data_dict['background_image']}'")
+            category.background_image = data_dict['background_image']
+
+
+        session.commit()
+        # Loglama da opacity'yi gösterecek şekilde güncellendi (EKSİKTİ!)
+        log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}', Opacity: '{category.opacity}'")
+
+        return {
+            'id': category.id,
+            'slug': category.slug,
+            'name': category.name,
+            'description': category.description,
+            'color': category.color,
+            'icon': category.icon,
+            'background_image': category.background_image,
+            'opacity': category.opacity, # Bu satır EKLE (EKSİKTİ!)
+            'created_at': category.created_at.isoformat() if category.created_at else None
+        }
+    except Exception as e:
+        session.rollback()
+        log.error(f"Error during theme_category_update for {slug}: {e}", exc_info=True)
+        if isinstance(e, (ValidationError, NotFound, NotAuthorized)):
+            raise
+        raise ValidationError(f'Error updating category: {str(e)}')        

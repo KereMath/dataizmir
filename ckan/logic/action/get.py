@@ -3692,7 +3692,7 @@ def theme_category_list(context, data_dict):
     except Exception as e:
         raise logic.ValidationError(f'Error fetching categories: {str(e)}')
 
-@logic.side_effect_free  
+@logic.side_effect_free  
 def theme_category_show(context, data_dict):
     """Bir kategorinin detayını ve dataset'lerini göster"""
     from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
@@ -3717,7 +3717,7 @@ def theme_category_show(context, data_dict):
         datasets = []
         for dataset_id in dataset_ids:
             try:
-                dataset = logic.get_action('package_show')(context, {'id': dataset_id})
+                dataset = get_action('package_show')(context, {'id': dataset_id})
                 datasets.append({
                     'id': dataset['id'],
                     'name': dataset['name'], 
@@ -3735,7 +3735,8 @@ def theme_category_show(context, data_dict):
                 'description': category.description,
                 'color': category.color,
                 'icon': category.icon,
-                'background_image': category.background_image, # YENİ EKLENDİ
+                'background_image': category.background_image,
+                'opacity': category.opacity, # YENİ EKLENDİ
                 'created_at': category.created_at.isoformat() if category.created_at else None
             },
             'datasets': datasets
@@ -3745,7 +3746,7 @@ def theme_category_show(context, data_dict):
             raise
         raise ValidationError(f'Error fetching category: {str(e)}')
 
-@logic.side_effect_free
+@logicside_effect_free
 def get_dataset_theme(context, data_dict):
     """Dataset'in temasını getir"""
     from ckan.model.theme import ThemeCategory, DatasetThemeAssignment
@@ -3774,7 +3775,8 @@ def get_dataset_theme(context, data_dict):
             'description': theme.description,
             'color': theme.color,
             'icon': theme.icon,
-            'background_image': theme.background_image, # YENİ EKLENDİ
+            'background_image': theme.background_image,
+            'opacity': theme.opacity, # YENİ EKLENDİ
             'assigned_at': assignment.assigned_at.isoformat() if assignment.assigned_at else None,
             'assigned_by': assignment.assigned_by
         }

@@ -1428,8 +1428,8 @@ def theme_category_update(context, data_dict):
     """Kategori güncelle"""
     from ckan.model.theme import ThemeCategory
     from ckan.model import Session, User
-    # from ckan.logic import ValidationError, NotAuthorized, NotFound, _ # Buradan kaldırıldı çünkü üstte import edildi.
-    # from ckan import logic # Buradan kaldırıldı çünkü üstte import edildi.
+    from ckan.logic import ValidationError, NotAuthorized, NotFound, _
+    from ckan import logic # Ensure ckan.logic is imported for _check_access etc.
 
     # Yetkilendirme kontrolü
     user_obj = context.get('auth_user_obj')
@@ -1456,7 +1456,7 @@ def theme_category_update(context, data_dict):
             if assigned_role in ['admin', 'editor']: # admin veya editor ise izin ver
                 is_theme_authorized_for_update = True
 
-    if not is_theme_authorized_for_edit:
+    if not is_theme_authorized_for_update:
         log.warning(f"User {user_obj.name if user_obj else 'anonymous'} not authorized to update theme {slug}.")
         raise NotAuthorized(_('Bu temayı güncellemek için yetkiniz yok.'))
 
@@ -1487,23 +1487,9 @@ def theme_category_update(context, data_dict):
             log.info(f"Action: Attempting to set background_image for {slug} to: '{data_dict['background_image']}'")
             category.background_image = data_dict['background_image']
 
-        # Opacity değerini güncelleme
-        if 'opacity' in data_dict:
-            try:
-                category.opacity = float(data_dict['opacity'])
-            except ValueError:
-                # Bu hata aslında plugin.py'de yakalanmalıydı, ama defensive programming için burada da kontrol edilebilir.
-                log.warning(f"Invalid opacity value received for theme {slug}: {data_dict['opacity']}")
-                # Burada bir hata yükseltmek yerine, varsayılan bir değer atayabilir veya mevcut değeri koruyabiliriz.
-                # Varsayılanı koruyalım veya 1.0'a ayarlayalım:
-                category.opacity = category.opacity or 1.0 # Mevcut değeri koru veya 1.0 yap
-        elif 'opacity' not in data_dict and category.opacity is None:
-            # Eğer formda opacity yoksa ve DB'de de null ise varsayılan atayalım
-            category.opacity = 1.0
-
 
         session.commit()
-        log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}', Opacity: '{category.opacity}'")
+        log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}'")
 
         return {
             'id': category.id,
@@ -1513,7 +1499,6 @@ def theme_category_update(context, data_dict):
             'color': category.color,
             'icon': category.icon,
             'background_image': category.background_image,
-            'opacity': category.opacity, # Opacity'yi döndürülen data'ya ekle
             'created_at': category.created_at.isoformat() if category.created_at else None
         }
     except Exception as e:
@@ -1522,7 +1507,7 @@ def theme_category_update(context, data_dict):
         if isinstance(e, (ValidationError, NotFound, NotAuthorized)):
             raise
         raise ValidationError(f'Error updating category: {str(e)}')
-        
+
 
 def remove_dataset_theme(context, data_dict):
     """Dataset'ten tema kaldır"""

@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
 # ckan/model/theme.py
-from sqlalchemy import Column, String, Text, DateTime, Integer, ForeignKey, Table, Numeric # Numeric eklendi
+from sqlalchemy import Column, String, Text, DateTime, Integer, ForeignKey, Table
 from sqlalchemy.orm import relationship
 from ckan.model.meta import metadata, mapper, Session
 from ckan.model.domain_object import DomainObject
@@ -15,12 +14,11 @@ theme_category_table = Table(
     Column('description', Text),
     Column('color', String(7), default='#333333'),
     Column('icon', String(100)),
-    Column('background_image', Text),
-    Column('opacity', Numeric(3, 2), default=1.0), # YENİ EKLENDİ
+    Column('background_image', Text), # YENİ EKLENDİ
     Column('created_at', DateTime, default=datetime.datetime.utcnow)
 )
 
-# Dataset-tema ilişki tablosu  
+# Dataset-tema ilişki tablosu  
 dataset_theme_table = Table(
     'dataset_theme_assignments', metadata,
     Column('dataset_id', String(100), primary_key=True),
@@ -40,14 +38,13 @@ user_theme_table = Table(
 )
 
 class ThemeCategory(DomainObject):
-    def __init__(self, slug=None, name=None, description=None, color='#333333', icon=None, background_image=None, opacity=1.0): # opacity eklendi
+    def __init__(self, slug=None, name=None, description=None, color='#333333', icon=None, background_image=None): # YENİ EKLENDİ
         self.slug = slug
-        self.name = name  
+        self.name = name  
         self.description = description
         self.color = color
         self.icon = icon
-        self.background_image = background_image
-        self.opacity = opacity # opacity ataması eklendi
+        self.background_image = background_image # YENİ EKLENDİ
 
 class DatasetThemeAssignment(DomainObject):
     def __init__(self, dataset_id=None, theme_slug=None, assigned_by=None):

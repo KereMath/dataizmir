@@ -1477,6 +1477,10 @@ def theme_category_update(context, data_dict):
             category.color = data_dict['color']
         if 'icon' in data_dict:
             category.icon = data_dict['icon']
+        # >>> BURADAN BAŞLAYAN KISIM ÖNCEKİ VERSİYONLARDA EKSİKTİ VEYA HATALIYDI <<<
+        if 'opacity' in data_dict:
+            category.opacity = data_dict['opacity']
+        # >>> BURAYA KADAR <<<
 
         # CRITICAL FIX: Ensure background_image is handled correctly
         # The 'background_image' will be present in data_dict if a new file was uploaded
@@ -1489,7 +1493,8 @@ def theme_category_update(context, data_dict):
 
 
         session.commit()
-        log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}'")
+        # Loglama da opacity'yi gösterecek şekilde güncellendi
+        log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}', Opacity: '{category.opacity}'")
 
         return {
             'id': category.id,
@@ -1499,6 +1504,7 @@ def theme_category_update(context, data_dict):
             'color': category.color,
             'icon': category.icon,
             'background_image': category.background_image,
+            'opacity': category.opacity, # Bu satır EKSİKTİ!
             'created_at': category.created_at.isoformat() if category.created_at else None
         }
     except Exception as e:
@@ -1507,7 +1513,6 @@ def theme_category_update(context, data_dict):
         if isinstance(e, (ValidationError, NotFound, NotAuthorized)):
             raise
         raise ValidationError(f'Error updating category: {str(e)}')
-
 
 def remove_dataset_theme(context, data_dict):
     """Dataset'ten tema kaldır"""

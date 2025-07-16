@@ -268,6 +268,7 @@
       width: 16px;
       height: 16px;
       cursor: pointer;
+      display: none; /* Checkbox'ları gizle */
     }
 
     .loading-users {
@@ -617,12 +618,10 @@
       <div class="filter-section">
         <label>Veri Görünürlüğü</label>
         <div class="visibility-filter">
-          <div class="visibility-option" id="visibilityPublic">
-            <input type="checkbox" id="showPublic" checked>
+          <div class="visibility-option selected" id="visibilityPublic">
             <span>🌐 Açık</span>
           </div>
-          <div class="visibility-option" id="visibilityPrivate">
-            <input type="checkbox" id="showPrivate" checked>
+          <div class="visibility-option selected" id="visibilityPrivate">
             <span>🔒 Gizli</span>
           </div>
         </div>
@@ -771,21 +770,17 @@
     function initVisibilityFilter() {
       const publicOption = document.getElementById('visibilityPublic');
       const privateOption = document.getElementById('visibilityPrivate');
-      const publicCheckbox = document.getElementById('showPublic');
-      const privateCheckbox = document.getElementById('showPrivate');
 
       // Public buton tıklama
-      publicOption.addEventListener('click', function(e) {
+      publicOption.addEventListener('click', function() {
         showPublic = !showPublic;
-        publicCheckbox.checked = showPublic;
         updateVisibilityUI();
         renderTable();
       });
 
       // Private buton tıklama
-      privateOption.addEventListener('click', function(e) {
+      privateOption.addEventListener('click', function() {
         showPrivate = !showPrivate;
-        privateCheckbox.checked = showPrivate;
         updateVisibilityUI();
         renderTable();
       });

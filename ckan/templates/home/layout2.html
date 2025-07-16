@@ -395,8 +395,7 @@ body, html, * {
           <div class="paydas-slider-wrapper" id="paydas-slider-wrapper">
             <div class="paydas-slider-mask">
               <div class="paydas-slider-track" id="paydas-slider-track">
-                <!-- Paydaş logoları buraya JavaScript ile yüklenecek -->
-              </div>
+                </div>
             </div>
           </div>
         </div>
@@ -435,7 +434,7 @@ document.addEventListener("DOMContentLoaded",function(){
   }
 
   setTimeout(()=>{showPage(1); container.style.visibility=paginationContainer.style.visibility="visible";
-                   container.style.opacity =paginationContainer.style.opacity ="1";},500);
+                  container.style.opacity =paginationContainer.style.opacity ="1";},500);
   window.paginationData={showPage,currentPage,totalPages,totalItems};
 });
 
@@ -469,13 +468,21 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         const iconHtml = category.icon ? `<i class="fa fa-${category.icon}"></i>` : '';
 
+                        // Açıklama varsa card-body'yi render et, yoksa etme
+                        let cardBodyHtml = '';
+                        if (category.description) {
+                            cardBodyHtml = `
+                                <div class="card-body">
+                                    <p class="description">${category.description}</p>
+                                </div>
+                            `;
+                        }
+
                         card.innerHTML = `
                             <div class="card-header">
                                 <h3 class="title">${iconHtml} ${category.name}</h3>
                             </div>
-                            <div class="card-body">
-                                <p class="description">${category.description || 'Açıklama mevcut değil.'}</p>
-                            </div>
+                            ${cardBodyHtml}
                             <div class="card-stats">
                                 <div class="stat-item">
                                     <span class="number">${category.dataset_count}</span>

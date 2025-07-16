@@ -219,6 +219,39 @@
         cursor: not-allowed;
     }
 
+    /* YENİ: Visibility filtresi için stil */
+    .visibility-filter {
+      display: flex;
+      gap: 10px;
+      margin-top: 5px;
+    }
+
+    .visibility-option {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 10px;
+      border: 1px solid #ced4da;
+      border-radius: 4px;
+      background-color: #fff;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 12px;
+    }
+
+    .visibility-option:hover {
+      background-color: #f8f9fa;
+    }
+
+    .visibility-option.selected {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      border-color: #1976d2;
+    }
+
+    .visibility-option input[type="checkbox"] {
+      margin: 0;
+    }
 
     .loading-users {
       color: #6c757d;
@@ -305,19 +338,35 @@
       border-color: #007bff;
     }
 
+    /* YENİ: Tablo container stilleri - yatay kaydırma için */
+    .table-container {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
     /* Veri Seti Tablosu */
     .dataset-table {
       width: 100%;
       border-collapse: collapse;
       background-color: #fff;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      table-layout: fixed; /* YENİ: Sabit tablo düzeni */
+      min-width: 1200px; /* YENİ: Minimum genişlik */
     }
 
     .dataset-table thead {
       background-color: #495057;
       color: white;
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
 
     .dataset-table th {
@@ -326,6 +375,28 @@
       font-weight: 600;
       font-size: 14px;
       letter-spacing: 0.5px;
+      position: relative;
+      user-select: none;
+    }
+
+    /* YENİ: Sütun yeniden boyutlandırma */
+    .column-resizer {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 5px;
+      height: 100%;
+      cursor: col-resize;
+      background: transparent;
+      z-index: 20;
+    }
+
+    .column-resizer:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .column-resizer.active {
+      background: rgba(255,255,255,0.5);
     }
 
     .dataset-table td {
@@ -333,6 +404,9 @@
       border-bottom: 1px solid #f1f3f4;
       vertical-align: top;
       font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-wrap: break-word;
     }
 
     .dataset-table tbody tr:hover {
@@ -349,17 +423,17 @@
       text-decoration: underline;
     }
     
-    /* Sütun Genişlikleri - İşlemler sütunu eklendi */
-    .t-title { width: 14%; } /* Başlık */
-    .t-desc { width: 18%; } /* Açıklama */
-    .t-org { width: 10%; } /* Organizasyon */
-    .t-user { width: 8%; } /* Oluşturan */
-    .t-groups { width: 9%; } /* Kategoriler */
-    .t-tags { width: 9%; } /* Etiketler */
-    .t-theme { width: 9%; } /* Tema */
-    .t-upd { width: 10%; } /* Güncellenme */
-    .t-formats { width: 8%; } /* Formatlar */
-    .t-actions { width: 10%; } /* İşlemler - YENİ SÜTUN */
+    /* YENİ: Güncellenmiş sütun genişlikleri */
+    .t-title { width: 200px; min-width: 150px; }
+    .t-desc { width: 250px; min-width: 180px; }
+    .t-org { width: 150px; min-width: 120px; }
+    .t-user { width: 120px; min-width: 100px; }
+    .t-groups { width: 140px; min-width: 120px; }
+    .t-tags { width: 140px; min-width: 120px; }
+    .t-theme { width: 130px; min-width: 110px; }
+    .t-upd { width: 120px; min-width: 100px; }
+    .t-formats { width: 120px; min-width: 100px; }
+    .t-actions { width: 150px; min-width: 130px; }
 
     .empty-cell {
       color: #9b98a7;
@@ -380,7 +454,7 @@
     .user-tag { background-color: #e3f2fd; color: #1976d2; }
     .group-tag { background-color: #e8f5e8; color: #2e7d32; }
     .tag-tag { background-color: #fbe9e7; color: #d84315; }
-    .theme-tag { background-color: #e0f7fa; color: #00838f; } /* YENİ TEMA ETİKET STİLİ */
+    .theme-tag { background-color: #e0f7fa; color: #00838f; }
 
     /* Format Etiket Stilleri */
     .fmt-csv { background-color: #e8f5e8; color: #2e7d32; }
@@ -441,6 +515,33 @@
     .duplicate-hidden {
       display: none !important;
     }
+
+    /* YENİ: Responsive tasarım */
+    @media (max-width: 768px) {
+      .page-container {
+        flex-direction: column;
+      }
+      
+      .sidebar-filter {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+      }
+      
+      .main-container {
+        width: 100%;
+        padding: 15px;
+      }
+      
+      .dataset-table {
+        font-size: 12px;
+      }
+      
+      .dataset-table th,
+      .dataset-table td {
+        padding: 8px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -486,6 +587,21 @@
         <label>Formatlar</label>
         <div class="multi-select" id="fmtSelect"></div>
       </div>
+
+      <!-- YENİ: Açık/Gizli veri filtresi -->
+      <div class="filter-section">
+        <label>Veri Görünürlüğü</label>
+        <div class="visibility-filter">
+          <div class="visibility-option" id="visibilityPublic">
+            <input type="checkbox" id="showPublic" checked>
+            <span>🌐 Açık</span>
+          </div>
+          <div class="visibility-option" id="visibilityPrivate">
+            <input type="checkbox" id="showPrivate" checked>
+            <span>🔒 Gizli</span>
+          </div>
+        </div>
+      </div>
       
       <div class="filter-section">
         <label>Sıralama</label>
@@ -513,25 +629,31 @@
         <div class="pagination-buttons" id="paginationButtons"></div>
       </div>
 
-      <table class="dataset-table">
-        <thead>
-          <tr>
-            <th class="t-title">Başlık</th>
-            <th class="t-desc">Açıklama</th>
-            <th class="t-org">Organizasyon</th>
-            <th class="t-user">Oluşturan</th>
-            <th class="t-groups">Kategoriler</th>
-            <th class="t-tags">Etiketler</th>
-            <th class="t-theme">Tema</th>
-            <th class="t-upd">Güncellenme</th>
-            <th class="t-formats">Formatlar</th>
-            <th class="t-actions">İşlemler</th>
-          </tr>
-        </thead>
-        <tbody id="dataset-table-body"></tbody>
-      </table>
+      <!-- YENİ: Tablo container wrapper -->
+      <div class="table-container">
+        <div class="table-wrapper">
+          <table class="dataset-table" id="datasetTable">
+            <thead>
+              <tr>
+                <th class="t-title">Başlık<div class="column-resizer"></div></th>
+                <th class="t-desc">Açıklama<div class="column-resizer"></div></th>
+                <th class="t-org">Organizasyon<div class="column-resizer"></div></th>
+                <th class="t-user">Oluşturan<div class="column-resizer"></div></th>
+                <th class="t-groups">Kategoriler<div class="column-resizer"></div></th>
+                <th class="t-tags">Etiketler<div class="column-resizer"></div></th>
+                <th class="t-theme">Tema<div class="column-resizer"></div></th>
+                <th class="t-upd">Güncellenme<div class="column-resizer"></div></th>
+                <th class="t-formats">Formatlar<div class="column-resizer"></div></th>
+                <th class="t-actions">İşlemler</th>
+              </tr>
+            </thead>
+            <tbody id="dataset-table-body"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </div>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.6.0/tinycolor.min.js"></script>
 <script>
     // --- Değişkenler ---
@@ -547,7 +669,17 @@
     var currentThemeSlugFromURL = null; // URL'den alınan temanın slug'ı
     var currentThemeData = null; // URL'deki temaya ait tüm veriler (profil kartı için)
 
-    // --- Fonksiyonlar (Orijinal yapı korunarak) ---
+    // YENİ: Görünürlük filtresi değişkenleri
+    var showPublic = true;
+    var showPrivate = true;
+
+    // YENİ: Sütun yeniden boyutlandırma değişkenleri
+    var isResizing = false;
+    var currentColumn = null;
+    var startX = 0;
+    var startWidth = 0;
+
+    // --- Fonksiyonlar ---
 
     function getPathInfo() {
       var currentUrl = window.location.pathname;
@@ -560,6 +692,111 @@
       if (currentUrl.startsWith('/user/')) return { type: 'user', name: currentUrl.replace('/user/', '') };
       if (currentUrl.startsWith('/dataset/')) return { type: 'dataset', name: null };
       return { type: null, name: null };
+    }
+
+    // YENİ: Sütun yeniden boyutlandırma fonksiyonları
+    function initColumnResize() {
+      const resizers = document.querySelectorAll('.column-resizer');
+      
+      resizers.forEach(resizer => {
+        resizer.addEventListener('mousedown', startResize);
+      });
+      
+      document.addEventListener('mousemove', doResize);
+      document.addEventListener('mouseup', stopResize);
+    }
+
+    function startResize(e) {
+      isResizing = true;
+      currentColumn = e.target.parentElement;
+      startX = e.pageX;
+      startWidth = parseInt(window.getComputedStyle(currentColumn).width, 10);
+      
+      e.target.classList.add('active');
+      document.body.style.cursor = 'col-resize';
+      e.preventDefault();
+    }
+
+    function doResize(e) {
+      if (!isResizing || !currentColumn) return;
+      
+      const width = startWidth + e.pageX - startX;
+      const minWidth = parseInt(window.getComputedStyle(currentColumn).minWidth, 10) || 100;
+      
+      if (width >= minWidth) {
+        currentColumn.style.width = width + 'px';
+      }
+    }
+
+    function stopResize() {
+      if (!isResizing) return;
+      
+      isResizing = false;
+      document.body.style.cursor = 'default';
+      
+      const activeResizer = document.querySelector('.column-resizer.active');
+      if (activeResizer) {
+        activeResizer.classList.remove('active');
+      }
+      
+      currentColumn = null;
+    }
+
+    // YENİ: Görünürlük filtresi fonksiyonları
+    function initVisibilityFilter() {
+      const publicOption = document.getElementById('visibilityPublic');
+      const privateOption = document.getElementById('visibilityPrivate');
+      const publicCheckbox = document.getElementById('showPublic');
+      const privateCheckbox = document.getElementById('showPrivate');
+
+      publicOption.addEventListener('click', function(e) {
+        if (e.target.type !== 'checkbox') {
+          publicCheckbox.checked = !publicCheckbox.checked;
+        }
+        showPublic = publicCheckbox.checked;
+        updateVisibilityUI();
+        renderTable();
+      });
+
+      privateOption.addEventListener('click', function(e) {
+        if (e.target.type !== 'checkbox') {
+          privateCheckbox.checked = !privateCheckbox.checked;
+        }
+        showPrivate = privateCheckbox.checked;
+        updateVisibilityUI();
+        renderTable();
+      });
+
+      publicCheckbox.addEventListener('change', function() {
+        showPublic = this.checked;
+        updateVisibilityUI();
+        renderTable();
+      });
+
+      privateCheckbox.addEventListener('change', function() {
+        showPrivate = this.checked;
+        updateVisibilityUI();
+        renderTable();
+      });
+
+      updateVisibilityUI();
+    }
+
+    function updateVisibilityUI() {
+      const publicOption = document.getElementById('visibilityPublic');
+      const privateOption = document.getElementById('visibilityPrivate');
+      
+      if (showPublic) {
+        publicOption.classList.add('selected');
+      } else {
+        publicOption.classList.remove('selected');
+      }
+      
+      if (showPrivate) {
+        privateOption.classList.add('selected');
+      } else {
+        privateOption.classList.remove('selected');
+      }
     }
 
     async function fetchUsername(userId) {
@@ -802,6 +1039,10 @@
       var sortOrder = document.getElementById("sortOrder").value;
 
       filteredDatasets = allDatasets.filter(function(pkg) {
+        // YENİ: Görünürlük filtresi
+        if (pkg.private && !showPrivate) return false;
+        if (!pkg.private && !showPublic) return false;
+        
         if (searchVal && !(pkg.title || pkg.name || '').toLowerCase().includes(searchVal)) return false;
         if (selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
         if (selectedUsers.size && !selectedUsers.has(pkg.creatorUsername)) return false;
@@ -1124,6 +1365,12 @@
                 renderTable();
             };
 
+            // YENİ: Görünürlük filtresi olay dinleyicilerini başlat
+            initVisibilityFilter();
+
+            // YENİ: Sütun yeniden boyutlandırma özelliğini başlat
+            initColumnResize();
+
             // Eğer grup sayfasındaysak, ilgili grubu seçili yap
             const pathInfo = getPathInfo();
             if (pathInfo.type === 'group' && pathInfo.name) {
@@ -1172,6 +1419,78 @@
             localStorage.removeItem('globalSearchTerm');
         }
     }
+
+    // YENİ: Klavye kısayolları
+    document.addEventListener('keydown', function(e) {
+        // Ctrl+F: Arama kutusuna odaklan
+        if (e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            document.getElementById('searchTitle').focus();
+        }
+        
+        // Escape: Arama kutusunu temizle
+        if (e.key === 'Escape') {
+            const searchInput = document.getElementById('searchTitle');
+            if (searchInput.value) {
+                searchInput.value = '';
+                renderTable();
+            }
+        }
+    });
+
+    // YENİ: Tablo auto-fit özelliği için fonksiyon
+    function autoFitColumns() {
+        const table = document.getElementById('datasetTable');
+        const headers = table.querySelectorAll('th');
+        
+        headers.forEach((header, index) => {
+            let maxWidth = 0;
+            
+            // Header genişliğini kontrol et
+            const headerText = header.textContent;
+            const tempSpan = document.createElement('span');
+            tempSpan.style.visibility = 'hidden';
+            tempSpan.style.position = 'absolute';
+            tempSpan.style.fontSize = window.getComputedStyle(header).fontSize;
+            tempSpan.style.fontWeight = window.getComputedStyle(header).fontWeight;
+            tempSpan.textContent = headerText;
+            document.body.appendChild(tempSpan);
+            maxWidth = Math.max(maxWidth, tempSpan.offsetWidth + 30); // 30px padding
+            document.body.removeChild(tempSpan);
+            
+            // İçerik genişliğini kontrol et
+            const rows = table.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+                const cell = row.cells[index];
+                if (cell) {
+                    const cellText = cell.textContent || cell.innerText;
+                    const tempSpan = document.createElement('span');
+                    tempSpan.style.visibility = 'hidden';
+                    tempSpan.style.position = 'absolute';
+                    tempSpan.style.fontSize = window.getComputedStyle(cell).fontSize;
+                    tempSpan.textContent = cellText;
+                    document.body.appendChild(tempSpan);
+                    maxWidth = Math.max(maxWidth, tempSpan.offsetWidth + 24); // 24px padding
+                    document.body.removeChild(tempSpan);
+                }
+            });
+            
+            // Minimum ve maksimum genişlik sınırları
+            const minWidth = parseInt(window.getComputedStyle(header).minWidth) || 100;
+            const maxAllowedWidth = 400; // Maksimum sütun genişliği
+            
+            maxWidth = Math.max(minWidth, Math.min(maxWidth, maxAllowedWidth));
+            header.style.width = maxWidth + 'px';
+        });
+    }
+
+    // YENİ: Auto-fit butonu için olay dinleyici (isteğe bağlı)
+    // Bu fonksiyonu bir buton ile çağırabilirsiniz veya otomatik olarak çalıştırabilirsiniz
+    window.autoFitTableColumns = autoFitColumns;
+
+    // YENİ: Tablo render'ı sonrası auto-fit (isteğe bağlı)
+    // Eğer otomatik auto-fit istiyorsanız, renderTable fonksiyonunun sonuna ekleyebilirsiniz:
+    // setTimeout(autoFitColumns, 100);
 </script>
 </body>
 </html>

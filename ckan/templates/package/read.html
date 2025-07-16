@@ -322,49 +322,6 @@
       .resource-actions-right a { color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; }
       .resource-actions-right a:first-child { background:#6c757d; }
       .resource-actions-right a:last-child { background:#667eea; }
-        
-        /* Tema Kartı Stilleri */
-        .theme-card {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 16px;
-            border: 1px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
-
-        .theme-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            background: #f1f3f5;
-        }
-
-        .theme-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            color: #fff;
-            flex-shrink: 0; /* Küçülmesini engelle */
-        }
-
-        .theme-content h4 {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 5px;
-        }
-
-        .theme-content p {
-            font-size: 0.95rem;
-            color: #6c757d;
-            line-height: 1.5;
-        }
 
       /* Responsive */
       @media (max-width: 1024px) {
@@ -388,8 +345,8 @@
     <div class="fab-container">
       {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
         <a href="{{ request.path }}/resource/new" class="groups-fab-futuristic" title="{{ _('Kaynak Ekle') }}">
-            <span class="fab-icon"><i class="fa fa-plus"></i></span> {# Burası güncellendi #}
-            <span class="fab-text">Kaynak Ekle</span>
+            <span class="fab-icon"><i class="fa fa-plus"></i></span> {# Burası güncellendi #}
+            <span class="fab-text">Kaynak Ekle</span>
         </a>
         <a href="{{ h.url_for('dataset.groups', id=pkg_dict.name) }}" class="groups-fab-futuristic" title="{{ _('Manage Groups') }}">
           <span class="fab-icon"><i class="fa fa-sitemap"></i></span>
@@ -423,14 +380,12 @@
                         <a href="#" class="nav-tab active" style="font-size:18px;" onclick="showTab('resources')">📁 Kaynaklar</a>
                         <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('dataset')">📋 Metaveri</a>
                         <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('groups')">👥 Kategoriler</a>
-                        <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('theme')">🎨 Tema</a> {# YENİ TEMA SEKMESİ #}
                     </div>
 
                     <div class="content-area">
                         <div id="dataset-content" class="tab-content"></div>
                         <div id="resources-content" class="tab-content active"></div>
                         <div id="groups-content" class="tab-content"></div>
-                        <div id="theme-content" class="tab-content"></div> {# YENİ TEMA İÇERİK ALANI #}
                     </div>
                 </div>
             </div>
@@ -446,7 +401,6 @@ class ModernDatasetPage {
         this.datasetId = this.getDatasetId();
         this.dataset = null;
         this.organization = null;
-        this.theme = null; // Tema verisi için yeni özellik
         this.stats = {};
         this.init();
     }
@@ -459,12 +413,10 @@ class ModernDatasetPage {
         try {
             await this.loadDataset();
             await this.loadStats();
-            await this.loadTheme(); // Tema verisini yükle
             this.renderHeader();
             this.renderDatasetContent();
             this.renderResourcesContent();
             this.renderGroupsContent();
-            this.renderThemeContent(); // Tema içeriğini render et
             this.renderSidebar();
         } catch (e) {
             this.renderError('Veri seti yüklenirken hata oluştu: '+e.message);
@@ -487,14 +439,6 @@ class ModernDatasetPage {
     async loadStats(){
         try{ this.stats.followers = await this.apiCall('dataset_follower_count',{id:this.datasetId}); }
         catch(e){ this.stats.followers = 0; }
-    }
-    async loadTheme() {
-        try {
-            this.theme = await this.apiCall('get_dataset_theme', { dataset_id: this.datasetId });
-        } catch (e) {
-            console.warn('Tema yüklenirken hata oluştu:', e);
-            this.theme = null;
-        }
     }
     renderHeader(){
         const nav=document.getElementById('breadcrumb-nav');
@@ -581,33 +525,6 @@ class ModernDatasetPage {
         } else { html+='<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti herhangi bir gruba bağlı değil.</p>'; }
         el.innerHTML=html;
     }
-
-    // Yeni render fonksiyonu: Tema içeriğini oluşturur
-    renderThemeContent() {
-        const el = document.getElementById('theme-content');
-        let html = '<h3 style="color:#667eea;margin-bottom:25px;font-size:1.8rem;font-weight:700;">🎨 Veri Seti Teması</h3>';
-        if (this.theme) {
-            const themeColor = this.theme.color || '#667eea'; // Varsayılan renk
-            // Eğer icon boşsa veya null ise fa-palette ikonunu kullan, aksi takdirde img etiketini oluştur
-            const themeIcon = this.theme.icon ? `<img src="${this.theme.icon}" alt="Tema İkonu" style="width: 30px; height: 30px;">` : `<i class="fa fa-palette"></i>`;
-
-            html += `
-                <div class="theme-card">
-                    <div class="theme-icon" style="background-color: ${themeColor};">
-                        ${themeIcon}
-                    </div>
-                    <div class="theme-content">
-                        <h4>${this.theme.name}</h4>
-                        <p>${this.theme.description || 'Bu tema için açıklama bulunmamaktadır.'}</p>
-                    </div>
-                </div>
-            `;
-        } else {
-            html += '<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti için tanımlanmış bir tema bulunmamaktadır.</p>';
-        }
-        el.innerHTML = html;
-    }
-
     renderSidebar(){
         const sb=document.getElementById('sidebar-area');
         let html='';

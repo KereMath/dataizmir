@@ -5,323 +5,323 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Dataset Sayfası</title>
-    <style>
-      /* --- FAB Buton Stilleri --- */
-      .fab-container {
-        position: fixed !important;
-        bottom: 30px !important;
-        right: 30px !important;
-        z-index: 1100 !important;
-        display: flex !important;
-        flex-direction: column-reverse;
-        align-items: flex-end;
-        gap: 15px;
-      }
-      .edit-fab-futuristic, .activity-fab-futuristic, .groups-fab-futuristic {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: flex-start !important;
-        width: 62px !important;
-        height: 60px !important;
-        padding: 0 21px !important;
-        color: #fff !important;
-        border-radius: 30px !important;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
-        text-decoration: none !important;
-        /* white-space: nowrap !important; */
-        overflow: hidden !important;
-        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
-      }
-      .edit-fab-futuristic .fab-icon, .activity-fab-futuristic .fab-icon, .groups-fab-futuristic .fab-icon {
-        font-size: 22px !important;
-        line-height: 1 !important;
-        transition: transform 0.5s ease !important;
-      }
-      .edit-fab-futuristic .fab-text, .activity-fab-futuristic .fab-text, .groups-fab-futuristic .fab-text {
-        font-size: 16px !important;
-        font-weight: 600 !important;
-        margin-left: 12px !important;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out 0.1s !important;
-      }
-      .edit-fab-futuristic:hover .fab-text,
-      .activity-fab-futuristic:hover .fab-text,
-      .groups-fab-futuristic:hover .fab-text {
-        opacity: 1;
-      }
-      .edit-fab-futuristic { background: linear-gradient(45deg, #455A64, #263238) !important; }
-      .edit-fab-futuristic:hover {
-        width: 250px !important;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
-        transform: translateY(-2px) !important;
-      }
-      .edit-fab-futuristic:hover .fab-icon { transform: rotate(180deg); }
-      .activity-fab-futuristic { background: linear-gradient(45deg, #FF9800, #FFC107) !important; }
-      .activity-fab-futuristic:hover {
-        width: 200px !important;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
-        transform: translateY(-2px) !important;
-      }
-      .groups-fab-futuristic { background: linear-gradient(45deg, #8A2BE2, #C71585) !important; }
-      .groups-fab-futuristic:hover {
-        width: 230px !important;
-        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
-        transform: translateY(-2px) !important;
-      }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Dataset Sayfası</title>
+    <style>
+      /* --- FAB Buton Stilleri --- */
+      .fab-container {
+        position: fixed !important;
+        bottom: 30px !important;
+        right: 30px !important;
+        z-index: 1100 !important;
+        display: flex !important;
+        flex-direction: column-reverse;
+        align-items: flex-end;
+        gap: 15px;
+      }
+      .edit-fab-futuristic, .activity-fab-futuristic, .groups-fab-futuristic {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: flex-start !important;
+        width: 62px !important;
+        height: 60px !important;
+        padding: 0 21px !important;
+        color: #fff !important;
+        border-radius: 30px !important;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3) !important;
+        text-decoration: none !important;
+        /* white-space: nowrap !important; */
+        overflow: hidden !important;
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
+      }
+      .edit-fab-futuristic .fab-icon, .activity-fab-futuristic .fab-icon, .groups-fab-futuristic .fab-icon {
+        font-size: 22px !important;
+        line-height: 1 !important;
+        transition: transform 0.5s ease !important;
+      }
+      .edit-fab-futuristic .fab-text, .activity-fab-futuristic .fab-text, .groups-fab-futuristic .fab-text {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+        margin-left: 12px !important;
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out 0.1s !important;
+      }
+      .edit-fab-futuristic:hover .fab-text,
+      .activity-fab-futuristic:hover .fab-text,
+      .groups-fab-futuristic:hover .fab-text {
+        opacity: 1;
+      }
+      .edit-fab-futuristic { background: linear-gradient(45deg, #455A64, #263238) !important; }
+      .edit-fab-futuristic:hover {
+        width: 250px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+        transform: translateY(-2px) !important;
+      }
+      .edit-fab-futuristic:hover .fab-icon { transform: rotate(180deg); }
+      .activity-fab-futuristic { background: linear-gradient(45deg, #FF9800, #FFC107) !important; }
+      .activity-fab-futuristic:hover {
+        width: 200px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+        transform: translateY(-2px) !important;
+      }
+      .groups-fab-futuristic { background: linear-gradient(45deg, #8A2BE2, #C71585) !important; }
+      .groups-fab-futuristic:hover {
+        width: 230px !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4) !important;
+        transform: translateY(-2px) !important;
+      }
 
-      /* Genel Reset & Temel Stil */
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        background: #f8f9fa;
-        min-height: 100vh;
-        color: #2c3e50;
-        overflow-x: hidden;
-      }
-      .modern-container {
-        max-width: 1600px;
-        margin: 0 auto;
-        padding: 25px;
-      }
-      h1, .h1, h2, .h2, h3, .h3 { margin: 0 !important; }
+      /* Genel Reset & Temel Stil */
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        background: #f8f9fa;
+        min-height: 100vh;
+        color: #2c3e50;
+        overflow-x: hidden;
+      }
+      .modern-container {
+        max-width: 1600px;
+        margin: 0 auto;
+        padding: 25px;
+      }
+      h1, .h1, h2, .h2, h3, .h3 { margin: 0 !important; }
 
-      /* Cam Efektli Kart */
-      .glass-card {
-        background: #ffffff;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 24px;
-        border: 1px solid #e9ecef;
-        box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
-        padding: 6px;
-        margin-bottom: 0px;
-        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
-        position: relative;
-      }
-      .glass-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background: linear-gradient(45deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4));
-        border-radius: 24px;
-        z-index: -1;
-      }
-      .glass-card:hover {
-        transform: translateY(-8px);
-        box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.12);
-        border-color: #dee2e6;
-      }
+      /* Cam Efektli Kart */
+      .glass-card {
+        background: #ffffff;
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid #e9ecef;
+        box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.08);
+        padding: 6px;
+        margin-bottom: 0px;
+        transition: all 0.4s cubic-bezier(0.23, 1, 0.320, 1);
+        position: relative;
+      }
+      .glass-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: linear-gradient(45deg, rgba(255,255,255,0.9), rgba(255,255,255,0.4));
+        border-radius: 24px;
+        z-index: -1;
+      }
+      .glass-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 32px 0 rgba(0, 0, 0, 0.12);
+        border-color: #dee2e6;
+      }
 
-      /* Başlık, Breadcrumb */
-      .header-section {
-        text-align: center;
-        margin-bottom: 50px;
-        position: relative;
-        padding: 40px 0;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        border-radius: 24px;
-        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
-      }
-      .main-title {
-        font-size: 4rem;
-        font-weight: 900;
-        margin-bottom: 20px;
-        color: #ffffff;
-        text-shadow: 0 2px 8px rgba(0,0,0,0.1);
-        line-height: 1.1;
-      }
-      .breadcrumb-nav {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 20px;
-        flex-wrap: wrap;
-        margin-bottom: 40px;
-      }
-      .breadcrumb-item {
-        color: rgba(255, 255, 255, 0.9);
-        text-decoration: none;
-        padding: 12px 20px;
-        border-radius: 30px;
-        background: rgba(255, 255, 255, 0.15);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-        font-weight: 600;
-        font-size: 0.95rem;
-      }
-      .breadcrumb-arrow { color: rgba(255, 255, 255, 0.6); font-size: 1.8rem; font-weight: bold; }
-      .breadcrumb-item:hover {
-        background: rgba(255, 255, 255, 0.25);
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        color: #fff;
-      }
+      /* Başlık, Breadcrumb */
+      .header-section {
+        text-align: center;
+        margin-bottom: 50px;
+        position: relative;
+        padding: 40px 0;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 24px;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.2);
+      }
+      .main-title {
+        font-size: 4rem;
+        font-weight: 900;
+        margin-bottom: 20px;
+        color: #ffffff;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        line-height: 1.1;
+      }
+      .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        flex-wrap: wrap;
+        margin-bottom: 40px;
+      }
+      .breadcrumb-item {
+        color: rgba(255, 255, 255, 0.9);
+        text-decoration: none;
+        padding: 12px 20px;
+        border-radius: 30px;
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+      .breadcrumb-arrow { color: rgba(255, 255, 255, 0.6); font-size: 1.8rem; font-weight: bold; }
+      .breadcrumb-item:hover {
+        background: rgba(255, 255, 255, 0.25);
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        color: #fff;
+      }
 
-      /* Grid Yapısı */
-      .content-grid {
-        display: grid;
-        grid-template-columns: 2.2fr 1fr;
-        gap: 40px;
-        margin-top: 40px;
-      }
-      .primary-area { display: flex; flex-direction: column; gap: 25px; }
-      .sidebar-area { display: flex; flex-direction: column; gap: 25px; }
+      /* Grid Yapısı */
+      .content-grid {
+        display: grid;
+        grid-template-columns: 2.2fr 1fr;
+        gap: 40px;
+        margin-top: 40px;
+      }
+      .primary-area { display: flex; flex-direction: column; gap: 25px; }
+      .sidebar-area { display: flex; flex-direction: column; gap: 25px; }
 
-      /* Sekmeler */
-      .nav-tabs {
-        display: flex;
-        background: #f8f9fa;
-        border-radius: 20px;
-        padding: 8px;
-        margin-bottom: 25px;
-        backdrop-filter: blur(15px);
-        border: 1px solid #e9ecef;
-      }
-      .nav-tab {
-        flex: 1;
-        padding: 18px 25px;
-        text-align: center;
-        border-radius: 16px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-        color: #6c757d;
-        font-weight: 600;
-        text-decoration: none;
-        font-size: 1rem;
-      }
-      .nav-tab.active {
-        background: #ffffff;
-        color: #667eea;
-        transform: scale(1.02);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      }
-      .nav-tab:hover { background: #ffffff; color: #667eea; transform: translateY(-2px); }
+      /* Sekmeler */
+      .nav-tabs {
+        display: flex;
+        background: #f8f9fa;
+        border-radius: 20px;
+        padding: 8px;
+        margin-bottom: 25px;
+        backdrop-filter: blur(15px);
+        border: 1px solid #e9ecef;
+      }
+      .nav-tab {
+        flex: 1;
+        padding: 18px 25px;
+        text-align: center;
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+        color: #6c757d;
+        font-weight: 600;
+        text-decoration: none;
+        font-size: 1rem;
+      }
+      .nav-tab.active {
+        background: #ffffff;
+        color: #667eea;
+        transform: scale(1.02);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      }
+      .nav-tab:hover { background: #ffffff; color: #667eea; transform: translateY(-2px); }
 
-      /* İçerik Bölgeleri */
-      .content-area { min-height: 500px; line-height: 1.8; font-size: 1.1rem; color: #495057; }
-      .tab-content { display: none; }
-      .tab-content.active { display: block; }
+      /* İçerik Bölgeleri */
+      .content-area { min-height: 500px; line-height: 1.8; font-size: 1.1rem; color: #495057; }
+      .tab-content { display: none; }
+      .tab-content.active { display: block; }
 
-      /* Metadata – yatay künye düzeni */
-      .metadata-grid {
-        display: grid;
-        grid-template-columns: 180px 1fr;
-        column-gap: 40px;
-        row-gap: 14px;
-        margin-top:30px;
-      }
-      .metadata-item { display: contents; }
-      .metadata-label {
-        font-weight: 700;
-        color: #495057;
-        text-align: right;
-      }
-      .metadata-value {
-        color: #2c3e50;
-        word-break: break-word;
-      }
+      /* Metadata – yatay künye düzeni */
+      .metadata-grid {
+        display: grid;
+        grid-template-columns: 180px 1fr;
+        column-gap: 40px;
+        row-gap: 14px;
+        margin-top:30px;
+      }
+      .metadata-item { display: contents; }
+      .metadata-label {
+        font-weight: 700;
+        color: #495057;
+        text-align: right;
+      }
+      .metadata-value {
+        color: #2c3e50;
+        word-break: break-word;
+      }
 
-      /* Metadata – tag, lisans, paylaş – tek satır yapı */
-      .meta-info-card {
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 16px;
-        border: 1px solid #e9ecef;
-      }
-      .meta-row {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-bottom: 15px;
-      }
-      .meta-title {
-        font-weight: 700;
-        color: #667eea;
-        font-size: 1rem;
-      }
+      /* Metadata – tag, lisans, paylaş – tek satır yapı */
+      .meta-info-card {
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 16px;
+        border: 1px solid #e9ecef;
+      }
+      .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 15px;
+      }
+      .meta-title {
+        font-weight: 700;
+        color: #667eea;
+        font-size: 1rem;
+      }
 
-      /* Etiketler satıriçi */
-      .tag-item {
-        display: inline-block;
-        background: #e9ecef;
-        color: #495057;
-        padding: 4px 10px;
-        border-radius: 14px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        border: 1px solid #ced4da;
-      }
+      /* Etiketler satıriçi */
+      .tag-item {
+        display: inline-block;
+        background: #e9ecef;
+        color: #495057;
+        padding: 4px 10px;
+        border-radius: 14px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        border: 1px solid #ced4da;
+      }
 
-      /* Sosyal Butonlar renksiz */
-      .social-buttons-inline { display: flex; gap: 10px; }
-      .social-btn {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-decoration: none;
-        border: 1px solid #ced4da;
-        transition: transform 0.3s ease;
-      }
-      .social-btn svg, .social-btn img { width: 20px; height: 20px; opacity: 0.75; filter: grayscale(1); }
-      .social-btn:hover { transform: translateY(-3px); }
+      /* Sosyal Butonlar renksiz */
+      .social-buttons-inline { display: flex; gap: 10px; }
+      .social-btn {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        border: 1px solid #ced4da;
+        transition: transform 0.3s ease;
+      }
+      .social-btn svg, .social-btn img { width: 20px; height: 20px; opacity: 0.75; filter: grayscale(1); }
+      .social-btn:hover { transform: translateY(-3px); }
 
-      /* İstatistik kartı */
-      .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 18px;
-        margin-top: 20px;
-      }
-      .stat-item {
-        text-align: center;
-        padding: 20px;
-        background: #f8f9fa;
-        border-radius: 16px;
-        transition: all 0.3s ease;
-        border: 1px solid #e9ecef;
-      }
-      .stat-item:hover { background: #f1f3f5; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-      .stat-number { font-size: 2.2rem; font-weight: 900; color: #667eea; display: block; margin-bottom: 8px; }
-      .stat-label { font-size: 1rem; color: #6c757d; font-weight: 600; }
+      /* İstatistik kartı */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 18px;
+        margin-top: 20px;
+      }
+      .stat-item {
+        text-align: center;
+        padding: 20px;
+        background: #f8f9fa;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        border: 1px solid #e9ecef;
+      }
+      .stat-item:hover { background: #f1f3f5; transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+      .stat-number { font-size: 2.2rem; font-weight: 900; color: #667eea; display: block; margin-bottom: 8px; }
+      .stat-label { font-size: 1rem; color: #6c757d; font-weight: 600; }
 
-      /* Kaynak Listesi */
-      .resource-list { display: flex; flex-direction: column; gap: 18px; }
-      .resource-item {
-        background: #f8f9fa;
-        padding: 25px;
-        border-radius: 16px;
-        border-left: 5px solid #667eea;
-        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-      }
-      .resource-item:hover { background: #f1f3f5; transform: translateX(8px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-      .resource-content-left { flex-grow: 1; margin-right: 20px; }
-      .resource-title { font-weight: 700; color: #2c3e50; margin-bottom: 12px; font-size: 2rem; }
-      .resource-format {
-        background: #667eea;
-        color: #fff;
-        padding: 4px 10px;
-        border-radius: 8px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        display: inline-block;
-        margin-bottom: 12px;
-      }
-      .resource-description { color: #6c757d; line-height: 1.6; font-size: 1.6rem; }
-      .resource-actions-right { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
-      .resource-actions-right a { color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; }
-      .resource-actions-right a:first-child { background:#6c757d; }
-      .resource-actions-right a:last-child { background:#667eea; }
+      /* Kaynak Listesi */
+      .resource-list { display: flex; flex-direction: column; gap: 18px; }
+      .resource-item {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 16px;
+        border-left: 5px solid #667eea;
+        transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1);
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+      }
+      .resource-item:hover { background: #f1f3f5; transform: translateX(8px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+      .resource-content-left { flex-grow: 1; margin-right: 20px; }
+      .resource-title { font-weight: 700; color: #2c3e50; margin-bottom: 12px; font-size: 2rem; }
+      .resource-format {
+        background: #667eea;
+        color: #fff;
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        display: inline-block;
+        margin-bottom: 12px;
+      }
+      .resource-description { color: #6c757d; line-height: 1.6; font-size: 1.6rem; }
+      .resource-actions-right { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+      .resource-actions-right a { color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; }
+      .resource-actions-right a:first-child { background:#6c757d; }
+      .resource-actions-right a:last-child { background:#667eea; }
         
         /* Tema Kartı Stilleri */
         .theme-card {
@@ -366,128 +366,128 @@
             line-height: 1.5;
         }
 
-      /* Responsive */
-      @media (max-width: 1024px) {
-        .content-grid { grid-template-columns: 1fr; }
-        .main-title { font-size: 3rem; }
-      }
-      @media (max-width: 768px) {
-        .main-title { font-size: 2.2rem; }
-        .nav-tabs { flex-direction: column; }
-        .breadcrumb-nav { flex-wrap: wrap; }
-        .header-section { padding: 20px; }
-        .resource-item { flex-direction: column; align-items: flex-start; }
-        .resource-content-left { margin-right: 0; margin-bottom: 15px; }
-        .resource-actions-right { flex-direction: row; width: 100%; justify-content: flex-start; }
-      }
-    </style>
+      /* Responsive */
+      @media (max-width: 1024px) {
+        .content-grid { grid-template-columns: 1fr; }
+        .main-title { font-size: 3rem; }
+      }
+      @media (max-width: 768px) {
+        .main-title { font-size: 2.2rem; }
+        .nav-tabs { flex-direction: column; }
+        .breadcrumb-nav { flex-wrap: wrap; }
+        .header-section { padding: 20px; }
+        .resource-item { flex-direction: column; align-items: flex-start; }
+        .resource-content-left { margin-right: 0; margin-bottom: 15px; }
+        .resource-actions-right { flex-direction: row; width: 100%; justify-content: flex-start; }
+      }
+    </style>
 </head>
 <body>
 
 {# --- FÜTÜRİSTİK ÇOKLU EYLEM BUTONLARI --- #}
-    <div class="fab-container">
-      {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
-        <a href="{{ request.path }}/resource/new" class="groups-fab-futuristic" title="{{ _('Kaynak Ekle') }}">
-            <span class="fab-icon"><i class="fa fa-plus"></i></span> {# Burası güncellendi #}
-            <span class="fab-text">Kaynak Ekle</span>
-        </a>
-        <a href="{{ h.url_for('dataset.groups', id=pkg_dict.name) }}" class="groups-fab-futuristic" title="{{ _('Manage Groups') }}">
-          <span class="fab-icon"><i class="fa fa-sitemap"></i></span>
-          <span class="fab-text">Kategorileri Düzenle</span>
-        </a>
-        <a href="{{ h.url_for('dataset.activity', id=pkg_dict.name) }}" class="activity-fab-futuristic" title="{{ _('Activity Stream') }}">
-          <span class="fab-icon"><i class="fa fa-history"></i></span>
-          <span class="fab-text">Aktivite Akışı</span>
-        </a>
-        <a href="{{ h.url_for('dataset.edit', id=pkg_dict.name) }}" class="edit-fab-futuristic" title="{{ _('Edit Dataset') }}">
-          <span class="fab-icon"><i class="fa fa-cog"></i></span>
-          <span class="fab-text">Veri Setini Düzenle</span>
-        </a>
-      {% endif %}
-    </div>
+    <div class="fab-container">
+      {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
+        <a href="{{ request.path }}/resource/new" class="groups-fab-futuristic" title="{{ _('Kaynak Ekle') }}">
+            <span class="fab-icon"><i class="fa fa-plus"></i></span> {# Burası güncellendi #}
+            <span class="fab-text">Kaynak Ekle</span>
+        </a>
+        <a href="{{ h.url_for('dataset.groups', id=pkg_dict.name) }}" class="groups-fab-futuristic" title="{{ _('Manage Groups') }}">
+          <span class="fab-icon"><i class="fa fa-sitemap"></i></span>
+          <span class="fab-text">Kategorileri Düzenle</span>
+        </a>
+        <a href="{{ h.url_for('dataset.activity', id=pkg_dict.name) }}" class="activity-fab-futuristic" title="{{ _('Activity Stream') }}">
+          <span class="fab-icon"><i class="fa fa-history"></i></span>
+          <span class="fab-text">Aktivite Akışı</span>
+        </a>
+        <a href="{{ h.url_for('dataset.edit', id=pkg_dict.name) }}" class="edit-fab-futuristic" title="{{ _('Edit Dataset') }}">
+          <span class="fab-icon"><i class="fa fa-cog"></i></span>
+          <span class="fab-text">Veri Setini Düzenle</span>
+        </a>
+      {% endif %}
+    </div>
 
-    <div class="modern-container">
-        <div class="header-section">
-            <nav class="breadcrumb-nav" id="breadcrumb-nav"></nav>
-            <h1 class="main-title" id="main-title">Veri Seti Yükleniyor...</h1>
-        </div>
+    <div class="modern-container">
+        <div class="header-section">
+            <nav class="breadcrumb-nav" id="breadcrumb-nav"></nav>
+            <h1 class="main-title" id="main-title">Veri Seti Yükleniyor...</h1>
+        </div>
 
-        <div class="content-grid">
-            <div class="primary-area">
-                <div class="glass-card" style="display:none;">
-                    <div class="action-toolbar" id="action-toolbar"></div>
-                </div>
+        <div class="content-grid">
+            <div class="primary-area">
+                <div class="glass-card" style="display:none;">
+                    <div class="action-toolbar" id="action-toolbar"></div>
+                </div>
 
-                <div class="glass-card">
-                    <div class="nav-tabs" id="nav-tabs">
-                        <a href="#" class="nav-tab active" style="font-size:18px;" onclick="showTab('resources')">📁 Kaynaklar</a>
-                        <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('dataset')">📋 Metaveri</a>
-                        <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('groups')">👥 Kategoriler</a>
-                        <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('theme')">🎨 Tema</a>
-                    </div>
+                <div class="glass-card">
+                    <div class="nav-tabs" id="nav-tabs">
+                        <a href="#" class="nav-tab active" style="font-size:18px;" onclick="showTab('resources')">📁 Kaynaklar</a>
+                        <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('dataset')">📋 Metaveri</a>
+                        <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('groups')">👥 Kategoriler</a>
+                        <a href="#" class="nav-tab" style="font-size:18px;" onclick="showTab('theme')">🎨 Tema</a> {# YENİ TEMA SEKMESİ #}
+                    </div>
 
-                    <div class="content-area">
-                        <div id="dataset-content" class="tab-content"></div>
-                        <div id="resources-content" class="tab-content active"></div>
-                        <div id="groups-content" class="tab-content"></div>
-                        <div id="theme-content" class="tab-content"></div>
-                    </div>
-                </div>
-            </div>
+                    <div class="content-area">
+                        <div id="dataset-content" class="tab-content"></div>
+                        <div id="resources-content" class="tab-content active"></div>
+                        <div id="groups-content" class="tab-content"></div>
+                        <div id="theme-content" class="tab-content"></div> {# YENİ TEMA İÇERİK ALANI #}
+                    </div>
+                </div>
+            </div>
 
-            <div class="sidebar-area" id="sidebar-area"><div class="loading">Yan panel yükleniyor...</div></div>
-        </div>
-    </div>
+            <div class="sidebar-area" id="sidebar-area"><div class="loading">Yan panel yükleniyor...</div></div>
+        </div>
+    </div>
 
 <script>
 class ModernDatasetPage {
-    constructor() {
-        this.baseURL = window.location.origin;
-        this.datasetId = this.getDatasetId();
-        this.dataset = null;
-        this.organization = null;
-        this.theme = null; // Tema verisi için yeni özellik
-        this.stats = {};
-        this.init();
-    }
-    getDatasetId() {
-        const path = window.location.pathname.split('/');
-        const idx = path.indexOf('dataset');
-        return (idx !== -1 && path[idx+1]) ? path[idx+1] : null;
-    }
-    async init() {
-        try {
-            await this.loadDataset();
-            await this.loadStats();
+    constructor() {
+        this.baseURL = window.location.origin;
+        this.datasetId = this.getDatasetId();
+        this.dataset = null;
+        this.organization = null;
+        this.theme = null; // Tema verisi için yeni özellik
+        this.stats = {};
+        this.init();
+    }
+    getDatasetId() {
+        const path = window.location.pathname.split('/');
+        const idx = path.indexOf('dataset');
+        return (idx !== -1 && path[idx+1]) ? path[idx+1] : null;
+    }
+    async init() {
+        try {
+            await this.loadDataset();
+            await this.loadStats();
             await this.loadTheme(); // Tema verisini yükle
-            this.renderHeader();
-            this.renderDatasetContent();
-            this.renderResourcesContent();
-            this.renderGroupsContent();
+            this.renderHeader();
+            this.renderDatasetContent();
+            this.renderResourcesContent();
+            this.renderGroupsContent();
             this.renderThemeContent(); // Tema içeriğini render et
-            this.renderSidebar();
-        } catch (e) {
-            this.renderError('Veri seti yüklenirken hata oluştu: '+e.message);
-        }
-    }
-    async apiCall(action, data={}) {
-        const res = await fetch(`${this.baseURL}/api/3/action/${action}`,{
-            method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
-        const json = await res.json();
-        if(!json.success) throw new Error(json.error?.message || 'API call failed');
-        return json.result;
-    }
-    async loadDataset(){
-        this.dataset = await this.apiCall('package_show',{id:this.datasetId, include_tracking:true});
-        if(this.dataset.organization){
-            try{ this.organization = await this.apiCall('organization_show',{id:this.dataset.organization.id, include_dataset_count:true}); }
-            catch(e){ console.warn('Org load error',e); }
-        }
-    }
-    async loadStats(){
-        try{ this.stats.followers = await this.apiCall('dataset_follower_count',{id:this.datasetId}); }
-        catch(e){ this.stats.followers = 0; }
-    }
+            this.renderSidebar();
+        } catch (e) {
+            this.renderError('Veri seti yüklenirken hata oluştu: '+e.message);
+        }
+    }
+    async apiCall(action, data={}) {
+        const res = await fetch(`${this.baseURL}/api/3/action/${action}`,{
+            method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+        const json = await res.json();
+        if(!json.success) throw new Error(json.error?.message || 'API call failed');
+        return json.result;
+    }
+    async loadDataset(){
+        this.dataset = await this.apiCall('package_show',{id:this.datasetId, include_tracking:true});
+        if(this.dataset.organization){
+            try{ this.organization = await this.apiCall('organization_show',{id:this.dataset.organization.id, include_dataset_count:true}); }
+            catch(e){ console.warn('Org load error',e); }
+        }
+    }
+    async loadStats(){
+        try{ this.stats.followers = await this.apiCall('dataset_follower_count',{id:this.datasetId}); }
+        catch(e){ this.stats.followers = 0; }
+    }
     async loadTheme() {
         try {
             this.theme = await this.apiCall('get_dataset_theme', { dataset_id: this.datasetId });
@@ -496,91 +496,91 @@ class ModernDatasetPage {
             this.theme = null;
         }
     }
-    renderHeader(){
-        const nav=document.getElementById('breadcrumb-nav');
-        let html='';
-        if(this.organization){
-          html=`<a href="/organization" class="breadcrumb-item">Veri Paydaşları</a><span class="breadcrumb-arrow">→</span><a href="/organization/${this.organization.name}" class="breadcrumb-item">${this.organization.title}</a><span class="breadcrumb-arrow">→</span><span class="breadcrumb-item" style="background:rgba(255,255,255,0.25);">${this.truncate(this.dataset.title,30)}</span>`;
-        } else {
-          html=`<a href="/dataset" class="breadcrumb-item">Veri Setleri</a><span class="breadcrumb-arrow">→</span><span class="breadcrumb-item" style="background:rgba(255,255,255,0.25);">${this.truncate(this.dataset.title,30)}</span>`;
-        }
-        nav.innerHTML=html;
-        document.getElementById('main-title').textContent=this.dataset.title;
-    }
-    renderDatasetContent(){
-        const el=document.getElementById('dataset-content');
-        let html=`<h3 style="color:#667eea;margin-bottom:25px;font-size:1.8rem;font-weight:700;">📄 Veri Seti Açıklaması</h3>`;
-        html+= this.dataset.notes ? `<div style="margin-bottom:30px;font-size:1.6rem;line-height:1.8;color:#495057;">${this.dataset.notes}</div>` : `<p style="color:#6c757d;font-size:1.6rem;">Bu dataset için henüz açıklama eklenmemiş.</p>`;
-        html+=`<h3 style="color:#667eea;margin-bottom:20px;font-size:1.8rem;font-weight:700;">📋 Veri Seti Bilgileri</h3><div class="metadata-grid">`;
-        const pushMeta=(label,val)=>{html+=`<div class="metadata-item"><div class="metadata-label">${label}</div><div class="metadata-value">${val}</div></div>`;};
-        // BURASI GÜNCELLENDİ: Son Güncelleme zamanından 3 saat çıkarılıyor
-        pushMeta('Son Güncelleme',this.formatDate(this.dataset.metadata_modified, +3)); 
-        pushMeta('Oluşturma Tarihi',this.formatDate(this.dataset.metadata_created));
-        pushMeta('Kaynak Sayısı',(this.dataset.num_resources||this.dataset.resources?.length||0)+' dosya');
-        if(this.dataset.license_title) pushMeta('Lisans',this.dataset.license_title);
-        if(this.dataset.author) pushMeta('Yazar',this.dataset.author);
-        if(this.dataset.version) pushMeta('Versiyon',this.dataset.version);
-        if(this.dataset.extras) this.dataset.extras.forEach(x=>pushMeta(x.key,x.value));
-        html+='</div>'; el.innerHTML=html;
-    }
-    
-    renderResourcesContent(){
-    const el = document.getElementById('resources-content');
-    let html = '';
-    if (this.dataset.resources?.length) {
-        html += '<div class="resource-list">';
-        this.dataset.resources.forEach(r => {
-            const viewUrl = `/dataset/${this.dataset.name}/resource/${r.id}`;
-            const editUrl = `${viewUrl}/edit`; // Kaynak düzenleme linki
+    renderHeader(){
+        const nav=document.getElementById('breadcrumb-nav');
+        let html='';
+        if(this.organization){
+          html=`<a href="/organization" class="breadcrumb-item">Veri Paydaşları</a><span class="breadcrumb-arrow">→</span><a href="/organization/${this.organization.name}" class="breadcrumb-item">${this.organization.title}</a><span class="breadcrumb-arrow">→</span><span class="breadcrumb-item" style="background:rgba(255,255,255,0.25);">${this.truncate(this.dataset.title,30)}</span>`;
+        } else {
+          html=`<a href="/dataset" class="breadcrumb-item">Veri Setleri</a><span class="breadcrumb-arrow">→</span><span class="breadcrumb-item" style="background:rgba(255,255,255,0.25);">${this.truncate(this.dataset.title,30)}</span>`;
+        }
+        nav.innerHTML=html;
+        document.getElementById('main-title').textContent=this.dataset.title;
+    }
+    renderDatasetContent(){
+        const el=document.getElementById('dataset-content');
+        let html=`<h3 style="color:#667eea;margin-bottom:25px;font-size:1.8rem;font-weight:700;">📄 Veri Seti Açıklaması</h3>`;
+        html+= this.dataset.notes ? `<div style="margin-bottom:30px;font-size:1.6rem;line-height:1.8;color:#495057;">${this.dataset.notes}</div>` : `<p style="color:#6c757d;font-size:1.6rem;">Bu dataset için henüz açıklama eklenmemiş.</p>`;
+        html+=`<h3 style="color:#667eea;margin-bottom:20px;font-size:1.8rem;font-weight:700;">📋 Veri Seti Bilgileri</h3><div class="metadata-grid">`;
+        const pushMeta=(label,val)=>{html+=`<div class="metadata-item"><div class="metadata-label">${label}</div><div class="metadata-value">${val}</div></div>`;};
+        // BURASI GÜNCELLENDİ: Son Güncelleme zamanından 3 saat çıkarılıyor
+        pushMeta('Son Güncelleme',this.formatDate(this.dataset.metadata_modified, +3)); 
+        pushMeta('Oluşturma Tarihi',this.formatDate(this.dataset.metadata_created));
+        pushMeta('Kaynak Sayısı',(this.dataset.num_resources||this.dataset.resources?.length||0)+' dosya');
+        if(this.dataset.license_title) pushMeta('Lisans',this.dataset.license_title);
+        if(this.dataset.author) pushMeta('Yazar',this.dataset.author);
+        if(this.dataset.version) pushMeta('Versiyon',this.dataset.version);
+        if(this.dataset.extras) this.dataset.extras.forEach(x=>pushMeta(x.key,x.value));
+        html+='</div>'; el.innerHTML=html;
+    }
+    
+    renderResourcesContent(){
+    const el = document.getElementById('resources-content');
+    let html = '';
+    if (this.dataset.resources?.length) {
+        html += '<div class="resource-list">';
+        this.dataset.resources.forEach(r => {
+            const viewUrl = `/dataset/${this.dataset.name}/resource/${r.id}`;
+            const editUrl = `${viewUrl}/edit`; // Kaynak düzenleme linki
 
-            html += `<div class="resource-item">
-                <div class="resource-content-left">
-                    <h4 class="resource-title">${r.name || r.id}</h4>
-                    <span class="resource-format">${r.format || 'Bilinmiyor'}</span>
-                    ${r.description ? `<p class="resource-description">${r.description}</p>` : ''}
-                </div>
-                <div class="resource-actions-right">
-                    <a href="${viewUrl}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#6c757d;">👁️ Görüntüle</a>
-                    <a href="${r.url}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#667eea;">💾 İndir</a>
-                    
-                    {# Sadece bu kısım Jinja2 tarafından işlenir ve yetki kontrolü yapar #}
-                    {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
-                        <a href="${editUrl}" style="
-                            background-color: #dc3545; /* Kırmızı arka plan */
-                            color: #fff; /* Beyaz metin */
-                            padding: 8px 15px;
-                            border-radius: 5px;
-                            text-decoration: none;
-                            font-weight: 600;
-                            font-size: 13px;
-                            display: flex; /* İkon ve metni hizalamak için */
-                            align-items: center;
-                            gap: 5px; /* İkon ile metin arasına boşluk */
-                        ">
-                            <i class="fa fa-cog" style="color: #fff;"></i>
-                            Düzenle
-                        </a>
-                    {% endif %}
-                </div>
-            </div>`;
-        });
-        html += '</div>';
-    } else {
-        html += '<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti için henüz kaynak eklenmemiş.</p>';
-    }
-    el.innerHTML = html;
+            html += `<div class="resource-item">
+                <div class="resource-content-left">
+                    <h4 class="resource-title">${r.name || r.id}</h4>
+                    <span class="resource-format">${r.format || 'Bilinmiyor'}</span>
+                    ${r.description ? `<p class="resource-description">${r.description}</p>` : ''}
+                </div>
+                <div class="resource-actions-right">
+                    <a href="${viewUrl}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#6c757d;">👁️ Görüntüle</a>
+                    <a href="${r.url}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#667eea;">💾 İndir</a>
+                    
+                    {# Sadece bu kısım Jinja2 tarafından işlenir ve yetki kontrolü yapar #}
+                    {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
+                        <a href="${editUrl}" style="
+                            background-color: #dc3545; /* Kırmızı arka plan */
+                            color: #fff; /* Beyaz metin */
+                            padding: 8px 15px;
+                            border-radius: 5px;
+                            text-decoration: none;
+                            font-weight: 600;
+                            font-size: 13px;
+                            display: flex; /* İkon ve metni hizalamak için */
+                            align-items: center;
+                            gap: 5px; /* İkon ile metin arasına boşluk */
+                        ">
+                            <i class="fa fa-cog" style="color: #fff;"></i>
+                            Düzenle
+                        </a>
+                    {% endif %}
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+    } else {
+        html += '<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti için henüz kaynak eklenmemiş.</p>';
+    }
+    el.innerHTML = html;
 }
-    
-    renderGroupsContent(){
-        const el=document.getElementById('groups-content');
-        let html='';
-        if(this.dataset.groups?.length){
-          html+='<div class="resource-list">';
-          this.dataset.groups.forEach(g=>{html+=`<div class="resource-item"><div class="resource-content-left"><h4 class="resource-title">${g.display_name||g.title||g.name}</h4>${g.description?`<p class="resource-description">${g.description}</p>`:''}</div></div>`;});
-          html+='</div>';
-        } else { html+='<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti herhangi bir gruba bağlı değil.</p>'; }
-        el.innerHTML=html;
-    }
+    
+    renderGroupsContent(){
+        const el=document.getElementById('groups-content');
+        let html='';
+        if(this.dataset.groups?.length){
+          html+='<div class="resource-list">';
+          this.dataset.groups.forEach(g=>{html+=`<div class="resource-item"><div class="resource-content-left"><h4 class="resource-title">${g.display_name||g.title||g.name}</h4>${g.description?`<p class="resource-description">${g.description}</p>`:''}</div></div>`;});
+          html+='</div>';
+        } else { html+='<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti herhangi bir gruba bağlı değil.</p>'; }
+        el.innerHTML=html;
+    }
 
     // Yeni render fonksiyonu: Tema içeriğini oluşturur
     renderThemeContent() {
@@ -588,6 +588,7 @@ class ModernDatasetPage {
         let html = '<h3 style="color:#667eea;margin-bottom:25px;font-size:1.8rem;font-weight:700;">🎨 Veri Seti Teması</h3>';
         if (this.theme) {
             const themeColor = this.theme.color || '#667eea'; // Varsayılan renk
+            // Eğer icon boşsa veya null ise fa-palette ikonunu kullan, aksi takdirde img etiketini oluştur
             const themeIcon = this.theme.icon ? `<img src="${this.theme.icon}" alt="Tema İkonu" style="width: 30px; height: 30px;">` : `<i class="fa fa-palette"></i>`;
 
             html += `
@@ -607,56 +608,56 @@ class ModernDatasetPage {
         el.innerHTML = html;
     }
 
-    renderSidebar(){
-        const sb=document.getElementById('sidebar-area');
-        let html='';
-        /* İstatistik Kartı */
-        html+=`<div class="glass-card"><h3 style="font-size:1.3rem;font-weight:800;color:#667eea;margin-bottom:10px;">📊 Veri Seti İstatistikleri</h3><div class="stats-grid"><div class="stat-item"><span class="stat-number">${this.dataset.tracking_summary?.total||0}</span><span class="stat-label">Görüntülenme</span></div><div class="stat-item"><span class="stat-number">${this.dataset.resources?.length||0}</span><span class="stat-label">Kaynak</span></div><div class="stat-item"><span class="stat-number">${this.stats.followers||0}</span><span class="stat-label">Takipçi</span></div><div class="stat-item"><span class="stat-number">${this.dataset.num_tags||0}</span><span class="stat-label">Etiket</span></div></div></div>`;
-        /* Organization Kartı  */
-        if(this.organization){
-          const logo=this.organization.image_display_url?`<img src="${this.organization.image_display_url}" alt="Logo" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">`:`<div style="width:80px;height:80px;border-radius:50%;background:#667eea;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.8rem;font-weight:900;">${this.organization.title.charAt(0)}</div>`;
-          html+=`<div class="glass-card"><h3 style="font-size:1.3rem;font-weight:800;color:#667eea;margin-bottom:10px;">🏛️ Veri Paydaşı</h3><div style="display:flex;align-items:center;gap:15px;">${logo}<div><a href="/organization/${this.organization.name}" style="font-weight:700;color:#2c3e50;">${this.organization.title}</a>${this.organization.description?`<p style="font-size:0.9rem;color:#6c757d;margin-top:5px;">${this.truncate(this.organization.description,100)}</p>`:''}</div></div></div>`;
-        }
-        /* Meta Bilgi – Etiket+Lisans+Paylaş */
-        html+=`<div class="glass-card meta-info-card">`;
-        if(this.dataset.tags?.length){
-          html+=`<div class="meta-row"><span class="meta-title">🏷️ Etiketler:</span>${this.dataset.tags.map(t=>`<span class="tag-item">${t.display_name}</span>`).join('')}</div>`;
-        }
-        if(this.dataset.license_title){
-          html+=`<div class="meta-row"><span class="meta-title">⚖️ Lisans:</span><span style="font-size:0.95rem;color:#495057;font-weight:600;">${this.dataset.license_title}</span>${this.dataset.license_url?`<a href="${this.dataset.license_url}" target="_blank" style="font-size:0.85rem;margin-left:4px;color:#667eea;text-decoration:none;">(detay)</a>`:''}</div>`;
-        }
-        const url=encodeURIComponent(window.location.href);
-        const title=encodeURIComponent(this.dataset.title);
-        html+=`<div class="meta-row"><span class="meta-title">🔗 Paylaş:</span><div class="social-buttons-inline"><a class="social-btn" href="https://twitter.com/intent/tweet?text=${title}&url=${url}" target="_blank"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/twitter.svg" alt="Twitter"></a><a class="social-btn" href="https://www.facebook.com/sharer/sharer.php?u=${url}" target="_blank"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/facebook.svg" alt="Facebook"></a><a class="social-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=${url}" target="_blank"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/linkedin.svg" alt="LinkedIn"></a><a class="social-btn" href="mailto:?subject=${title}&body=${url}"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/gmail.svg" alt="E-Posta"></a></div></div>`;
-        html+='</div>'; /* meta-info-card bitiş */
-        sb.innerHTML=html;
-    }
-    /* Yardımcı fonksiyonlar */
-    renderError(msg){ document.body.innerHTML=`<div class="modern-container"><div class="glass-card"><div style="padding:40px;text-align:center;color:#dc3545;">${msg}</div></div></div>`; }
-    // BURASI GÜNCELLENDİ: `hoursOffset` parametresi eklendi
-    formatDate(s, hoursOffset = 0){ 
-        if(!s) return 'Bilinmiyor'; 
-        const d = new Date(s); 
-        // Saat farkını uygula
-        d.setHours(d.getHours() + hoursOffset);
+    renderSidebar(){
+        const sb=document.getElementById('sidebar-area');
+        let html='';
+        /* İstatistik Kartı */
+        html+=`<div class="glass-card"><h3 style="font-size:1.3rem;font-weight:800;color:#667eea;margin-bottom:10px;">📊 Veri Seti İstatistikleri</h3><div class="stats-grid"><div class="stat-item"><span class="stat-number">${this.dataset.tracking_summary?.total||0}</span><span class="stat-label">Görüntülenme</span></div><div class="stat-item"><span class="stat-number">${this.dataset.resources?.length||0}</span><span class="stat-label">Kaynak</span></div><div class="stat-item"><span class="stat-number">${this.stats.followers||0}</span><span class="stat-label">Takipçi</span></div><div class="stat-item"><span class="stat-number">${this.dataset.num_tags||0}</span><span class="stat-label">Etiket</span></div></div></div>`;
+        /* Organization Kartı  */
+        if(this.organization){
+          const logo=this.organization.image_display_url?`<img src="${this.organization.image_display_url}" alt="Logo" style="width:80px;height:80px;border-radius:50%;object-fit:cover;">`:`<div style="width:80px;height:80px;border-radius:50%;background:#667eea;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.8rem;font-weight:900;">${this.organization.title.charAt(0)}</div>`;
+          html+=`<div class="glass-card"><h3 style="font-size:1.3rem;font-weight:800;color:#667eea;margin-bottom:10px;">🏛️ Veri Paydaşı</h3><div style="display:flex;align-items:center;gap:15px;">${logo}<div><a href="/organization/${this.organization.name}" style="font-weight:700;color:#2c3e50;">${this.organization.title}</a>${this.organization.description?`<p style="font-size:0.9rem;color:#6c757d;margin-top:5px;">${this.truncate(this.organization.description,100)}</p>`:''}</div></div></div>`;
+        }
+        /* Meta Bilgi – Etiket+Lisans+Paylaş */
+        html+=`<div class="glass-card meta-info-card">`;
+        if(this.dataset.tags?.length){
+          html+=`<div class="meta-row"><span class="meta-title">🏷️ Etiketler:</span>${this.dataset.tags.map(t=>`<span class="tag-item">${t.display_name}</span>`).join('')}</div>`;
+        }
+        if(this.dataset.license_title){
+          html+=`<div class="meta-row"><span class="meta-title">⚖️ Lisans:</span><span style="font-size:0.95rem;color:#495057;font-weight:600;">${this.dataset.license_title}</span>${this.dataset.license_url?`<a href="${this.dataset.license_url}" target="_blank" style="font-size:0.85rem;margin-left:4px;color:#667eea;text-decoration:none;">(detay)</a>`:''}</div>`;
+        }
+        const url=encodeURIComponent(window.location.href);
+        const title=encodeURIComponent(this.dataset.title);
+        html+=`<div class="meta-row"><span class="meta-title">🔗 Paylaş:</span><div class="social-buttons-inline"><a class="social-btn" href="https://twitter.com/intent/tweet?text=${title}&url=${url}" target="_blank"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/twitter.svg" alt="Twitter"></a><a class="social-btn" href="https://www.facebook.com/sharer/sharer.php?u=${url}" target="_blank"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/facebook.svg" alt="Facebook"></a><a class="social-btn" href="https://www.linkedin.com/sharing/share-offsite/?url=${url}" target="_blank"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/linkedin.svg" alt="LinkedIn"></a><a class="social-btn" href="mailto:?subject=${title}&body=${url}"><img src="https://cdn.jsdelivr.net/npm/simple-icons@v6/icons/gmail.svg" alt="E-Posta"></a></div></div>`;
+        html+='</div>'; /* meta-info-card bitiş */
+        sb.innerHTML=html;
+    }
+    /* Yardımcı fonksiyonlar */
+    renderError(msg){ document.body.innerHTML=`<div class="modern-container"><div class="glass-card"><div style="padding:40px;text-align:center;color:#dc3545;">${msg}</div></div></div>`; }
+    // BURASI GÜNCELLENDİ: `hoursOffset` parametresi eklendi
+    formatDate(s, hoursOffset = 0){ 
+        if(!s) return 'Bilinmiyor'; 
+        const d = new Date(s); 
+        // Saat farkını uygula
+        d.setHours(d.getHours() + hoursOffset);
 
-        const now = new Date();
-        const diffMinutes = (now.getTime() - d.getTime()) / (1000 * 60); 
+        const now = new Date();
+        const diffMinutes = (now.getTime() - d.getTime()) / (1000 * 60); 
 
-        if(diffMinutes < 60) {
-            return Math.floor(diffMinutes) + ' dk önce';
-        }
-        const diffHours = diffMinutes / 60; 
-        if(diffHours < 24) {
-            return Math.floor(diffHours) + ' saat önce';
-        }
-        const diffDays = diffHours / 24; 
-        if(diffDays < 30) {
-            return Math.floor(diffDays) + ' gün önce';
-        }
-        return d.toLocaleDateString('tr-TR',{year:'numeric',month:'long',day:'numeric'}); 
-    }
-    truncate(t,l){ return (!t||t.length<=l)?t:(t.substring(0,l)+'...'); }
+        if(diffMinutes < 60) {
+            return Math.floor(diffMinutes) + ' dk önce';
+        }
+        const diffHours = diffMinutes / 60; 
+        if(diffHours < 24) {
+            return Math.floor(diffHours) + ' saat önce';
+        }
+        const diffDays = diffHours / 24; 
+        if(diffDays < 30) {
+            return Math.floor(diffDays) + ' gün önce';
+        }
+        return d.toLocaleDateString('tr-TR',{year:'numeric',month:'long',day:'numeric'}); 
+    }
+    truncate(t,l){ return (!t||t.length<=l)?t:(t.substring(0,l)+'...'); }
 }
 function showTab(name){ document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active')); document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active')); event.currentTarget.classList.add('active'); document.getElementById(`${name}-content`).classList.add('active'); }
 window.addEventListener('scroll',()=>{ const sc=window.pageYOffset; const h=document.querySelector('.header-section'); if(h) h.style.transform=`translateY(${sc*0.3}px)`; });

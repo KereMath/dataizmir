@@ -774,39 +774,20 @@
       const publicCheckbox = document.getElementById('showPublic');
       const privateCheckbox = document.getElementById('showPrivate');
 
-      // Tüm public option alanını tıklanabilir yap
+      // Public buton tıklama
       publicOption.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
         showPublic = !showPublic;
         publicCheckbox.checked = showPublic;
         updateVisibilityUI();
         renderTable();
-        console.log('Açık veriler:', showPublic ? 'Gösteriliyor' : 'Gizleniyor');
       });
 
-      // Tüm private option alanını tıklanabilir yap  
+      // Private buton tıklama
       privateOption.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
         showPrivate = !showPrivate;
         privateCheckbox.checked = showPrivate;
         updateVisibilityUI();
         renderTable();
-        console.log('Gizli veriler:', showPrivate ? 'Gösteriliyor' : 'Gizleniyor');
-      });
-
-      // Checkbox'ların kendi click event'lerini tamamen engelle
-      publicCheckbox.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
-      });
-
-      privateCheckbox.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        return false;
       });
 
       updateVisibilityUI();

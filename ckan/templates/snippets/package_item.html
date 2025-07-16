@@ -222,35 +222,52 @@
     /* YENİ: Visibility filtresi için stil */
     .visibility-filter {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       margin-top: 5px;
     }
 
     .visibility-option {
       display: flex;
       align-items: center;
-      gap: 5px;
-      padding: 5px 10px;
-      border: 1px solid #ced4da;
-      border-radius: 4px;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 2px solid #ced4da;
+      border-radius: 6px;
       background-color: #fff;
       cursor: pointer;
-      transition: all 0.15s ease;
-      font-size: 12px;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      justify-content: center;
+      min-height: 42px;
+      user-select: none;
     }
 
     .visibility-option:hover {
       background-color: #f8f9fa;
+      border-color: #adb5bd;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
     .visibility-option.selected {
       background-color: #e3f2fd;
       color: #1976d2;
       border-color: #1976d2;
+      box-shadow: 0 0 0 2px rgba(25,118,210,0.2);
+    }
+
+    .visibility-option.selected:hover {
+      background-color: #bbdefb;
+      border-color: #1565c0;
     }
 
     .visibility-option input[type="checkbox"] {
       margin: 0;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
     }
 
     .loading-users {
@@ -382,21 +399,29 @@
     /* YENİ: Sütun yeniden boyutlandırma */
     .column-resizer {
       position: absolute;
-      right: 0;
+      right: -2px;
       top: 0;
-      width: 5px;
+      width: 8px;
       height: 100%;
       cursor: col-resize;
-      background: transparent;
+      background: rgba(255,255,255,0.2);
+      border-right: 2px solid rgba(255,255,255,0.4);
       z-index: 20;
+      transition: all 0.2s ease;
     }
 
     .column-resizer:hover {
-      background: rgba(255,255,255,0.3);
+      background: rgba(255,255,255,0.4);
+      border-right: 2px solid rgba(255,255,255,0.7);
+      width: 10px;
+      right: -3px;
     }
 
     .column-resizer.active {
-      background: rgba(255,255,255,0.5);
+      background: rgba(255,255,255,0.6);
+      border-right: 2px solid rgba(255,255,255,0.9);
+      width: 12px;
+      right: -4px;
     }
 
     .dataset-table td {
@@ -431,7 +456,7 @@
     .t-groups { width: 140px; min-width: 120px; }
     .t-tags { width: 140px; min-width: 120px; }
     .t-theme { width: 130px; min-width: 110px; }
-    .t-upd { width: 140px; min-width: 140px; }
+    .t-upd { width: 120px; min-width: 100px; }
     .t-formats { width: 120px; min-width: 100px; }
     .t-actions { width: 150px; min-width: 130px; }
 
@@ -749,34 +774,31 @@
       const publicCheckbox = document.getElementById('showPublic');
       const privateCheckbox = document.getElementById('showPrivate');
 
+      // Tüm public option alanını tıklanabilir yap
       publicOption.addEventListener('click', function(e) {
-        if (e.target.type !== 'checkbox') {
-          publicCheckbox.checked = !publicCheckbox.checked;
-        }
-        showPublic = publicCheckbox.checked;
+        e.stopPropagation();
+        showPublic = !showPublic;
+        publicCheckbox.checked = showPublic;
         updateVisibilityUI();
         renderTable();
       });
 
+      // Tüm private option alanını tıklanabilir yap  
       privateOption.addEventListener('click', function(e) {
-        if (e.target.type !== 'checkbox') {
-          privateCheckbox.checked = !privateCheckbox.checked;
-        }
-        showPrivate = privateCheckbox.checked;
+        e.stopPropagation();
+        showPrivate = !showPrivate;
+        privateCheckbox.checked = showPrivate;
         updateVisibilityUI();
         renderTable();
       });
 
-      publicCheckbox.addEventListener('change', function() {
-        showPublic = this.checked;
-        updateVisibilityUI();
-        renderTable();
+      // Checkbox'ların kendi click event'lerini engelle (çift tıklama önlenir)
+      publicCheckbox.addEventListener('click', function(e) {
+        e.stopPropagation();
       });
 
-      privateCheckbox.addEventListener('change', function() {
-        showPrivate = this.checked;
-        updateVisibilityUI();
-        renderTable();
+      privateCheckbox.addEventListener('click', function(e) {
+        e.stopPropagation();
       });
 
       updateVisibilityUI();

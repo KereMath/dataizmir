@@ -772,15 +772,23 @@
       const privateOption = document.getElementById('visibilityPrivate');
 
       // Public buton tıklama
-      publicOption.addEventListener('click', function() {
+      publicOption.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Public tıklandı, önceki durum:', showPublic);
         showPublic = !showPublic;
+        console.log('Public yeni durum:', showPublic);
         updateVisibilityUI();
         renderTable();
       });
 
       // Private buton tıklama
-      privateOption.addEventListener('click', function() {
+      privateOption.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Private tıklandı, önceki durum:', showPrivate);
         showPrivate = !showPrivate;
+        console.log('Private yeni durum:', showPrivate);
         updateVisibilityUI();
         renderTable();
       });
@@ -791,6 +799,8 @@
     function updateVisibilityUI() {
       const publicOption = document.getElementById('visibilityPublic');
       const privateOption = document.getElementById('visibilityPrivate');
+      
+      console.log('UI güncelleniyor - showPublic:', showPublic, 'showPrivate:', showPrivate);
       
       if (showPublic) {
         publicOption.classList.add('selected');

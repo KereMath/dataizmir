@@ -696,6 +696,7 @@
     // YENİ: Görünürlük filtresi değişkenleri
     var showPublic = true;
     var showPrivate = true;
+    var isUpdating = false; // Çift tıklama önleyici
 
     // YENİ: Sütun yeniden boyutlandırma değişkenleri
     var isResizing = false;
@@ -772,25 +773,39 @@
       const privateOption = document.getElementById('visibilityPrivate');
 
       // Public buton tıklama
-      publicOption.addEventListener('click', function(e) {
+      publicOption.addEventListener('mousedown', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Public tıklandı, önceki durum:', showPublic);
-        showPublic = !showPublic;
-        console.log('Public yeni durum:', showPublic);
-        updateVisibilityUI();
-        renderTable();
+        
+        if (isUpdating) return; // Eğer güncelleme devam ediyorsa bekle
+        isUpdating = true;
+        
+        setTimeout(() => {
+          showPublic = !showPublic;
+          updateVisibilityUI();
+          setTimeout(() => {
+            renderTable();
+            isUpdating = false;
+          }, 50);
+        }, 10);
       });
 
       // Private buton tıklama
-      privateOption.addEventListener('click', function(e) {
+      privateOption.addEventListener('mousedown', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        console.log('Private tıklandı, önceki durum:', showPrivate);
-        showPrivate = !showPrivate;
-        console.log('Private yeni durum:', showPrivate);
-        updateVisibilityUI();
-        renderTable();
+        
+        if (isUpdating) return; // Eğer güncelleme devam ediyorsa bekle
+        isUpdating = true;
+        
+        setTimeout(() => {
+          showPrivate = !showPrivate;
+          updateVisibilityUI();
+          setTimeout(() => {
+            renderTable();
+            isUpdating = false;
+          }, 50);
+        }, 10);
       });
 
       updateVisibilityUI();
@@ -799,8 +814,6 @@
     function updateVisibilityUI() {
       const publicOption = document.getElementById('visibilityPublic');
       const privateOption = document.getElementById('visibilityPrivate');
-      
-      console.log('UI güncelleniyor - showPublic:', showPublic, 'showPrivate:', showPrivate);
       
       if (showPublic) {
         publicOption.classList.add('selected');

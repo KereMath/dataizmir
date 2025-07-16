@@ -456,7 +456,7 @@
     .t-groups { width: 140px; min-width: 120px; }
     .t-tags { width: 140px; min-width: 120px; }
     .t-theme { width: 130px; min-width: 110px; }
-    .t-upd { width: 120px; min-width: 100px; }
+    .t-upd { width: 140px; min-width: 140px; }
     .t-formats { width: 120px; min-width: 100px; }
     .t-actions { width: 150px; min-width: 130px; }
 
@@ -776,29 +776,37 @@
 
       // Tüm public option alanını tıklanabilir yap
       publicOption.addEventListener('click', function(e) {
+        e.preventDefault();
         e.stopPropagation();
         showPublic = !showPublic;
         publicCheckbox.checked = showPublic;
         updateVisibilityUI();
         renderTable();
+        console.log('Açık veriler:', showPublic ? 'Gösteriliyor' : 'Gizleniyor');
       });
 
       // Tüm private option alanını tıklanabilir yap  
       privateOption.addEventListener('click', function(e) {
+        e.preventDefault();
         e.stopPropagation();
         showPrivate = !showPrivate;
         privateCheckbox.checked = showPrivate;
         updateVisibilityUI();
         renderTable();
+        console.log('Gizli veriler:', showPrivate ? 'Gösteriliyor' : 'Gizleniyor');
       });
 
-      // Checkbox'ların kendi click event'lerini engelle (çift tıklama önlenir)
+      // Checkbox'ların kendi click event'lerini tamamen engelle
       publicCheckbox.addEventListener('click', function(e) {
+        e.preventDefault();
         e.stopPropagation();
+        return false;
       });
 
       privateCheckbox.addEventListener('click', function(e) {
+        e.preventDefault();
         e.stopPropagation();
+        return false;
       });
 
       updateVisibilityUI();
@@ -1061,9 +1069,11 @@
       var sortOrder = document.getElementById("sortOrder").value;
 
       filteredDatasets = allDatasets.filter(function(pkg) {
-        // YENİ: Görünürlük filtresi
-        if (pkg.private && !showPrivate) return false;
-        if (!pkg.private && !showPublic) return false;
+        // YENİ: Görünürlük filtresi - DÜZELTME
+        // Eğer gizli veri ve showPrivate false ise, filtreyi geçme
+        if (pkg.private === true && !showPrivate) return false;
+        // Eğer açık veri ve showPublic false ise, filtreyi geçme  
+        if (pkg.private !== true && !showPublic) return false;
         
         if (searchVal && !(pkg.title || pkg.name || '').toLowerCase().includes(searchVal)) return false;
         if (selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
@@ -1118,7 +1128,6 @@
             return 0;
         }
       });
-
     }
 
     function renderPagination() {

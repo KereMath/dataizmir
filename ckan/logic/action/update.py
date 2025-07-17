@@ -1424,6 +1424,7 @@ def config_option_update(context, data_dict):
 
 # Theme UPDATE Actions
 
+
 def theme_category_update(context, data_dict):
     """Kategori güncelle"""
     from ckan.model.theme import ThemeCategory
@@ -1457,7 +1458,10 @@ def theme_category_update(context, data_dict):
                 is_theme_authorized_for_update = True
 
     if not is_theme_authorized_for_update:
-        log.warning(f"User {user_obj.name if user_obj else 'anonymous'} not authorized to update theme {slug}.")
+        try:
+            log.warning(f"User {user_obj.name if user_obj else 'anonymous'} not authorized to update theme {slug}.")
+        except NameError:
+            pass # Fallback if log is not defined
         raise NotAuthorized(_('Bu temayı güncellemek için yetkiniz yok.'))
 
     try:
@@ -1465,7 +1469,10 @@ def theme_category_update(context, data_dict):
 
         category = session.query(ThemeCategory).filter_by(slug=slug).first()
         if not category:
-            log.error(f"Theme category with slug '{slug}' not found for update.")
+            try:
+                log.error(f"Theme category with slug '{slug}' not found for update.")
+            except NameError:
+                pass # Fallback if log is not defined
             raise NotFound('Theme category not found')
 
         # Güncellenebilir alanlar
@@ -1477,24 +1484,34 @@ def theme_category_update(context, data_dict):
             category.color = data_dict['color']
         if 'icon' in data_dict:
             category.icon = data_dict['icon']
-        # >>> BURADAN BAŞLAYAN KISIM ÖNCEKİ VERSİYONLARDA EKSİKTİ VEYA HATALIYDI <<<
         if 'opacity' in data_dict:
             category.opacity = data_dict['opacity']
-        # >>> BURAYA KADAR <<<
 
-        # CRITICAL FIX: Ensure background_image is handled correctly
-        # The 'background_image' will be present in data_dict if a new file was uploaded
-        # OR if the 'clear_background_image' checkbox was used (in which case it's None)
-        # OR if no image changes were made (in which case it's the old path).
-        # We simply assign whatever is in data_dict for 'background_image'.
+        # CRITICAL FIX: background_image'i daha akıllıca ele alalım.
+        # Eğer gelen background_image None ise VE clear_background_image 'true' değilse,
+        # bu bir "istenmeyen boşaltma" demektir, bu durumda güncellemeyi atlarız.
+        # Eğer None ise VE clear_background_image 'true' ise, bu "istenerek boşaltma" demektir, güncelleriz.
+        # Eğer None değilse (yeni bir görsel veya mevcut bir yol), her zaman güncelleriz.
         if 'background_image' in data_dict:
-            log.info(f"Action: Attempting to set background_image for {slug} to: '{data_dict['background_image']}'")
-            category.background_image = data_dict['background_image']
+            incoming_bg_image = data_dict['background_image']
+            clear_requested = data_dict.get('clear_background_image') == 'true'
 
+            # Eğer temizleme isteği varsa VEYA gelen görsel None değilse (yani bir görsel yolu var)
+            if clear_requested or incoming_bg_image is not None:
+                log.info(f"Action: Attempting to set background_image for {slug} to: '{incoming_bg_image}' (Clear requested: {clear_requested})")
+                category.background_image = incoming_bg_image
+            else:
+                # Bu durum, 'background_image' None olarak geldiğinde ANCAK temizleme isteği olmadığında tetiklenir.
+                # Bu, kullanıcının görseli değiştirmek istemediği ve formun yanlışlıkla None gönderdiği durumdur.
+                log.info(f"Action: Incoming background_image for {slug} is None and clear was NOT requested. Keeping existing image in DB.")
+                # Bu durumda category.background_image'i değiştirmiyoruz, böylece mevcut değer korunur.
+                pass 
 
         session.commit()
-        # Loglama da opacity'yi gösterecek şekilde güncellendi
-        log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}', Opacity: '{category.opacity}'")
+        try:
+            log.info(f"Theme category '{slug}' successfully committed to database. Background_image after commit: '{category.background_image}', Opacity: '{category.opacity}'")
+        except NameError:
+            pass # Fallback if log is not defined
 
         return {
             'id': category.id,
@@ -1504,15 +1521,20 @@ def theme_category_update(context, data_dict):
             'color': category.color,
             'icon': category.icon,
             'background_image': category.background_image,
-            'opacity': category.opacity, # Bu satır EKSİKTİ!
+            'opacity': category.opacity,
             'created_at': category.created_at.isoformat() if category.created_at else None
         }
     except Exception as e:
         session.rollback()
-        log.error(f"Error during theme_category_update for {slug}: {e}", exc_info=True)
+        try:
+            log.error(f"Error during theme_category_update for {slug}: {e}", exc_info=True)
+        except NameError:
+            pass # Fallback if log is not defined
+
         if isinstance(e, (ValidationError, NotFound, NotAuthorized)):
             raise
         raise ValidationError(f'Error updating category: {str(e)}')
+
 
 def remove_dataset_theme(context, data_dict):
     """Dataset'ten tema kaldır"""

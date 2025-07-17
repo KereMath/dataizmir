@@ -680,6 +680,31 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.6.0/tinycolor.min.js"></script>
 <script>
+
+function toggleActionColumnVisibility() {
+    const path = window.location.pathname;
+    const actionColumnHeader = document.querySelector('th.t-actions');
+    const actionColumnCells = document.querySelectorAll('td.t-actions');
+
+    // Eğer URL tam olarak '/dataset/' veya '/dataset' ise
+    if (path === '/dataset/' || path === '/dataset') {
+        if (actionColumnHeader) {
+            actionColumnHeader.style.display = 'none'; // Başlık hücresini gizle
+        }
+        actionColumnCells.forEach(cell => {
+            cell.style.display = 'none'; // Tüm ilgili veri hücrelerini gizle
+        });
+    } else {
+        // Diğer sayfalarda görünür yap (varsayılan durumu döndür)
+        if (actionColumnHeader) {
+            actionColumnHeader.style.display = ''; // CSS'in varsayılan değerini almasını sağla
+        }
+        actionColumnCells.forEach(cell => {
+            cell.style.display = ''; // CSS'in varsayılan değerini almasını sağla
+        });
+    }
+}
+
     // --- Değişkenler ---
     var allDatasets = [];
     var filteredDatasets = [];
@@ -1329,6 +1354,7 @@
       
       tbody.innerHTML = '';
       tbody.appendChild(fragment);
+      toggleActionColumnVisibility();
     }
     
     // PERFORMANS: Debounced render

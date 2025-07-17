@@ -1,1626 +1,1686 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="utf-8">
-  <title>Veri Seti Tablosu</title>
-  <style>
-    /* CKAN arama formunu gizle */
-    .search-form {
-        display:none !important;
-    }
-    
-    /* Genel Sıfırlama ve Kutu Boyutlandırma */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    /* Temel Gövde Stilleri */
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      background-color: #f8f9fa;
-      color: #333;
-    }
-
-    /* Sayfa Kapsayıcısı */
-    .page-container {
-      display: flex;
-      min-height: 100vh;
-    }
-
-    /* Kenar Çubuğu Filtre Stilleri */
-    .sidebar-filter {
-      width: 270px;
-      background-color: #fff;
-      border-right: 1px solid #e9ecef;
-      padding: 20px;
-      overflow-y: auto;
-      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
-      flex-shrink: 0;
-    }
-
-    /* Profil Kartı Stilleri */
-    .profile-card {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 25px;
-      color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .profile-card.user-profile {
-      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-    }
-    /* YENİ: Tema Profil Kartı Stili */
-    .profile-card.theme-profile {
-      background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); /* Cyan tonları */
-    }
-
-
-    .profile-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .profile-image {
-      width: 60px;
-      height: 60px;
-      border-radius: 8px;
-      margin-right: 15px;
-      object-fit: cover;
-      background-color: rgba(255,255,255,0.2);
-      display: flex; /* İkonu ortalamak için */
-      align-items: center; /* İkonu dikeyde ortalamak için */
-      justify-content: center; /* İkonu yatayda ortalamak için */
-      font-size: 30px; /* İkon boyutu */
-    }
-    .profile-image .fa { /* İkonun rengini beyaz yap */
-      color: white;
-    }
-
-    .profile-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin: 0;
-    }
-
-    .profile-type {
-      display:none !important;
-      font-size: 12px;
-      opacity: 0.8;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-top: 2px;
-    }
-
-    .profile-info {
-      display: grid;
-      gap: 8px;
-    }
-
-    .profile-field {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      font-size: 14px;
-    }
-
-    .profile-field-label {
-      opacity: 0.8;
-      margin-right: 10px;
-      flex-shrink: 0;
-    }
-
-    .profile-field-value {
-      text-align: right;
-      word-break: break-word;
-    }
-
-    .profile-description {
-      margin-top: 12px;
-      font-size: 13px;
-      opacity: 0.9;
-      line-height: 1.4;
-      font-style: italic;
-    }
-
-    .admin-badge {
-      background-color: rgba(255,193,7,0.9);
-      color: #000;
-      padding: 2px 6px;
-      border-radius: 10px;
-      font-size: 10px;
-      font-weight: bold;
-      margin-left: 8px;
-    }
-
-    .sidebar-filter h3 {
-      margin-bottom: 20px;
-      color: #495057;
-      font-size: 18px;
-      font-weight: 600;
-    }
-
-    .filter-section {
-      margin-bottom: 25px;
-    }
-
-    .filter-section label {
-      display: block;
-      margin-bottom: 8px;
-      font-weight: 500;
-      color: #495057;
-      font-size: 14px;
-    }
-
-    .filter-section input[type="search"],
-    .filter-section select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ced4da;
-      border-radius: 6px;
-      font-size: 14px;
-      background-color: #fff;
-      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-    }
-
-    .filter-section input[type="search"]:focus,
-    .filter-section select:focus {
-      outline: none;
-      border-color: #80bdff;
-      box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
-    }
-
-    .multi-select {
-      max-height: 200px;
-      overflow-y: auto;
-      border: 1px solid #ced4da;
-      border-radius: 6px;
-      background-color: #fff;
-    }
-
-    .multi-select-option {
-      padding: 10px 12px;
-      cursor: pointer;
-      transition: background-color 0.15s ease;
-      border-bottom: 1px solid #f8f9fa;
-      display: flex;
-      align-items: center;
-    }
-
-    .multi-select-option:last-child {
-      border-bottom: none;
-    }
-
-    .multi-select-option:hover {
-      background-color: #f8f9fa;
-    }
-
-    .multi-select-option.selected {
-      background-color: #e3f2fd;
-      color: #1976d2;
-    }
-    /* YENİ: Seçili ve devre dışı bırakılmış tema filtresi için stil */
-    .multi-select-option.selected.disabled {
-        background-color: #d1ecf1; /* Açık mavi */
-        color: #00838f; /* Koyu tema rengi */
-        cursor: not-allowed;
-        font-weight: bold;
-    }
-
-    .multi-select-option input[type="checkbox"] {
-      margin-right: 8px;
-    }
-    /* YENİ: Devre dışı bırakılmış checkbox için stil */
-    .multi-select-option input[type="checkbox"]:disabled {
-        cursor: not-allowed;
-    }
-
-    /* YENİ: Visibility filtresi için stil */
-    .visibility-filter {
-      display: flex;
-      gap: 8px;
-      margin-top: 5px;
-    }
-
-    .visibility-option {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 8px 12px;
-      border: 2px solid #ced4da;
-      border-radius: 6px;
-      background-color: #fff;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      font-size: 13px;
-      font-weight: 500;
-      flex: 1;
-      justify-content: center;
-      min-height: 42px;
-      user-select: none;
-    }
-
-    .visibility-option:hover {
-      background-color: #f8f9fa;
-      border-color: #adb5bd;
-      transform: translateY(-1px);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .visibility-option.selected {
-      background-color: #e3f2fd;
-      color: #1976d2;
-      border-color: #1976d2;
-      box-shadow: 0 0 0 2px rgba(25,118,210,0.2);
-    }
-
-    .visibility-option.selected:hover {
-      background-color: #bbdefb;
-      border-color: #1565c0;
-    }
-
-    .visibility-option input[type="checkbox"] {
-      margin: 0;
-      width: 16px;
-      height: 16px;
-      cursor: pointer;
-      display: none; /* Checkbox'ları gizle */
-    }
-
-    .loading-users {
-      color: #6c757d;
-      font-size: 12px;
-      font-style: italic;
-      padding: 5px 12px;
-    }
-
-    /* Ana İçerik Kapsayıcısı */
-    .main-container {
-      flex-grow: 1;
-      padding: 20px;
-      width: calc(100% - 320px);
-    }
-
-    /* Sayfalama Kontrolleri */
-    .pagination-controls {
-      background-color: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 15px;
-    }
-
-    .per-page-select {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .per-page-select label {
-      font-weight: 500;
-      color: #495057;
-      font-size: 14px;
-    }
-
-    .per-page-select select {
-      padding: 8px 12px;
-      border: 1px solid #ced4da;
-      border-radius: 6px;
-      font-size: 14px;
-      background-color: #fff;
-    }
-
-    .pagination-info {
-      color: #6c757d;
-      font-size: 14px;
-    }
-
-    .pagination-buttons {
-      display: flex;
-      gap: 5px;
-    }
-
-    .pagination-btn {
-      padding: 8px 12px;
-      border: 1px solid #ced4da;
-      background-color: #fff;
-      color: #495057;
-      cursor: pointer;
-      border-radius: 4px;
-      font-size: 14px;
-      transition: all 0.15s ease;
-    }
-
-    .pagination-btn:hover:not(:disabled) {
-      background-color: #e9ecef;
-      border-color: #adb5bd;
-    }
-
-    .pagination-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .pagination-btn.active {
-      background-color: #007bff;
-      color: white;
-      border-color: #007bff;
-    }
-
-    /* YENİ: Tablo container stilleri - yatay kaydırma için */
-    .table-container {
-      background-color: #fff;
-      border-radius: 8px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      overflow: hidden;
-      position: relative;
-    }
-
-    .table-wrapper {
-      overflow-x: auto;
-      overflow-y: hidden;
-    }
-
-    /* Veri Seti Tablosu */
-    .dataset-table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: #fff;
-      table-layout: fixed; /* YENİ: Sabit tablo düzeni */
-      min-width: 1200px; /* YENİ: Minimum genişlik */
-    }
-
-    .dataset-table thead {
-      background-color: #495057;
-      color: white;
-      position: sticky;
-      top: 0;
-      z-index: 0;
-    }
-
-    .dataset-table th {
-      padding: 15px 12px;
-      text-align: left;
-      font-weight: 600;
-      font-size: 14px;
-      letter-spacing: 0.5px;
-      position: relative;
-      user-select: none;
-    }
-
-    /* YENİ: Sütun yeniden boyutlandırma */
-    .column-resizer {
-      position: absolute;
-      right: -2px;
-      top: 0;
-      width: 8px;
-      height: 100%;
-      cursor: col-resize;
-      background: rgba(255,255,255,0.2);
-      border-right: 2px solid rgba(255,255,255,0.4);
-      z-index: 20;
-      transition: all 0.2s ease;
-    }
-
-    .column-resizer:hover {
-      background: rgba(255,255,255,0.4);
-      border-right: 2px solid rgba(255,255,255,0.7);
-      width: 10px;
-      right: -3px;
-    }
-
-    .column-resizer.active {
-      background: rgba(255,255,255,0.6);
-      border-right: 2px solid rgba(255,255,255,0.9);
-      width: 12px;
-      right: -4px;
-    }
-
-    .dataset-table td {
-      padding: 12px;
-      border-bottom: 1px solid #f1f3f4;
-      vertical-align: top;
-      font-size: 14px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      word-wrap: break-word;
-    }
-
-    .dataset-table tbody tr:hover {
-      background-color: #f8f9fa;
-    }
-
-    .dataset-link {
-      color: #1976d2;
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .dataset-link:hover {
-      text-decoration: underline;
-    }
-    
-    /* YENİ: Güncellenmiş sütun genişlikleri */
-    .t-title { width: 200px; min-width: 150px; }
-    .t-desc { width: 250px; min-width: 180px; }
-    .t-org { width: 150px; min-width: 120px; }
-    .t-user { width: 120px; min-width: 100px; }
-    .t-groups { width: 140px; min-width: 120px; }
-    .t-tags { width: 140px; min-width: 120px; }
-    .t-theme { width: 130px; min-width: 110px; }
-    .t-upd { width: 140px; min-width: 140px; }
-    .t-formats { width: 120px; min-width: 100px; }
-    .t-actions { width: 150px; min-width: 130px; }
-
-    .empty-cell {
-      color: #9b98a7;
-      font-style: italic;
-    }
-
-    /* Etiket Stilleri */
-    .format-tag, .user-tag, .group-tag, .tag-tag, .theme-tag {
-      display: inline-block;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 11px;
-      font-weight: 500;
-      margin: 1px 2px;
-      white-space: nowrap;
-    }
-
-    .user-tag { background-color: #e3f2fd; color: #1976d2; }
-    .group-tag { background-color: #e8f5e8; color: #2e7d32; }
-    .tag-tag { background-color: #fbe9e7; color: #d84315; }
-    .theme-tag { background-color: #e0f7fa; color: #00838f; }
-
-    /* Format Etiket Stilleri */
-    .fmt-csv { background-color: #e8f5e8; color: #2e7d32; }
-    .fmt-xls { background-color: #e3f2fd; color: #1976d2; }
-    .fmt-json { background-color: #fff3e0; color: #f57c00; }
-    .fmt-xml { background-color: #fce4ec; color: #c2185b; }
-    .fmt-pdf { background-color: #ffebee; color: #d32f2f; }
-    .fmt-shp { background-color: #f3e5f5; color: #7b1fa2; }
-    .fmt-zip { background-color: #f1f8e9; color: #558b2f; }
-    .fmt-html { background-color: #e0f2f1; color: #00796b; }
-    .fmt-doc { background-color: #e8eaf6; color: #3f51b5; }
-    .fmt-txt { background-color: #fafafa; color: #616161; }
-    .fmt-other { background-color: #eceff1; color: #455a64; }
-
-    /* İşlemler sütunu buton stilleri */
-    .action-buttons {
-      display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-    }
-
-    .action-btn {
-      padding: 4px 8px;
-      border: none;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 3px;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-    }
-
-    .edit-btn {
-      background-color: #007bff;
-      color: white;
-    }
-
-    .edit-btn:hover {
-      background-color: #0056b3;
-      color: white;
-      text-decoration: none;
-    }
-
-    .delete-btn {
-      background-color: #dc3545;
-      color: white;
-    }
-
-    .delete-btn:hover {
-      background-color: #c82333;
-    }
-
-    /* Kopyalanan elementleri gizle */
-    .duplicate-hidden {
-      display: none !important;
-    }
-
-    /* YENİ: Responsive tasarım */
-    @media (max-width: 768px) {
-      .page-container {
-        flex-direction: column;
-      }
-      
-      .sidebar-filter {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid #e9ecef;
-      }
-      
-      .main-container {
-        width: 100%;
-        padding: 15px;
-      }
-      
-      .dataset-table {
-        font-size: 12px;
-      }
-      
-      .dataset-table th,
-      .dataset-table td {
-        padding: 8px;
-      }
-    }
-  </style>
+  <meta charset="utf-8">
+  <title>Veri Seti Tablosu</title>
+  <style>
+    /* CKAN arama formunu gizle */
+    .search-form {
+        display:none !important;
+    }
+    
+    /* Genel Sıfırlama ve Kutu Boyutlandırma */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* Temel Gövde Stilleri */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background-color: #f8f9fa;
+      color: #333;
+    }
+
+    /* Sayfa Kapsayıcısı */
+    .page-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Kenar Çubuğu Filtre Stilleri */
+    .sidebar-filter {
+      width: 270px;
+      background-color: #fff;
+      border-right: 1px solid #e9ecef;
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+
+    /* Profil Kartı Stilleri */
+    .profile-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .profile-card.user-profile {
+      background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    }
+    /* YENİ: Tema Profil Kartı Stili */
+    .profile-card.theme-profile {
+      background: linear-gradient(135deg, #00BCD4 0%, #0097A7 100%); /* Cyan tonları */
+    }
+
+
+    .profile-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .profile-image {
+      width: 60px;
+      height: 60px;
+      border-radius: 8px;
+      margin-right: 15px;
+      object-fit: cover;
+      background-color: rgba(255,255,255,0.2);
+      display: flex; /* İkonu ortalamak için */
+      align-items: center; /* İkonu dikeyde ortalamak için */
+      justify-content: center; /* İkonu yatayda ortalamak için */
+      font-size: 30px; /* İkon boyutu */
+    }
+    .profile-image .fa { /* İkonun rengini beyaz yap */
+      color: white;
+    }
+
+    .profile-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .profile-type {
+      display:none !important;
+      font-size: 12px;
+      opacity: 0.8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 2px;
+    }
+
+    .profile-info {
+      display: grid;
+      gap: 8px;
+    }
+
+    .profile-field {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 14px;
+    }
+
+    .profile-field-label {
+      opacity: 0.8;
+      margin-right: 10px;
+      flex-shrink: 0;
+    }
+
+    .profile-field-value {
+      text-align: right;
+      word-break: break-word;
+    }
+
+    .profile-description {
+      margin-top: 12px;
+      font-size: 13px;
+      opacity: 0.9;
+      line-height: 1.4;
+      font-style: italic;
+    }
+
+    .admin-badge {
+      background-color: rgba(255,193,7,0.9);
+      color: #000;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 10px;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    .sidebar-filter h3 {
+      margin-bottom: 20px;
+      color: #495057;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .filter-section {
+      margin-bottom: 25px;
+    }
+
+    .filter-section label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    .filter-section input[type="search"],
+    .filter-section select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      background-color: #fff;
+      transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+
+    .filter-section input[type="search"]:focus,
+    .filter-section select:focus {
+      outline: none;
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+    }
+
+    .multi-select {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      background-color: #fff;
+    }
+
+    .multi-select-option {
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+      border-bottom: 1px solid #f8f9fa;
+      display: flex;
+      align-items: center;
+    }
+
+    .multi-select-option:last-child {
+      border-bottom: none;
+    }
+
+    .multi-select-option:hover {
+      background-color: #f8f9fa;
+    }
+
+    .multi-select-option.selected {
+      background-color: #e3f2fd;
+      color: #1976d2;
+    }
+    /* YENİ: Seçili ve devre dışı bırakılmış tema filtresi için stil */
+    .multi-select-option.selected.disabled {
+        background-color: #d1ecf1; /* Açık mavi */
+        color: #00838f; /* Koyu tema rengi */
+        cursor: not-allowed;
+        font-weight: bold;
+    }
+
+    .multi-select-option input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    /* YENİ: Devre dışı bırakılmış checkbox için stil */
+    .multi-select-option input[type="checkbox"]:disabled {
+        cursor: not-allowed;
+    }
+
+    /* YENİ: Visibility filtresi için stil */
+    .visibility-filter {
+      display: flex;
+      gap: 8px;
+      margin-top: 5px;
+    }
+
+    .visibility-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border: 2px solid #ced4da;
+      border-radius: 6px;
+      background-color: #fff;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 13px;
+      font-weight: 500;
+      flex: 1;
+      justify-content: center;
+      min-height: 42px;
+      user-select: none;
+    }
+
+    .visibility-option:hover {
+      background-color: #f8f9fa;
+      border-color: #adb5bd;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .visibility-option.selected {
+      background-color: #e3f2fd;
+      color: #1976d2;
+      border-color: #1976d2;
+      box-shadow: 0 0 0 2px rgba(25,118,210,0.2);
+    }
+
+    .visibility-option.selected:hover {
+      background-color: #bbdefb;
+      border-color: #1565c0;
+    }
+
+    .visibility-option input[type="checkbox"] {
+      margin: 0;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      display: none; /* Checkbox'ları gizle */
+    }
+
+    .loading-users {
+      color: #6c757d;
+      font-size: 12px;
+      font-style: italic;
+      padding: 5px 12px;
+    }
+
+    /* Ana İçerik Kapsayıcısı */
+    .main-container {
+      flex-grow: 1;
+      padding: 20px;
+      width: calc(100% - 320px);
+    }
+
+    /* Sayfalama Kontrolleri */
+    .pagination-controls {
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .per-page-select {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .per-page-select label {
+      font-weight: 500;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    .per-page-select select {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 6px;
+      font-size: 14px;
+      background-color: #fff;
+    }
+
+    .pagination-info {
+      color: #6c757d;
+      font-size: 14px;
+    }
+
+    .pagination-buttons {
+      display: flex;
+      gap: 5px;
+    }
+
+    .pagination-btn {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      background-color: #fff;
+      color: #495057;
+      cursor: pointer;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.15s ease;
+    }
+
+    .pagination-btn:hover:not(:disabled) {
+      background-color: #e9ecef;
+      border-color: #adb5bd;
+    }
+
+    .pagination-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination-btn.active {
+      background-color: #007bff;
+      color: white;
+      border-color: #007bff;
+    }
+
+    /* YENİ: Tablo container stilleri - yatay kaydırma için */
+    .table-container {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    /* Veri Seti Tablosu */
+    .dataset-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #fff;
+      table-layout: fixed; /* YENİ: Sabit tablo düzeni */
+      min-width: 1200px; /* YENİ: Minimum genişlik */
+    }
+
+    .dataset-table thead {
+      background-color: #495057;
+      color: white;
+      position: sticky;
+      top: 0;
+      z-index: 0;
+    }
+
+    .dataset-table th {
+      padding: 15px 12px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: 0.5px;
+      position: relative;
+      user-select: none;
+    }
+
+    /* YENİ: Sütun yeniden boyutlandırma */
+    .column-resizer {
+      position: absolute;
+      right: -2px;
+      top: 0;
+      width: 8px;
+      height: 100%;
+      cursor: col-resize;
+      background: rgba(255,255,255,0.2);
+      border-right: 2px solid rgba(255,255,255,0.4);
+      z-index: 20;
+      transition: all 0.2s ease;
+    }
+
+    .column-resizer:hover {
+      background: rgba(255,255,255,0.4);
+      border-right: 2px solid rgba(255,255,255,0.7);
+      width: 10px;
+      right: -3px;
+    }
+
+    .column-resizer.active {
+      background: rgba(255,255,255,0.6);
+      border-right: 2px solid rgba(255,255,255,0.9);
+      width: 12px;
+      right: -4px;
+    }
+
+    .dataset-table td {
+      padding: 12px;
+      border-bottom: 1px solid #f1f3f4;
+      vertical-align: top;
+      font-size: 14px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-wrap: break-word;
+    }
+
+    .dataset-table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .dataset-link {
+      color: #1976d2;
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .dataset-link:hover {
+      text-decoration: underline;
+    }
+    
+    /* YENİ: Güncellenmiş sütun genişlikleri */
+    .t-title { width: 200px; min-width: 150px; }
+    .t-desc { width: 250px; min-width: 180px; }
+    .t-org { width: 150px; min-width: 120px; }
+    .t-user { width: 120px; min-width: 100px; }
+    .t-groups { width: 140px; min-width: 120px; }
+    .t-tags { width: 140px; min-width: 120px; }
+    .t-theme { width: 130px; min-width: 110px; }
+    .t-upd { width: 140px; min-width: 140px; }
+    .t-formats { width: 120px; min-width: 100px; }
+    .t-actions { width: 150px; min-width: 130px; }
+
+    /* İŞLEM SÜTUNU GİZLEME EKLENDİ */
+    .t-actions.hide-column {
+        display: none;
+    }
+
+    .empty-cell {
+      color: #9b98a7;
+      font-style: italic;
+    }
+
+    /* Etiket Stilleri */
+    .format-tag, .user-tag, .group-tag, .tag-tag, .theme-tag {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
+      margin: 1px 2px;
+      white-space: nowrap;
+    }
+
+    .user-tag { background-color: #e3f2fd; color: #1976d2; }
+    .group-tag { background-color: #e8f5e8; color: #2e7d32; }
+    .tag-tag { background-color: #fbe9e7; color: #d84315; }
+    .theme-tag { background-color: #e0f7fa; color: #00838f; }
+
+    /* Format Etiket Stilleri */
+    .fmt-csv { background-color: #e8f5e8; color: #2e7d32; }
+    .fmt-xls { background-color: #e3f2fd; color: #1976d2; }
+    .fmt-json { background-color: #fff3e0; color: #f57c00; }
+    .fmt-xml { background-color: #fce4ec; color: #c2185b; }
+    .fmt-pdf { background-color: #ffebee; color: #d32f2f; }
+    .fmt-shp { background-color: #f3e5f5; color: #7b1fa2; }
+    .fmt-zip { background-color: #f1f8e9; color: #558b2f; }
+    .fmt-html { background-color: #e0f2f1; color: #00796b; }
+    .fmt-doc { background-color: #e8eaf6; color: #3f51b5; }
+    .fmt-txt { background-color: #fafafa; color: #616161; }
+    .fmt-other { background-color: #eceff1; color: #455a64; }
+
+    /* İşlemler sütunu buton stilleri */
+    .action-buttons {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .edit-btn {
+      background-color: #007bff;
+      color: white;
+    }
+
+    .edit-btn:hover {
+      background-color: #0056b3;
+      color: white;
+      text-decoration: none;
+    }
+
+    .delete-btn {
+      background-color: #dc3545;
+      color: white;
+    }
+
+    .delete-btn:hover {
+      background-color: #c82333;
+    }
+
+    .no-permission-message {
+      color: #6c757d;
+      font-style: italic;
+      font-size: 0.85em;
+      white-space: nowrap;
+    }
+
+    /* Kopyalanan elementleri gizle */
+    .duplicate-hidden {
+      display: none !important;
+    }
+
+    /* YENİ: Responsive tasarım */
+    @media (max-width: 768px) {
+      .page-container {
+        flex-direction: column;
+      }
+      
+      .sidebar-filter {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e9ecef;
+      }
+      
+      .main-container {
+        width: 100%;
+        padding: 15px;
+      }
+      
+      .dataset-table {
+        font-size: 12px;
+      }
+      
+      .dataset-table th,
+      .dataset-table td {
+        padding: 8px;
+      }
+    }
+  </style>
 </head>
 <body>
-  <div class="page-container">
-    <div class="sidebar-filter" id="filterSidebar">
-      <div id="profileCard" class="profile-card" style="display: none;"></div>
-      
-      <h3>Filtreler</h3>
-      
-      <div class="filter-section">
-        <label for="searchTitle">Başlıkta Ara</label>
-        <input type="search" id="searchTitle" placeholder="Başlık ara...">
-      </div>
-      
-      <div class="filter-section">
-        <label>Veri Paydaşları</label>
-        <div class="multi-select" id="orgSelect"></div>
-      </div>
+  <div class="page-container">
+    <div class="sidebar-filter" id="filterSidebar">
+      <div id="profileCard" class="profile-card" style="display: none;"></div>
+      
+      <h3>Filtreler</h3>
+      
+      <div class="filter-section">
+        <label for="searchTitle">Başlıkta Ara</label>
+        <input type="search" id="searchTitle" placeholder="Başlık ara...">
+      </div>
+      
+      <div class="filter-section">
+        <label>Veri Paydaşları</label>
+        <div class="multi-select" id="orgSelect"></div>
+      </div>
 
-      <div class="filter-section">
-        <label>Kategoriler</label>
-        <div class="multi-select" id="groupSelect"></div>
-      </div>
-      
-      <div class="filter-section">
-        <label>Etiketler</label>
-        <div class="multi-select" id="tagSelect"></div>
-      </div>
+      <div class="filter-section">
+        <label>Kategoriler</label>
+        <div class="multi-select" id="groupSelect"></div>
+      </div>
+      
+      <div class="filter-section">
+        <label>Etiketler</label>
+        <div class="multi-select" id="tagSelect"></div>
+      </div>
 
-      <div class="filter-section">
-        <label>Temalar</label> 
-        <div class="multi-select" id="themeSelect"></div> 
-      </div>
-      
-      <div class="filter-section">
-        <label>Kullanıcılar</label>
-        <div class="multi-select" id="userSelect">
-          <div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>
-        </div>
-      </div>
-      
-      <div class="filter-section">
-        <label>Formatlar</label>
-        <div class="multi-select" id="fmtSelect"></div>
-      </div>
+      <div class="filter-section">
+        <label>Temalar</label> 
+        <div class="multi-select" id="themeSelect"></div> 
+      </div>
+      
+      <div class="filter-section">
+        <label>Kullanıcılar</label>
+        <div class="multi-select" id="userSelect">
+          <div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>
+        </div>
+      </div>
+      
+      <div class="filter-section">
+        <label>Formatlar</label>
+        <div class="multi-select" id="fmtSelect"></div>
+      </div>
 
-      <!-- YENİ: Açık/Gizli veri filtresi -->
-      <div class="filter-section">
-        <label>Veri Görünürlüğü</label>
-        <div class="visibility-filter">
-          <div class="visibility-option selected" id="visibilityPublic">
-            <span>🌐 Açık</span>
-          </div>
-          <div class="visibility-option selected" id="visibilityPrivate">
-            <span>🔒 Gizli</span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="filter-section">
-        <label>Sıralama</label>
-        <select id="sortOrder">
-          <option value="date_desc">En Yeni Önce</option>
-          <option value="date_asc">En Eski Önce</option>
-          <option value="title_asc">A-Z (Alfabetik)</option>
-          <option value="title_desc">Z-A (Alfabetik)</option>
-        </select>
-      </div>
-    </div>
+            <div class="filter-section">
+        <label>Veri Görünürlüğü</label>
+        <div class="visibility-filter">
+          <div class="visibility-option selected" id="visibilityPublic">
+            <span>🌐 Açık</span>
+          </div>
+          <div class="visibility-option selected" id="visibilityPrivate">
+            <span>🔒 Gizli</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="filter-section">
+        <label>Sıralama</label>
+        <select id="sortOrder">
+          <option value="date_desc">En Yeni Önce</option>
+          <option value="date_asc">En Eski Önce</option>
+          <option value="title_asc">A-Z (Alfabetik)</option>
+          <option value="title_desc">Z-A (Alfabetik)</option>
+        </select>
+      </div>
+    </div>
 
-    <div class="main-container">
-      <div class="pagination-controls">
-        <div class="per-page-select">
-          <label for="itemsPerPage">Sayfa başına:</label>
-          <select id="itemsPerPage">
-            <option value="10">10</option>
-            <option value="20" selected>20</option>
-            <option value="50">50</option>
-          </select>
-        </div>
-        
-        <div class="pagination-info" id="paginationInfo"></div>
-        <div class="pagination-buttons" id="paginationButtons"></div>
-      </div>
+    <div class="main-container">
+      <div class="pagination-controls">
+        <div class="per-page-select">
+          <label for="itemsPerPage">Sayfa başına:</label>
+          <select id="itemsPerPage">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+          </select>
+        </div>
+        
+        <div class="pagination-info" id="paginationInfo"></div>
+        <div class="pagination-buttons" id="paginationButtons"></div>
+      </div>
 
-      <!-- YENİ: Tablo container wrapper -->
-      <div class="table-container">
-        <div class="table-wrapper">
-          <table class="dataset-table" id="datasetTable">
-            <thead>
-              <tr>
-                <th class="t-title">Başlık<div class="column-resizer"></div></th>
-                <th class="t-desc">Açıklama<div class="column-resizer"></div></th>
-                <th class="t-org">Organizasyon<div class="column-resizer"></div></th>
-                <th class="t-user">Oluşturan<div class="column-resizer"></div></th>
-                <th class="t-groups">Kategoriler<div class="column-resizer"></div></th>
-                <th class="t-tags">Etiketler<div class="column-resizer"></div></th>
-                <th class="t-theme">Tema<div class="column-resizer"></div></th>
-                <th class="t-upd">Güncellenme<div class="column-resizer"></div></th>
-                <th class="t-formats">Formatlar<div class="column-resizer"></div></th>
-                <th class="t-actions">İşlemler</th>
-              </tr>
-            </thead>
-            <tbody id="dataset-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+            <div class="table-container">
+        <div class="table-wrapper">
+          <table class="dataset-table" id="datasetTable">
+            <thead>
+              <tr>
+                <th class="t-title">Başlık<div class="column-resizer"></div></th>
+                <th class="t-desc">Açıklama<div class="column-resizer"></div></th>
+                <th class="t-org">Organizasyon<div class="column-resizer"></div></th>
+                <th class="t-user">Oluşturan<div class="column-resizer"></div></th>
+                <th class="t-groups">Kategoriler<div class="column-resizer"></div></th>
+                <th class="t-tags">Etiketler<div class="column-resizer"></div></th>
+                <th class="t-theme">Tema<div class="column-resizer"></div></th>
+                <th class="t-upd">Güncellenme<div class="column-resizer"></div></th>
+                <th class="t-formats">Formatlar<div class="column-resizer"></div></th>
+                <th class="t-actions">İşlemler</th>
+              </tr>
+            </thead>
+            <tbody id="dataset-table-body"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.6.0/tinycolor.min.js"></script>
 <script>
-    // --- Değişkenler ---
-    var allDatasets = [];
-    var filteredDatasets = [];
-    var allOrgs = [], allFormats = [], allUsers = [], allGroups = [], allTags = [], allThemes = [];
-    var userCache = {}; // User ID -> Username cache
-    var selectedOrgs = new Set(), selectedFormats = new Set(), selectedUsers = new Set(), selectedGroups = new Set(), selectedTags = new Set(), selectedThemes = new Set();
-    var currentPage = 1;
-    var itemsPerPage = 20;
-    var usersLoaded = false;
-    
-    var currentThemeSlugFromURL = null; // URL'den alınan temanın slug'ı
-    var currentThemeData = null; // URL'deki temaya ait tüm veriler (profil kartı için)
+    // --- Değişkenler ---
+    var allDatasets = [];
+    var filteredDatasets = [];
+    var allOrgs = [], allFormats = [], allUsers = [], allGroups = [], allTags = [], allThemes = [];
+    var userCache = {}; // User ID -> Username cache
+    var selectedOrgs = new Set(), selectedFormats = new Set(), selectedUsers = new Set(), selectedGroups = new Set(), selectedTags = new Set(), selectedThemes = new Set();
+    var currentPage = 1;
+    var itemsPerPage = 20;
+    var usersLoaded = false;
+    
+    var currentThemeSlugFromURL = null; // URL'den alınan temanın slug'ı
+    var currentThemeData = null; // URL'deki temaya ait tüm veriler (profil kartı için)
 
-    // YENİ: Görünürlük filtresi değişkenleri
-    var showPublic = true;
-    var showPrivate = true;
-    var isUpdating = false; // Çift tıklama önleyici
+    // YENİ: Görünürlük filtresi değişkenleri
+    var showPublic = true;
+    var showPrivate = true;
+    var isUpdating = false; // Çift tıklama önleyici
 
-    // YENİ: Sütun yeniden boyutlandırma değişkenleri
-    var isResizing = false;
-    var currentColumn = null;
-    var startX = 0;
-    var startWidth = 0;
+    // YENİ: Sütun yeniden boyutlandırma değişkenleri
+    var isResizing = false;
+    var currentColumn = null;
+    var startX = 0;
+    var startWidth = 0;
 
-    // PERFORMANS: Debounce fonksiyonu
-    function debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    }
+    // YENİ: Kullanıcı yetki değişkenleri (BU DEĞERLERİ CKAN BACKEND'DEN DİNAMİK ALMALISINIZ!)
+    // Örneğin, Flask/Pylons şablonunda:
+    // window.isCurrentUserAdmin = {{ h.is_sysadmin() | tojson }};
+    // window.currentLoggedInUserId = {{ g.user.id if g.user else 'null' | tojson }};
+    var isCurrentUserAdmin = true; // Demo için true olarak ayarlandı, gerçekte backend'den gelmeli
+    var currentLoggedInUserId = 'some-user-id-from-ckan'; // Demo için örnek ID, gerçekte backend'den gelmeli
+    // Eğer kullanıcı oturum açmamışsa, null veya boş bir string olmalı.
+    // 'ckan.model.user.get_current_user_id()' gibi bir fonksiyonla alabilirsiniz.
 
-    // PERFORMANS: RequestAnimationFrame wrapper
-    function rafDebounce(func) {
-        let rafId = null;
-        return function(...args) {
-            if (rafId) {
-                cancelAnimationFrame(rafId);
-            }
-            rafId = requestAnimationFrame(() => {
-                func.apply(this, args);
-            });
-        };
-    }
+    // PERFORMANS: Debounce fonksiyonu
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
 
-    // --- Fonksiyonlar ---
+    // PERFORMANS: RequestAnimationFrame wrapper
+    function rafDebounce(func) {
+        let rafId = null;
+        return function(...args) {
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+            }
+            rafId = requestAnimationFrame(() => {
+                func.apply(this, args);
+            });
+        };
+    }
 
-    function getPathInfo() {
-      var currentUrl = window.location.pathname;
-      // Tema sayfası kontrolü eklendi
-      if (currentUrl.startsWith('/temalar/') && currentUrl.split('/').length > 2) {
-        return { type: 'theme', name: currentUrl.split('/')[2] };
-      }
-      if (currentUrl.startsWith('/organization/')) return { type: 'organization', name: currentUrl.replace('/organization/', '') };
-      if (currentUrl.startsWith('/group/')) return { type: 'group', name: currentUrl.replace('/group/', '') };
-      if (currentUrl.startsWith('/user/')) return { type: 'user', name: currentUrl.replace('/user/', '') };
-      if (currentUrl.startsWith('/dataset/')) return { type: 'dataset', name: null };
-      return { type: null, name: null };
-    }
+    // --- Fonksiyonlar ---
 
-    // YENİ: Sütun yeniden boyutlandırma fonksiyonları
-    function initColumnResize() {
-      const resizers = document.querySelectorAll('.column-resizer');
-      
-      resizers.forEach(resizer => {
-        resizer.addEventListener('mousedown', startResize);
-      });
-      
-      document.addEventListener('mousemove', doResize);
-      document.addEventListener('mouseup', stopResize);
-    }
+    function getPathInfo() {
+      var currentUrl = window.location.pathname;
+      // Tema sayfası kontrolü eklendi
+      if (currentUrl.startsWith('/temalar/') && currentUrl.split('/').length > 2) {
+        return { type: 'theme', name: currentUrl.split('/')[2] };
+      }
+      if (currentUrl.startsWith('/organization/')) return { type: 'organization', name: currentUrl.replace('/organization/', '') };
+      if (currentUrl.startsWith('/group/')) return { type: 'group', name: currentUrl.replace('/group/', '') };
+      if (currentUrl.startsWith('/user/')) return { type: 'user', name: currentUrl.replace('/user/', '') };
+      if (currentUrl.startsWith('/dataset/')) return { type: 'dataset', name: null };
+      return { type: null, name: null };
+    }
 
-    function startResize(e) {
-      isResizing = true;
-      currentColumn = e.target.parentElement;
-      startX = e.pageX;
-      startWidth = parseInt(window.getComputedStyle(currentColumn).width, 10);
-      
-      e.target.classList.add('active');
-      document.body.style.cursor = 'col-resize';
-      e.preventDefault();
-    }
+    // YENİ: Sütun yeniden boyutlandırma fonksiyonları
+    function initColumnResize() {
+      const resizers = document.querySelectorAll('.column-resizer');
+      
+      resizers.forEach(resizer => {
+        resizer.addEventListener('mousedown', startResize);
+      });
+      
+      document.addEventListener('mousemove', doResize);
+      document.addEventListener('mouseup', stopResize);
+    }
 
-    const doResize = rafDebounce((e) => {
-      if (!isResizing || !currentColumn) return;
-      
-      const width = startWidth + e.pageX - startX;
-      const minWidth = parseInt(window.getComputedStyle(currentColumn).minWidth, 10) || 100;
-      
-      if (width >= minWidth) {
-        currentColumn.style.width = width + 'px';
-      }
-    });
+    function startResize(e) {
+      isResizing = true;
+      currentColumn = e.target.parentElement;
+      startX = e.pageX;
+      startWidth = parseInt(window.getComputedStyle(currentColumn).width, 10);
+      
+      e.target.classList.add('active');
+      document.body.style.cursor = 'col-resize';
+      e.preventDefault();
+    }
 
-    function stopResize() {
-      if (!isResizing) return;
-      
-      isResizing = false;
-      document.body.style.cursor = 'default';
-      
-      const activeResizer = document.querySelector('.column-resizer.active');
-      if (activeResizer) {
-        activeResizer.classList.remove('active');
-      }
-      
-      currentColumn = null;
-    }
+    const doResize = rafDebounce((e) => {
+      if (!isResizing || !currentColumn) return;
+      
+      const width = startWidth + e.pageX - startX;
+      const minWidth = parseInt(window.getComputedStyle(currentColumn).minWidth, 10) || 100;
+      
+      if (width >= minWidth) {
+        currentColumn.style.width = width + 'px';
+      }
+    });
 
-    // YENİ: Görünürlük filtresi fonksiyonları
-    function initVisibilityFilter() {
-      const publicOption = document.getElementById('visibilityPublic');
-      const privateOption = document.getElementById('visibilityPrivate');
+    function stopResize() {
+      if (!isResizing) return;
+      
+      isResizing = false;
+      document.body.style.cursor = 'default';
+      
+      const activeResizer = document.querySelector('.column-resizer.active');
+      if (activeResizer) {
+        activeResizer.classList.remove('active');
+      }
+      
+      currentColumn = null;
+    }
 
-      // Public buton tıklama
-      publicOption.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (isUpdating) return; // Eğer güncelleme devam ediyorsa bekle
-        isUpdating = true;
-        
-        requestAnimationFrame(() => {
-          showPublic = !showPublic;
-          updateVisibilityUI();
-          requestAnimationFrame(() => {
-            renderTable();
-            isUpdating = false;
-          });
-        });
-      });
+    // YENİ: Görünürlük filtresi fonksiyonları
+    function initVisibilityFilter() {
+      const publicOption = document.getElementById('visibilityPublic');
+      const privateOption = document.getElementById('visibilityPrivate');
 
-      // Private buton tıklama
-      privateOption.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (isUpdating) return; // Eğer güncelleme devam ediyorsa bekle
-        isUpdating = true;
-        
-        requestAnimationFrame(() => {
-          showPrivate = !showPrivate;
-          updateVisibilityUI();
-          requestAnimationFrame(() => {
-            renderTable();
-            isUpdating = false;
-          });
-        });
-      });
+      // Public buton tıklama
+      publicOption.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isUpdating) return; // Eğer güncelleme devam ediyorsa bekle
+        isUpdating = true;
+        
+        requestAnimationFrame(() => {
+          showPublic = !showPublic;
+          updateVisibilityUI();
+          requestAnimationFrame(() => {
+            renderTable();
+            isUpdating = false;
+          });
+        });
+      });
 
-      updateVisibilityUI();
-    }
+      // Private buton tıklama
+      privateOption.addEventListener('mousedown', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (isUpdating) return; // Eğer güncelleme devam ediyorsa bekle
+        isUpdating = true;
+        
+        requestAnimationFrame(() => {
+          showPrivate = !showPrivate;
+          updateVisibilityUI();
+          requestAnimationFrame(() => {
+            renderTable();
+            isUpdating = false;
+          });
+        });
+      });
 
-    function updateVisibilityUI() {
-      const publicOption = document.getElementById('visibilityPublic');
-      const privateOption = document.getElementById('visibilityPrivate');
-      
-      if (showPublic) {
-        publicOption.classList.add('selected');
-      } else {
-        publicOption.classList.remove('selected');
-      }
-      
-      if (showPrivate) {
-        privateOption.classList.add('selected');
-      } else {
-        privateOption.classList.remove('selected');
-      }
-    }
+      updateVisibilityUI();
+    }
 
-    // PERFORMANS: Batch user fetching with cache
-    async function fetchUsername(userId) {
-      if (!userId || userCache[userId]) return userCache[userId] || 'Bilinmiyor';
-      
-      // Batch bekleyen istekleri topla
-      if (!window.userFetchQueue) {
-        window.userFetchQueue = new Set();
-        window.userFetchPromise = null;
-      }
-      
-      window.userFetchQueue.add(userId);
-      
-      // Batch işlemi başlat
-      if (!window.userFetchPromise) {
-        window.userFetchPromise = new Promise(resolve => {
-          setTimeout(async () => {
-            const userIds = Array.from(window.userFetchQueue);
-            window.userFetchQueue.clear();
-            
-            // Paralel olarak kullanıcıları getir
-            const results = await Promise.allSettled(
-              userIds.map(id => 
-                fetch('/api/3/action/user_show', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
-                  body: JSON.stringify({ id })
-                }).then(r => r.json())
-              )
-            );
-            
-            results.forEach((result, index) => {
-              const userId = userIds[index];
-              if (result.status === 'fulfilled' && result.value.success && result.value.result) {
-                const username = result.value.result.name || result.value.result.display_name || 'Bilinmiyor';
-                userCache[userId] = username;
-              } else {
-                userCache[userId] = 'Bilinmiyor';
-              }
-            });
-            
-            window.userFetchPromise = null;
-            resolve();
-          }, 50); // 50ms bekle, diğer istekleri topla
-        });
-      }
-      
-      await window.userFetchPromise;
-      return userCache[userId] || 'Bilinmiyor';
-    }
+    function updateVisibilityUI() {
+      const publicOption = document.getElementById('visibilityPublic');
+      const privateOption = document.getElementById('visibilityPrivate');
+      
+      if (showPublic) {
+        publicOption.classList.add('selected');
+      } else {
+        publicOption.classList.remove('selected');
+      }
+      
+      if (showPrivate) {
+        privateOption.classList.add('selected');
+      } else {
+        privateOption.classList.remove('selected');
+      }
+    }
 
-    // PERFORMANS: Optimize edilmiş kullanıcı yükleme
-    async function loadUsernames() {
-      const uniqueUserIds = [...new Set(allDatasets.map(pkg => pkg.creator_user_id).filter(Boolean))];
-      console.log('🔄 Toplam unique user sayısı:', uniqueUserIds.length);
-      
-      const batchSize = 20; // Daha büyük batch boyutu
-      const batches = [];
-      
-      for (let i = 0; i < uniqueUserIds.length; i += batchSize) {
-        batches.push(uniqueUserIds.slice(i, i + batchSize));
-      }
-      
-      // Tüm batch'leri paralel işle
-      for (const batch of batches) {
-        await Promise.all(batch.map(userId => fetchUsername(userId)));
-        const progress = Math.min(batches.indexOf(batch) * batchSize + batch.length, uniqueUserIds.length);
-        console.log(`📊 User yükleme: ${progress}/${uniqueUserIds.length}`);
-        
-        // UI'yi güncelle ama çok sık değil
-        if (progress % 50 === 0 || progress === uniqueUserIds.length) {
-          updateUsersFilter();
-        }
-      }
-      
-      usersLoaded = true;
-      console.log('✅ Tüm user bilgileri yüklendi:', Object.keys(userCache).length);
-      updateUsersFilter();
-    }
+    // PERFORMANS: Batch user fetching with cache
+    async function fetchUsername(userId) {
+      if (!userId || userCache[userId]) return userCache[userId] || 'Bilinmiyor';
+      
+      // Batch bekleyen istekleri topla
+      if (!window.userFetchQueue) {
+        window.userFetchQueue = new Set();
+        window.userFetchPromise = null;
+      }
+      
+      window.userFetchQueue.add(userId);
+      
+      // Batch işlemi başlat
+      if (!window.userFetchPromise) {
+        window.userFetchPromise = new Promise(resolve => {
+          setTimeout(async () => {
+            const userIds = Array.from(window.userFetchQueue);
+            window.userFetchQueue.clear();
+            
+            // Paralel olarak kullanıcıları getir
+            const results = await Promise.allSettled(
+              userIds.map(id => 
+                fetch('/api/3/action/user_show', {
+                  method: 'POST', 
+                  headers: { 'Content-Type': 'application/json' }, 
+                  credentials: 'include', 
+                  body: JSON.stringify({ id }) 
+                }).then(r => r.json())
+              )
+            );
+            
+            results.forEach((result, index) => {
+              const userId = userIds[index];
+              if (result.status === 'fulfilled' && result.value.success && result.value.result) {
+                const username = result.value.result.name || result.value.result.display_name || 'Bilinmiyor';
+                userCache[userId] = username;
+              } else {
+                userCache[userId] = 'Bilinmiyor';
+              }
+            });
+            
+            window.userFetchPromise = null;
+            resolve();
+          }, 50); // 50ms bekle, diğer istekleri topla
+        });
+      }
+      
+      await window.userFetchPromise;
+      return userCache[userId] || 'Bilinmiyor';
+    }
 
-    function updateUsersFilter() {
-      const usernames = Object.values(userCache).filter(Boolean);
-      allUsers = [...new Set(usernames)].sort();
-      if (allUsers.length > 0) {
-        renderMultiSelect("userSelect", allUsers, selectedUsers, debouncedRenderTable);
-      } else if (!usersLoaded) {
-        document.getElementById('userSelect').innerHTML = '<div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>';
-      } else {
-        document.getElementById('userSelect').innerHTML = '<div class="empty-cell" style="padding:10px;">Kullanıcı yok</div>';
-      }
-    }
+    // PERFORMANS: Optimize edilmiş kullanıcı yükleme
+    async function loadUsernames() {
+      const uniqueUserIds = [...new Set(allDatasets.map(pkg => pkg.creator_user_id).filter(Boolean))];
+      console.log('🔄 Toplam unique user sayısı:', uniqueUserIds.length);
+      
+      const batchSize = 20; // Daha büyük batch boyutu
+      const batches = [];
+      
+      for (let i = 0; i < uniqueUserIds.length; i += batchSize) {
+        batches.push(uniqueUserIds.slice(i, i + batchSize));
+      }
+      
+      // Tüm batch'leri paralel işle
+      for (const batch of batches) {
+        await Promise.all(batch.map(userId => fetchUsername(userId)));
+        const progress = Math.min(batches.indexOf(batch) * batchSize + batch.length, uniqueUserIds.length);
+        console.log(`📊 User yükleme: ${progress}/${uniqueUserIds.length}`);
+        
+        // UI'yi güncelle ama çok sık değil
+        if (progress % 50 === 0 || progress === uniqueUserIds.length) {
+          updateUsersFilter();
+        }
+      }
+      
+      usersLoaded = true;
+      console.log('✅ Tüm user bilgileri yüklendi:', Object.keys(userCache).length);
+      updateUsersFilter();
+    }
 
-    // YENİ: Tema Profil Kartı Render Fonksiyonu
-    function renderThemeProfileCard(themeData) {
-      var profileCard = document.getElementById('profileCard');
-      if (!themeData) {
-        profileCard.style.display = 'none';
-        return;
-      }
-      
-      // Tema rengini al veya varsayılan bir renk kullan
-      const themeColor = themeData.color || '#00BCD4'; // Eğer tema rengi yoksa varsayılan cyan tonu
-      
-      profileCard.className = 'profile-card theme-profile'; 
-      // Arka plan stilini dinamik olarak ayarla
-      profileCard.style.background = `linear-gradient(135deg, ${themeColor} 0%, ${tinycolor(themeColor).darken(10).toString()} 100%)`;
+    function updateUsersFilter() {
+      const usernames = Object.values(userCache).filter(Boolean);
+      allUsers = [...new Set(usernames)].sort();
+      if (allUsers.length > 0) {
+        renderMultiSelect("userSelect", allUsers, selectedUsers, debouncedRenderTable);
+      } else if (!usersLoaded) {
+        document.getElementById('userSelect').innerHTML = '<div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>';
+      } else {
+        document.getElementById('userSelect').innerHTML = '<div class="empty-cell" style="padding:10px;">Kullanıcı yok</div>';
+      }
+    }
 
-      var html = '';
-      html += '<div class="profile-header">';
-      if (themeData.icon) {
-        html += `<div class="profile-image"><i class="fa fa-${themeData.icon}"></i></div>`;
-      } else {
-        html += '<div class="profile-image"></div>';
-      }
-      html += '<div>';
-      html += '<h3 class="profile-title">' + (themeData.name || themeData.slug || '') + '</h3>';
-      html += '<div class="profile-type">Tema Kategorisi</div>'; 
-      html += '</div></div>';
-      html += '<div class="profile-info">';
-      if (themeData.dataset_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + themeData.dataset_count + '</span></div>';
-      if (themeData.created_at) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(themeData.created_at).toLocaleDateString('tr-TR') + '</span></div>';
-      html += '</div>';
-      var description = themeData.description;
-      if (description) {
-        html += '<div class="profile-description">' + description + '</div>';
-      }
-      profileCard.innerHTML = html;
-      profileCard.style.display = 'block';
-    }
+    // YENİ: Tema Profil Kartı Render Fonksiyonu
+    function renderThemeProfileCard(themeData) {
+      var profileCard = document.getElementById('profileCard');
+      if (!themeData) {
+        profileCard.style.display = 'none';
+        return;
+      }
+      
+      // Tema rengini al veya varsayılan bir renk kullan
+      const themeColor = themeData.color || '#00BCD4'; // Eğer tema rengi yoksa varsayılan cyan tonu
+      
+      profileCard.className = 'profile-card theme-profile'; 
+      // Arka plan stilini dinamik olarak ayarla
+      profileCard.style.background = `linear-gradient(135deg, ${themeColor} 0%, ${tinycolor(themeColor).darken(10).toString()} 100%)`;
 
-    function renderProfileCard(profileData, profileType) {
-      var profileCard = document.getElementById('profileCard');
-      if (!profileData) {
-        profileCard.style.display = 'none';
-        return;
-      }
-      var html = '';
-      profileCard.className = 'profile-card' + (profileType === 'user' ? ' user-profile' : '');
-      html += '<div class="profile-header">';
-      if (profileData.image_display_url) {
-        html += '<img src="' + profileData.image_display_url + '" class="profile-image" alt="' + (profileData.title || profileData.name || '') + '">';
-      } else {
-        html += '<div class="profile-image"></div>';
-      }
-      html += '<div>';
-      if (profileType === 'user') {
-        var displayName = profileData.display_name || profileData.fullname || profileData.name || '';
-        html += '<h3 class="profile-title">' + displayName;
-        if (profileData.sysadmin) {
-          html += '<span class="admin-badge">ADMIN</span>';
-        }
-        html += '</h3>';
-        html += '<div class="profile-type">@' + (profileData.name || '') + '</div>';
-      } else {
-        html += '<h3 class="profile-title">' + (profileData.title || profileData.display_name || profileData.name || '') + '</h3>';
-        html += '<div class="profile-type">' + (profileData.type || '') + '</div>';
-      }
-      html += '</div></div>';
-      html += '<div class="profile-info">';
-      if (profileType === 'user') {
-        if (profileData.email) html += '<div class="profile-field"><span class="profile-field-label">Email:</span><span class="profile-field-value">' + profileData.email + '</span></div>';
-        if (profileData.number_created_packages !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + profileData.number_created_packages + '</span></div>';
-        if (profileData.created) html += '<div class="profile-field"><span class="profile-field-label">Üyelik:</span><span class="profile-field-value">' + new Date(profileData.created).toLocaleDateString('tr-TR') + '</span></div>';
-        if (profileData.state) html += '<div class="profile-field"><span class="profile-field-label">Durum:</span><span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</span></div>';
-      } else {
-        if (profileData.package_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + profileData.package_count + '</span></div>';
-        if (profileData.num_followers !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Takipçi:</span><span class="profile-field-value">' + profileData.num_followers + '</span></div>';
-        if (profileData.created) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(profileData.created).toLocaleDateString('tr-TR') + '</span></div>';
-        if (profileData.state) html += '<div class="profile-field"><span class="profile-field-label">Durum:</span><span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</span></div>';
-      }
-      html += '</div>';
-      var description = profileData.description || profileData.about;
-      if (description) {
-        html += '<div class="profile-description">' + description + '</div>';
-      }
-      profileCard.innerHTML = html;
-      profileCard.style.display = 'block';
-    }
+      var html = '';
+      html += '<div class="profile-header">';
+      if (themeData.icon) {
+        html += `<div class="profile-image"><i class="fa fa-${themeData.icon}"></i></div>`;
+      } else {
+        html += '<div class="profile-image"></div>';
+      }
+      html += '<div>';
+      html += '<h3 class="profile-title">' + (themeData.name || themeData.slug || '') + '</h3>';
+      html += '<div class="profile-type">Tema Kategorisi</div>'; 
+      html += '</div></div>';
+      html += '<div class="profile-info">';
+      if (themeData.dataset_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + themeData.dataset_count + '</span></div>';
+      if (themeData.created_at) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(themeData.created_at).toLocaleDateString('tr-TR') + '</span></div>';
+      html += '</div>';
+      var description = themeData.description;
+      if (description) {
+        html += '<div class="profile-description">' + description + '</div>';
+      }
+      profileCard.innerHTML = html;
+      profileCard.style.display = 'block';
+    }
 
-    function buildApiQuery() {
-      var pathInfo = getPathInfo();
-      var baseQuery = 'rows=1000&include_private=true';
-      if (pathInfo.type === 'organization' && pathInfo.name) return baseQuery + '&fq=organization:' + encodeURIComponent(pathInfo.name);
-      if (pathInfo.type === 'group' && pathInfo.name) return baseQuery + '&fq=groups:' + encodeURIComponent(pathInfo.name);
-      if (pathInfo.type === 'user' && pathInfo.name) return baseQuery;
-      return baseQuery;
-    }
-    
-    async function loadProfileData() {
-      var pathInfo = getPathInfo();
-      if (pathInfo.type === 'dataset' || !pathInfo.name) { renderProfileCard(null); return; }
-      
-      // Eğer tema sayfası ise özel profil kartını render et
-      if (pathInfo.type === 'theme') {
-        try {
-          const ckan_api_base = "/api/3/action/";
-          const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
-          const themeData = await themeResponse.json();
-          if (themeData.success && themeData.result && themeData.result.category) {
-            currentThemeData = themeData.result.category;
-            currentThemeSlugFromURL = pathInfo.name;
-            renderThemeProfileCard(currentThemeData);
-          } else {
-            renderProfileCard(null);
-          }
-        } catch (error) {
-          console.error('Tema profil bilgileri yüklenirken hata:', error);
-          renderProfileCard(null);
-        }
-      } else {
-        // Diğer profil türleri için mevcut mantık
-        var apiEndpoint = '';
-        var profileType = pathInfo.type;
-        if (pathInfo.type === 'organization') apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
-        else if (pathInfo.type === 'group') apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
-        else if (pathInfo.type === 'user') apiEndpoint = '/api/3/action/user_show';
-        if (apiEndpoint) {
-          try {
-            let response;
-            if (pathInfo.type === 'user') {
-              response = await fetch(apiEndpoint, { 
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' }, 
-                credentials: 'include', 
-                body: JSON.stringify({ id: pathInfo.name }) 
-              });
+    function renderProfileCard(profileData, profileType) {
+      var profileCard = document.getElementById('profileCard');
+      if (!profileData) {
+        profileCard.style.display = 'none';
+        return;
+      }
+      var html = '';
+      profileCard.className = 'profile-card' + (profileType === 'user' ? ' user-profile' : '');
+      html += '<div class="profile-header">';
+      if (profileData.image_display_url) {
+        html += '<img src="' + profileData.image_display_url + '" class="profile-image" alt="' + (profileData.title || profileData.name || '') + '">';
+      } else {
+        html += '<div class="profile-image"></div>';
+      }
+      html += '<div>';
+      if (profileType === 'user') {
+        var displayName = profileData.display_name || profileData.fullname || profileData.name || '';
+        html += '<h3 class="profile-title">' + displayName;
+        if (profileData.sysadmin) {
+          html += '<span class="admin-badge">ADMIN</span>';
+        }
+        html += '</h3>';
+        html += '<div class="profile-type">@' + (profileData.name || '') + '</div>';
+      } else {
+        html += '<h3 class="profile-title">' + (profileData.title || profileData.display_name || profileData.name || '') + '</h3>';
+        html += '<div class="profile-type">' + (profileData.type || '') + '</div>';
+      }
+      html += '</div></div>';
+      html += '<div class="profile-info">';
+      if (profileType === 'user') {
+        if (profileData.email) html += '<div class="profile-field"><span class="profile-field-label">Email:</span><span class="profile-field-value">' + profileData.email + '</span></div>';
+        if (profileData.number_created_packages !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + profileData.number_created_packages + '</span></div>';
+        if (profileData.created) html += '<div class="profile-field"><span class="profile-field-label">Üyelik:</span><span class="profile-field-value">' + new Date(profileData.created).toLocaleDateString('tr-TR') + '</span></div>';
+        if (profileData.state) html += '<div class="profile-field"><span class="profile-field-label">Durum:</span><span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</span></div>';
+      } else {
+        if (profileData.package_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + profileData.package_count + '</span></div>';
+        if (profileData.num_followers !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Takipçi:</span><span class="profile-field-value">' + profileData.num_followers + '</span></div>';
+        if (profileData.created) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(profileData.created).toLocaleDateString('tr-TR') + '</span></div>';
+        if (profileData.state) html += '<div class="profile-field"><span class="profile-field-label">Durum:</span><span class="profile-field-value">' + (profileData.state === 'active' ? 'Aktif' : profileData.state) + '</div>';
+      }
+      html += '</div>';
+      var description = profileData.description || profileData.about;
+      if (description) {
+        html += '<div class="profile-description">' + description + '</div>';
+      }
+      profileCard.innerHTML = html;
+      profileCard.style.display = 'block';
+    }
+
+    function buildApiQuery() {
+      var pathInfo = getPathInfo();
+      var baseQuery = 'rows=1000&include_private=true';
+      if (pathInfo.type === 'organization' && pathInfo.name) return baseQuery + '&fq=organization:' + encodeURIComponent(pathInfo.name);
+      if (pathInfo.type === 'group' && pathInfo.name) return baseQuery + '&fq=groups:' + encodeURIComponent(pathInfo.name);
+      if (pathInfo.type === 'user' && pathInfo.name) return baseQuery;
+      return baseQuery;
+    }
+    
+    async function loadProfileData() {
+      var pathInfo = getPathInfo();
+      if (pathInfo.type === 'dataset' || !pathInfo.name) { renderProfileCard(null); return; }
+      
+      // Eğer tema sayfası ise özel profil kartını render et
+      if (pathInfo.type === 'theme') {
+        try {
+          const ckan_api_base = "/api/3/action/";
+          const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
+          const themeData = await themeResponse.json();
+          if (themeData.success && themeData.result && themeData.result.category) {
+            currentThemeData = themeData.result.category;
+            currentThemeSlugFromURL = pathInfo.name;
+            renderThemeProfileCard(currentThemeData);
+          } else {
+            renderProfileCard(null);
+          }
+        } catch (error) {
+          console.error('Tema profil bilgileri yüklenirken hata:', error);
+          renderProfileCard(null);
+        }
+      } else {
+        // Diğer profil türleri için mevcut mantık
+        var apiEndpoint = '';
+        var profileType = pathInfo.type;
+        if (pathInfo.type === 'organization') apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
+        else if (pathInfo.type === 'group') apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
+        else if (pathInfo.type === 'user') apiEndpoint = '/api/3/action/user_show';
+        if (apiEndpoint) {
+          try {
+            let response;
+            if (pathInfo.type === 'user') {
+              response = await fetch(apiEndpoint, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                credentials: 'include', 
+                body: JSON.stringify({ id: pathInfo.name }) 
+              });
+            } else {
+              response = await fetch(apiEndpoint, { credentials: 'include' });
+            }
+            const data = await response.json();
+            if (data.success && data.result) renderProfileCard(data.result, profileType);
+            else renderProfileCard(null);
+          } catch (error) { 
+            console.error('Profil bilgileri yüklenirken hata:', error); 
+            renderProfileCard(null); 
+          }
+        }
+      }
+    }
+    
+    function hideDuplicateElements() {
+      var selectors = ['.sidebar-filter', '.dataset-table', '.main-container', '.page-container'];
+      selectors.forEach(selector => {
+        var elements = document.querySelectorAll(selector);
+        for (var i = 1; i < elements.length; i++) {
+          elements[i].classList.add('duplicate-hidden');
+        }
+      });
+    }
+
+    function formatClass(fmt) {
+      if (!fmt) return 'fmt-other';
+      fmt = fmt.toLowerCase();
+      const classes = { 
+        csv: 'csv', xls: 'xls', xlsx: 'xls', json: 'json', 
+        xml: 'xml', pdf: 'pdf', shp: 'shp', zip: 'zip', 
+        html: 'html', doc: 'doc', docx: 'doc', txt: 'txt' 
+      };
+      return `fmt-${classes[fmt] || 'other'}`;
+    }
+
+    // PERFORMANS: Optimize edilmiş multi-select render
+    function renderMultiSelect(containerId, items, selectedSet, onchange) {
+      var c = document.getElementById(containerId);
+      
+      if (items.length === 0) {
+        c.innerHTML = `<div class="empty-cell" style="padding:10px;">Seçenek yok</div>`;
+        return;
+      }
+      
+      // DocumentFragment kullan
+      const fragment = document.createDocumentFragment();
+      
+      items.forEach(function(item) {
+        var opt = document.createElement("div");
+        const isThemeFilterAndFromURL = (containerId === "themeSelect" && currentThemeSlugFromURL && item === currentThemeData?.name);
+        
+        opt.className = "multi-select-option" + (selectedSet.has(item) ? " selected" : "") + (isThemeFilterAndFromURL ? " disabled" : "");
+        opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item) ? "checked" : ""} ${isThemeFilterAndFromURL ? "disabled" : ""}> <span>${item}</span>`;
+        
+        opt.onclick = function(e) {
+          if(isThemeFilterAndFromURL) {
+            e.preventDefault(); 
+            return;
+          }
+          e.stopPropagation();
+          if(selectedSet.has(item)) selectedSet.delete(item);
+          else selectedSet.add(item);
+          renderMultiSelect(containerId, items, selectedSet, onchange);
+          onchange();
+        };
+        fragment.appendChild(opt);
+      });
+      
+      c.innerHTML = "";
+      c.appendChild(fragment);
+    }
+    
+    function filterDatasets() {
+      var searchVal = document.getElementById("searchTitle").value.trim().toLowerCase();
+      var sortOrder = document.getElementById("sortOrder").value;
+
+      filteredDatasets = allDatasets.filter(function(pkg) {
+        // Görünürlük filtresi
+        if (pkg.private === true && !showPrivate) return false;
+        if (pkg.private !== true && !showPublic) return false;
+        
+        if (searchVal && !(pkg.title || pkg.name || '').toLowerCase().includes(searchVal)) return false;
+        if (selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
+        if (selectedUsers.size && !selectedUsers.has(pkg.creatorUsername)) return false;
+
+        // AND mantığı
+        if (selectedGroups.size && ![...selectedGroups].every(g => pkg.groupTitles.includes(g))) return false;
+        if (selectedTags.size && ![...selectedTags].every(t => pkg.tagNames.includes(t))) return false;
+
+        // Tema filtreleme
+        if (selectedThemes.size) {
+          if (pkg.themeName === null && selectedThemes.has('Yok')) {
+            // OK
+          } else if (pkg.themeName === null) {
+            return false;
+          } else if (!selectedThemes.has(pkg.themeName)) {
+            return false;
+          }
+        }
+
+        var fmts = Object.keys(pkg.fmts);
+        if (selectedFormats.size && ![...selectedFormats].every(fmt => fmts.includes(fmt))) return false;
+        
+        return true;
+      });
+
+      // Sıralama
+      filteredDatasets.sort(function(a, b) {
+        switch(sortOrder) {
+          case 'date_desc':
+            var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
+            var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
+            return tb - ta;
+          case 'date_asc':
+            var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
+            var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
+            return ta - tb;
+          case 'title_asc':
+            var titleA = (a.title || a.name || '').toLowerCase();
+            var titleB = (b.title || b.name || '').toLowerCase();
+            return titleA.localeCompare(titleB, 'tr');
+          case 'title_desc':
+            var titleA = (a.title || a.name || '').toLowerCase();
+            var titleB = (b.title || b.name || '').toLowerCase();
+            return titleB.localeCompare(titleA, 'tr');
+          default:
+            return 0;
+        }
+      });
+    }
+
+    function renderPagination() {
+      var totalItems = filteredDatasets.length;
+      var totalPages = Math.ceil(totalItems / itemsPerPage);
+      var startItem = (currentPage - 1) * itemsPerPage + 1;
+      var endItem = Math.min(currentPage * itemsPerPage, totalItems);
+      document.getElementById('paginationInfo').textContent = totalItems === 0 ? "Gösterilecek kayıt yok" : `${startItem}-${endItem} / ${totalItems} kayıt`;
+      var buttonsContainer = document.getElementById('paginationButtons');
+      buttonsContainer.innerHTML = '';
+      if (totalPages <= 1) return;
+
+      var createBtn = (text, page, isDisabled = false, isActive = false) => {
+        const btn = document.createElement('button');
+        btn.className = 'pagination-btn' + (isActive ? ' active' : '');
+        btn.textContent = text;
+        btn.disabled = isDisabled;
+        if (page !== null) {
+          btn.onclick = () => {
+            currentPage = page;
+            renderTable();
+          };
+        }
+        return btn;
+      };
+
+      // Pagination butonları
+      buttonsContainer.appendChild(createBtn('‹ Önceki', currentPage - 1, currentPage === 1));
+
+      var startPage = Math.max(1, currentPage - 2);
+      var endPage = Math.min(totalPages, currentPage + 2);
+
+      if (startPage > 1) {
+        buttonsContainer.appendChild(createBtn('1', 1));
+        if (startPage > 2) {
+          buttonsContainer.appendChild(createBtn('...', null, true));
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        buttonsContainer.appendChild(createBtn(i, i, false, i === currentPage));
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          buttonsContainer.appendChild(createBtn('...', null, true));
+        }
+        buttonsContainer.appendChild(createBtn(totalPages, totalPages));
+      }
+
+      buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
+    }
+
+    // YENİ: Silme onayı için fonksiyon
+    function confirmDelete(datasetName) {
+      return confirm(`"${datasetName}" veri setini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!`);
+    }
+
+    // PERFORMANS: Optimize edilmiş tablo render
+    function renderTable() {
+      filterDatasets();
+      renderPagination();
+      
+      var startIndex = (currentPage - 1) * itemsPerPage;
+      var pageDatasets = filteredDatasets.slice(startIndex, startIndex + itemsPerPage);
+      
+      // HTML string oluşturma yerine DocumentFragment kullan
+      const tbody = document.getElementById('dataset-table-body');
+      const fragment = document.createDocumentFragment();
+      
+      if (pageDatasets.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="10" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td>`;
+        fragment.appendChild(tr);
+      } else {
+        pageDatasets.forEach(pkg => {
+          const tr = document.createElement('tr');
+          
+          var title = pkg.title || pkg.name || '';
+          var link = '/dataset/' + encodeURIComponent(pkg.name);
+          var desc = pkg.notes ? pkg.notes.replace(/\n/g, ' ').substring(0, 150) + (pkg.notes.length > 150 ? '...' : '') : '<span class="empty-cell">Yok</span>';
+          var org = pkg.organization?.title || '<span class="empty-cell">Yok</span>';
+          var user = pkg.creatorUsername ? `<span class="user-tag">${pkg.creatorUsername}</span>` : '<span class="empty-cell">Bilinmiyor</span>';
+          var groups = pkg.groups?.length ? pkg.groups.map(g => `<span class="group-tag">${g.display_name || g.title || g.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
+          var tags = pkg.tags?.length ? pkg.tags.map(t => `<span class="tag-tag">${t.display_name || t.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
+          var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>';
+          var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
+          var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
+          
+          var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
+          var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
+          
+            let actionButtonsHtml = '';
+
+            // Yetki kontrolü: Admin veya veri setini oluşturan kişi ise butonları göster
+            if (isCurrentUserAdmin || (currentLoggedInUserId && pkg.creator_user_id === currentLoggedInUserId)) {
+                actionButtonsHtml = `
+                    <div class="action-buttons">
+                        <a href="${editLink}" class="action-btn edit-btn" title="Düzenle">
+                            ✏️ Düzenle
+                        </a>
+                        <a href="${deleteLink}" class="action-btn delete-btn" title="Sil" onclick="return confirmDelete('${title.replace(/'/g, "\\'")}')">
+                            🗑️ Sil
+                        </a>
+                    </div>
+                `;
             } else {
-              response = await fetch(apiEndpoint, { credentials: 'include' });
+                actionButtonsHtml = `<span class="no-permission-message">Yetkiniz yok</span>`;
             }
-            const data = await response.json();
-            if (data.success && data.result) renderProfileCard(data.result, profileType);
-            else renderProfileCard(null);
-          } catch (error) { 
-            console.error('Profil bilgileri yüklenirken hata:', error); 
-            renderProfileCard(null); 
-          }
+
+          tr.innerHTML = `
+            <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
+            <td class="t-desc">${desc}</td>
+            <td class="t-org">${org}</td>
+            <td class="t-user">${user}</td>
+            <td class="t-groups">${groups}</td>
+            <td class="t-tags">${tags}</td>
+            <td class="t-theme">${theme}</td>
+            <td class="t-upd">${upd}</td>
+            <td class="t-formats">${formats}</td>
+            <td class="t-actions">
+              ${actionButtonsHtml}
+            </td>
+          `;
+          
+          fragment.appendChild(tr);
+        });
+      }
+      
+      tbody.innerHTML = '';
+      tbody.appendChild(fragment);
+
+      // İşlem sütununun görünürlüğünü güncelle
+      updateActionColumnVisibility();
+    }
+    
+    // PERFORMANS: Debounced render
+    const debouncedRenderTable = debounce(renderTable, 300);
+    
+    async function filterByUserPath() {
+      var pathInfo = getPathInfo();
+      if (pathInfo.type === 'user' && pathInfo.name) {
+        try {
+          const userResponse = await fetch('/api/3/action/user_show', {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', 
+            body: JSON.stringify({ id: pathInfo.name })
+          });
+          const userData = await userResponse.json();
+          if (userData.success && userData.result) {
+            const userId = userData.result.id;
+            console.log('🔍 User path filtreleme:', pathInfo.name, '→', userId);
+            allDatasets = allDatasets.filter(pkg => pkg.creator_user_id === userId);
+            console.log('📊 User\'ın dataset sayısı:', allDatasets.length);
+          }
+        } catch (error) { 
+          console.error('User path filtreleme hatası:', error); 
+        }
+      }
+    }
+
+    // PERFORMANS: Optimize edilmiş veri yükleme
+    var datasetThemeMap = {};
+    
+    async function initializeData() {
+      const ckan_api_base = "/api/3/action/";
+      const pathInfo = getPathInfo();
+
+      // 1. Profil verisi ve temalar paralel yükle
+      const profilePromise = loadProfileData();
+      const themePromise = loadThemes();
+      
+      // 2. Ana veri setini yükle
+      const packagePromise = fetch('/api/3/action/package_search?' + buildApiQuery(), { credentials: 'include' })
+        .then(r => r.json());
+      
+      try {
+        // Paralel yükleme
+        const [_, themeData, packageSearchData] = await Promise.all([
+          profilePromise,
+          themePromise,
+          packagePromise
+        ]);
+        
+        // Theme map oluştur
+        if (themeData) {
+          datasetThemeMap = themeData;
+        }
+        
+        if (!packageSearchData.result || !packageSearchData.result.results) return;
+
+        var orgSet = new Set(), fmtSet = new Set(), groupSet = new Set(), tagSet = new Set();
+        
+        // PERFORMANS: Map işlemlerini optimize et
+        allDatasets = packageSearchData.result.results.map(function(pkg) {
+          var orgTitle = pkg.organization?.title || "";
+          if (orgTitle) orgSet.add(orgTitle);
+
+          var fmts = {};
+          if (pkg.resources) {
+            for (const r of pkg.resources) {
+              if (r.format) {
+                const fmt = r.format.toLowerCase();
+                fmtSet.add(fmt);
+                fmts[fmt] = true;
+              }
+            }
+          }
+
+          var groupTitles = pkg.groups?.map(g => g.display_name || g.title || g.name) || [];
+          groupTitles.forEach(g => groupSet.add(g));
+
+          var tagNames = pkg.tags?.map(t => t.display_name || t.name) || [];
+          tagNames.forEach(t => tagSet.add(t));
+
+          const themeName = datasetThemeMap[pkg.id] || null;
+          
+          return {
+            ...pkg,
+            orgTitle: orgTitle,
+            fmts: fmts,
+            creatorUsername: userCache[pkg.creator_user_id] || 'Yükleniyor...',
+            groupTitles: groupTitles,
+            tagNames: tagNames,
+            themeName: themeName
+          };
+        });
+        
+        // User filtreleme
+        await filterByUserPath();
+
+        // Filtre listelerini hazırla
+        allOrgs = [...orgSet].filter(Boolean).sort();
+        allFormats = [...fmtSet].filter(Boolean).sort();
+        allGroups = [...groupSet].filter(Boolean).sort();
+        allTags = [...tagSet].filter(Boolean).sort();
+
+        // Filtreleri render et
+        renderMultiSelect("orgSelect", allOrgs, selectedOrgs, debouncedRenderTable);
+        renderMultiSelect("fmtSelect", allFormats, selectedFormats, debouncedRenderTable);
+        renderMultiSelect("groupSelect", allGroups, selectedGroups, debouncedRenderTable);
+        renderMultiSelect("tagSelect", allTags, selectedTags, debouncedRenderTable);
+        renderMultiSelect("themeSelect", allThemes, selectedThemes, debouncedRenderTable);
+
+        // Event listener'ları ekle
+        document.getElementById("searchTitle").addEventListener('input', debouncedRenderTable);
+        document.getElementById("sortOrder").addEventListener('change', renderTable);
+        document.getElementById("itemsPerPage").addEventListener('change', function() {
+          itemsPerPage = parseInt(this.value);
+          currentPage = 1;
+          renderTable();
+        });
+
+        // Diğer başlatmalar
+        initVisibilityFilter();
+        initColumnResize();
+
+        // Grup sayfası kontrolü
+        if (pathInfo.type === 'group' && pathInfo.name) {
+          const groupInfo = allDatasets[0]?.groups.find(g => g.name === pathInfo.name);
+          if (groupInfo) {
+            const groupTitle = groupInfo.display_name || groupInfo.title || groupInfo.name;
+            if(allGroups.includes(groupTitle)) selectedGroups.add(groupTitle);
+          }
+        }
+        
+        applyGlobalSearchAndFilter();
+
+        // İlk render
+        renderTable();
+        hideDuplicateElements();
+        
+        // User bilgilerini asenkron olarak yükle
+        loadUsernames().then(() => {
+          allDatasets.forEach(pkg => {
+            pkg.creatorUsername = userCache[pkg.creator_user_id] || 'Bilinmiyor'
+          });
+          renderTable();
+        });
+
+      } catch (error) {
+        console.error('Veri yüklenirken hata:', error);
+        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="10" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+      }
+    }
+
+    // PERFORMANS: Tema yükleme optimize edildi
+    async function loadThemes() {
+      const ckan_api_base = "/api/3/action/";
+      const pathInfo = getPathInfo();
+      
+      try {
+        // URL'den tema bilgisi varsa
+        if (pathInfo.type === 'theme' && pathInfo.name) {
+          const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
+          const themeData = await themeResponse.json();
+          if (themeData.success && themeData.result && themeData.result.category) {
+            currentThemeData = themeData.result.category;
+            currentThemeSlugFromURL = pathInfo.name;
+            renderThemeProfileCard(currentThemeData);
+            selectedThemes.add(currentThemeData.name);
+          }
+        }
+
+        // Tüm temaları çek
+        const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
+        const themeListData = await themeListResponse.json();
+
+        if (themeListData.success && themeListData.result) {
+          allThemes = themeListData.result.map(t => t.name || t.slug);
+          
+          // PERFORMANS: Tema-dataset ilişkilerini paralel yükle
+          const themePromises = themeListData.result.map(theme => 
+            fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
+              .then(r => r.json())
+              .then(data => {
+                if (data.success && data.result && data.result.datasets) {
+                  return { theme: theme.name, datasets: data.result.datasets };
+                }
+                return null;
+              })
+              .catch(err => {
+                console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
+                return null;
+              })
+          );
+          
+          const themeResults = await Promise.all(themePromises);
+          const tempMap = {};
+          
+          themeResults.forEach(result => {
+            if (result) {
+              result.datasets.forEach(dataset => {
+                tempMap[dataset.id] = result.theme;
+              });
+            }
+          });
+          
+          // Teması olmayan datasetler için kontrol
+          const hasNullThemes = Object.keys(tempMap).length < 1000; // Tahmin
+          if (hasNullThemes) {
+            allThemes.push('Yok');
+          }
+          allThemes = [...new Set(allThemes)].sort();
+          
+          return tempMap;
+        }
+      } catch (error) {
+        console.error("Tema listesi yüklenirken hata:", error);
+        return {};
+      }
+    }
+
+    // Sayfa yüklendiğinde başlat
+    document.addEventListener('DOMContentLoaded', function() {
+      // PERFORMANS: Intersection Observer ile lazy loading
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              initializeData();
+              observer.disconnect();
+            }
+          });
+        });
+        observer.observe(document.body);
+      } else {
+        initializeData();
+      }
+      
+      hideDuplicateElements();
+    });
+
+    // Mutation observer optimize edildi
+    const mutationObserver = new MutationObserver(
+      debounce(hideDuplicateElements, 100)
+    );
+    mutationObserver.observe(document.body, { 
+      childList: true, 
+      subtree: true 
+    });
+
+    function applyGlobalSearchAndFilter() {
+      const searchTerm = localStorage.getItem('globalSearchTerm');
+      if (searchTerm) {
+        const titleSearchInput = document.getElementById('searchTitle');
+        if (titleSearchInput) {
+          titleSearchInput.value = searchTerm;
+          console.log(`'${searchTerm}' local storage'dan alınıp arama kutusuna yazıldı.`);
+        }
+        localStorage.removeItem('globalSearchTerm');
+      }
+    }
+
+    // Klavye kısayolları
+    document.addEventListener('keydown', function(e) {
+      // Ctrl+F: Arama kutusuna odaklan
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('searchTitle').focus();
+      }
+      
+      // Escape: Arama kutusunu temizle
+      if (e.key === 'Escape') {
+        const searchInput = document.getElementById('searchTitle');
+        if (searchInput.value) {
+          searchInput.value = '';
+          renderTable();
+        }
+      }
+    });
+
+    // PERFORMANS: Window global değişkenleri temizle
+    window.addEventListener('beforeunload', function() {
+      if (window.userFetchQueue) {
+        window.userFetchQueue.clear();
+        window.userFetchQueue = null;
+      }
+      if (window.userFetchPromise) {
+        window.userFetchPromise = null;
+      }
+    });
+
+    // Global fonksiyonlar
+    window.confirmDelete = confirmDelete;
+
+    // YENİ EKLENEN KISIM: İşlem sütununu URL'ye göre gizle/göster
+    function updateActionColumnVisibility() {
+        const path = window.location.pathname;
+        const actionColumnHeader = document.querySelector('th.t-actions');
+        const actionColumnCells = document.querySelectorAll('td.t-actions');
+
+        // URL sadece "/dataset/" veya "/dataset" ise işlem sütununu gizle
+        if (path === '/dataset/' || path === '/dataset') {
+            actionColumnHeader.classList.add('hide-column');
+            actionColumnCells.forEach(cell => cell.classList.add('hide-column'));
+        } else {
+            actionColumnHeader.classList.remove('hide-column');
+            actionColumnCells.forEach(cell => cell.classList.remove('hide-column'));
         }
-      }
-    }
-    
-    function hideDuplicateElements() {
-      var selectors = ['.sidebar-filter', '.dataset-table', '.main-container', '.page-container'];
-      selectors.forEach(selector => {
-        var elements = document.querySelectorAll(selector);
-        for (var i = 1; i < elements.length; i++) {
-          elements[i].classList.add('duplicate-hidden');
-        }
-      });
-    }
-
-    function formatClass(fmt) {
-      if (!fmt) return 'fmt-other';
-      fmt = fmt.toLowerCase();
-      const classes = { 
-        csv: 'csv', xls: 'xls', xlsx: 'xls', json: 'json', 
-        xml: 'xml', pdf: 'pdf', shp: 'shp', zip: 'zip', 
-        html: 'html', doc: 'doc', docx: 'doc', txt: 'txt' 
-      };
-      return `fmt-${classes[fmt] || 'other'}`;
-    }
-
-    // PERFORMANS: Optimize edilmiş multi-select render
-    function renderMultiSelect(containerId, items, selectedSet, onchange) {
-      var c = document.getElementById(containerId);
-      
-      if (items.length === 0) {
-        c.innerHTML = `<div class="empty-cell" style="padding:10px;">Seçenek yok</div>`;
-        return;
-      }
-      
-      // DocumentFragment kullan
-      const fragment = document.createDocumentFragment();
-      
-      items.forEach(function(item) {
-        var opt = document.createElement("div");
-        const isThemeFilterAndFromURL = (containerId === "themeSelect" && currentThemeSlugFromURL && item === currentThemeData?.name);
-        
-        opt.className = "multi-select-option" + (selectedSet.has(item) ? " selected" : "") + (isThemeFilterAndFromURL ? " disabled" : "");
-        opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item) ? "checked" : ""} ${isThemeFilterAndFromURL ? "disabled" : ""}> <span>${item}</span>`;
-        
-        opt.onclick = function(e) {
-          if(isThemeFilterAndFromURL) {
-            e.preventDefault(); 
-            return;
-          }
-          e.stopPropagation();
-          if(selectedSet.has(item)) selectedSet.delete(item);
-          else selectedSet.add(item);
-          renderMultiSelect(containerId, items, selectedSet, onchange);
-          onchange();
-        };
-        fragment.appendChild(opt);
-      });
-      
-      c.innerHTML = "";
-      c.appendChild(fragment);
-    }
-    
-    function filterDatasets() {
-      var searchVal = document.getElementById("searchTitle").value.trim().toLowerCase();
-      var sortOrder = document.getElementById("sortOrder").value;
-
-      filteredDatasets = allDatasets.filter(function(pkg) {
-        // Görünürlük filtresi
-        if (pkg.private === true && !showPrivate) return false;
-        if (pkg.private !== true && !showPublic) return false;
-        
-        if (searchVal && !(pkg.title || pkg.name || '').toLowerCase().includes(searchVal)) return false;
-        if (selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
-        if (selectedUsers.size && !selectedUsers.has(pkg.creatorUsername)) return false;
-
-        // AND mantığı
-        if (selectedGroups.size && ![...selectedGroups].every(g => pkg.groupTitles.includes(g))) return false;
-        if (selectedTags.size && ![...selectedTags].every(t => pkg.tagNames.includes(t))) return false;
-
-        // Tema filtreleme
-        if (selectedThemes.size) {
-          if (pkg.themeName === null && selectedThemes.has('Yok')) {
-            // OK
-          } else if (pkg.themeName === null) {
-            return false;
-          } else if (!selectedThemes.has(pkg.themeName)) {
-            return false;
-          }
-        }
-
-        var fmts = Object.keys(pkg.fmts);
-        if (selectedFormats.size && ![...selectedFormats].every(fmt => fmts.includes(fmt))) return false;
-        
-        return true;
-      });
-
-      // Sıralama
-      filteredDatasets.sort(function(a, b) {
-        switch(sortOrder) {
-          case 'date_desc':
-            var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
-            var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
-            return tb - ta;
-          case 'date_asc':
-            var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
-            var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
-            return ta - tb;
-          case 'title_asc':
-            var titleA = (a.title || a.name || '').toLowerCase();
-            var titleB = (b.title || b.name || '').toLowerCase();
-            return titleA.localeCompare(titleB, 'tr');
-          case 'title_desc':
-            var titleA = (a.title || a.name || '').toLowerCase();
-            var titleB = (b.title || b.name || '').toLowerCase();
-            return titleB.localeCompare(titleA, 'tr');
-          default:
-            return 0;
-        }
-      });
-    }
-
-    function renderPagination() {
-      var totalItems = filteredDatasets.length;
-      var totalPages = Math.ceil(totalItems / itemsPerPage);
-      var startItem = (currentPage - 1) * itemsPerPage + 1;
-      var endItem = Math.min(currentPage * itemsPerPage, totalItems);
-      document.getElementById('paginationInfo').textContent = totalItems === 0 ? "Gösterilecek kayıt yok" : `${startItem}-${endItem} / ${totalItems} kayıt`;
-      var buttonsContainer = document.getElementById('paginationButtons');
-      buttonsContainer.innerHTML = '';
-      if (totalPages <= 1) return;
-
-      var createBtn = (text, page, isDisabled = false, isActive = false) => {
-        const btn = document.createElement('button');
-        btn.className = 'pagination-btn' + (isActive ? ' active' : '');
-        btn.textContent = text;
-        btn.disabled = isDisabled;
-        if (page !== null) {
-          btn.onclick = () => {
-            currentPage = page;
-            renderTable();
-          };
-        }
-        return btn;
-      };
-
-      // Pagination butonları
-      buttonsContainer.appendChild(createBtn('‹ Önceki', currentPage - 1, currentPage === 1));
-
-      var startPage = Math.max(1, currentPage - 2);
-      var endPage = Math.min(totalPages, currentPage + 2);
-
-      if (startPage > 1) {
-        buttonsContainer.appendChild(createBtn('1', 1));
-        if (startPage > 2) {
-          buttonsContainer.appendChild(createBtn('...', null, true));
-        }
-      }
-
-      for (let i = startPage; i <= endPage; i++) {
-        buttonsContainer.appendChild(createBtn(i, i, false, i === currentPage));
-      }
-
-      if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-          buttonsContainer.appendChild(createBtn('...', null, true));
-        }
-        buttonsContainer.appendChild(createBtn(totalPages, totalPages));
-      }
-
-      buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
-    }
-
-    // YENİ: Silme onayı için fonksiyon
-    function confirmDelete(datasetName) {
-      return confirm(`"${datasetName}" veri setini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!`);
-    }
-
-    // PERFORMANS: Optimize edilmiş tablo render
-    function renderTable() {
-      filterDatasets();
-      renderPagination();
-      
-      var startIndex = (currentPage - 1) * itemsPerPage;
-      var pageDatasets = filteredDatasets.slice(startIndex, startIndex + itemsPerPage);
-      
-      // HTML string oluşturma yerine DocumentFragment kullan
-      const tbody = document.getElementById('dataset-table-body');
-      const fragment = document.createDocumentFragment();
-      
-      if (pageDatasets.length === 0) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="10" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td>`;
-        fragment.appendChild(tr);
-      } else {
-        pageDatasets.forEach(pkg => {
-          const tr = document.createElement('tr');
-          
-          var title = pkg.title || pkg.name || '';
-          var link = '/dataset/' + encodeURIComponent(pkg.name);
-          var desc = pkg.notes ? pkg.notes.replace(/\n/g, ' ').substring(0, 150) + (pkg.notes.length > 150 ? '...' : '') : '<span class="empty-cell">Yok</span>';
-          var org = pkg.organization?.title || '<span class="empty-cell">Yok</span>';
-          var user = pkg.creatorUsername ? `<span class="user-tag">${pkg.creatorUsername}</span>` : '<span class="empty-cell">Bilinmiyor</span>';
-          var groups = pkg.groups?.length ? pkg.groups.map(g => `<span class="group-tag">${g.display_name || g.title || g.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
-          var tags = pkg.tags?.length ? pkg.tags.map(t => `<span class="tag-tag">${t.display_name || t.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
-          var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>';
-          var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
-          var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
-          
-          var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
-          var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
-          
-          tr.innerHTML = `
-            <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
-            <td class="t-desc">${desc}</td>
-            <td class="t-org">${org}</td>
-            <td class="t-user">${user}</td>
-            <td class="t-groups">${groups}</td>
-            <td class="t-tags">${tags}</td>
-            <td class="t-theme">${theme}</td>
-            <td class="t-upd">${upd}</td>
-            <td class="t-formats">${formats}</td>
-            <td class="t-actions">
-              <div class="action-buttons">
-                <a href="${editLink}" class="action-btn edit-btn" title="Düzenle">
-                  ✏️ Düzenle
-                </a>
-                <a href="${deleteLink}" class="action-btn delete-btn" title="Sil" onclick="return confirmDelete('${title.replace(/'/g, "\\'")}')">
-                  🗑️ Sil
-                </a>
-              </div>
-            </td>
-          `;
-          
-          fragment.appendChild(tr);
-        });
-      }
-      
-      tbody.innerHTML = '';
-      tbody.appendChild(fragment);
-    }
-    
-    // PERFORMANS: Debounced render
-    const debouncedRenderTable = debounce(renderTable, 300);
-    
-    async function filterByUserPath() {
-      var pathInfo = getPathInfo();
-      if (pathInfo.type === 'user' && pathInfo.name) {
-        try {
-          const userResponse = await fetch('/api/3/action/user_show', {
-            method: 'POST', 
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', 
-            body: JSON.stringify({ id: pathInfo.name })
-          });
-          const userData = await userResponse.json();
-          if (userData.success && userData.result) {
-            const userId = userData.result.id;
-            console.log('🔍 User path filtreleme:', pathInfo.name, '→', userId);
-            allDatasets = allDatasets.filter(pkg => pkg.creator_user_id === userId);
-            console.log('📊 User\'ın dataset sayısı:', allDatasets.length);
-          }
-        } catch (error) { 
-          console.error('User path filtreleme hatası:', error); 
-        }
-      }
-    }
-
-    // PERFORMANS: Optimize edilmiş veri yükleme
-    var datasetThemeMap = {};
-    
-    async function initializeData() {
-      const ckan_api_base = "/api/3/action/";
-      const pathInfo = getPathInfo();
-
-      // 1. Profil verisi ve temalar paralel yükle
-      const profilePromise = loadProfileData();
-      const themePromise = loadThemes();
-      
-      // 2. Ana veri setini yükle
-      const packagePromise = fetch('/api/3/action/package_search?' + buildApiQuery(), { credentials: 'include' })
-        .then(r => r.json());
-      
-      try {
-        // Paralel yükleme
-        const [_, themeData, packageSearchData] = await Promise.all([
-          profilePromise,
-          themePromise,
-          packagePromise
-        ]);
-        
-        // Theme map oluştur
-        if (themeData) {
-          datasetThemeMap = themeData;
-        }
-        
-        if (!packageSearchData.result || !packageSearchData.result.results) return;
-
-        var orgSet = new Set(), fmtSet = new Set(), groupSet = new Set(), tagSet = new Set();
-        
-        // PERFORMANS: Map işlemlerini optimize et
-        allDatasets = packageSearchData.result.results.map(function(pkg) {
-          var orgTitle = pkg.organization?.title || "";
-          if (orgTitle) orgSet.add(orgTitle);
-
-          var fmts = {};
-          if (pkg.resources) {
-            for (const r of pkg.resources) {
-              if (r.format) {
-                const fmt = r.format.toLowerCase();
-                fmtSet.add(fmt);
-                fmts[fmt] = true;
-              }
-            }
-          }
-
-          var groupTitles = pkg.groups?.map(g => g.display_name || g.title || g.name) || [];
-          groupTitles.forEach(g => groupSet.add(g));
-
-          var tagNames = pkg.tags?.map(t => t.display_name || t.name) || [];
-          tagNames.forEach(t => tagSet.add(t));
-
-          const themeName = datasetThemeMap[pkg.id] || null;
-          
-          return {
-            ...pkg,
-            orgTitle: orgTitle,
-            fmts: fmts,
-            creatorUsername: userCache[pkg.creator_user_id] || 'Yükleniyor...',
-            groupTitles: groupTitles,
-            tagNames: tagNames,
-            themeName: themeName
-          };
-        });
-        
-        // User filtreleme
-        await filterByUserPath();
-
-        // Filtre listelerini hazırla
-        allOrgs = [...orgSet].filter(Boolean).sort();
-        allFormats = [...fmtSet].filter(Boolean).sort();
-        allGroups = [...groupSet].filter(Boolean).sort();
-        allTags = [...tagSet].filter(Boolean).sort();
-
-        // Filtreleri render et
-        renderMultiSelect("orgSelect", allOrgs, selectedOrgs, debouncedRenderTable);
-        renderMultiSelect("fmtSelect", allFormats, selectedFormats, debouncedRenderTable);
-        renderMultiSelect("groupSelect", allGroups, selectedGroups, debouncedRenderTable);
-        renderMultiSelect("tagSelect", allTags, selectedTags, debouncedRenderTable);
-        renderMultiSelect("themeSelect", allThemes, selectedThemes, debouncedRenderTable);
-
-        // Event listener'ları ekle
-        document.getElementById("searchTitle").addEventListener('input', debouncedRenderTable);
-        document.getElementById("sortOrder").addEventListener('change', renderTable);
-        document.getElementById("itemsPerPage").addEventListener('change', function() {
-          itemsPerPage = parseInt(this.value);
-          currentPage = 1;
-          renderTable();
-        });
-
-        // Diğer başlatmalar
-        initVisibilityFilter();
-        initColumnResize();
-
-        // Grup sayfası kontrolü
-        if (pathInfo.type === 'group' && pathInfo.name) {
-          const groupInfo = allDatasets[0]?.groups.find(g => g.name === pathInfo.name);
-          if (groupInfo) {
-            const groupTitle = groupInfo.display_name || groupInfo.title || groupInfo.name;
-            if(allGroups.includes(groupTitle)) selectedGroups.add(groupTitle);
-          }
-        }
-        
-        applyGlobalSearchAndFilter();
-
-        // İlk render
-        renderTable();
-        hideDuplicateElements();
-        
-        // User bilgilerini asenkron olarak yükle
-        loadUsernames().then(() => {
-          allDatasets.forEach(pkg => {
-            pkg.creatorUsername = userCache[pkg.creator_user_id] || 'Bilinmiyor'
-          });
-          renderTable();
-        });
-
-      } catch (error) {
-        console.error('Veri yüklenirken hata:', error);
-        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="10" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
-      }
     }
 
-    // PERFORMANS: Tema yükleme optimize edildi
-    async function loadThemes() {
-      const ckan_api_base = "/api/3/action/";
-      const pathInfo = getPathInfo();
-      
-      try {
-        // URL'den tema bilgisi varsa
-        if (pathInfo.type === 'theme' && pathInfo.name) {
-          const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
-          const themeData = await themeResponse.json();
-          if (themeData.success && themeData.result && themeData.result.category) {
-            currentThemeData = themeData.result.category;
-            currentThemeSlugFromURL = pathInfo.name;
-            renderThemeProfileCard(currentThemeData);
-            selectedThemes.add(currentThemeData.name);
-          }
-        }
+    // `initializeData` çağrıldıktan sonra ve `renderTable` her çağrıldığında
+    // sütun görünürlüğünü güncellemek için `updateActionColumnVisibility()` fonksiyonunu çağırın.
+    // Zaten `renderTable` fonksiyonunun sonunda çağrılıyor.
+    // Sayfa ilk yüklendiğinde de doğru şekilde gizlenmesi için DOMContentLoaded'e de ekleyelim.
+    document.addEventListener('DOMContentLoaded', updateActionColumnVisibility);
 
-        // Tüm temaları çek
-        const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
-        const themeListData = await themeListResponse.json();
+    // Eğer sayfa history API ile değişirse (tek sayfa uygulamalarında), görünürlüğü tekrar kontrol etmek için
+    window.addEventListener('popstate', updateActionColumnVisibility);
 
-        if (themeListData.success && themeListData.result) {
-          allThemes = themeListData.result.map(t => t.name || t.slug);
-          
-          // PERFORMANS: Tema-dataset ilişkilerini paralel yükle
-          const themePromises = themeListData.result.map(theme => 
-            fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
-              .then(r => r.json())
-              .then(data => {
-                if (data.success && data.result && data.result.datasets) {
-                  return { theme: theme.name, datasets: data.result.datasets };
-                }
-                return null;
-              })
-              .catch(err => {
-                console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
-                return null;
-              })
-          );
-          
-          const themeResults = await Promise.all(themePromises);
-          const tempMap = {};
-          
-          themeResults.forEach(result => {
-            if (result) {
-              result.datasets.forEach(dataset => {
-                tempMap[dataset.id] = result.theme;
-              });
-            }
-          });
-          
-          // Teması olmayan datasetler için kontrol
-          const hasNullThemes = Object.keys(tempMap).length < 1000; // Tahmin
-          if (hasNullThemes) {
-            allThemes.push('Yok');
-          }
-          allThemes = [...new Set(allThemes)].sort();
-          
-          return tempMap;
-        }
-      } catch (error) {
-        console.error("Tema listesi yüklenirken hata:", error);
-        return {};
-      }
-    }
 
-    // Sayfa yüklendiğinde başlat
-    document.addEventListener('DOMContentLoaded', function() {
-      // PERFORMANS: Intersection Observer ile lazy loading
-      if ('IntersectionObserver' in window) {
-        const observer = new IntersectionObserver((entries) => {
-          entries.forEach(entry => {
-            if (entry.isIntersecting) {
-              initializeData();
-              observer.disconnect();
-            }
-          });
-        });
-        observer.observe(document.body);
-      } else {
-        initializeData();
-      }
-      
-      hideDuplicateElements();
-    });
-
-    // Mutation observer optimize edildi
-    const mutationObserver = new MutationObserver(
-      debounce(hideDuplicateElements, 100)
-    );
-    mutationObserver.observe(document.body, { 
-      childList: true, 
-      subtree: true 
-    });
-
-    function applyGlobalSearchAndFilter() {
-      const searchTerm = localStorage.getItem('globalSearchTerm');
-      if (searchTerm) {
-        const titleSearchInput = document.getElementById('searchTitle');
-        if (titleSearchInput) {
-          titleSearchInput.value = searchTerm;
-          console.log(`'${searchTerm}' local storage'dan alınıp arama kutusuna yazıldı.`);
-        }
-        localStorage.removeItem('globalSearchTerm');
-      }
-    }
-
-    // Klavye kısayolları
-    document.addEventListener('keydown', function(e) {
-      // Ctrl+F: Arama kutusuna odaklan
-      if (e.ctrlKey && e.key === 'f') {
-        e.preventDefault();
-        document.getElementById('searchTitle').focus();
-      }
-      
-      // Escape: Arama kutusunu temizle
-      if (e.key === 'Escape') {
-        const searchInput = document.getElementById('searchTitle');
-        if (searchInput.value) {
-          searchInput.value = '';
-          renderTable();
-        }
-      }
-    });
-
-    // PERFORMANS: Window global değişkenleri temizle
-    window.addEventListener('beforeunload', function() {
-      if (window.userFetchQueue) {
-        window.userFetchQueue.clear();
-        window.userFetchQueue = null;
-      }
-      if (window.userFetchPromise) {
-        window.userFetchPromise = null;
-      }
-    });
-
-    // Global fonksiyonlar
-    window.confirmDelete = confirmDelete;
 </script>
 </body>
 </html>

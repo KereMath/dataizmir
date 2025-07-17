@@ -1,1512 +1,543 @@
-{% macro actor(activity) %}
-  <span class="actor">
-    {{ h.linked_user(activity.user_id, 0, 30) }}
-  </span>
-{% endmacro %}
-
-{% macro dataset(activity) %}
-  {% set dataset_type = activity.data.package.type or 'dataset' %}
-  <span class="dataset">
-    {{ h.link_to(activity.data.package.title if activity.data.package else _('unknown'),
-      h.url_for(dataset_type ~ '.read', id=activity.object_id)) }}
-    {# object_id because the object_name may be out of date) #}
-  </span>
-{% endmacro %}
-
-{% macro organization(activity) %}
-  {{ h.link_to(activity.data.group.title if activity.data.group else _('unknown'),
-               h.url_for('organization.read', id=activity.object_id)) }}
-               {# object_id because the object_name may be out of date) #}
-{% endmacro %}
-
-{% macro user(activity) %}
-<span class="actor">
-  {{ h.linked_user(activity.object_id, 0, 20) }}
-</span>
-{% endmacro %}
-
-{% macro group(activity) %}
-<span class="group">
-  {{ h.link_to(activity.data.group.title if activity.data.group else _('unknown'),
-               h.url_for('group.read', id=activity.object_id)) }}
-               {# object_id because the object_name may be out of date) #}
-</span>
-{% endmacro %}
-
 <style>
-  .modern-activity-table tbody tr {
-  height: 250px !important;
-}
-/* Main Layout Container */
-.activity-main-layout {
-  display: flex !important;
-  gap: 24px !important;
-  width: 100% !important;
-  max-width: 1400px !important;
-  margin: 0 auto !important;
-  padding: 20px !important;
-}
-
-/* Modern Sidebar Styles */
-.activity-filter-sidebar {
-  width: 320px !important;
-  min-width: 320px !important;
-  background: linear-gradient(145deg, #667eea 0%, #764ba2 50%, #6366f1 100%) !important;
-  border-radius: 16px !important;
-  box-shadow: 0 10px 40px rgba(102, 126, 234, 0.15) !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  position: sticky !important;
-  top: 20px !important;
-  height: fit-content !important;
-}
-
-.sidebar-header {
-  background: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(10px) !important;
-  padding: 24px !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-}
-
-.sidebar-header h3 {
-  color: white !important;
-  font-size: 20px !important;
-  font-weight: 700 !important;
-  margin: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-}
-
-.sidebar-header h3:before {
-  content: "🎛️" !important;
-  font-size: 24px !important;
-}
-
-.sidebar-content {
-  padding: 24px !important;
-  padding-bottom:60px !important;
-  padding-top:45px !important;
-}
-
-.filter-section {
-  margin-bottom: 32px !important;
-}
-
-.filter-section:last-child {
-  margin-bottom: 0 !important;
-}
-
-.filter-section-title {
-  color: white !important;
-  font-size: 16px !important;
-  font-weight: 600 !important;
-  margin-bottom: 16px !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-}
-
-.filter-section-title.activity-types:before {
-  content: "⚡" !important;
-}
-
-.filter-section-title.user-filter:before {
-  content: "👤" !important;
-}
-
-/* User Filters */
-.user-filters {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
-  max-height: 200px !important;
-  overflow-y: auto !important;
-}
-
-.user-filter-option {
-  background: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(5px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 10px !important;
-  padding: 10px 14px !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-}
-
-.user-filter-option:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-
-.user-filter-option.active {
-  background: rgba(255, 255, 255, 0.25) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
-}
-
-.user-filter-option input[type="checkbox"] {
-  display: none !important;
-}
-
-.user-filter-option .user-avatar {
-  width: 24px !important;
-  height: 24px !important;
-  border-radius: 50% !important;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-  color: white !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 12px !important;
-  font-weight: bold !important;
-  flex-shrink: 0 !important;
-}
-
-.user-filter-option .user-name {
-  color: white !important;
-  font-weight: 500 !important;
-  font-size: 13px !important;
-  flex: 1 !important;
-}
-
-.user-filter-option .user-count {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  padding: 3px 6px !important;
-  border-radius: 10px !important;
-  min-width: 20px !important;
-  text-align: center !important;
-}
-
-/* Activity Type Filters */
-.activity-type-filters {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 12px !important;
-}
-
-.activity-type-option {
-  background: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(5px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 12px !important;
-  padding: 12px 16px !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-}
-
-.activity-type-option:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-}
-
-.activity-type-option.active {
-  background: rgba(255, 255, 255, 0.25) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
-}
-
-.activity-type-option input[type="checkbox"] {
-  display: none !important;
-}
-
-.activity-type-option .filter-icon {
-  width: 28px !important;
-  height: 28px !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 12px !important;
-  font-weight: bold !important;
-  flex-shrink: 0 !important;
-}
-
-.activity-type-option .filter-icon.created {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  color: white !important;
-}
-
-.activity-type-option .filter-icon.updated {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-  color: white !important;
-}
-
-.activity-type-option .filter-icon.deleted {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  color: white !important;
-}
-
-.activity-type-option .filter-icon.follow {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-  color: white !important;
-}
-
-.activity-type-option .filter-label {
-  color: white !important;
-  font-weight: 500 !important;
-  font-size: 14px !important;
-  flex: 1 !important;
-}
-
-.activity-type-option .filter-count {
-  background: rgba(255, 255, 255, 0.2) !important;
-  color: white !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  padding: 4px 8px !important;
-  border-radius: 12px !important;
-  min-width: 24px !important;
-  text-align: center !important;
-}
-
-/* Time Range Filters */
-.time-range-filters {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 8px !important;
-}
-
-.time-range-option {
-  background: rgba(255, 255, 255, 0.1) !important;
-  backdrop-filter: blur(5px) !important;
-  border: 1px solid rgba(255, 255, 255, 0.2) !important;
-  border-radius: 10px !important;
-  padding: 12px 16px !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 12px !important;
-}
-
-.time-range-option:hover {
-  background: rgba(255, 255, 255, 0.2) !important;
-}
-
-.time-range-option.active {
-  background: rgba(255, 255, 255, 0.25) !important;
-  border-color: rgba(255, 255, 255, 0.4) !important;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.3) !important;
-}
-
-.time-range-option input[type="radio"] {
-  display: none !important;
-}
-
-.time-range-option .radio-indicator {
-  width: 16px !important;
-  height: 16px !important;
-  border: 2px solid rgba(255, 255, 255, 0.6) !important;
-  border-radius: 50% !important;
-  position: relative !important;
-  flex-shrink: 0 !important;
-}
-
-.time-range-option.active .radio-indicator:after {
-  content: "" !important;
-  position: absolute !important;
-  top: 50% !important;
-  left: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  width: 8px !important;
-  height: 8px !important;
-  background: white !important;
-  border-radius: 50% !important;
-}
-
-.time-range-option label {
-  color: white !important;
-  font-weight: 500 !important;
-  font-size: 14px !important;
-  cursor: pointer !important;
-  flex: 1 !important;
-  margin: 0 !important;
-}
-
-/* Clear Filters Button */
-.clear-filters-btn {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  color: white !important;
-  border: none !important;
-  border-radius: 10px !important;
-  padding: 12px 20px !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-  cursor: pointer !important;
-  transition: all 0.3s ease !important;
-  width: 100% !important;
-  margin-top: 20px !important;
-}
-
-.clear-filters-btn:hover {
-  transform: translateY(-2px) !important;
-  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
-}
-
-/* Modern Activity Stream Styles */
-.modern-activity-container {
-  background: #ffffff !important;
-  border-radius: 12px !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
-  overflow: hidden !important;
-  flex: 1 !important;
-}
-
-.activity-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-  color: white !important;
-  padding: 20px 24px !important;
-  border-bottom: none !important;
-}
-
-.activity-header h3 {
-  margin: 0 !important;
-  font-size: 18px !important;
-  font-weight: 600 !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 10px !important;
-}
-
-.activity-header h3:before {
-  content: "⚡" !important;
-  font-size: 20px !important;
-}
-
-.modern-activity-table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  background: white !important;
-  margin: 0 !important;
-  table-layout: fixed !important;
-}
-
-.modern-activity-table th:first-child,
-.modern-activity-table td:first-child {
-  width: 140px !important;
-  max-width: 140px !important;
-}
-
-.modern-activity-table th:nth-child(2),
-.modern-activity-table td:nth-child(2) {
-  min-width: 80px !important;
-  max-width: 80px !important;
-}
-
-.modern-activity-table th:nth-child(3),
-.modern-activity-table td:nth-child(3) {
-  min-width: 150px !important;
-  max-width: 150px !important;
-}
-
-.modern-activity-table th:last-child,
-.modern-activity-table td:last-child {
-  width: 120px !important;
-  max-width: 120px !important;
-  text-align: center !important;
-}
-
-.modern-activity-table thead {
-  background: #f8fafc !important;
-  border-bottom: 2px solid #e2e8f0 !important;
-}
-
-.modern-activity-table th {
-  padding: 16px 20px !important;
-  text-align: left !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-  color: #475569 !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  border: none !important;
-}
-
-.modern-activity-table tbody tr {
-  border-bottom: 1px solid #f1f5f9 !important;
-  transition: all 0.2s ease !important;
-}
-
-.modern-activity-table tbody tr:hover {
-  background: #f8fafc !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
-
-.modern-activity-table tbody tr:last-child {
-  border-bottom: none !important;
-}
-
-.modern-activity-table tbody tr.hidden {
-  display: none !important;
-}
-
-.modern-activity-table td {
-  padding: 16px 20px !important;
-  vertical-align: middle !important;
-  border: none !important;
-  font-size: 14px !important;
-  line-height: 1.5 !important;
-}
-
-.activity-icon {
-  width: 32px !important;
-  height: 32px !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 14px !important;
-  font-weight: bold !important;
-  margin-right: 0 !important;
-  flex-shrink: 0 !important;
-}
-
-.activity-icon.created {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  color: white !important;
-}
-
-.activity-icon.updated {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-  color: white !important;
-}
-
-.activity-icon.deleted {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  color: white !important;
-}
-
-.activity-icon.follow {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-  color: white !important;
-}
-
-.activity-icon.default {
-  background: linear-gradient(135deg, #6b7280, #4b5563) !important;
-  color: white !important;
-}
-
-.activity-type {
-  font-weight: 600 !important;
-  color: #1e293b !important;
-  margin-bottom: 4px !important;
-  display: block !important;
-}
-
-.activity-description {
-  color: #64748b !important;
-  font-size: 13px !important;
-  line-height: 1.4 !important;
-}
-
-.activity-object {
-  font-weight: 500 !important;
-  color: #0f172a !important;
-}
-
-.activity-object a {
-  color: #3b82f6 !important;
-  text-decoration: none !important;
-  font-weight: 600 !important;
-  transition: color 0.2s ease !important;
-  display: inline-block !important;
-  padding: 6px 12px !important;
-  background: linear-gradient(135deg, #e0f2fe, #b3e5fc) !important;
-  border-radius: 8px !important;
-  border: 1px solid #81d4fa !important;
-  margin: 2px 0 !important;
-}
-
-.activity-object a:hover {
-  color: #1d4ed8 !important;
-  background: linear-gradient(135deg, #b3e5fc, #81d4fa) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2) !important;
-}
-
-/* Modern Date Display */
-.activity-date {
-  background: linear-gradient(135deg, #f3f4f6, #e5e7eb) !important;
-  color: #374151 !important;
-  padding: 4px 8px !important;
-  border-radius: 6px !important;
-  font-size: 12px !important;
-  font-weight: 500 !important;
-  display: inline-block !important;
-  margin: 2px 0 !important;
-  border: 1px solid #d1d5db !important;
-}
-
-/* Modern Action Buttons */
-.activity-action-btn {
-  display: inline-block !important;
-  padding: 6px 12px !important;
-  border-radius: 8px !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  text-decoration: none !important;
-  transition: all 0.2s ease !important;
-  margin: 2px 4px 2px 0 !important;
-  border: none !important;
-  cursor: pointer !important;
-}
-
-.activity-action-btn.view {
-  background: linear-gradient(135deg, #10b981, #059669) !important;
-  color: white !important;
-}
-
-.activity-action-btn.view:hover {
-  background: linear-gradient(135deg, #059669, #047857) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3) !important;
-}
-
-.activity-action-btn.edit {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-  color: white !important;
-}
-
-.activity-action-btn.edit:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
-}
-
-.activity-action-btn.delete {
-  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
-  color: white !important;
-}
-
-.activity-action-btn.delete:hover {
-  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3) !important;
-}
-
-.activity-action-btn.download {
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-  color: white !important;
-}
-
-.activity-action-btn.download:hover {
-  background: linear-gradient(135deg, #d97706, #b45309) !important;
-  transform: translateY(-1px) !important;
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3) !important;
-}
-
-/* Modern Tag Style for Categories */
-.activity-tag {
-  display: inline-block !important;
-  padding: 4px 8px !important;
-  background: linear-gradient(135deg, #fef3c7, #fed7aa) !important;
-  color: #92400e !important;
-  border-radius: 12px !important;
-  font-size: 11px !important;
-  font-weight: 600 !important;
-  margin: 2px 4px 2px 0 !important;
-  border: 1px solid #fbbf24 !important;
-}
-
-/* Remove list markers and styling */
-.activity-object li {
-  list-style: none !important;
-  list-style-type: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-}
-
-.activity-object li::marker {
-  display: none !important;
-  content: none !important;
-}
-
-.activity-object ul, .activity-object ol {
-  list-style: none !important;
-  padding: 0 !important;
-  margin: 0 !important;
-}
-
-.activity-time {
-  color: #64748b !important;
-  font-size: 12px !important;
-  white-space: nowrap !important;
-  background: #f1f5f9 !important;
-  padding: 4px 8px !important;
-  border-radius: 12px !important;
-  display: inline-block !important;
-}
-
-.actor a {
-  color: #3b82f6 !important;
-  text-decoration: none !important;
-  font-weight: 500 !important;
-  transition: color 0.2s ease !important;
-}
-
-.actor a:hover {
-  color: #1d4ed8 !important;
-  text-decoration: underline !important;
-}
-
-.dataset a, .organization a, .group a {
-  color: #059669 !important;
-  text-decoration: none !important;
-  font-weight: 500 !important;
-  transition: color 0.2s ease !important;
-}
-
-.dataset a:hover, .organization a:hover, .group a:hover {
-  color: #047857 !important;
-  text-decoration: underline !important;
-}
-
-/* Pagination Styles */
-.pagination-container {
-  display: flex !important;
-  justify-content: space-between !important;
-  align-items: center !important;
-  padding: 20px 24px !important;
-  background: #f8fafc !important;
-  border-top: 1px solid #e2e8f0 !important;
-  flex-wrap: wrap !important;
-  gap: 15px !important;
-}
-
-.pagination-info {
-  color: #64748b !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-}
-
-.pagination-controls {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-}
-
-.pagination-select {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-}
-
-.pagination-select label {
-  color: #64748b !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-}
-
-.pagination-select select {
-  padding: 6px 10px !important;
-  border: 1px solid #d1d5db !important;
-  border-radius: 6px !important;
-  font-size: 14px !important;
-  background: white !important;
-  color: #374151 !important;
-  cursor: pointer !important;
-}
-
-.pagination-select select:focus {
-  outline: none !important;
-  border-color: #3b82f6 !important;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
-}
-
-.pagination-buttons {
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-}
-
-.pagination-btn {
-  padding: 8px 12px !important;
-  border: 1px solid #d1d5db !important;
-  background: white !important;
-  color: #374151 !important;
-  border-radius: 6px !important;
-  font-size: 14px !important;
-  font-weight: 500 !important;
-  cursor: pointer !important;
-  transition: all 0.2s ease !important;
-  text-decoration: none !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  min-width: 40px !important;
-  justify-content: center !important;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: #f3f4f6 !important;
-  border-color: #9ca3af !important;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.5 !important;
-  cursor: not-allowed !important;
-  background: #f9fafb !important;
-}
-
-.pagination-btn.active {
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8) !important;
-  color: white !important;
-  border-color: #3b82f6 !important;
-}
-
-.pagination-btn.active:hover {
-  background: linear-gradient(135deg, #1d4ed8, #1e40af) !important;
-  border-color: #1d4ed8 !important;
-}
-
-.pagination-btn.prev:before {
-  content: "‹" !important;
-  font-size: 16px !important;
-}
-
-.pagination-btn.next:after {
-  content: "›" !important;
-  font-size: 16px !important;
-}
-
-.pagination-dots {
-  padding: 8px 4px !important;
-  color: #9ca3af !important;
-  font-weight: bold !important;
-  cursor: default !important;
-}
-.activity-empty {
-  text-align: center !important;
-  padding: 60px 20px !important;
-  color: #64748b !important;
-}
-
-.activity-empty-icon {
-  font-size: 48px !important;
-  margin-bottom: 16px !important;
-  opacity: 0.5 !important;
-}
-
-.activity-empty-text {
-  font-size: 16px !important;
-  font-weight: 500 !important;
-  margin-bottom: 8px !important;
-}
-
-.activity-empty-description {
-  font-size: 14px !important;
-  opacity: 0.8 !important;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
+    .modern-activity-table tbody tr {
+    height: auto !important; /* Otomatik yükseklik */
+  }
+  /* Main Layout Container */
   .activity-main-layout {
-    flex-direction: column !important;
+    display: block !important; /* Flex yerine block yapıldı */
+    width: 100% !important;
+    max-width: 1400px !important;
+    margin: 0 auto !important;
+    padding: 20px !important;
   }
   
+  /* Sidebar tamamen kaldırıldığı için ilgili CSS'ler önemsizleşti */
   .activity-filter-sidebar {
-    width: 100% !important;
-    min-width: auto !important;
-    position: relative !important;
-    top: auto !important;
+    display: none !important; /* Sidebar tamamen gizlendi */
   }
   
-  .sidebar-content {
-    padding: 20px !important;
-  }
-  
-  .activity-type-filters,
-  .time-range-filters,
-  .user-filters {
-    flex-direction: row !important;
-    flex-wrap: wrap !important;
-  }
-  
-  .activity-type-option,
-  .time-range-option,
-  .user-filter-option {
-    flex: 1 !important;
-    min-width: 120px !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .modern-activity-table th,
-  .modern-activity-table td {
-    padding: 12px 16px !important;
-    font-size: 13px !important;
+  /* Modern Activity Stream Styles */
+  .modern-activity-container {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+    overflow: auto !important; /* Tablonun yatay kaydırması için auto yapıldı */
+    flex: 1 !important;
   }
   
   .activity-header {
-    padding: 16px 20px !important;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    color: white !important;
+    padding: 20px 24px !important;
+    border-bottom: none !important;
   }
   
   .activity-header h3 {
-    font-size: 16px !important;
+    margin: 0 !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
   }
   
-  .activity-icon {
-    width: 28px !important;
-    height: 28px !important;
-    font-size: 12px !important;
+  .activity-header h3:before {
+    content: "⚡" !important;
+    font-size: 20px !important;
   }
   
-  .activity-type-filters,
-  .time-range-filters,
-  .user-filters {
-    flex-direction: column !important;
-  }
-  
-  .pagination-container {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 10px !important;
-  }
-  
-  .pagination-controls {
-    justify-content: center !important;
-    flex-wrap: wrap !important;
-  }
-}
-
-@media (max-width: 480px) {
   .modern-activity-table {
-    font-size: 12px !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    background: white !important;
+    margin: 0 !important;
+    table-layout: auto !important; /* Sütun genişlikleri dinamikleşsin */
+    min-width: 800px; /* Çok fazla sütun varsa yatay kaydırma için minimum genişlik */
   }
   
-  .modern-activity-table th:last-child,
-  .modern-activity-table td:last-child {
-    display: none !important;
+  /* Eski sabit sütun genişlikleri kaldırıldı, dinamik içeriğe göre ayarlansın */
+  .modern-activity-table th,
+  .modern-activity-table td {
+      padding: 16px 20px !important;
+      text-align: left !important;
+      vertical-align: top !important; /* İçerik üste hizalansın */
+      font-size: 14px !important;
+      line-height: 1.5 !important;
+      border-bottom: 1px solid #f1f5f9 !important;
+      word-break: break-word; /* Uzun kelimeleri kırma */
   }
   
-  .modern-activity-table th:first-child,
-  .modern-activity-table td:first-child {
-    width: 140px !important;
-    max-width: 140px !important;
+  .modern-activity-table thead {
+    background: #f8fafc !important;
+    border-bottom: 2px solid #e2e8f0 !important;
   }
-}
-</style>
-
-{# Displays an activity stream with filters
-
-activity_stream - the activity data. e.g. the output from package_activity_list
-id - the id or current name of the object (e.g. package name, user id)
-object_type - 'package', 'organization', 'group', 'user'
-
-#}
-{% block activity_stream %}
-{% set dataset_type = 'dataset' %}
-{% set can_show_activity_detail = h.check_access('activity_list', {'id': id, 'include_data': True, 'object_type': object_type}) %}
-
-<div class="activity-main-layout">
-  <!-- Filter Sidebar -->
-  <div class="activity-filter-sidebar">
-    <div class="sidebar-header">
-      <h3>Filtreler</h3>
-    </div>
-    
-    <div class="sidebar-content">
-      <!-- Activity Type Filters -->
-      <div class="filter-section">
-        <div class="filter-section-title activity-types">Aktivite Türü</div>
-        <div class="activity-type-filters">
-          <div class="activity-type-option" data-filter="created">
-            <input type="checkbox" id="filter-created" value="created">
-            <div class="filter-icon created">+</div>
-            <div class="filter-label">Yeni Oluşturuldu</div>
-            <div class="filter-count" id="count-created">0</div>
-          </div>
-          
-          <div class="activity-type-option" data-filter="updated">
-            <input type="checkbox" id="filter-updated" value="updated">
-            <div class="filter-icon updated">✎</div>
-            <div class="filter-label">Güncellendi</div>
-            <div class="filter-count" id="count-updated">0</div>
-          </div>
-          
-          <div class="activity-type-option" data-filter="deleted">
-            <input type="checkbox" id="filter-deleted" value="deleted">
-            <div class="filter-icon deleted">×</div>
-            <div class="filter-label">Silindi</div>
-            <div class="filter-count" id="count-deleted">0</div>
-          </div>
-          
-          <div class="activity-type-option" data-filter="follow">
-            <input type="checkbox" id="filter-follow" value="follow">
-            <div class="filter-icon follow">♥</div>
-            <div class="filter-label">Takip Edildi</div>
-            <div class="filter-count" id="count-follow">0</div>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Time Sort Filters -->
-      <div class="filter-section">
-        <div class="filter-section-title time-range">Sıralama</div>
-        <div class="time-range-filters">
-          <div class="time-range-option active" data-sort="newest">
-            <input type="radio" name="sort-filter" id="sort-newest" value="newest" checked>
-            <div class="radio-indicator"></div>
-            <label for="sort-newest">En Yeni Önce</label>
-          </div>
-          
-          <div class="time-range-option" data-sort="oldest">
-            <input type="radio" name="sort-filter" id="sort-oldest" value="oldest">
-            <div class="radio-indicator"></div>
-            <label for="sort-oldest">En Eski Önce</label>
-          </div>
-        </div>
-      </div>
-      
-      <!-- User Filters -->
-      <div class="filter-section">
-        <div class="filter-section-title user-filter">👤 Kullanıcılar</div>
-        <div class="user-filters" id="user-filters">
-          <!-- User filters will be populated by JavaScript -->
-        </div>
-      </div>
-      
-      <button class="clear-filters-btn" onclick="clearAllFilters()">
-        🗑️ Filtreleri Temizle
-      </button>
-    </div>
+  
+  .modern-activity-table th {
+    font-weight: 600 !important;
+    color: #475569 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.5px !important;
+    border: none !important;
+  }
+  
+  .modern-activity-table tbody tr {
+    transition: all 0.2s ease !important;
+  }
+  
+  .modern-activity-table tbody tr:hover {
+    background: #f8fafc !important;
+    transform: none !important; /* Hover efekti kaldırıldı */
+    box-shadow: none !important; /* Hover efekti kaldırıldı */
+  }
+  
+  .modern-activity-table tbody tr:last-child {
+    border-bottom: none !important;
+  }
+  
+  /* Bu kısım artık kullanılmıyor, kaldırıldı:
+  .modern-activity-table tbody tr.hidden {
+    display: table-row !important;
+  }
+  */
+  
+  /* Diğer CSS kuralları aynen kalsın veya ihtiyaca göre düzenlensin */
+  /* Stil düzeltmelerinin çoğu geçerliliğini koruyor */
+  
+  /* Remove list markers and styling */
+  .activity-object li {
+    list-style: none !important;
+    list-style-type: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  .activity-object li::marker {
+    display: none !important;
+    content: none !important;
+  }
+  
+  .activity-object ul, .activity-object ol {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  
+  /* Responsive Design */
+  @media (max-width: 1200px) {
+    .activity-main-layout {
+      flex-direction: column !important;
+    }
+    
+    .activity-filter-sidebar {
+      width: 100% !important;
+      min-width: auto !important;
+      position: relative !important;
+      top: auto !important;
+    }
+    
+    .sidebar-content {
+      padding: 20px !important;
+    }
+    
+    /* Bu sınıflara sahip elemanlar artık yok, kaldırıldı */
+    /*
+    .activity-type-filters,
+    .time-range-filters,
+    .user-filters {
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+    }
+    
+    .activity-type-option,
+    .time-range-option,
+    .user-filter-option {
+      flex: none !important;
+      min-width: auto !important;
+    }
+    */
+  }
+  
+  @media (max-width: 768px) {
+    .modern-activity-table th,
+    .modern-activity-table td {
+      padding: 10px 12px !important; /* Daha küçük padding */
+      font-size: 12px !important;
+    }
+    
+    .activity-header {
+      padding: 12px 16px !important;
+    }
+    
+    .activity-header h3 {
+      font-size: 15px !important;
+    }
+    
+    /* Bu sınıflara sahip elemanlar artık yok, kaldırıldı */
+    /*
+    .activity-icon {
+      width: 24px !important;
+      height: 24px !important;
+      font-size: 10px !important;
+    }
+    */
+    
+    /* Bu sınıflara sahip elemanlar artık yok, kaldırıldı */
+    /*
+    .activity-type-filters,
+    .time-range-filters,
+    .user-filters {
+      flex-direction: column !important;
+    }
+    */
+    
+    /* Pagination artık tamamen gizlendiği için bu kısım da önemsizleşti */
+    .pagination-container {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 10px !important;
+      padding: 15px !important;
+    }
+    
+    .pagination-controls {
+      justify-content: center !important;
+      flex-wrap: wrap !important;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .modern-activity-table {
+      font-size: 11px !important;
+    }
+  }
+  </style>
+  
+  {# Displays an activity stream with filters
+  
+  activity_stream - the activity data. e.g. the output from package_activity_list
+  id - the id or current name of the object (e.g. package name, user id)
+  object_type - 'package', 'organization', 'group', 'user'
+  
+  #}
+  {% block activity_stream %}
+  {# Makrolar aynen kalabilir, çünkü activity nesnesi hala aynı şekilde kullanılacak #}
+  {% macro actor(activity) %}
+    <span class="actor">
+      {{ h.linked_user(activity.user_id, 0, 30) }}
+    </span>
+  {% endmacro %}
+  
+  {% macro dataset(activity) %}
+    {% set dataset_type = activity.data.package.type if activity.data.package and activity.data.package.type else 'dataset' %}
+    <span class="dataset">
+      {{ h.link_to(activity.data.package.title if activity.data.package and activity.data.package.title else _('unknown'),
+        h.url_for(dataset_type ~ '.read', id=activity.object_id)) }}
+    </span>
+  {% endmacro %}
+  
+  {% macro organization(activity) %}
+    {{ h.link_to(activity.data.group.title if activity.data.group and activity.data.group.title else _('unknown'),
+                 h.url_for('organization.read', id=activity.object_id)) }}
+  {% endmacro %}
+  
+  {% macro user(activity) %}
+  <span class="actor">
+    {{ h.linked_user(activity.object_id, 0, 20) }}
+  </span>
+  {% endmacro %}
+  
+  {% macro group(activity) %}
+  <span class="group">
+    {{ h.link_to(activity.data.group.title if activity.data.group and activity.data.group.title else _('unknown'),
+                 h.url_for('group.read', id=activity.object_id)) }}
+  </span>
+  {% endmacro %}
+  
+  
+  {% set can_show_activity_detail = h.check_access('activity_list', {'id': id, 'include_data': True, 'object_type': object_type}) %}
+  
+  <div class="activity-main-layout">
+      <div class="activity-filter-sidebar" style="display: none;">
+        </div>
+  
+      <div class="modern-activity-container">
+      <div class="activity-header">
+        <h3>Tüm Aktiviteler (Backend'den Gelen Eksiksiz Veri)</h3>
+      </div>
+      
+      {% if activity_stream %}
+        <table class="modern-activity-table">
+          <thead>
+            <tr id="activity-table-header-row">
+              {# Sütun başlıkları dinamik olarak JavaScript tarafından doldurulacak #}
+            </tr>
+          </thead>
+          <tbody id="activity-table-body">
+            {# Jinja2 ile gelen veriyi işleyip tabloya basıyoruz - JS tarafından doldurulacak #}
+          </tbody>
+        </table>
+        
+              <div class="pagination-container" style="display: none;">
+          <div class="pagination-info" id="pagination-info"></div>
+          <div class="pagination-controls">
+            <div class="pagination-buttons" id="pagination-buttons"></div>
+          </div>
+        </div>
+      {% else %}
+        <div class="activity-empty">
+          <div class="activity-empty-icon">📊</div>
+          <div class="activity-empty-text">Henüz aktivite yok</div>
+          <div class="activity-empty-description">Aktiviteler burada görünecek</div>
+        </div>
+      {% endif %}
+    </div>
   </div>
-
-  <!-- Activity Table -->
-  <div class="modern-activity-container">
-    <div class="activity-header">
-      <h3>Son Aktiviteler</h3>
-    </div>
-    
-    {% if activity_stream %}
-      <table class="modern-activity-table">
-        <thead>
-          <tr>
-            <th>Tür</th>
-            <th>Kullanıcı</th>
-            <th>Açıklama</th>
-            <th>Zaman</th>
-          </tr>
-        </thead>
-        <tbody id="activity-table-body">
-          {% for activity in activity_stream %}
-            <tr data-activity-type="{{ activity.activity_type.replace(' ', '_').lower() }}" 
-                data-timestamp="{{ activity.timestamp }}"
-                data-user-id="{{ activity.user_id or 'unknown' }}">
-              <td>
-                <div style="display: flex !important; align-items: center !important; gap: 12px !important;">
-                  {% set activity_type = activity.activity_type.replace(' ', '_').lower() %}
-                  {% if 'new' in activity_type or 'created' in activity_type %}
-                    <div class="activity-icon created">+</div>
-                    <span style="font-weight: 600 !important; color: #059669 !important;">Yeni Oluşturuldu</span>
-                  {% elif 'changed' in activity_type or 'updated' in activity_type %}
-                    <div class="activity-icon updated">✎</div>
-                    <span style="font-weight: 600 !important; color: #3b82f6 !important;">Güncellendi</span>
-                  {% elif 'deleted' in activity_type %}
-                    <div class="activity-icon deleted">×</div>
-                    <span style="font-weight: 600 !important; color: #ef4444 !important;">Silindi</span>
-                  {% elif 'follow' in activity_type %}
-                    <div class="activity-icon follow">♥</div>
-                    <span style="font-weight: 600 !important; color: #f59e0b !important;">Takip Edildi</span>
-                  {% else %}
-                    <div class="activity-icon default">•</div>
-                    <span style="font-weight: 600 !important; color: #6b7280 !important;">{{ activity.activity_type|capitalize }}</span>
-                  {% endif %}
-                </div>
-              </td>
-              <td>
-                <div class="activity-description">
-                  {{ actor(activity) }} tarafından
-                </div>
-              </td>
-              <td class="activity-object">
-                {%- snippet "snippets/activities/{}.html".format(
-                  activity.activity_type.replace(' ', '_')
-                  ), "snippets/activities/fallback.html",
-                  activity=activity, can_show_activity_detail=can_show_activity_detail, ah={
-                    'actor': actor,
-                    'dataset': dataset,
-                    'organization': organization,
-                    'user': user,
-                    'group': group,
-                    'dataset_type' : dataset_type,
-                  }, id=id
-                -%}
-              </td>
-              <td>
-                <span class="activity-time">
-                  {{ h.time_ago_from_timestamp(activity.timestamp) }}
-                </span>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      
-      <!-- Pagination -->
-      <div class="pagination-container">
-        <div class="pagination-info" id="pagination-info">
-          <!-- Pagination bilgisi buraya gelecek -->
-        </div>
-        
-        <div class="pagination-controls">
-          <!-- <div class="pagination-select">
-            <label for="items-per-page">Sayfa başına:</label>
-            <select id="items-per-page">
-              <option value="10">10</option>
-              <option value="20" selected>20</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
-          </div> -->
-          
-          <div class="pagination-buttons" id="pagination-buttons">
-            <!-- Pagination butonları buraya gelecek -->
-          </div>
-        </div>
-      </div>
-    {% else %}
-      <div class="activity-empty">
-        <div class="activity-empty-icon">📊</div>
-        <div class="activity-empty-text">Henüz aktivite yok</div>
-        <div class="activity-empty-description">Aktiviteler burada görünecek</div>
-      </div>
-    {% endif %}
-  </div>
-</div>
-
-<script>
-let currentPage = 1;
-let itemsPerPage = 3;
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Initialize filter functionality
-  initializeFilters();
-  updateFilterCounts();
-  generateUserFilters();
-  setupModernButtons();
-  initializePagination();
-});
-
-function initializeFilters() {
-  // Activity type filter click handlers
-  document.querySelectorAll('.activity-type-option').forEach(option => {
-    option.addEventListener('click', function() {
-      const checkbox = this.querySelector('input[type="checkbox"]');
-      checkbox.checked = !checkbox.checked;
-      this.classList.toggle('active', checkbox.checked);
-      currentPage = 1; // Reset to first page
-      applyFiltersAndPagination();
-    });
-  });
   
-  // Sort filter click handlers (changed from time-range)
-  document.querySelectorAll('.time-range-option').forEach(option => {
-    option.addEventListener('click', function() {
-      // Remove active from all sort options
-      document.querySelectorAll('.time-range-option').forEach(opt => {
-        opt.classList.remove('active');
-        opt.querySelector('input[type="radio"]').checked = false;
-      });
-      
-      // Set active on clicked option
-      this.classList.add('active');
-      this.querySelector('input[type="radio"]').checked = true;
-      currentPage = 1; // Reset to first page
-      applySorting();
-      applyFiltersAndPagination();
-    });
-  });
+  <script>
+  document.addEventListener('DOMContentLoaded', function() {
+      // activity_stream verisi, Jinja2'den doğrudan bir JavaScript değişkenine aktarılır.
+      // Bu, CKAN'ın Python tarafında `activity_stream` adında bir değişkende
+      // aktivite verilerini sağladığını varsayarız.
+      const activityStream = {{ activity_stream | tojson }};
   
-  // User filter click handlers (will be set up after generating filters)
-  setupUserFilterHandlers();
-}
-
-function initializePagination() {
-  // Items per page change handler
-  const itemsPerPageSelect = document.getElementById('items-per-page');
-  if (itemsPerPageSelect) {
-    itemsPerPageSelect.addEventListener('change', function() {
-      itemsPerPage = parseInt(this.value);
-      currentPage = 1; // Reset to first page
-      applyFiltersAndPagination();
-    });
-  }
-}
-
-function generateUserFilters() {
-  const userFiltersContainer = document.getElementById('user-filters');
-  const rows = document.querySelectorAll('#activity-table-body tr');
-  const userCounts = {};
-  const userNames = {};
+      const tableBody = document.getElementById('activity-table-body');
+      const tableHeaderRow = document.getElementById('activity-table-header-row');
   
-  // Collect user data from rows
-  rows.forEach(row => {
-    const userId = row.dataset.userId;
-    const userLink = row.querySelector('.actor a');
-    
-    if (userId && userId !== 'unknown' && userLink) {
-      const userName = userLink.textContent.trim();
-      if (!userCounts[userId]) {
-        userCounts[userId] = 0;
-        userNames[userId] = userName;
+      if (!activityStream || activityStream.length === 0) {
+          // Eğer aktivite akışı boşsa, JS tarafında ekstra bir işlem yapmaya gerek yok,
+          // Jinja'nın {% else %} bloğu zaten bu durumu yönetiyor.
+          return;
       }
-      userCounts[userId]++;
-    }
-  });
   
-  // Generate user filter options
-  Object.keys(userCounts).forEach(userId => {
-    const userName = userNames[userId];
-    const count = userCounts[userId];
-    const initials = userName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
-    
-    const userOption = document.createElement('div');
-    userOption.className = 'user-filter-option';
-    userOption.dataset.userId = userId;
-    userOption.innerHTML = `
-      <input type="checkbox" value="${userId}">
-      <div class="user-avatar">${initials}</div>
-      <div class="user-name">${userName}</div>
-      <div class="user-count">${count}</div>
-    `;
-    
-    userFiltersContainer.appendChild(userOption);
-  });
-  
-  setupUserFilterHandlers();
-}
-
-function setupUserFilterHandlers() {
-  document.querySelectorAll('.user-filter-option').forEach(option => {
-    option.addEventListener('click', function() {
-      const checkbox = this.querySelector('input[type="checkbox"]');
-      checkbox.checked = !checkbox.checked;
-      this.classList.toggle('active', checkbox.checked);
-      currentPage = 1; // Reset to first page
-      applyFiltersAndPagination();
-    });
-  });
-}
-
-function applySorting() {
-  const rows = Array.from(document.querySelectorAll('#activity-table-body tr'));
-  const sortOrder = document.querySelector('.time-range-option.active').dataset.sort;
-  const tbody = document.getElementById('activity-table-body');
-  
-  rows.sort((a, b) => {
-    const timestampA = parseInt(a.dataset.timestamp);
-    const timestampB = parseInt(b.dataset.timestamp);
-    
-    if (sortOrder === 'newest') {
-      return timestampB - timestampA; // Newest first
-    } else {
-      return timestampA - timestampB; // Oldest first
-    }
-  });
-  
-  // Remove all rows and add them back in sorted order
-  rows.forEach(row => row.remove());
-  rows.forEach(row => tbody.appendChild(row));
-}
-
-function applyFiltersAndPagination() {
-  // First apply filters
-  applyFilters();
-  // Then apply pagination
-  applyPagination();
-  // Update pagination controls
-  updatePaginationControls();
-}
-
-function applyFilters() {
-  const rows = document.querySelectorAll('#activity-table-body tr');
-  const selectedTypes = Array.from(document.querySelectorAll('.activity-type-option.active')).map(opt => opt.dataset.filter);
-  const selectedUsers = Array.from(document.querySelectorAll('.user-filter-option.active')).map(opt => opt.dataset.userId);
-  
-  rows.forEach(row => {
-    let showRow = true;
-    
-    // Apply activity type filter
-    if (selectedTypes.length > 0) {
-      const rowType = row.dataset.activityType;
-      const matchesType = selectedTypes.some(type => {
-        if (type === 'created') return rowType.includes('new') || rowType.includes('created');
-        if (type === 'updated') return rowType.includes('changed') || rowType.includes('updated');
-        if (type === 'deleted') return rowType.includes('deleted');
-        if (type === 'follow') return rowType.includes('follow');
-        return false;
+      // --- Sütun Başlıklarını Dinamik Olarak Oluştur ---
+      // Tüm aktivitelerdeki benzersiz anahtarları topla
+      let allKeys = new Set();
+      activityStream.forEach(activity => {
+          Object.keys(activity).forEach(key => allKeys.add(key));
+          // activity.data bir nesne ise, içindeki anahtarları da 'data.key' formatında ekleyelim
+          if (typeof activity.data === 'object' && activity.data !== null) {
+              Object.keys(activity.data).forEach(dataKey => allKeys.add('data.' + dataKey));
+          } else if (typeof activity.data === 'string') {
+              // Eğer activity.data bir JSON string ise parse etmeye çalışalım
+              try {
+                  const parsedData = JSON.parse(activity.data);
+                  if (typeof parsedData === 'object' && parsedData !== null) {
+                      Object.keys(parsedData).forEach(dataKey => allKeys.add('data.' + dataKey));
+                  }
+              } catch (e) {
+                  // JSON parse hatası varsa, data'yı sadece bir 'data' sütunu olarak ele alacağız
+                  allKeys.add('data');
+              }
+          }
       });
-      
-      if (!matchesType) showRow = false;
-    }
-    
-    // Apply user filter
-    if (selectedUsers.length > 0 && showRow) {
-      const rowUserId = row.dataset.userId;
-      if (!selectedUsers.includes(rowUserId)) {
-        showRow = false;
+  
+      // Gösterilmesini istemediğimiz bazı anahtarlar (CKAN içsel veya anlamsız)
+      const excludedKeys = new Set([
+          '__extras',
+          'validated_data',
+          'object_type', // Nesne tipi ve ID'sini birleştirip daha anlamlı hale getirebiliriz
+          'object_id',
+          'activity_type', // Daha anlamlı bir "Aktivite" sütunu oluşturacağız
+          'user_id', // Kullanıcı ID'si yerine kullanıcı adını çekeceğiz
+          // Diğer CKAN özel/içsel anahtarları:
+          'revision_id',
+          'data' // 'data.key' olarak detayları alacağımız için ana 'data' sütununu kaldırıyoruz
+      ]);
+  
+      // Kullanıcı adları için bir cache oluşturalım
+      const userCache = {};
+      const userPromises = [];
+  
+      // CKAN API'sinden kullanıcı adını çeker
+      // Bu fonksiyon, aynı zamanda cache'i günceller ve Promise döndürür.
+      async function fetchUsername(userId) {
+          if (!userId) return 'Bilinmiyor';
+          if (userCache[userId]) return userCache[userId];
+  
+          try {
+              // CKAN API Endpoint'i için göreceli URL kullanıyoruz.
+              // Sunucu adresini belirtmeye gerek yok.
+              const response = await fetch(`/api/3/action/user_show`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include', // Oturum çerezlerini gönderir
+                  body: JSON.stringify({ id: userId })
+              });
+              const data = await response.json();
+              if (data.success && data.result) {
+                  const username = data.result.name || data.result.display_name || 'Bilinmiyor';
+                  userCache[userId] = username;
+                  return username;
+              }
+          } catch (error) {
+              console.warn(`Kullanıcı ID ${userId} bilgisi çekilemedi:`, error);
+          }
+          userCache[userId] = 'Bilinmiyor'; // Hata durumunda da cache'e ekle
+          return 'Bilinmiyor';
       }
-    }
-    
-    // Add filter class (not display:none yet, pagination will handle visibility)
-    row.classList.toggle('filtered-out', !showRow);
+  
+      // Başlık hücresi için gösterim sırası ve başlıklar
+      const customHeaders = {
+          'timestamp': 'Zaman',
+          'user_display_name': 'Kullanıcı', // Yeni oluşturacağımız kullanıcı adı sütunu
+          'activity_details': 'Aktivite Detayı', // Aktivite tipi ve nesne detaylarını birleştireceğimiz sütun
+          'object_type': 'Nesne Tipi', // Eğer ayrı bir sütun olarak tutmak istersek
+          'object_id': 'Nesne ID', // Eğer ayrı bir sütun olarak tutmak istersek
+          // Diğer 'data.' ile başlayanlar dinamik olacak
+      };
+  
+      // Belirli bir sıralama belirleyelim, geri kalanlar alfabetik olsun
+      const preferredOrder = [
+          'timestamp', 'user_display_name', 'activity_details'
+          // 'object_type', 'object_id' gibi daha fazla sütunu buraya ekleyebilirsiniz
+      ];
+  
+      // `allKeys` kümesindeki anahtarları sırala
+      let sortedKeys = Array.from(allKeys).filter(key => !excludedKeys.has(key));
+      sortedKeys.sort((a, b) => {
+          const indexA = preferredOrder.indexOf(a);
+          const indexB = preferredOrder.indexOf(b);
+  
+          // Eğer ikisi de tercih edilen sırada değilse alfabetik sırala
+          if (indexA === -1 && indexB === -1) {
+              return a.localeCompare(b);
+          }
+          // Sadece biri tercih edilen sıradaysa, onu öne al
+          if (indexA === -1) return 1;
+          if (indexB === -1) return -1;
+          // İkisi de tercih edilen sıradaysa, sırasına göre sırala
+          return indexA - indexB;
+      });
+  
+      // Custom header'ları preferredOrder'ın başına ekleyerek nihai sırayı oluştur
+      const finalHeaders = preferredOrder.filter(header => Object.keys(customHeaders).includes(header))
+                              .concat(sortedKeys.filter(key => !preferredOrder.includes(key)));
+  
+      // Dinamik sütun başlıklarını oluştur
+      const headerHtml = finalHeaders.map(key => {
+          let displayKey = customHeaders[key] || key.replace(/_/g, ' '); // Özel başlık varsa onu kullan, yoksa alt çizgileri düzelt
+          if (key.startsWith('data.')) {
+              displayKey = 'Detay: ' + displayKey.substring(5).replace(/_/g, ' '); // 'data.' prefix'ini kaldırıp düzelt
+          }
+          return `<th>${displayKey.charAt(0).toUpperCase() + displayKey.slice(1)}</th>`; // İlk harfi büyüt
+      }).join('');
+      tableHeaderRow.innerHTML = headerHtml;
+  
+      // Kullanıcı adlarını önceden çekmek için tüm user_id'leri topla
+      const uniqueUserIds = new Set(activityStream.map(activity => activity.user_id).filter(id => id && id !== 'null'));
+      uniqueUserIds.forEach(userId => {
+          userPromises.push(fetchUsername(userId));
+      });
+  
+      // Tüm kullanıcı adları çekildikten sonra tabloyu render et
+      Promise.all(userPromises).then(() => {
+          tableBody.innerHTML = ''; // Mevcut içeriği temizle
+  
+          activityStream.forEach(activity => {
+              const tr = document.createElement('tr');
+  
+              finalHeaders.forEach(headerKey => {
+                  const td = document.createElement('td');
+                  let cellContent = '';
+  
+                  if (headerKey === 'user_display_name') {
+                      cellContent = userCache[activity.user_id] || activity.user_id || 'Bilinmiyor';
+                  } else if (headerKey === 'timestamp') {
+                      cellContent = activity.timestamp ? new Date(activity.timestamp).toLocaleString('tr-TR') : '<span style="color:#9b98a7;font-style:italic;">Yok</span>';
+                  } else if (headerKey === 'activity_details') {
+                      // Bu sütunda Aktivite Tipi ve Nesne bilgisini birleştiriyoruz
+                      let objectLinkHtml = '';
+                      let activityTypeTranslated = '';
+  
+                      const activityType = activity.activity_type ? activity.activity_type.replace(/_/g, ' ').toLowerCase() : 'unknown';
+  
+                      // Basit çeviriler (daha kapsamlı çeviri için CKAN i18n helperları kullanılmalı)
+                      if (activityType.includes('new') || activityType.includes('created')) {
+                          activityTypeTranslated = 'Yeni Oluşturuldu';
+                          td.innerHTML += `<div style="display: flex; align-items: center; gap: 8px;"><div class="activity-icon created">+</div> <span style="font-weight: 600; color: #059669;">${activityTypeTranslated}</span></div>`;
+                      } else if (activityType.includes('changed') || activityType.includes('updated')) {
+                          activityTypeTranslated = 'Güncellendi';
+                          td.innerHTML += `<div style="display: flex; align-items: center; gap: 8px;"><div class="activity-icon updated">✎</div> <span style="font-weight: 600; color: #3b82f6;">${activityTypeTranslated}</span></div>`;
+                      } else if (activityType.includes('deleted')) {
+                          activityTypeTranslated = 'Silindi';
+                          td.innerHTML += `<div style="display: flex; align-items: center; gap: 8px;"><div class="activity-icon deleted">×</div> <span style="font-weight: 600; color: #ef4444;">${activityTypeTranslated}</span></div>`;
+                      } else if (activityType.includes('follow')) {
+                          activityTypeTranslated = 'Takip Edildi';
+                          td.innerHTML += `<div style="display: flex; align-items: center; gap: 8px;"><div class="activity-icon follow">♥</div> <span style="font-weight: 600; color: #f59e0b;">${activityTypeTranslated}</span></div>`;
+                      } else {
+                          activityTypeTranslated = activity.activity_type ? activity.activity_type.replace(/_/g, ' ') : 'Bilinmiyor';
+                          td.innerHTML += `<div style="display: flex; align-items: center; gap: 8px;"><div class="activity-icon default">•</div> <span style="font-weight: 600; color: #6b7280;">${activityTypeTranslated.charAt(0).toUpperCase() + activityTypeTranslated.slice(1)}</span></div>`;
+                      }
+                      td.innerHTML += `<div class="activity-description">${userCache[activity.user_id] || activity.user_id || 'Bilinmiyor'} tarafından</div>`;
+  
+  
+                      // Nesne tipi ve ID'sine göre link oluştur
+                      if (activity.object_type === 'package') {
+                          const pkg = activity.data.package || {}; // Eğer data.package yoksa boş obje
+                          objectLinkHtml = `<span class="activity-object"><a href="/dataset/${pkg.name || activity.object_id}" class="activity-action-btn view">👁️ ${pkg.title || pkg.name || _('unknown dataset')}</a></span>`;
+                      } else if (activity.object_type === 'organization' || activity.object_type === 'group') {
+                          const group = activity.data.group || {}; // Eğer data.group yoksa boş obje
+                          const urlPrefix = activity.object_type === 'organization' ? '/organization/' : '/group/';
+                          objectLinkHtml = `<span class="activity-object"><a href="${urlPrefix}${group.name || activity.object_id}" class="activity-action-btn view">👁️ ${group.title || group.name || _('unknown ' + activity.object_type)}</a></span>`;
+                      } else if (activity.object_type === 'user') {
+                          objectLinkHtml = `<span class="activity-object"><a href="/user/${activity.object_id}" class="activity-action-btn view">👁️ ${userCache[activity.object_id] || activity.object_id || _('unknown user')}</a></span>`;
+                      } else {
+                           // Diğer objeler için sadece ID veya tip göster
+                          objectLinkHtml = `<span class="activity-object">${activity.object_type ? activity.object_type.charAt(0).toUpperCase() + activity.object_type.slice(1) + ': ' : ''}${activity.object_id || _('unknown object')}</span>`;
+                      }
+                      td.innerHTML += objectLinkHtml;
+                  }
+                  else if (headerKey.startsWith('data.')) {
+                      // data.key'leri özel olarak işle
+                      const dataKey = headerKey.substring(5);
+                      try {
+                          let dataValue;
+                          if (typeof activity.data === 'string') {
+                              // Eğer activity.data bir JSON string ise parse et
+                              const parsedData = JSON.parse(activity.data);
+                              dataValue = parsedData[dataKey];
+                          } else if (typeof activity.data === 'object' && activity.data !== null) {
+                              // Zaten bir obje ise doğrudan eriş
+                              dataValue = activity.data[dataKey];
+                          }
+                          
+                          if (dataValue !== undefined && dataValue !== null) {
+                              if (typeof dataValue === 'object') {
+                                  cellContent = `<pre>${JSON.stringify(dataValue, null, 2)}</pre>`;
+                              } else if (typeof dataValue === 'boolean') {
+                                  cellContent = dataValue ? 'Evet' : 'Hayır';
+                              }
+                              else {
+                                  cellContent = dataValue.toString();
+                              }
+                          } else {
+                              cellContent = '<span style="color:#9b98a7;font-style:italic;">Yok</span>';
+                          }
+                      } catch (e) {
+                          cellContent = `<span style="color:red;font-style:italic;">Veri hatası (JSON parse hatası)</span>`;
+                          console.error('JSON parse hatası:', e, activity.data);
+                      }
+                      td.innerHTML = cellContent;
+                  } else if (activity[headerKey] !== undefined && activity[headerKey] !== null) {
+                      if (typeof activity[headerKey] === 'object') {
+                          cellContent = `<pre>${JSON.stringify(activity[headerKey], null, 2)}</pre>`;
+                      } else if (typeof activity[headerKey] === 'boolean') {
+                          cellContent = activity[headerKey] ? 'Evet' : 'Hayır';
+                      } else {
+                          cellContent = activity[headerKey].toString();
+                      }
+                      td.innerHTML = cellContent;
+                  } else {
+                      td.innerHTML = '<span style="color:#9b98a7;font-style:italic;">Yok</span>';
+                  }
+                  tr.appendChild(td);
+              });
+              tableBody.appendChild(tr);
+          });
+      }).catch(error => {
+          console.error("Tablo oluşturulurken hata:", error);
+          tableBody.innerHTML = `<tr><td colspan="${finalHeaders.length}" style="text-align:center; color:red;">Veri yüklenirken veya işlenirken hata oluştu: ${error.message}</td></tr>`;
+      });
   });
-}
-
-function applyPagination() {
-  const allRows = document.querySelectorAll('#activity-table-body tr');
-  const visibleRows = document.querySelectorAll('#activity-table-body tr:not(.filtered-out)');
-  
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  
-  // Hide all rows first
-  allRows.forEach(row => {
-    row.classList.add('hidden');
-  });
-  
-  // Show only the rows for current page
-  Array.from(visibleRows).forEach((row, index) => {
-    if (index >= startIndex && index < endIndex) {
-      row.classList.remove('hidden');
-    }
-  });
-}
-
-function updatePaginationControls() {
-  const visibleRows = document.querySelectorAll('#activity-table-body tr:not(.filtered-out)');
-  const totalItems = visibleRows.length;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  
-  // Update pagination info
-  const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-  
-  const paginationInfo = document.getElementById('pagination-info');
-  if (totalItems === 0) {
-    paginationInfo.textContent = 'Gösterilecek kayıt yok';
-  } else {
-    paginationInfo.textContent = `${startItem}-${endItem} / ${totalItems} kayıt gösteriliyor`;
-  }
-  
-  // Update pagination buttons
-  const paginationButtons = document.getElementById('pagination-buttons');
-  paginationButtons.innerHTML = '';
-  
-  if (totalPages <= 1) return;
-  
-  // Previous button
-  const prevBtn = document.createElement('button');
-  prevBtn.className = 'pagination-btn prev';
-  prevBtn.disabled = currentPage === 1;
-  prevBtn.onclick = () => {
-    if (currentPage > 1) {
-      currentPage--;
-      applyFiltersAndPagination();
-    }
-  };
-  paginationButtons.appendChild(prevBtn);
-  
-  // Page number buttons
-  const maxVisiblePages = 5;
-  let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-  let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-  
-  // Adjust start page if we're near the end
-  if (endPage - startPage + 1 < maxVisiblePages) {
-    startPage = Math.max(1, endPage - maxVisiblePages + 1);
-  }
-  
-  // First page + dots if needed
-  if (startPage > 1) {
-    const firstPageBtn = document.createElement('button');
-    firstPageBtn.className = 'pagination-btn';
-    firstPageBtn.textContent = '1';
-    firstPageBtn.onclick = () => {
-      currentPage = 1;
-      applyFiltersAndPagination();
-    };
-    paginationButtons.appendChild(firstPageBtn);
-    
-    if (startPage > 2) {
-      const dots = document.createElement('span');
-      dots.className = 'pagination-dots';
-      dots.textContent = '...';
-      paginationButtons.appendChild(dots);
-    }
-  }
-  
-  // Visible page numbers
-  for (let i = startPage; i <= endPage; i++) {
-    const pageBtn = document.createElement('button');
-    pageBtn.className = 'pagination-btn' + (i === currentPage ? ' active' : '');
-    pageBtn.textContent = i;
-    pageBtn.onclick = () => {
-      currentPage = i;
-      applyFiltersAndPagination();
-    };
-    paginationButtons.appendChild(pageBtn);
-  }
-  
-  // Last page + dots if needed
-  if (endPage < totalPages) {
-    if (endPage < totalPages - 1) {
-      const dots = document.createElement('span');
-      dots.className = 'pagination-dots';
-      dots.textContent = '...';
-      paginationButtons.appendChild(dots);
-    }
-    
-    const lastPageBtn = document.createElement('button');
-    lastPageBtn.className = 'pagination-btn';
-    lastPageBtn.textContent = totalPages;
-    lastPageBtn.onclick = () => {
-      currentPage = totalPages;
-      applyFiltersAndPagination();
-    };
-    paginationButtons.appendChild(lastPageBtn);
-  }
-  
-  // Next button
-  const nextBtn = document.createElement('button');
-  nextBtn.className = 'pagination-btn next';
-  nextBtn.disabled = currentPage === totalPages;
-  nextBtn.onclick = () => {
-    if (currentPage < totalPages) {
-      currentPage++;
-      applyFiltersAndPagination();
-    }
-  };
-  paginationButtons.appendChild(nextBtn);
-}
-
-function updateFilterCounts() {
-  const rows = document.querySelectorAll('#activity-table-body tr');
-  const counts = { created: 0, updated: 0, deleted: 0, follow: 0 };
-  
-  rows.forEach(row => {
-    const activityType = row.dataset.activityType;
-    if (activityType.includes('new') || activityType.includes('created')) counts.created++;
-    else if (activityType.includes('changed') || activityType.includes('updated')) counts.updated++;
-    else if (activityType.includes('deleted')) counts.deleted++;
-    else if (activityType.includes('follow')) counts.follow++;
-  });
-  
-  Object.keys(counts).forEach(type => {
-    const countElement = document.getElementById(`count-${type}`);
-    if (countElement) countElement.textContent = counts[type];
-  });
-}
-
-function setupModernButtons() {
-  // Convert regular links to modern buttons in activity objects
-  document.querySelectorAll('.activity-object a').forEach(link => {
-    const href = link.getAttribute('href');
-    const text = link.textContent.trim();
-    
-    // Determine button type based on href or text
-    if (href && href.includes('/dataset/')) {
-      link.classList.add('activity-action-btn', 'view');
-      link.innerHTML = '👁️ ' + text;
-    } else if (text.toLowerCase().includes('edit') || text.toLowerCase().includes('düzenle')) {
-      link.classList.add('activity-action-btn', 'edit');
-      link.innerHTML = '✏️ ' + text;
-    } else if (text.toLowerCase().includes('delete') || text.toLowerCase().includes('sil')) {
-      link.classList.add('activity-action-btn', 'delete');
-      link.innerHTML = '🗑️ ' + text;
-    } else if (text.toLowerCase().includes('download') || text.toLowerCase().includes('indir')) {
-      link.classList.add('activity-action-btn', 'download');
-      link.innerHTML = '⬇️ ' + text;
-    } else {
-      // Default styling for other links
-      link.style.display = 'inline-block';
-    }
-  });
-  
-  // Clean up broken images, icons, and HTML in activity objects
-  document.querySelectorAll('.activity-object').forEach(cell => {
-    let content = cell.innerHTML;
-    
-    // Remove all img tags (broken and working)
-    content = content.replace(/<img[^>]*>/gi, '');
-    
-    // Remove all FontAwesome and other icons
-    content = content.replace(/<i[^>]*class="[^"]*fa[^"]*"[^>]*><\/i>/gi, '');
-    content = content.replace(/<i[^>]*class="[^"]*icon[^"]*"[^>]*><\/i>/gi, '');
-    content = content.replace(/<i[^>]*fa-[^>]*><\/i>/gi, '');
-    
-    // Clean up li classes but keep the li tag structure  
-    content = content.replace(/<li[^>]*class="[^"]*"[^>]*>/gi, '<li>');
-    content = content.replace(/<li[^>]*>/gi, '<li>');
-    
-    // Remove broken image paths and timestamps
-    content = content.replace(/\d{2,4}-\d{2}-\d{2}-\d{6}\.\d+[a-zA-Z0-9_-]*\.(png|jpg|jpeg|gif|svg)/gi, '');
-    
-    // Remove broken attributes
-    content = content.replace(/class="user-image"[^>]*>/gi, '');
-    content = content.replace(/width="\d+"[^>]*height="\d+"[^>]*alt="[^"]*"/gi, '');
-    
-    // Fix broken anchor tags
-    content = content.replace(/<a=""/gi, '<a');
-    content = content.replace(/href="\s*"/gi, '');
-    
-    // Clean up multiple spaces and special characters
-    content = content.replace(/\s{2,}/g, ' ');
-    content = content.replace(/\*\*/g, '');
-    content = content.trim();
-    
-    // Style dates in content
-    const dateRegex = /(\d{1,2}[\.\/\-]\d{1,2}[\.\/\-]\d{2,4})/g;
-    content = content.replace(dateRegex, '<span class="activity-date">📅 $1</span>');
-    
-    cell.innerHTML = content;
-  });
-  
-  // Initialize pagination after setup
-  applyFiltersAndPagination();
-}
-
-function clearAllFilters() {
-  // Clear activity type filters
-  document.querySelectorAll('.activity-type-option').forEach(option => {
-    option.classList.remove('active');
-    option.querySelector('input[type="checkbox"]').checked = false;
-  });
-  
-  // Clear user filters
-  document.querySelectorAll('.user-filter-option').forEach(option => {
-    option.classList.remove('active');
-    option.querySelector('input[type="checkbox"]').checked = false;
-  });
-  
-  // Reset sort to "newest"
-  document.querySelectorAll('.time-range-option').forEach(option => {
-    option.classList.remove('active');
-    option.querySelector('input[type="radio"]').checked = false;
-  });
-  
-  const newestOption = document.querySelector('.time-range-option[data-sort="newest"]');
-  newestOption.classList.add('active');
-  newestOption.querySelector('input[type="radio"]').checked = true;
-  
-  // Reset pagination
-  currentPage = 1;
-  
-  // Apply sorting and filters
-  applySorting();
-  applyFiltersAndPagination();
-}
-</script>
-{% endblock %}
+  </script>
+  {% endblock %}

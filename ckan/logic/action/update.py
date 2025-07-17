@@ -1487,24 +1487,16 @@ def theme_category_update(context, data_dict):
         if 'opacity' in data_dict:
             category.opacity = data_dict['opacity']
 
-        # CRITICAL FIX: background_image'i daha akıllıca ele alalım.
-        # Eğer gelen background_image None ise VE clear_background_image 'true' değilse,
-        # bu bir "istenmeyen boşaltma" demektir, bu durumda güncellemeyi atlarız.
-        # Eğer None ise VE clear_background_image 'true' ise, bu "istenerek boşaltma" demektir, güncelleriz.
-        # Eğer None değilse (yeni bir görsel veya mevcut bir yol), her zaman güncelleriz.
+        # SENİN İSTEĞİN DOĞRULTUSUNDA DEĞİŞİKLİK BURADA:
+        # data_dict içinde 'background_image' varsa VE değeri None DEĞİLSE güncelle.
+        # Eğer değeri None gelirse, bu alanı HİÇ DEĞİŞTİRME.
         if 'background_image' in data_dict:
-            incoming_bg_image = data_dict['background_image']
-            clear_requested = data_dict.get('clear_background_image') == 'true'
-
-            # Eğer temizleme isteği varsa VEYA gelen görsel None değilse (yani bir görsel yolu var)
-            if clear_requested or incoming_bg_image is not None:
-                log.info(f"Action: Attempting to set background_image for {slug} to: '{incoming_bg_image}' (Clear requested: {clear_requested})")
-                category.background_image = incoming_bg_image
+            if data_dict['background_image'] is not None:
+                log.info(f"Action: Attempting to set background_image for {slug} to: '{data_dict['background_image']}'")
+                category.background_image = data_dict['background_image']
             else:
-                # Bu durum, 'background_image' None olarak geldiğinde ANCAK temizleme isteği olmadığında tetiklenir.
-                # Bu, kullanıcının görseli değiştirmek istemediği ve formun yanlışlıkla None gönderdiği durumdur.
-                log.info(f"Action: Incoming background_image for {slug} is None and clear was NOT requested. Keeping existing image in DB.")
-                # Bu durumda category.background_image'i değiştirmiyoruz, böylece mevcut değer korunur.
+                log.info(f"Action: Incoming background_image for {slug} is None. Keeping existing image in DB as requested.")
+                # Bu durumda category.background_image'i değiştirmiyoruz, yani mevcut değer korunur.
                 pass 
 
         session.commit()

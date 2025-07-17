@@ -704,6 +704,32 @@
     var startX = 0;
     var startWidth = 0;
 
+    // PERFORMANS: Debounce fonksiyonu
+    function debounce(func, wait) {
+        let timeout;
+        return function executedFunction(...args) {
+            const later = () => {
+                clearTimeout(timeout);
+                func(...args);
+            };
+            clearTimeout(timeout);
+            timeout = setTimeout(later, wait);
+        };
+    }
+
+    // PERFORMANS: RequestAnimationFrame wrapper
+    function rafDebounce(func) {
+        let rafId = null;
+        return function(...args) {
+            if (rafId) {
+                cancelAnimationFrame(rafId);
+            }
+            rafId = requestAnimationFrame(() => {
+                func.apply(this, args);
+            });
+        };
+    }
+
     // --- Fonksiyonlar ---
 
     function getPathInfo() {
@@ -742,7 +768,7 @@
       e.preventDefault();
     }
 
-    function doResize(e) {
+    const doResize = rafDebounce((e) => {
       if (!isResizing || !currentColumn) return;
       
       const width = startWidth + e.pageX - startX;
@@ -751,7 +777,7 @@
       if (width >= minWidth) {
         currentColumn.style.width = width + 'px';
       }
-    }
+    });
 
     function stopResize() {
       if (!isResizing) return;
@@ -780,14 +806,14 @@
         if (isUpdating) return; // Eğer güncelleme devam ediyorsa bekle
         isUpdating = true;
         
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           showPublic = !showPublic;
           updateVisibilityUI();
-          setTimeout(() => {
+          requestAnimationFrame(() => {
             renderTable();
             isUpdating = false;
-          }, 50);
-        }, 10);
+          });
+        });
       });
 
       // Private buton tıklama
@@ -798,14 +824,14 @@
         if (isUpdating) return; // Eğer güncelleme devam ediyorsa bekle
         isUpdating = true;
         
-        setTimeout(() => {
+        requestAnimationFrame(() => {
           showPrivate = !showPrivate;
           updateVisibilityUI();
-          setTimeout(() => {
+          requestAnimationFrame(() => {
             renderTable();
             isUpdating = false;
-          }, 50);
-        }, 10);
+          });
+        });
       });
 
       updateVisibilityUI();
@@ -828,45 +854,91 @@
       }
     }
 
+    // PERFORMANS: Batch user fetching with cache
     async function fetchUsername(userId) {
       if (!userId || userCache[userId]) return userCache[userId] || 'Bilinmiyor';
-      try {
-        const response = await fetch('/api/3/action/user_show', {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          credentials: 'include', body: JSON.stringify({ id: userId })
+      
+      // Batch bekleyen istekleri topla
+      if (!window.userFetchQueue) {
+        window.userFetchQueue = new Set();
+        window.userFetchPromise = null;
+      }
+      
+      window.userFetchQueue.add(userId);
+      
+      // Batch işlemi başlat
+      if (!window.userFetchPromise) {
+        window.userFetchPromise = new Promise(resolve => {
+          setTimeout(async () => {
+            const userIds = Array.from(window.userFetchQueue);
+            window.userFetchQueue.clear();
+            
+            // Paralel olarak kullanıcıları getir
+            const results = await Promise.allSettled(
+              userIds.map(id => 
+                fetch('/api/3/action/user_show', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  credentials: 'include',
+                  body: JSON.stringify({ id })
+                }).then(r => r.json())
+              )
+            );
+            
+            results.forEach((result, index) => {
+              const userId = userIds[index];
+              if (result.status === 'fulfilled' && result.value.success && result.value.result) {
+                const username = result.value.result.name || result.value.result.display_name || 'Bilinmiyor';
+                userCache[userId] = username;
+              } else {
+                userCache[userId] = 'Bilinmiyor';
+              }
+            });
+            
+            window.userFetchPromise = null;
+            resolve();
+          }, 50); // 50ms bekle, diğer istekleri topla
         });
-        const data = await response.json();
-        if (data.success && data.result) {
-          const username = data.result.name || data.result.display_name || 'Bilinmiyor';
-          userCache[userId] = username;
-          return username;
-        }
-      } catch (error) { console.warn('User bilgisi alınamadı:', userId, error); }
-      userCache[userId] = 'Bilinmiyor';
-      return 'Bilinmiyor';
+      }
+      
+      await window.userFetchPromise;
+      return userCache[userId] || 'Bilinmiyor';
     }
 
+    // PERFORMANS: Optimize edilmiş kullanıcı yükleme
     async function loadUsernames() {
       const uniqueUserIds = [...new Set(allDatasets.map(pkg => pkg.creator_user_id).filter(Boolean))];
       console.log('🔄 Toplam unique user sayısı:', uniqueUserIds.length);
-      const batchSize = 5; // Parallel fetch for users
+      
+      const batchSize = 20; // Daha büyük batch boyutu
+      const batches = [];
+      
       for (let i = 0; i < uniqueUserIds.length; i += batchSize) {
-        const batch = uniqueUserIds.slice(i, i + batchSize);
-        await Promise.all(batch.map(userId => fetchUsername(userId)));
-        const progress = Math.min(i + batchSize, uniqueUserIds.length);
-        console.log(`📊 User yükleme: ${progress}/${uniqueUserIds.length}`);
-        updateUsersFilter(); // Update filter as users load
+        batches.push(uniqueUserIds.slice(i, i + batchSize));
       }
+      
+      // Tüm batch'leri paralel işle
+      for (const batch of batches) {
+        await Promise.all(batch.map(userId => fetchUsername(userId)));
+        const progress = Math.min(batches.indexOf(batch) * batchSize + batch.length, uniqueUserIds.length);
+        console.log(`📊 User yükleme: ${progress}/${uniqueUserIds.length}`);
+        
+        // UI'yi güncelle ama çok sık değil
+        if (progress % 50 === 0 || progress === uniqueUserIds.length) {
+          updateUsersFilter();
+        }
+      }
+      
       usersLoaded = true;
       console.log('✅ Tüm user bilgileri yüklendi:', Object.keys(userCache).length);
-      updateUsersFilter(); // Final update after all users loaded
+      updateUsersFilter();
     }
 
     function updateUsersFilter() {
       const usernames = Object.values(userCache).filter(Boolean);
       allUsers = [...new Set(usernames)].sort();
       if (allUsers.length > 0) {
-        renderMultiSelect("userSelect", allUsers, selectedUsers, renderTable);
+        renderMultiSelect("userSelect", allUsers, selectedUsers, debouncedRenderTable);
       } else if (!usersLoaded) {
         document.getElementById('userSelect').innerHTML = '<div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>';
       } else {
@@ -876,41 +948,41 @@
 
     // YENİ: Tema Profil Kartı Render Fonksiyonu
     function renderThemeProfileCard(themeData) {
-    var profileCard = document.getElementById('profileCard');
-    if (!themeData) {
+      var profileCard = document.getElementById('profileCard');
+      if (!themeData) {
         profileCard.style.display = 'none';
         return;
-    }
-    
-    // Tema rengini al veya varsayılan bir renk kullan
-    const themeColor = themeData.color || '#00BCD4'; // Eğer tema rengi yoksa varsayılan cyan tonu
-    
-    profileCard.className = 'profile-card theme-profile'; 
-    // Arka plan stilini dinamik olarak ayarla
-    profileCard.style.background = `linear-gradient(135deg, ${themeColor} 0%, ${tinycolor(themeColor).darken(10).toString()} 100%)`; // Ana renk ve %10 koyulaştırılmış hali
+      }
+      
+      // Tema rengini al veya varsayılan bir renk kullan
+      const themeColor = themeData.color || '#00BCD4'; // Eğer tema rengi yoksa varsayılan cyan tonu
+      
+      profileCard.className = 'profile-card theme-profile'; 
+      // Arka plan stilini dinamik olarak ayarla
+      profileCard.style.background = `linear-gradient(135deg, ${themeColor} 0%, ${tinycolor(themeColor).darken(10).toString()} 100%)`;
 
-    var html = '';
-    html += '<div class="profile-header">';
-    if (themeData.icon) {
-      html += `<div class="profile-image"><i class="fa fa-${themeData.icon}"></i></div>`; // İkonun arka plan rengini CSS'ten alacak
-    } else {
+      var html = '';
+      html += '<div class="profile-header">';
+      if (themeData.icon) {
+        html += `<div class="profile-image"><i class="fa fa-${themeData.icon}"></i></div>`;
+      } else {
         html += '<div class="profile-image"></div>';
-    }
-    html += '<div>';
-    html += '<h3 class="profile-title">' + (themeData.name || themeData.slug || '') + '</h3>';
-    html += '<div class="profile-type">Tema Kategorisi</div>'; 
-    html += '</div></div>';
-    html += '<div class="profile-info">';
-    if (themeData.dataset_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + themeData.dataset_count + '</span></div>';
-    if (themeData.created_at) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(themeData.created_at).toLocaleDateString('tr-TR') + '</span></div>';
-    html += '</div>';
-    var description = themeData.description;
-    if (description) {
+      }
+      html += '<div>';
+      html += '<h3 class="profile-title">' + (themeData.name || themeData.slug || '') + '</h3>';
+      html += '<div class="profile-type">Tema Kategorisi</div>'; 
+      html += '</div></div>';
+      html += '<div class="profile-info">';
+      if (themeData.dataset_count !== undefined) html += '<div class="profile-field"><span class="profile-field-label">Veri Seti:</span><span class="profile-field-value">' + themeData.dataset_count + '</span></div>';
+      if (themeData.created_at) html += '<div class="profile-field"><span class="profile-field-label">Oluşturulma:</span><span class="profile-field-value">' + new Date(themeData.created_at).toLocaleDateString('tr-TR') + '</span></div>';
+      html += '</div>';
+      var description = themeData.description;
+      if (description) {
         html += '<div class="profile-description">' + description + '</div>';
+      }
+      profileCard.innerHTML = html;
+      profileCard.style.display = 'block';
     }
-    profileCard.innerHTML = html;
-    profileCard.style.display = 'block';
-}
 
     function renderProfileCard(profileData, profileType) {
       var profileCard = document.getElementById('profileCard');
@@ -924,7 +996,6 @@
       if (profileData.image_display_url) {
         html += '<img src="' + profileData.image_display_url + '" class="profile-image" alt="' + (profileData.title || profileData.name || '') + '">';
       } else {
-        // İkon yerine boş div veya varsayılan ikon
         html += '<div class="profile-image"></div>';
       }
       html += '<div>';
@@ -968,52 +1039,59 @@
       if (pathInfo.type === 'organization' && pathInfo.name) return baseQuery + '&fq=organization:' + encodeURIComponent(pathInfo.name);
       if (pathInfo.type === 'group' && pathInfo.name) return baseQuery + '&fq=groups:' + encodeURIComponent(pathInfo.name);
       if (pathInfo.type === 'user' && pathInfo.name) return baseQuery;
-      // Tema filtresi için fq parametresi package_search API'sinde doğrudan bulunmadığı için
-      // tema filtrelemesini JavaScript'te yapacağız.
       return baseQuery;
     }
     
     async function loadProfileData() {
-        var pathInfo = getPathInfo();
-        if (pathInfo.type === 'dataset' || !pathInfo.name) { renderProfileCard(null); return; }
-        
-        // Eğer tema sayfası ise özel profil kartını render et
-        if (pathInfo.type === 'theme') {
-            try {
-                const ckan_api_base = "https://dataizmir.izka.org.tr/api/3/action/";
-                const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
-                const themeData = await themeResponse.json();
-                if (themeData.success && themeData.result && themeData.result.category) {
-                    currentThemeData = themeData.result.category; // Tema profil kartı için veriyi sakla
-                    currentThemeSlugFromURL = pathInfo.name; // URL'deki slug'ı sakla
-                    renderThemeProfileCard(currentThemeData);
-                } else {
-                    renderProfileCard(null);
-                }
-            } catch (error) {
-                console.error('Tema profil bilgileri yüklenirken hata:', error);
-                renderProfileCard(null);
-            }
-        } else {
-            // Diğer profil türleri için mevcut mantık
-            var apiEndpoint = ''; var profileType = pathInfo.type;
-            if (pathInfo.type === 'organization') apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
-            else if (pathInfo.type === 'group') apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
-            else if (pathInfo.type === 'user') apiEndpoint = '/api/3/action/user_show';
-            if (apiEndpoint) {
-                try {
-                    let response;
-                    if (pathInfo.type === 'user') {
-                        response = await fetch(apiEndpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, credentials: 'include', body: JSON.stringify({ id: pathInfo.name }) });
-                    } else {
-                        response = await fetch(apiEndpoint, { credentials: 'include' });
-                    }
-                    const data = await response.json();
-                    if (data.success && data.result) renderProfileCard(data.result, profileType);
-                    else renderProfileCard(null);
-                } catch (error) { console.error('Profil bilgileri yüklenirken hata:', error); renderProfileCard(null); }
-            }
+      var pathInfo = getPathInfo();
+      if (pathInfo.type === 'dataset' || !pathInfo.name) { renderProfileCard(null); return; }
+      
+      // Eğer tema sayfası ise özel profil kartını render et
+      if (pathInfo.type === 'theme') {
+        try {
+          const ckan_api_base = "/api/3/action/";
+          const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
+          const themeData = await themeResponse.json();
+          if (themeData.success && themeData.result && themeData.result.category) {
+            currentThemeData = themeData.result.category;
+            currentThemeSlugFromURL = pathInfo.name;
+            renderThemeProfileCard(currentThemeData);
+          } else {
+            renderProfileCard(null);
+          }
+        } catch (error) {
+          console.error('Tema profil bilgileri yüklenirken hata:', error);
+          renderProfileCard(null);
         }
+      } else {
+        // Diğer profil türleri için mevcut mantık
+        var apiEndpoint = '';
+        var profileType = pathInfo.type;
+        if (pathInfo.type === 'organization') apiEndpoint = '/api/3/action/organization_show?id=' + encodeURIComponent(pathInfo.name);
+        else if (pathInfo.type === 'group') apiEndpoint = '/api/3/action/group_show?id=' + encodeURIComponent(pathInfo.name);
+        else if (pathInfo.type === 'user') apiEndpoint = '/api/3/action/user_show';
+        if (apiEndpoint) {
+          try {
+            let response;
+            if (pathInfo.type === 'user') {
+              response = await fetch(apiEndpoint, { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                credentials: 'include', 
+                body: JSON.stringify({ id: pathInfo.name }) 
+              });
+            } else {
+              response = await fetch(apiEndpoint, { credentials: 'include' });
+            }
+            const data = await response.json();
+            if (data.success && data.result) renderProfileCard(data.result, profileType);
+            else renderProfileCard(null);
+          } catch (error) { 
+            console.error('Profil bilgileri yüklenirken hata:', error); 
+            renderProfileCard(null); 
+          }
+        }
+      }
     }
     
     function hideDuplicateElements() {
@@ -1029,27 +1107,35 @@
     function formatClass(fmt) {
       if (!fmt) return 'fmt-other';
       fmt = fmt.toLowerCase();
-      const classes = { csv: 'csv', xls: 'xls', xlsx: 'xls', json: 'json', xml: 'xml', pdf: 'pdf', shp: 'shp', zip: 'zip', html: 'html', doc: 'doc', docx: 'doc', txt: 'txt' };
+      const classes = { 
+        csv: 'csv', xls: 'xls', xlsx: 'xls', json: 'json', 
+        xml: 'xml', pdf: 'pdf', shp: 'shp', zip: 'zip', 
+        html: 'html', doc: 'doc', docx: 'doc', txt: 'txt' 
+      };
       return `fmt-${classes[fmt] || 'other'}`;
     }
 
+    // PERFORMANS: Optimize edilmiş multi-select render
     function renderMultiSelect(containerId, items, selectedSet, onchange) {
       var c = document.getElementById(containerId);
-      c.innerHTML = "";
+      
       if (items.length === 0) {
         c.innerHTML = `<div class="empty-cell" style="padding:10px;">Seçenek yok</div>`;
         return;
       }
+      
+      // DocumentFragment kullan
+      const fragment = document.createDocumentFragment();
+      
       items.forEach(function(item) {
         var opt = document.createElement("div");
-        // Tema filtresi ise ve URL'den geliyorsa checkbox'ı devre dışı bırak
         const isThemeFilterAndFromURL = (containerId === "themeSelect" && currentThemeSlugFromURL && item === currentThemeData?.name);
         
         opt.className = "multi-select-option" + (selectedSet.has(item) ? " selected" : "") + (isThemeFilterAndFromURL ? " disabled" : "");
         opt.innerHTML = `<input type="checkbox" ${selectedSet.has(item) ? "checked" : ""} ${isThemeFilterAndFromURL ? "disabled" : ""}> <span>${item}</span>`;
         
         opt.onclick = function(e) {
-          if(isThemeFilterAndFromURL) { // Eğer tema filtresi ve URL'den geliyorsa tıklamayı engelle
+          if(isThemeFilterAndFromURL) {
             e.preventDefault(); 
             return;
           }
@@ -1059,8 +1145,11 @@
           renderMultiSelect(containerId, items, selectedSet, onchange);
           onchange();
         };
-        c.appendChild(opt);
+        fragment.appendChild(opt);
       });
+      
+      c.innerHTML = "";
+      c.appendChild(fragment);
     }
     
     function filterDatasets() {
@@ -1068,34 +1157,27 @@
       var sortOrder = document.getElementById("sortOrder").value;
 
       filteredDatasets = allDatasets.filter(function(pkg) {
-        // YENİ: Görünürlük filtresi - DÜZELTME
-        // Eğer gizli veri ve showPrivate false ise, filtreyi geçme
+        // Görünürlük filtresi
         if (pkg.private === true && !showPrivate) return false;
-        // Eğer açık veri ve showPublic false ise, filtreyi geçme  
         if (pkg.private !== true && !showPublic) return false;
         
         if (searchVal && !(pkg.title || pkg.name || '').toLowerCase().includes(searchVal)) return false;
         if (selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
         if (selectedUsers.size && !selectedUsers.has(pkg.creatorUsername)) return false;
 
-        // AND mantığı: Seçili her grubun, veri setinin gruplarında olması gerekir
+        // AND mantığı
         if (selectedGroups.size && ![...selectedGroups].every(g => pkg.groupTitles.includes(g))) return false;
-        
-        // AND mantığı: Seçili her etiketin, veri setinin etiketlerinde olması gerekir
         if (selectedTags.size && ![...selectedTags].every(t => pkg.tagNames.includes(t))) return false;
 
-        // YENİ: Tema filtreleme mantığı
+        // Tema filtreleme
         if (selectedThemes.size) {
-            // Eğer veri setinin bir teması yoksa ve seçili temalar arasında "Yok" varsa, tut
-            if (pkg.themeName === null && selectedThemes.has('Yok')) {
-                // Bu durum zaten filtrelemeyecek, özel bir durum
-            } else if (pkg.themeName === null) {
-                // Tema yok ama "Yok" seçili değil, bu veri setini filtrele (gösterme)
-                return false;
-            } else if (!selectedThemes.has(pkg.themeName)) {
-                // Tema var ama seçili temalar arasında değil, bu veri setini filtrele (gösterme)
-                return false;
-            }
+          if (pkg.themeName === null && selectedThemes.has('Yok')) {
+            // OK
+          } else if (pkg.themeName === null) {
+            return false;
+          } else if (!selectedThemes.has(pkg.themeName)) {
+            return false;
+          }
         }
 
         var fmts = Object.keys(pkg.fmts);
@@ -1104,7 +1186,7 @@
         return true;
       });
 
-      // Geliştirilmiş sıralama mantığı
+      // Sıralama
       filteredDatasets.sort(function(a, b) {
         switch(sortOrder) {
           case 'date_desc':
@@ -1130,64 +1212,62 @@
     }
 
     function renderPagination() {
-    var totalItems = filteredDatasets.length;
-    var totalPages = Math.ceil(totalItems / itemsPerPage);
-    var startItem = (currentPage - 1) * itemsPerPage + 1;
-    var endItem = Math.min(currentPage * itemsPerPage, totalItems);
-    document.getElementById('paginationInfo').textContent = totalItems === 0 ? "Gösterilecek kayıt yok" : `${startItem}-${endItem} / ${totalItems} kayıt`;
-    var buttonsContainer = document.getElementById('paginationButtons');
-    buttonsContainer.innerHTML = '';
-    if (totalPages <= 1) return;
+      var totalItems = filteredDatasets.length;
+      var totalPages = Math.ceil(totalItems / itemsPerPage);
+      var startItem = (currentPage - 1) * itemsPerPage + 1;
+      var endItem = Math.min(currentPage * itemsPerPage, totalItems);
+      document.getElementById('paginationInfo').textContent = totalItems === 0 ? "Gösterilecek kayıt yok" : `${startItem}-${endItem} / ${totalItems} kayıt`;
+      var buttonsContainer = document.getElementById('paginationButtons');
+      buttonsContainer.innerHTML = '';
+      if (totalPages <= 1) return;
 
-    var createBtn = (text, page, isDisabled = false, isActive = false) => {
+      var createBtn = (text, page, isDisabled = false, isActive = false) => {
         const btn = document.createElement('button');
         btn.className = 'pagination-btn' + (isActive ? ' active' : '');
         btn.textContent = text;
         btn.disabled = isDisabled;
-        // Önemli: Burada doğrudan bir anonim fonksiyon ile currentPage'i güncelleyip renderTable'ı çağırıyoruz.
-        if (page !== null) { // Eğer sayfa numarası varsa onclick ekle
-            btn.onclick = () => {
-                currentPage = page;
-                renderTable();
-            };
+        if (page !== null) {
+          btn.onclick = () => {
+            currentPage = page;
+            renderTable();
+          };
         }
         return btn;
-    };
+      };
 
-    // Önceki butonu
-    buttonsContainer.appendChild(createBtn('‹ Önceki', currentPage - 1, currentPage === 1));
+      // Pagination butonları
+      buttonsContainer.appendChild(createBtn('‹ Önceki', currentPage - 1, currentPage === 1));
 
-    // Sayfa numarası butonları
-    var startPage = Math.max(1, currentPage - 2);
-    var endPage = Math.min(totalPages, currentPage + 2);
+      var startPage = Math.max(1, currentPage - 2);
+      var endPage = Math.min(totalPages, currentPage + 2);
 
-    if (startPage > 1) {
+      if (startPage > 1) {
         buttonsContainer.appendChild(createBtn('1', 1));
         if (startPage > 2) {
-            buttonsContainer.appendChild(createBtn('...', null, true)); // ... butonu tıklanabilir olmamalı
+          buttonsContainer.appendChild(createBtn('...', null, true));
         }
-    }
+      }
 
-    for (let i = startPage; i <= endPage; i++) {
+      for (let i = startPage; i <= endPage; i++) {
         buttonsContainer.appendChild(createBtn(i, i, false, i === currentPage));
-    }
+      }
 
-    if (endPage < totalPages) {
+      if (endPage < totalPages) {
         if (endPage < totalPages - 1) {
-            buttonsContainer.appendChild(createBtn('...', null, true)); // ... butonu tıklanabilir olmamalı
+          buttonsContainer.appendChild(createBtn('...', null, true));
         }
         buttonsContainer.appendChild(createBtn(totalPages, totalPages));
-    }
+      }
 
-    // Sonraki butonu
-    buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
-}
+      buttonsContainer.appendChild(createBtn('Sonraki ›', currentPage + 1, currentPage === totalPages));
+    }
 
     // YENİ: Silme onayı için fonksiyon
     function confirmDelete(datasetName) {
       return confirm(`"${datasetName}" veri setini silmek istediğinizden emin misiniz?\n\nBu işlem geri alınamaz!`);
     }
 
+    // PERFORMANS: Optimize edilmiş tablo render
     function renderTable() {
       filterDatasets();
       renderPagination();
@@ -1195,332 +1275,352 @@
       var startIndex = (currentPage - 1) * itemsPerPage;
       var pageDatasets = filteredDatasets.slice(startIndex, startIndex + itemsPerPage);
       
-      var rows = pageDatasets.map(function(pkg) {
-        var title = pkg.title || pkg.name || '';
-        var link = '/dataset/' + encodeURIComponent(pkg.name);
-        var desc = pkg.notes ? pkg.notes.replace(/\n/g, ' ').substring(0, 150) + (pkg.notes.length > 150 ? '...' : '') : '<span class="empty-cell">Yok</span>';
-        var org = pkg.organization?.title || '<span class="empty-cell">Yok</span>'; // organization object'ten title alındı
-        var user = pkg.creatorUsername ? `<span class="user-tag">${pkg.creatorUsername}</span>` : '<span class="empty-cell">Bilinmiyor</span>';
-        var groups = pkg.groups?.length ? pkg.groups.map(g => `<span class="group-tag">${g.display_name || g.title || g.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>'; // group object'ten display_name/title/name alındı
-        var tags = pkg.tags?.length ? pkg.tags.map(t => `<span class="tag-tag">${t.display_name || t.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>'; // tag object'ten display_name/name alındı
-        var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>'; // YENİ: Tema sütun verisi
-        var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
-        var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
-        
-        // YENİ: İşlemler sütunu
-        var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
-        var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
-        var actions = `
-          <div class="action-buttons">
-            <a href="${editLink}" class="action-btn edit-btn" title="Düzenle">
-              ✏️ Düzenle
-            </a>
-            <a href="${deleteLink}" class="action-btn delete-btn" title="Sil" onclick="return confirmDelete('${title.replace(/'/g, "\\'")}')">
-              🗑️ Sil
-            </a>
-          </div>
-        `;
-        
-        return `<tr>
-          <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
-          <td class="t-desc">${desc}</td>
-          <td class="t-org">${org}</td>
-          <td class="t-user">${user}</td>
-          <td class="t-groups">${groups}</td>
-          <td class="t-tags">${tags}</td>
-          <td class="t-theme">${theme}</td>
-          <td class="t-upd">${upd}</td>
-          <td class="t-formats">${formats}</td>
-          <td class="t-actions">${actions}</td>
-        </tr>`;
-      }).join('');
+      // HTML string oluşturma yerine DocumentFragment kullan
+      const tbody = document.getElementById('dataset-table-body');
+      const fragment = document.createDocumentFragment();
       
-      // colspan değeri 9'dan 10'a çıkarıldı (yeni işlemler sütunu için)
-      document.getElementById('dataset-table-body').innerHTML = rows || `<tr><td colspan="10" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td></tr>`;
+      if (pageDatasets.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="10" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td>`;
+        fragment.appendChild(tr);
+      } else {
+        pageDatasets.forEach(pkg => {
+          const tr = document.createElement('tr');
+          
+          var title = pkg.title || pkg.name || '';
+          var link = '/dataset/' + encodeURIComponent(pkg.name);
+          var desc = pkg.notes ? pkg.notes.replace(/\n/g, ' ').substring(0, 150) + (pkg.notes.length > 150 ? '...' : '') : '<span class="empty-cell">Yok</span>';
+          var org = pkg.organization?.title || '<span class="empty-cell">Yok</span>';
+          var user = pkg.creatorUsername ? `<span class="user-tag">${pkg.creatorUsername}</span>` : '<span class="empty-cell">Bilinmiyor</span>';
+          var groups = pkg.groups?.length ? pkg.groups.map(g => `<span class="group-tag">${g.display_name || g.title || g.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
+          var tags = pkg.tags?.length ? pkg.tags.map(t => `<span class="tag-tag">${t.display_name || t.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
+          var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>';
+          var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
+          var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
+          
+          var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
+          var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
+          
+          tr.innerHTML = `
+            <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
+            <td class="t-desc">${desc}</td>
+            <td class="t-org">${org}</td>
+            <td class="t-user">${user}</td>
+            <td class="t-groups">${groups}</td>
+            <td class="t-tags">${tags}</td>
+            <td class="t-theme">${theme}</td>
+            <td class="t-upd">${upd}</td>
+            <td class="t-formats">${formats}</td>
+            <td class="t-actions">
+              <div class="action-buttons">
+                <a href="${editLink}" class="action-btn edit-btn" title="Düzenle">
+                  ✏️ Düzenle
+                </a>
+                <a href="${deleteLink}" class="action-btn delete-btn" title="Sil" onclick="return confirmDelete('${title.replace(/'/g, "\\'")}')">
+                  🗑️ Sil
+                </a>
+              </div>
+            </td>
+          `;
+          
+          fragment.appendChild(tr);
+        });
+      }
+      
+      tbody.innerHTML = '';
+      tbody.appendChild(fragment);
     }
+    
+    // PERFORMANS: Debounced render
+    const debouncedRenderTable = debounce(renderTable, 300);
     
     async function filterByUserPath() {
-        var pathInfo = getPathInfo();
-        if (pathInfo.type === 'user' && pathInfo.name) {
-            try {
-                const userResponse = await fetch('/api/3/action/user_show', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include', body: JSON.stringify({ id: pathInfo.name })
-                });
-                const userData = await userResponse.json();
-                if (userData.success && userData.result) {
-                    const userId = userData.result.id;
-                    console.log('🔍 User path filtreleme:', pathInfo.name, '→', userId);
-                    allDatasets = allDatasets.filter(pkg => pkg.creator_user_id === userId);
-                    console.log('📊 User\'ın dataset sayısı:', allDatasets.length);
-                }
-            } catch (error) { console.error('User path filtreleme hatası:', error); }
+      var pathInfo = getPathInfo();
+      if (pathInfo.type === 'user' && pathInfo.name) {
+        try {
+          const userResponse = await fetch('/api/3/action/user_show', {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include', 
+            body: JSON.stringify({ id: pathInfo.name })
+          });
+          const userData = await userResponse.json();
+          if (userData.success && userData.result) {
+            const userId = userData.result.id;
+            console.log('🔍 User path filtreleme:', pathInfo.name, '→', userId);
+            allDatasets = allDatasets.filter(pkg => pkg.creator_user_id === userId);
+            console.log('📊 User\'ın dataset sayısı:', allDatasets.length);
+          }
+        } catch (error) { 
+          console.error('User path filtreleme hatası:', error); 
         }
+      }
     }
 
-    // YENİ: Veri yükleme ve başlatma mantığını güncelledik
-    // Tüm tema bilgilerini (ve ilişkili veri setlerini), ardından tüm paketleri çeker
-    // ve datasetThemeMap'i oluşturur.
-    var datasetThemeMap = {}; // dataset_id'den tema adına eşleşme
+    // PERFORMANS: Optimize edilmiş veri yükleme
+    var datasetThemeMap = {};
     
     async function initializeData() {
-        // CKAN API'nizin doğru temel URL'si (eğer farklıysa bu alana domaininizi yazın)
-        const ckan_api_base = "/api/3/action/"; // CKAN'ın varsayılan API yolu
-        // Eğer tarayıcıda doğrudan domain belirtmeniz gerekiyorsa:
-        // const ckan_api_base = "https://dataizmir.izka.org.tr/api/3/action/";
+      const ckan_api_base = "/api/3/action/";
+      const pathInfo = getPathInfo();
 
-        const pathInfo = getPathInfo();
-
-        // 1. URL'den tema bilgisi varsa, tema profil kartını yükle
-        if (pathInfo.type === 'theme' && pathInfo.name) {
-            try {
-                const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
-                const themeData = await themeResponse.json();
-                if (themeData.success && themeData.result && themeData.result.category) {
-                    currentThemeData = themeData.result.category; // Tema profil kartı için veriyi sakla
-                    currentThemeSlugFromURL = pathInfo.name; // URL'deki slug'ı sakla
-                    renderThemeProfileCard(currentThemeData);
-
-                    // Eğer tema sayfasındaysak, ilgili temayı seçili hale getir
-                    selectedThemes.add(currentThemeData.name); 
-                }
-            } catch (error) {
-                console.error("Tema profil bilgileri yüklenirken hata:", error);
-            }
-        } else {
-             // Diğer profil türleri için mevcut loadProfileData çağrısı
-             loadProfileData();
+      // 1. Profil verisi ve temalar paralel yükle
+      const profilePromise = loadProfileData();
+      const themePromise = loadThemes();
+      
+      // 2. Ana veri setini yükle
+      const packagePromise = fetch('/api/3/action/package_search?' + buildApiQuery(), { credentials: 'include' })
+        .then(r => r.json());
+      
+      try {
+        // Paralel yükleme
+        const [_, themeData, packageSearchData] = await Promise.all([
+          profilePromise,
+          themePromise,
+          packagePromise
+        ]);
+        
+        // Theme map oluştur
+        if (themeData) {
+          datasetThemeMap = themeData;
         }
+        
+        if (!packageSearchData.result || !packageSearchData.result.results) return;
 
-        // 2. Tüm tema kategorilerini çek (filtre listesi için)
-        try {
-            const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
-            const themeListData = await themeListResponse.json();
+        var orgSet = new Set(), fmtSet = new Set(), groupSet = new Set(), tagSet = new Set();
+        
+        // PERFORMANS: Map işlemlerini optimize et
+        allDatasets = packageSearchData.result.results.map(function(pkg) {
+          var orgTitle = pkg.organization?.title || "";
+          if (orgTitle) orgSet.add(orgTitle);
 
-            if (themeListData.success && themeListData.result) {
-                // allThemes: Filtre için kullanılacak tüm temaların adları
-                // "Yok" seçeneği, teması olmayan veri setleri için eklenecek
-                allThemes = themeListData.result.map(t => t.name || t.slug);
-                
-                // Her bir tema için ilişkili veri setlerini çekip datasetThemeMap'i oluştur
-                await Promise.all(themeListData.result.map(async (theme) => {
-                    try {
-                        const themeShowResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' });
-                        const themeShowData = await themeShowResponse.json();
-
-                        if (themeShowData.success && themeShowData.result && themeShowData.result.datasets) {
-                            themeShowData.result.datasets.forEach(dataset => {
-                                // datasetThemeMap'e her veri setinin ID'sini ve tema adını ekle
-                                datasetThemeMap[dataset.id] = theme.name; // Tema adını kullanıyoruz
-                            });
-                        }
-                    } catch (error) {
-                        console.warn(`Tema '${theme.slug}' için veri setleri yüklenirken hata oluştu:`, error);
-                    }
-                }));
+          var fmts = {};
+          if (pkg.resources) {
+            for (const r of pkg.resources) {
+              if (r.format) {
+                const fmt = r.format.toLowerCase();
+                fmtSet.add(fmt);
+                fmts[fmt] = true;
+              }
             }
-        } catch (error) {
-            console.error("Tema listesi veya detayları yüklenirken hata:", error);
+          }
+
+          var groupTitles = pkg.groups?.map(g => g.display_name || g.title || g.name) || [];
+          groupTitles.forEach(g => groupSet.add(g));
+
+          var tagNames = pkg.tags?.map(t => t.display_name || t.name) || [];
+          tagNames.forEach(t => tagSet.add(t));
+
+          const themeName = datasetThemeMap[pkg.id] || null;
+          
+          return {
+            ...pkg,
+            orgTitle: orgTitle,
+            fmts: fmts,
+            creatorUsername: userCache[pkg.creator_user_id] || 'Yükleniyor...',
+            groupTitles: groupTitles,
+            tagNames: tagNames,
+            themeName: themeName
+          };
+        });
+        
+        // User filtreleme
+        await filterByUserPath();
+
+        // Filtre listelerini hazırla
+        allOrgs = [...orgSet].filter(Boolean).sort();
+        allFormats = [...fmtSet].filter(Boolean).sort();
+        allGroups = [...groupSet].filter(Boolean).sort();
+        allTags = [...tagSet].filter(Boolean).sort();
+
+        // Filtreleri render et
+        renderMultiSelect("orgSelect", allOrgs, selectedOrgs, debouncedRenderTable);
+        renderMultiSelect("fmtSelect", allFormats, selectedFormats, debouncedRenderTable);
+        renderMultiSelect("groupSelect", allGroups, selectedGroups, debouncedRenderTable);
+        renderMultiSelect("tagSelect", allTags, selectedTags, debouncedRenderTable);
+        renderMultiSelect("themeSelect", allThemes, selectedThemes, debouncedRenderTable);
+
+        // Event listener'ları ekle
+        document.getElementById("searchTitle").addEventListener('input', debouncedRenderTable);
+        document.getElementById("sortOrder").addEventListener('change', renderTable);
+        document.getElementById("itemsPerPage").addEventListener('change', function() {
+          itemsPerPage = parseInt(this.value);
+          currentPage = 1;
+          renderTable();
+        });
+
+        // Diğer başlatmalar
+        initVisibilityFilter();
+        initColumnResize();
+
+        // Grup sayfası kontrolü
+        if (pathInfo.type === 'group' && pathInfo.name) {
+          const groupInfo = allDatasets[0]?.groups.find(g => g.name === pathInfo.name);
+          if (groupInfo) {
+            const groupTitle = groupInfo.display_name || groupInfo.title || groupInfo.name;
+            if(allGroups.includes(groupTitle)) selectedGroups.add(groupTitle);
+          }
         }
+        
+        applyGlobalSearchAndFilter();
 
-        // 3. Tüm paketleri çek ve tema bilgilerini ekle
-        try {
-            const packageSearchResponse = await fetch('/api/3/action/package_search?' + buildApiQuery(), { credentials: 'include' });
-            const packageSearchData = await packageSearchResponse.json();
+        // İlk render
+        renderTable();
+        hideDuplicateElements();
+        
+        // User bilgilerini asenkron olarak yükle
+        loadUsernames().then(() => {
+          allDatasets.forEach(pkg => {
+            pkg.creatorUsername = userCache[pkg.creator_user_id] || 'Bilinmiyor'
+          });
+          renderTable();
+        });
 
-            if (!packageSearchData.result || !packageSearchData.result.results) return;
-
-            var orgSet = new Set(), fmtSet = new Set(), groupSet = new Set(), tagSet = new Set();
-            
-            allDatasets = packageSearchData.result.results.map(function(pkg) {
-                var orgTitle = pkg.organization?.title || "";
-                if (orgTitle) orgSet.add(orgTitle);
-
-                var fmts = {};
-                pkg.resources?.forEach(r => {
-                    if (r.format) { fmtSet.add(r.format.toLowerCase()); fmts[r.format.toLowerCase()] = true; }
-                });
-
-                var groupTitles = pkg.groups?.map(g => g.display_name || g.title || g.name) || [];
-                groupTitles.forEach(g => groupSet.add(g));
-
-                var tagNames = pkg.tags?.map(t => t.display_name || t.name) || [];
-                tagNames.forEach(t => tagSet.add(t));
-
-                // datasetThemeMap'ten veri setinin temasını al
-                const themeName = datasetThemeMap[pkg.id] || null;
-                
-                return {
-                    ...pkg,
-                    orgTitle: orgTitle,
-                    fmts: fmts,
-                    creatorUsername: userCache[pkg.creator_user_id] || 'Yükleniyor...',
-                    groupTitles: groupTitles,
-                    tagNames: tagNames,
-                    themeName: themeName // Veri seti objesine tema adını ekle
-                };
-            });
-            
-            // allThemes listesine "Yok" seçeneğini ekle ve tekilleştir/sırala
-            // Sadece teması olmayan datasetler varsa "Yok" eklenmeli
-            const hasNullThemes = allDatasets.some(pkg => pkg.themeName === null);
-            if (hasNullThemes) {
-                allThemes.push('Yok');
-            }
-            allThemes = [...new Set(allThemes)].sort();
-
-
-            // Eğer user sayfasındaysak, veriyi ana dizi üzerinden filtrele
-            await filterByUserPath();
-
-            // Filtre listelerini DOLDUR (artık veriden türetiliyor)
-            allOrgs = [...orgSet].filter(Boolean).sort();
-            allFormats = [...fmtSet].filter(Boolean).sort();
-            allGroups = [...groupSet].filter(Boolean).sort();
-            allTags = [...tagSet].filter(Boolean).sort();
-
-            // Filtreleri RENDER ET
-            renderMultiSelect("orgSelect", allOrgs, selectedOrgs, renderTable);
-            renderMultiSelect("fmtSelect", allFormats, selectedFormats, renderTable);
-            renderMultiSelect("groupSelect", allGroups, selectedGroups, renderTable);
-            renderMultiSelect("tagSelect", allTags, selectedTags, renderTable);
-            renderMultiSelect("themeSelect", allThemes, selectedThemes, renderTable); // Tema filtresini render et
-
-            // Olay dinleyicilerini ata
-            document.getElementById("searchTitle").oninput = renderTable;
-            document.getElementById("sortOrder").onchange = renderTable; // sortDate'ten sortOrder'a değişti
-            document.getElementById("itemsPerPage").onchange = function() {
-                itemsPerPage = parseInt(this.value);
-                currentPage = 1;
-                renderTable();
-            };
-
-            // YENİ: Görünürlük filtresi olay dinleyicilerini başlat
-            initVisibilityFilter();
-
-            // YENİ: Sütun yeniden boyutlandırma özelliğini başlat
-            initColumnResize();
-
-            // Eğer grup sayfasındaysak, ilgili grubu seçili yap
-            const pathInfo = getPathInfo();
-            if (pathInfo.type === 'group' && pathInfo.name) {
-                const groupInfo = allDatasets[0]?.groups.find(g => g.name === pathInfo.name);
-                if (groupInfo) {
-                    const groupTitle = groupInfo.display_name || groupInfo.title || groupInfo.name;
-                    if(allGroups.includes(groupTitle)) selectedGroups.add(groupTitle);
-                }
-            }
-            applyGlobalSearchAndFilter(); 
-
-            // İlk render
-            renderTable();
-            hideDuplicateElements();
-            
-            // User bilgilerini asenkron olarak yükle ve tabloyu son haliyle güncelle
-            await loadUsernames();
-            allDatasets.forEach(pkg => {
-                pkg.creatorUsername = userCache[pkg.creator_user_id] || 'Bilinmiyor'
-            });
-            renderTable();
-
-        } catch (error) {
-            console.error('Veri yüklenirken hata:', error);
-            document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="10" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
-        }
+      } catch (error) {
+        console.error('Veri yüklenirken hata:', error);
+        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="10" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+      }
     }
 
-    // Sayfa yüklendiğinde veri başlatma fonksiyonunu çağır
-    document.addEventListener('DOMContentLoaded', initializeData);
-    document.addEventListener('DOMContentLoaded', hideDuplicateElements); // Duplikatları gizle
+    // PERFORMANS: Tema yükleme optimize edildi
+    async function loadThemes() {
+      const ckan_api_base = "/api/3/action/";
+      const pathInfo = getPathInfo();
+      
+      try {
+        // URL'den tema bilgisi varsa
+        if (pathInfo.type === 'theme' && pathInfo.name) {
+          const themeResponse = await fetch(`${ckan_api_base}theme_category_show?slug=${pathInfo.name}`, { credentials: 'include' });
+          const themeData = await themeResponse.json();
+          if (themeData.success && themeData.result && themeData.result.category) {
+            currentThemeData = themeData.result.category;
+            currentThemeSlugFromURL = pathInfo.name;
+            renderThemeProfileCard(currentThemeData);
+            selectedThemes.add(currentThemeData.name);
+          }
+        }
 
-    var observer = new MutationObserver(function(mutations) {
+        // Tüm temaları çek
+        const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
+        const themeListData = await themeListResponse.json();
+
+        if (themeListData.success && themeListData.result) {
+          allThemes = themeListData.result.map(t => t.name || t.slug);
+          
+          // PERFORMANS: Tema-dataset ilişkilerini paralel yükle
+          const themePromises = themeListData.result.map(theme => 
+            fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
+              .then(r => r.json())
+              .then(data => {
+                if (data.success && data.result && data.result.datasets) {
+                  return { theme: theme.name, datasets: data.result.datasets };
+                }
+                return null;
+              })
+              .catch(err => {
+                console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
+                return null;
+              })
+          );
+          
+          const themeResults = await Promise.all(themePromises);
+          const tempMap = {};
+          
+          themeResults.forEach(result => {
+            if (result) {
+              result.datasets.forEach(dataset => {
+                tempMap[dataset.id] = result.theme;
+              });
+            }
+          });
+          
+          // Teması olmayan datasetler için kontrol
+          const hasNullThemes = Object.keys(tempMap).length < 1000; // Tahmin
+          if (hasNullThemes) {
+            allThemes.push('Yok');
+          }
+          allThemes = [...new Set(allThemes)].sort();
+          
+          return tempMap;
+        }
+      } catch (error) {
+        console.error("Tema listesi yüklenirken hata:", error);
+        return {};
+      }
+    }
+
+    // Sayfa yüklendiğinde başlat
+    document.addEventListener('DOMContentLoaded', function() {
+      // PERFORMANS: Intersection Observer ile lazy loading
+      if ('IntersectionObserver' in window) {
+        const observer = new IntersectionObserver((entries) => {
+          entries.forEach(entry => {
+            if (entry.isIntersecting) {
+              initializeData();
+              observer.disconnect();
+            }
+          });
+        });
+        observer.observe(document.body);
+      } else {
+        initializeData();
+      }
+      
       hideDuplicateElements();
     });
-    observer.observe(document.body, { childList: true, subtree: true });
 
-    function applyGlobalSearchAndFilter() {
-        const searchTerm = localStorage.getItem('globalSearchTerm');
-        if (searchTerm) {
-            const titleSearchInput = document.getElementById('searchTitle');
-            if (titleSearchInput) {
-                titleSearchInput.value = searchTerm;
-                console.log(`'${searchTerm}' local storage'dan alınıp arama kutusuna yazıldı.`);
-            }
-            localStorage.removeItem('globalSearchTerm');
-        }
-    }
-
-    // YENİ: Klavye kısayolları
-    document.addEventListener('keydown', function(e) {
-        // Ctrl+F: Arama kutusuna odaklan
-        if (e.ctrlKey && e.key === 'f') {
-            e.preventDefault();
-            document.getElementById('searchTitle').focus();
-        }
-        
-        // Escape: Arama kutusunu temizle
-        if (e.key === 'Escape') {
-            const searchInput = document.getElementById('searchTitle');
-            if (searchInput.value) {
-                searchInput.value = '';
-                renderTable();
-            }
-        }
+    // Mutation observer optimize edildi
+    const mutationObserver = new MutationObserver(
+      debounce(hideDuplicateElements, 100)
+    );
+    mutationObserver.observe(document.body, { 
+      childList: true, 
+      subtree: true 
     });
 
-    // YENİ: Tablo auto-fit özelliği için fonksiyon
-    function autoFitColumns() {
-        const table = document.getElementById('datasetTable');
-        const headers = table.querySelectorAll('th');
-        
-        headers.forEach((header, index) => {
-            let maxWidth = 0;
-            
-            // Header genişliğini kontrol et
-            const headerText = header.textContent;
-            const tempSpan = document.createElement('span');
-            tempSpan.style.visibility = 'hidden';
-            tempSpan.style.position = 'absolute';
-            tempSpan.style.fontSize = window.getComputedStyle(header).fontSize;
-            tempSpan.style.fontWeight = window.getComputedStyle(header).fontWeight;
-            tempSpan.textContent = headerText;
-            document.body.appendChild(tempSpan);
-            maxWidth = Math.max(maxWidth, tempSpan.offsetWidth + 30); // 30px padding
-            document.body.removeChild(tempSpan);
-            
-            // İçerik genişliğini kontrol et
-            const rows = table.querySelectorAll('tbody tr');
-            rows.forEach(row => {
-                const cell = row.cells[index];
-                if (cell) {
-                    const cellText = cell.textContent || cell.innerText;
-                    const tempSpan = document.createElement('span');
-                    tempSpan.style.visibility = 'hidden';
-                    tempSpan.style.position = 'absolute';
-                    tempSpan.style.fontSize = window.getComputedStyle(cell).fontSize;
-                    tempSpan.textContent = cellText;
-                    document.body.appendChild(tempSpan);
-                    maxWidth = Math.max(maxWidth, tempSpan.offsetWidth + 24); // 24px padding
-                    document.body.removeChild(tempSpan);
-                }
-            });
-            
-            // Minimum ve maksimum genişlik sınırları
-            const minWidth = parseInt(window.getComputedStyle(header).minWidth) || 100;
-            const maxAllowedWidth = 400; // Maksimum sütun genişliği
-            
-            maxWidth = Math.max(minWidth, Math.min(maxWidth, maxAllowedWidth));
-            header.style.width = maxWidth + 'px';
-        });
+    function applyGlobalSearchAndFilter() {
+      const searchTerm = localStorage.getItem('globalSearchTerm');
+      if (searchTerm) {
+        const titleSearchInput = document.getElementById('searchTitle');
+        if (titleSearchInput) {
+          titleSearchInput.value = searchTerm;
+          console.log(`'${searchTerm}' local storage'dan alınıp arama kutusuna yazıldı.`);
+        }
+        localStorage.removeItem('globalSearchTerm');
+      }
     }
 
-    // YENİ: Auto-fit butonu için olay dinleyici (isteğe bağlı)
-    // Bu fonksiyonu bir buton ile çağırabilirsiniz veya otomatik olarak çalıştırabilirsiniz
-    window.autoFitTableColumns = autoFitColumns;
+    // Klavye kısayolları
+    document.addEventListener('keydown', function(e) {
+      // Ctrl+F: Arama kutusuna odaklan
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        document.getElementById('searchTitle').focus();
+      }
+      
+      // Escape: Arama kutusunu temizle
+      if (e.key === 'Escape') {
+        const searchInput = document.getElementById('searchTitle');
+        if (searchInput.value) {
+          searchInput.value = '';
+          renderTable();
+        }
+      }
+    });
 
-    // YENİ: Tablo render'ı sonrası auto-fit (isteğe bağlı)
-    // Eğer otomatik auto-fit istiyorsanız, renderTable fonksiyonunun sonuna ekleyebilirsiniz:
-    // setTimeout(autoFitColumns, 100);
+    // PERFORMANS: Window global değişkenleri temizle
+    window.addEventListener('beforeunload', function() {
+      if (window.userFetchQueue) {
+        window.userFetchQueue.clear();
+        window.userFetchQueue = null;
+      }
+      if (window.userFetchPromise) {
+        window.userFetchPromise = null;
+      }
+    });
+
+    // Global fonksiyonlar
+    window.confirmDelete = confirmDelete;
 </script>
 </body>
 </html>

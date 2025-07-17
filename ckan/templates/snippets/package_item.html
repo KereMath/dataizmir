@@ -680,35 +680,6 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.6.0/tinycolor.min.js"></script>
 <script>
-function updateTableVisibility() {
-    const path = window.location.pathname;
-    const actionColumnHeader = document.querySelector('th.t-actions');
-    const actionColumnCells = document.querySelectorAll('td.t-actions');
-
-    // Kullanıcı giriş yapmamışsa VEYA URL sadece /dataset/ ise butonları gizle
-    // Not: isCurrentUserAdmin ve currentLoggedInUserId backend'den doğru şekilde gelmeli.
-    // Eğer currentLoggedInUserId null veya boş ise, kullanıcı giriş yapmamış demektir.
-    const isUserLoggedIn = currentLoggedInUserId && currentLoggedInUserId !== 'null'; // 'null' string olarak gelme ihtimaline karşı
-
-    if (!isUserLoggedIn || (path === '/dataset/' || path === '/dataset')) {
-        if (actionColumnHeader) {
-            actionColumnHeader.style.display = 'none'; // Başlık hücresini gizle
-        }
-        actionColumnCells.forEach(cell => {
-            cell.style.display = 'none'; // Tüm ilgili veri hücrelerini gizle
-        });
-    } else {
-        // Kullanıcı giriş yapmışsa VE URL /dataset/ değilse görünür yap
-        if (actionColumnHeader) {
-            actionColumnHeader.style.display = ''; // CSS'in varsayılan değerini almasını sağla
-        }
-        actionColumnCells.forEach(cell => {
-            cell.style.display = ''; // CSS'in varsayılan değerini almasını sağla
-        });
-    }
-}
-
-
     // --- Değişkenler ---
     var allDatasets = [];
     var filteredDatasets = [];
@@ -1358,7 +1329,6 @@ function updateTableVisibility() {
       
       tbody.innerHTML = '';
       tbody.appendChild(fragment);
-      updateTableVisibility();
     }
     
     // PERFORMANS: Debounced render

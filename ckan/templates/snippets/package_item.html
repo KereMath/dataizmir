@@ -768,6 +768,16 @@
       e.preventDefault();
     }
 
+    const doResize = rafDebounce((e) => {
+      if (!isResizing || !currentColumn) return;
+      
+      const width = startWidth + e.pageX - startX;
+      const minWidth = parseInt(window.getComputedStyle(currentColumn).minWidth, 10) || 100;
+      
+      if (width >= minWidth) {
+        currentColumn.style.width = width + 'px';
+      }
+    });
 
     function stopResize() {
       if (!isResizing) return;

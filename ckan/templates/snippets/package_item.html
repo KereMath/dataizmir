@@ -1621,6 +1621,119 @@
 
     // Global fonksiyonlar
     window.confirmDelete = confirmDelete;
+
+    // YENİ: Şu anki kullanıcının tüm rollerini çek ve console'a yazdır
+    async function getCurrentUserRoles() {
+      console.log('=== ŞU ANKİ KULLANICININ ROLLERİ ===');
+      
+      try {
+        // 1. Önce şu anki kullanıcının bilgilerini al
+        const currentUserResponse = await fetch('/api/3/action/user_show', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({})  // Boş obje gönderince şu anki kullanıcıyı döndürür
+        });
+        
+        const currentUserData = await currentUserResponse.json();
+        
+        if (!currentUserData.success || !currentUserData.result) {
+          console.log('❌ Kullanıcı bilgisi alınamadı');
+          return;
+        }
+        
+        const currentUser = currentUserData.result;
+        const userId = currentUser.id;
+        const userName = currentUser.name;
+        
+        console.log(`👤 Şu anki kullanıcı: ${userName} (ID: ${userId})`);
+        console.log('');
+        
+        // 2. Paralel olarak tüm rolleri çek
+        const [orgRoles, groupRoles, themeRoles] = await Promise.all([
+          // Organizations
+          fetch(`/api/3/action/organization_list_for_user?id=${userId}&permission=read`, {
+            credentials: 'include'
+          }).then(r => r.json()).catch(() => ({ success: false, result: [] })),
+          
+          // Groups  
+          fetch(`/api/3/action/group_list_for_user?id=${userId}&permission=read`, {
+            credentials: 'include'
+          }).then(r => r.json()).catch(() => ({ success: false, result: [] })),
+          
+          // Themes
+          fetch(`/api/3/action/get_user_themes?user_id=${userId}`, {
+            credentials: 'include'
+          }).then(r => r.json()).catch(() => ({ success: false, result: [] }))
+        ]);
+        
+        // 3. Organization rollerini yazdır
+        console.log('🏢 ORGANIZASYON ROLLERİ:');
+        if (orgRoles.success && orgRoles.result && orgRoles.result.length > 0) {
+          orgRoles.result.forEach(org => {
+            const role = org.capacity || 'member';
+            const orgName = org.display_name || org.title || org.name;
+            console.log(`  📋 ${orgName} → ${role.toUpperCase()}`);
+          });
+        } else {
+          console.log('  ❌ Hiçbir organizasyonda rolü yok');
+        }
+        console.log('');
+        
+        // 4. Group rollerini yazdır
+        console.log('👥 GRUP ROLLERİ:');
+        if (groupRoles.success && groupRoles.result && groupRoles.result.length > 0) {
+          groupRoles.result.forEach(group => {
+            const role = group.capacity || 'member';
+            const groupName = group.display_name || group.title || group.name;
+            console.log(`  📂 ${groupName} → ${role.toUpperCase()}`);
+          });
+        } else {
+          console.log('  ❌ Hiçbir grupta rolü yok');
+        }
+        console.log('');
+        
+        // 5. Theme rollerini yazdır
+        console.log('🎨 TEMA ROLLERİ:');
+        if (themeRoles.success && themeRoles.result && themeRoles.result.length > 0) {
+          themeRoles.result.forEach(theme => {
+            const role = theme.role || 'member';
+            const themeName = theme.theme_name || theme.theme_slug;
+            console.log(`  🏷️ ${themeName} → ${role.toUpperCase()}`);
+          });
+        } else {
+          console.log('  ❌ Hiçbir temada rolü yok');
+        }
+        console.log('');
+        
+        // 6. Özet bilgi
+        const totalOrgs = (orgRoles.success && orgRoles.result) ? orgRoles.result.length : 0;
+        const totalGroups = (groupRoles.success && groupRoles.result) ? groupRoles.result.length : 0;
+        const totalThemes = (themeRoles.success && themeRoles.result) ? themeRoles.result.length : 0;
+        const totalRoles = totalOrgs + totalGroups + totalThemes;
+        
+        console.log('📊 ÖZET:');
+        console.log(`  🏢 Organizasyon: ${totalOrgs} rol`);
+        console.log(`  👥 Grup: ${totalGroups} rol`);
+        console.log(`  🎨 Tema: ${totalThemes} rol`);
+        console.log(`  📈 TOPLAM: ${totalRoles} rol`);
+        
+        if (currentUser.sysadmin) {
+          console.log('  ⭐ SİSTEM YÖNETİCİSİ');
+        }
+        
+        console.log('=== ROL KONTROLÜ TAMAMLANDI ===');
+        
+      } catch (error) {
+        console.error('❌ Roller çekilirken hata oluştu:', error);
+      }
+    }
+
+    // Sayfa yüklendiğinde kullanıcı rollerini çek
+    document.addEventListener('DOMContentLoaded', function() {
+      // 2 saniye bekleyip rolleri çek (sayfanın tamamen yüklenmesi için)
+      setTimeout(getCurrentUserRoles, 2000);
+    });
 </script>
 </body>
 </html>

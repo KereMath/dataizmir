@@ -1627,105 +1627,128 @@
       console.log('=== ŞU ANKİ KULLANICININ ROLLERİ ===');
       
       try {
-        // 1. Önce şu anki kullanıcının bilgilerini al
-        const currentUserResponse = await fetch('/api/3/action/user_show', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({})  // Boş obje gönderince şu anki kullanıcıyı döndürür
-        });
+        // 1. Şu anki kullanıcının session bilgilerini kontrol et
+        let currentUser = null;
+        let userId = null;
+        let userName = null;
         
-        const currentUserData = await currentUserResponse.json();
-        
-        if (!currentUserData.success || !currentUserData.result) {
-          console.log('❌ Kullanıcı bilgisi alınamadı');
-          return;
+        try {
+          // CKAN'da login olan kullanıcıyı almak için boş POST ile user_show çağır
+          const currentUserResponse = await fetch('/api/3/action/user_show', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({})
+          });
+          
+          const currentUserData = await currentUserResponse.json();
+          
+          if (currentUserData.success && currentUserData.result) {
+            currentUser = currentUserData.result;
+            userId = currentUser.id;
+            userName = currentUser.name;
+          }
+        } catch (e) {
+          console.log('⚠️ user_show ile kullanıcı bilgisi alınamadı, alternatif yol deneniyor...');
         }
         
-        const currentUser = currentUserData.result;
-        const userId = currentUser.id;
-        const userName = currentUser.name;
+        // Eğer user_show çalışmazsa, context'ten kullanıcı adını almaya çalış
+        if (!currentUser) {
+          console.log('❌ Kullanıcı bilgisi alınamadı - giriş yapılmamış olabilir');
+          return;
+        }
         
         console.log(`👤 Şu anki kullanıcı: ${userName} (ID: ${userId})`);
         console.log('');
         
-        // 2. Paralel olarak tüm rolleri çek
-        const [orgRoles, groupRoles, themeRoles] = await Promise.all([
-          // Organizations
-          fetch(`/api/3/action/organization_list_for_user?id=${userId}&permission=read`, {
-            credentials: 'include'
-          }).then(r => r.json()).catch(() => ({ success: false, result: [] })),
-          
-          // Groups  
-          fetch(`/api/3/action/group_list_for_user?id=${userId}&permission=read`, {
-            credentials: 'include'
-          }).then(r => r.json()).catch(() => ({ success: false, result: [] })),
-          
-          // Themes
-          fetch(`/api/3/action/get_user_themes?user_id=${userId}`, {
-            credentials: 'include'
-          }).then(r => r.json()).catch(() => ({ success: false, result: [] }))
-        ]);
-        
-        // 3. Organization rollerini yazdır
+        // 2. Organization rollerini çek
         console.log('🏢 ORGANIZASYON ROLLERİ:');
-        if (orgRoles.success && orgRoles.result && orgRoles.result.length > 0) {
-          orgRoles.result.forEach(org => {
-            const role = org.capacity || 'member';
-            const orgName = org.display_name || org.title || org.name;
-            console.log(`  📋 ${orgName} → ${role.toUpperCase()}`);
+        try {
+          const orgResponse = await fetch('/api/3/action/organization_list_for_user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id: userId })
           });
-        } else {
-          console.log('  ❌ Hiçbir organizasyonda rolü yok');
+          
+          const orgData = await orgResponse.json();
+          
+          if (orgData.success && orgData.result && orgData.result.length > 0) {
+            orgData.result.forEach(org => {
+              const role = org.capacity || 'member';
+              const orgName = org.display_name || org.title || org.name;
+              console.log(`  📋 ${orgName} → ${role.toUpperCase()}`);
+            });
+          } else {
+            console.log('  ❌ Hiçbir organizasyonda rolü yok');
+          }
+        } catch (error) {
+          console.log('  ❌ Organizasyon rolleri alınamadı:', error.message);
         }
         console.log('');
         
-        // 4. Group rollerini yazdır
+        // 3. Group rollerini çek  
         console.log('👥 GRUP ROLLERİ:');
-        if (groupRoles.success && groupRoles.result && groupRoles.result.length > 0) {
-          groupRoles.result.forEach(group => {
-            const role = group.capacity || 'member';
-            const groupName = group.display_name || group.title || group.name;
-            console.log(`  📂 ${groupName} → ${role.toUpperCase()}`);
+        try {
+          const groupResponse = await fetch('/api/3/action/group_list_for_user', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id: userId })
           });
-        } else {
-          console.log('  ❌ Hiçbir grupta rolü yok');
+          
+          const groupData = await groupResponse.json();
+          
+          if (groupData.success && groupData.result && groupData.result.length > 0) {
+            groupData.result.forEach(group => {
+              const role = group.capacity || 'member';
+              const groupName = group.display_name || group.title || group.name;
+              console.log(`  📂 ${groupName} → ${role.toUpperCase()}`);
+            });
+          } else {
+            console.log('  ❌ Hiçbir grupta rolü yok');
+          }
+        } catch (error) {
+          console.log('  ❌ Grup rolleri alınamadı:', error.message);
         }
         console.log('');
         
-        // 5. Theme rollerini yazdır
+        // 4. Theme rollerini çek
         console.log('🎨 TEMA ROLLERİ:');
-        if (themeRoles.success && themeRoles.result && themeRoles.result.length > 0) {
-          themeRoles.result.forEach(theme => {
-            const role = theme.role || 'member';
-            const themeName = theme.theme_name || theme.theme_slug;
-            console.log(`  🏷️ ${themeName} → ${role.toUpperCase()}`);
+        try {
+          const themeResponse = await fetch('/api/3/action/get_user_themes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ user_id: userId })
           });
-        } else {
-          console.log('  ❌ Hiçbir temada rolü yok');
+          
+          const themeData = await themeResponse.json();
+          
+          if (themeData.success && themeData.result && themeData.result.length > 0) {
+            themeData.result.forEach(theme => {
+              const role = theme.role || 'member';
+              const themeName = theme.theme_name || theme.theme_slug;
+              console.log(`  🏷️ ${themeName} → ${role.toUpperCase()}`);
+            });
+          } else {
+            console.log('  ❌ Hiçbir temada rolü yok');
+          }
+        } catch (error) {
+          console.log('  ❌ Tema rolleri alınamadı:', error.message);
         }
         console.log('');
         
-        // 6. Özet bilgi
-        const totalOrgs = (orgRoles.success && orgRoles.result) ? orgRoles.result.length : 0;
-        const totalGroups = (groupRoles.success && groupRoles.result) ? groupRoles.result.length : 0;
-        const totalThemes = (themeRoles.success && themeRoles.result) ? themeRoles.result.length : 0;
-        const totalRoles = totalOrgs + totalGroups + totalThemes;
-        
-        console.log('📊 ÖZET:');
-        console.log(`  🏢 Organizasyon: ${totalOrgs} rol`);
-        console.log(`  👥 Grup: ${totalGroups} rol`);
-        console.log(`  🎨 Tema: ${totalThemes} rol`);
-        console.log(`  📈 TOPLAM: ${totalRoles} rol`);
-        
+        // 5. Ekstra bilgiler
         if (currentUser.sysadmin) {
-          console.log('  ⭐ SİSTEM YÖNETİCİSİ');
+          console.log('⭐ SİSTEM YÖNETİCİSİ');
+          console.log('');
         }
         
         console.log('=== ROL KONTROLÜ TAMAMLANDI ===');
         
       } catch (error) {
-        console.error('❌ Roller çekilirken hata oluştu:', error);
+        console.error('❌ Genel hata oluştu:', error);
       }
     }
 

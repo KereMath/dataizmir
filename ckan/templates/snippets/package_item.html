@@ -615,7 +615,7 @@
       </div>
 
       <!-- YENİ: Açık/Gizli veri filtresi -->
-      <div class="filter-section">
+      <div class="filter-section" id="dark">
         <label>Veri Görünürlüğü</label>
         <div class="visibility-filter">
           <div class="visibility-option selected" id="visibilityPublic">
@@ -1893,6 +1893,7 @@
           .t-user { display: none !important; }
           .t-actions { display: none !important; }
           .visibility-filter { display: none !important; }
+          #dark { display: none !important; }
         `;
         console.log('  🚫 Giriş yapmamış kullanıcı: t-user, t-actions ve visibility filter gizlendi');
         

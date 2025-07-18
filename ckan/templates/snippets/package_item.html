@@ -1627,39 +1627,143 @@
       console.log('=== ŞU ANKİ KULLANICININ ROLLERİ ===');
       
       try {
-        // 1. Şu anki kullanıcının session bilgilerini kontrol et
-        let currentUser = null;
+        // 1. Kullanıcı bilgisini farklı yöntemlerle almaya çalış
         let userId = null;
         let userName = null;
+        let displayName = null;
+        let isSysadmin = false;
         
+        // Yöntem 1: Dashboard link'inden kullanıcı adını çek
+        const dashboardLink = document.querySelector('a[href*="/dashboard"]');
+        if (dashboardLink) {
+          console.log('Dashboard linki bulundu');
+        }
+        
+        // Yöntem 2: URL pattern'lerinden kullanıcı adını çek
+        const currentUrl = window.location.href;
+        const userMatch = currentUrl.match(/\/user\/([^\/\?]+)/);
+        if (userMatch) {
+          userName = userMatch[1];
+          console.log(`URL'den kullanıcı adı tespit edildi: ${userName}`);
+        }
+        
+        // Yöntem 3: Meta tag'lerden kontrol et
+        const metaTags = document.querySelectorAll('meta');
+        for (let meta of metaTags) {
+          if (meta.name === 'author' || meta.name === 'user') {
+            console.log('Meta tag kontrol ediliyor:', meta.content);
+          }
+        }
+        
+        // Yöntem 4: Body class'larından user bilgisi
+        const bodyClasses = document.body.className;
+        console.log('Body classes:', bodyClasses);
+        
+        // Yöntem 5: Cookie'lerden session kontrol
+        const cookies = document.cookie;
+        if (cookies.includes('auth_tkt') || cookies.includes('session')) {
+          console.log('Session cookie bulundu, kullanıcı giriş yapmış');
+        } else {
+          console.log('Session cookie bulunamadı');
+        }
+        
+        // Yöntem 6: API ile mevcut session'ı kontrol et
         try {
-          // CKAN'da login olan kullanıcıyı almak için boş POST ile user_show çağır
-          const currentUserResponse = await fetch('/api/3/action/user_show', {
+          console.log('API ile session kontrol ediliyor...');
+          
+          // Boş bir API çağrısı yap, eğer authenticated ise kullanıcı bilgisi döner
+          const sessionResponse = await fetch('/api/3/action/package_search?rows=0', {
+            credentials: 'include'
+          });
+          
+          const sessionData = await sessionResponse.json();
+          console.log('Session API response:', sessionData.success);
+          
+          // Member roles list ile authenticated user kontrolü
+          const rolesResponse = await fetch('/api/3/action/member_roles_list', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify({})
           });
           
-          const currentUserData = await currentUserResponse.json();
+          const rolesData = await rolesResponse.json();
+          console.log('Roles API response:', rolesData.success);
           
-          if (currentUserData.success && currentUserData.result) {
-            currentUser = currentUserData.result;
-            userId = currentUser.id;
-            userName = currentUser.name;
-          }
         } catch (e) {
-          console.log('⚠️ user_show ile kullanıcı bilgisi alınamadı, alternatif yol deneniyor...');
+          console.log('Session API kontrolü başarısız:', e.message);
         }
         
-        // Eğer user_show çalışmazsa, context'ten kullanıcı adını almaya çalış
-        if (!currentUser) {
-          console.log('❌ Kullanıcı bilgisi alınamadı - giriş yapılmamış olabilir');
+        // Eğer hiçbir yöntemle kullanıcı adı bulunamazsa, direct API denemesi
+        if (!userName) {
+          console.log('Kullanıcı adı bulunamadı, direct API denemeleri başlatılıyor...');
+          
+          // Dashboard datasets API'sine çağrı yap - bu authenticated user gerektirir
+          try {
+            const dashboardResponse = await fetch('/api/3/action/dashboard_activity_list', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ limit: 1 })
+            });
+            
+            const dashboardData = await dashboardResponse.json();
+            
+            if (dashboardData.success) {
+              console.log('Dashboard API başarılı - kullanıcı giriş yapmış');
+              
+              // Activity'lerden user ID çekmeye çalış
+              if (dashboardData.result && dashboardData.result.length > 0) {
+                const firstActivity = dashboardData.result[0];
+                if (firstActivity.user_id) {
+                  userId = firstActivity.user_id;
+                  console.log('Activity\'den User ID bulundu:', userId);
+                }
+              }
+            } else {
+              console.log('Dashboard API başarısız - kullanıcı giriş yapmamış olabilir');
+            }
+          } catch (error) {
+            console.log('Dashboard API hatası:', error.message);
+          }
+        }
+        
+        // Eğer user ID bulunduysa, user_show ile detayları al
+        if (userId && !userName) {
+          try {
+            const userResponse = await fetch('/api/3/action/user_show', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ id: userId })
+            });
+            
+            const userData = await userResponse.json();
+            
+            if (userData.success && userData.result) {
+              userName = userData.result.name;
+              displayName = userData.result.display_name || userData.result.fullname;
+              isSysadmin = userData.result.sysadmin || false;
+              console.log(`User detayları bulundu: ${displayName} (@${userName})`);
+            }
+          } catch (error) {
+            console.log('User show API hatası:', error.message);
+          }
+        }
+        
+        // Son kontrol: Eğer hala kullanıcı bulunamadıysa
+        if (!userName && !userId) {
+          console.log('❌ Kullanıcı bilgisi hiçbir yöntemle alınamadı');
+          console.log('💡 Muhtemelen giriş yapılmamış veya session süresi dolmuş');
           return;
         }
         
-        console.log(`👤 Şu anki kullanıcı: ${userName} (ID: ${userId})`);
+        console.log(`👤 Şu anki kullanıcı: ${displayName || userName} ${userName ? `(@${userName})` : ''}`);
+        if (userId) console.log(`🆔 User ID: ${userId}`);
         console.log('');
+        
+        // Artık role API'lerini çağırabiliriz
+        const userIdentifier = userName || userId;
         
         // 2. Organization rollerini çek
         console.log('🏢 ORGANIZASYON ROLLERİ:');
@@ -1668,7 +1772,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ id: userId })
+            body: JSON.stringify({ id: userIdentifier })
           });
           
           const orgData = await orgResponse.json();
@@ -1694,7 +1798,7 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({ id: userId })
+            body: JSON.stringify({ id: userIdentifier })
           });
           
           const groupData = await groupResponse.json();
@@ -1716,23 +1820,42 @@
         // 4. Theme rollerini çek
         console.log('🎨 TEMA ROLLERİ:');
         try {
-          const themeResponse = await fetch('/api/3/action/get_user_themes', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ user_id: userId })
-          });
-          
-          const themeData = await themeResponse.json();
-          
-          if (themeData.success && themeData.result && themeData.result.length > 0) {
-            themeData.result.forEach(theme => {
-              const role = theme.role || 'member';
-              const themeName = theme.theme_name || theme.theme_slug;
-              console.log(`  🏷️ ${themeName} → ${role.toUpperCase()}`);
+          // Theme için user ID gerekli, userName'den user ID al
+          if (!userId && userName) {
+            const userShowResponse = await fetch('/api/3/action/user_show', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ id: userName })
             });
+            
+            const userShowData = await userShowResponse.json();
+            if (userShowData.success && userShowData.result) {
+              userId = userShowData.result.id;
+            }
+          }
+          
+          if (userId) {
+            const themeResponse = await fetch('/api/3/action/get_user_themes', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({ user_id: userId })
+            });
+            
+            const themeData = await themeResponse.json();
+            
+            if (themeData.success && themeData.result && themeData.result.length > 0) {
+              themeData.result.forEach(theme => {
+                const role = theme.role || 'member';
+                const themeName = theme.theme_name || theme.theme_slug;
+                console.log(`  🏷️ ${themeName} → ${role.toUpperCase()}`);
+              });
+            } else {
+              console.log('  ❌ Hiçbir temada rolü yok');
+            }
           } else {
-            console.log('  ❌ Hiçbir temada rolü yok');
+            console.log('  ❌ User ID bulunamadı, tema rolleri kontrol edilemedi');
           }
         } catch (error) {
           console.log('  ❌ Tema rolleri alınamadı:', error.message);
@@ -1740,7 +1863,7 @@
         console.log('');
         
         // 5. Ekstra bilgiler
-        if (currentUser.sysadmin) {
+        if (isSysadmin) {
           console.log('⭐ SİSTEM YÖNETİCİSİ');
           console.log('');
         }

@@ -1622,9 +1622,14 @@
     // Global fonksiyonlar
     window.confirmDelete = confirmDelete;
 
-    // YENİ: Şu anki kullanıcının tüm rollerini çek ve console'a yazdır
+    // YENİ: Şu anki kullanıcının tüm rollerini çek ve sütun görünürlüğünü ayarla
     async function getCurrentUserRoles() {
       console.log('=== ŞU ANKİ KULLANICININ ROLLERİ ===');
+      
+      // Varsayılan olarak tüm sütunları gizle
+      let hasAdminOrEditorRole = false;
+      let hasAnyRole = false;
+      let isLoggedIn = false;
       
       try {
         // 1. Kullanıcı bilgisini farklı yöntemlerle almaya çalış
@@ -1647,85 +1652,48 @@
           console.log(`URL'den kullanıcı adı tespit edildi: ${userName}`);
         }
         
-        // Yöntem 3: Meta tag'lerden kontrol et
-        const metaTags = document.querySelectorAll('meta');
-        for (let meta of metaTags) {
-          if (meta.name === 'author' || meta.name === 'user') {
-            console.log('Meta tag kontrol ediliyor:', meta.content);
-          }
-        }
-        
-        // Yöntem 4: Body class'larından user bilgisi
-        const bodyClasses = document.body.className;
-        console.log('Body classes:', bodyClasses);
-        
-        // Yöntem 5: Cookie'lerden session kontrol
+        // Yöntem 3: Cookie'lerden session kontrol
         const cookies = document.cookie;
         if (cookies.includes('auth_tkt') || cookies.includes('session')) {
           console.log('Session cookie bulundu, kullanıcı giriş yapmış');
+          isLoggedIn = true;
         } else {
           console.log('Session cookie bulunamadı');
         }
         
-        // Yöntem 6: API ile mevcut session'ı kontrol et
+        // Yöntem 4: API ile mevcut session'ı kontrol et
         try {
           console.log('API ile session kontrol ediliyor...');
           
-          // Boş bir API çağrısı yap, eğer authenticated ise kullanıcı bilgisi döner
-          const sessionResponse = await fetch('/api/3/action/package_search?rows=0', {
-            credentials: 'include'
-          });
-          
-          const sessionData = await sessionResponse.json();
-          console.log('Session API response:', sessionData.success);
-          
-          // Member roles list ile authenticated user kontrolü
-          const rolesResponse = await fetch('/api/3/action/member_roles_list', {
+          // Dashboard datasets API'sine çağrı yap - bu authenticated user gerektirir
+          const dashboardResponse = await fetch('/api/3/action/dashboard_activity_list', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
-            body: JSON.stringify({})
+            body: JSON.stringify({ limit: 1 })
           });
           
-          const rolesData = await rolesResponse.json();
-          console.log('Roles API response:', rolesData.success);
+          const dashboardData = await dashboardResponse.json();
           
-        } catch (e) {
-          console.log('Session API kontrolü başarısız:', e.message);
-        }
-        
-        // Eğer hiçbir yöntemle kullanıcı adı bulunamazsa, direct API denemesi
-        if (!userName) {
-          console.log('Kullanıcı adı bulunamadı, direct API denemeleri başlatılıyor...');
-          
-          // Dashboard datasets API'sine çağrı yap - bu authenticated user gerektirir
-          try {
-            const dashboardResponse = await fetch('/api/3/action/dashboard_activity_list', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({ limit: 1 })
-            });
+          if (dashboardData.success) {
+            console.log('Dashboard API başarılı - kullanıcı giriş yapmış');
+            isLoggedIn = true;
             
-            const dashboardData = await dashboardResponse.json();
-            
-            if (dashboardData.success) {
-              console.log('Dashboard API başarılı - kullanıcı giriş yapmış');
-              
-              // Activity'lerden user ID çekmeye çalış
-              if (dashboardData.result && dashboardData.result.length > 0) {
-                const firstActivity = dashboardData.result[0];
-                if (firstActivity.user_id) {
-                  userId = firstActivity.user_id;
-                  console.log('Activity\'den User ID bulundu:', userId);
-                }
+            // Activity'lerden user ID çekmeye çalış
+            if (dashboardData.result && dashboardData.result.length > 0) {
+              const firstActivity = dashboardData.result[0];
+              if (firstActivity.user_id) {
+                userId = firstActivity.user_id;
+                console.log('Activity\'den User ID bulundu:', userId);
               }
-            } else {
-              console.log('Dashboard API başarısız - kullanıcı giriş yapmamış olabilir');
             }
-          } catch (error) {
-            console.log('Dashboard API hatası:', error.message);
+          } else {
+            console.log('Dashboard API başarısız - kullanıcı giriş yapmamış olabilir');
+            isLoggedIn = false;
           }
+        } catch (error) {
+          console.log('Dashboard API hatası:', error.message);
+          isLoggedIn = false;
         }
         
         // Eğer user ID bulunduysa, user_show ile detayları al
@@ -1751,13 +1719,17 @@
           }
         }
         
-        // Son kontrol: Eğer hala kullanıcı bulunamadıysa
-        if (!userName && !userId) {
+        // Eğer hala kullanıcı bulunamadıysa, giriş yapılmamış
+        if (!userName && !userId && !isLoggedIn) {
           console.log('❌ Kullanıcı bilgisi hiçbir yöntemle alınamadı');
-          console.log('💡 Muhtemelen giriş yapılmamış veya session süresi dolmuş');
+          console.log('💡 Kullanıcı giriş yapmamış');
+          
+          // Giriş yapmamış kullanıcı için sütunları gizle
+          hideColumnsForNotLoggedIn();
           return;
         }
         
+        isLoggedIn = true;
         console.log(`👤 Şu anki kullanıcı: ${displayName || userName} ${userName ? `(@${userName})` : ''}`);
         if (userId) console.log(`🆔 User ID: ${userId}`);
         console.log('');
@@ -1782,6 +1754,13 @@
               const role = org.capacity || 'member';
               const orgName = org.display_name || org.title || org.name;
               console.log(`  📋 ${orgName} → ${role.toUpperCase()}`);
+              
+              // Admin veya editor rolü kontrolü
+              if (role === 'admin' || role === 'editor') {
+                hasAdminOrEditorRole = true;
+              }
+              // Herhangi bir rol (member dahil)
+              hasAnyRole = true;
             });
           } else {
             console.log('  ❌ Hiçbir organizasyonda rolü yok');
@@ -1808,6 +1787,13 @@
               const role = group.capacity || 'member';
               const groupName = group.display_name || group.title || group.name;
               console.log(`  📂 ${groupName} → ${role.toUpperCase()}`);
+              
+              // Admin veya editor rolü kontrolü (gruplar için sadece admin var normalde)
+              if (role === 'admin' || role === 'editor') {
+                hasAdminOrEditorRole = true;
+              }
+              // Herhangi bir rol (member dahil)
+              hasAnyRole = true;
             });
           } else {
             console.log('  ❌ Hiçbir grupta rolü yok');
@@ -1817,7 +1803,7 @@
         }
         console.log('');
         
-        // 4. Theme rollerini çek
+        // 4. Theme rollerini çek (sadece göster, visibility kontrolünde kullanma)
         console.log('🎨 TEMA ROLLERİ:');
         try {
           // Theme için user ID gerekli, userName'den user ID al
@@ -1850,6 +1836,7 @@
                 const role = theme.role || 'member';
                 const themeName = theme.theme_name || theme.theme_slug;
                 console.log(`  🏷️ ${themeName} → ${role.toUpperCase()}`);
+                // NOT: Tema rollerini visibility kontrolünde kullanmıyoruz
               });
             } else {
               console.log('  ❌ Hiçbir temada rolü yok');
@@ -1862,17 +1849,89 @@
         }
         console.log('');
         
-        // 5. Ekstra bilgiler
+        // 5. Sysadmin kontrolü
         if (isSysadmin) {
           console.log('⭐ SİSTEM YÖNETİCİSİ');
+          hasAdminOrEditorRole = true; // Sysadmin her şeyi yapabilir
+          hasAnyRole = true;
           console.log('');
         }
         
         console.log('=== ROL KONTROLÜ TAMAMLANDI ===');
+        console.log(`📊 Admin/Editor Rolü: ${hasAdminOrEditorRole ? 'VAR' : 'YOK'}`);
+        console.log(`📊 Herhangi Bir Rol: ${hasAnyRole ? 'VAR' : 'YOK'}`);
+        console.log(`📊 Giriş Durumu: ${isLoggedIn ? 'GİRİŞ YAPMIŞ' : 'GİRİŞ YAPMAMI'}`);
         
       } catch (error) {
         console.error('❌ Genel hata oluştu:', error);
+        isLoggedIn = false;
+        hasAdminOrEditorRole = false;
+        hasAnyRole = false;
       }
+      
+      // Sütun görünürlüğü ayarlamaları
+      updateColumnVisibility(isLoggedIn, hasAdminOrEditorRole, hasAnyRole);
+    }
+
+    // Sütun görünürlüğünü güncelle
+    function updateColumnVisibility(isLoggedIn, hasAdminOrEditorRole, hasAnyRole) {
+      console.log('🔧 Sütun görünürlüğü güncelleniyor...');
+      
+      // CSS stilleri eklemek için style element oluştur
+      let styleElement = document.getElementById('dynamic-column-visibility');
+      if (!styleElement) {
+        styleElement = document.createElement('style');
+        styleElement.id = 'dynamic-column-visibility';
+        document.head.appendChild(styleElement);
+      }
+      
+      let css = '';
+      
+      if (!isLoggedIn) {
+        // Giriş yapmamış: t-user, t-actions ve visibility filter gizle
+        css += `
+          .t-user { display: none !important; }
+          .t-actions { display: none !important; }
+          .visibility-filter { display: none !important; }
+        `;
+        console.log('  🚫 Giriş yapmamış kullanıcı: t-user, t-actions ve visibility filter gizlendi');
+        
+      } else {
+        // Giriş yapmış kullanıcı
+        
+        if (!hasAdminOrEditorRole) {
+          // Admin/Editor rolü yok: t-actions gizle
+          css += `
+            .t-actions { display: none !important; }
+          `;
+          console.log('  🚫 Admin/Editor rolü yok: t-actions gizlendi');
+        } else {
+          console.log('  ✅ Admin/Editor rolü var: t-actions görünür');
+        }
+        
+        if (!hasAnyRole) {
+          // Hiçbir rol yok (organizasyon/grup): visibility filter gizle
+          css += `
+            .visibility-filter { display: none !important; }
+          `;
+          console.log('  🚫 Hiçbir organizasyon/grup rolü yok: visibility filter gizlendi');
+        } else {
+          console.log('  ✅ Organizasyon/grup rolü var: visibility filter görünür');
+        }
+        
+        // t-user her zaman görünür (giriş yapmış kullanıcı için)
+        console.log('  ✅ Giriş yapmış kullanıcı: t-user görünür');
+      }
+      
+      // CSS'i uygula
+      styleElement.textContent = css;
+      console.log('🔧 Sütun görünürlüğü güncellendi');
+    }
+
+    // Giriş yapmamış kullanıcı için tüm restricted sütunları gizle
+    function hideColumnsForNotLoggedIn() {
+      console.log('🚫 Giriş yapmamış kullanıcı için sütunlar gizleniyor...');
+      updateColumnVisibility(false, false, false);
     }
 
     // Sayfa yüklendiğinde kullanıcı rollerini çek

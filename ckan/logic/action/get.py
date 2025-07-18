@@ -3660,7 +3660,6 @@ def api_token_list(context, data_dict):
     return model_dictize.api_token_list_dictize(tokens, context)
 
 # Theme GET Actions
-
 @logic.side_effect_free
 def theme_category_list(context, data_dict):
     """Tüm kategorileri listele"""
@@ -3683,7 +3682,8 @@ def theme_category_list(context, data_dict):
                 'description': cat.description,
                 'color': cat.color,
                 'icon': cat.icon,
-                'background_image': cat.background_image, # YENİ EKLENDİ
+                'background_image': cat.background_image,
+                'opacity': cat.opacity,  # CRITICAL FIX: Opacity eklendi!
                 'dataset_count': dataset_count,
                 'created_at': cat.created_at.isoformat() if cat.created_at else None
             })
@@ -3691,8 +3691,6 @@ def theme_category_list(context, data_dict):
         return result
     except Exception as e:
         raise logic.ValidationError(f'Error fetching categories: {str(e)}')
-
-
 
 @logic.side_effect_free  
 def theme_category_show(context, data_dict):

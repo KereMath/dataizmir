@@ -504,9 +504,9 @@ textarea.pre {
     <div class="view-content">
       <div class="ckanext-datapreview">
         {% if not to_preview and h.resource_view_is_filterable(resource_view) %}
-          <div class="resource-view-filters">
+          <!-- <div class="resource-view-filters">
             {% snippet 'package/snippets/resource_view_filters.html', resource=resource %}
-          </div>
+          </div> -->
         {% endif %}
         
         {% if not h.resource_view_is_iframed(resource_view) %}

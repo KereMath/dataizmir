@@ -2,6 +2,22 @@
 
 <style>
 /* Modern Resource View Styles */
+.flot-tick-label.tickLabel {
+    /* Rotate by 45 degrees */
+    transform: rotate(-45deg) !important;
+    -webkit-transform: rotate(-45deg) !important; /* For Safari/Chrome */
+    -moz-transform: rotate(-45deg) !important;    /* For Firefox */
+    -ms-transform: rotate(-45deg) !important;     /* For IE 9 */
+    -o-transform: rotate(-45deg) !important;      /* For Opera */
+    /* Adjust origin for rotation */
+    transform-origin: 0% 50%;
+    /* Prevent overlapping rotated text from hiding each other */
+    white-space: nowrap;
+    /* Optionally adjust positioning if needed after rotation */
+    margin-left: -5px; /* Example adjustment */
+}
+
+
 .resource-view {
   background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
   border-radius: 20px !important;

@@ -373,17 +373,7 @@
       {% block resource_view %}
         {% block resource_view_nav %}
           <!-- Modern View Controls -->
-          <div class="view-controls">
-            <div class="view-buttons">
-              <button class="btn btn-secondary btn-sm" onclick="addChart()">
-                <i class="fa fa-bar-chart"></i> Grafik Ekle
-              </button>
-              <button class="btn btn-secondary btn-sm" onclick="addFilter()">
-                <i class="fa fa-filter"></i> Filtre Ekle
-              </button>
-            </div>
-          </div>
-          
+
           {% set resource_preview = h.resource_preview(resource, package) %}
           {% snippet "package/snippets/resource_views_list.html",
              views=resource_views,

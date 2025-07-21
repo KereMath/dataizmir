@@ -1,227 +1,540 @@
-{% extends "package/base.html" %}
+/* Modern Resource Page CSS - Complete Override */
 
-{% set res = resource %}
+/* Reset and Base Styles */
+* {
+  box-sizing: border-box !important;
+}
 
-{% block head_extras -%}
-  {{ super() }}
-  {% set description = h.markdown_extract(h.get_translated(res, 'description'), extract_length=200) if res.description else h.markdown_extract(h.get_translated(package, 'notes'), extract_length=200) %}
-  <meta property="og:title" content="{{ h.dataset_display_name(package) }} - {{ h.resource_display_name(res) }} - {{ g.site_title }}">
-  <meta property="og:description" content="{{ description|forceescape }}">
-{% endblock -%}
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.6 !important;
+  color: #2d3748 !important;
+  min-height: 100vh !important;
+}
 
-{% block subtitle %}{{ h.dataset_display_name(package) }} {{ g.template_title_delimiter }} {{ h.resource_display_name(res) }}{% endblock %}
+/* Container and Layout */
+.container {
+  max-width: 1400px !important;
+  margin: 0 auto !important;
+  padding: 2rem !important;
+  position: relative !important;
+}
 
-{% block breadcrumb_content_selected %}{% endblock %}
+/* Breadcrumb Modernization */
+.breadcrumb {
+  background: rgba(255, 255, 255, 0.1) !important;
+  backdrop-filter: blur(10px) !important;
+  border-radius: 16px !important;
+  padding: 1rem 2rem !important;
+  margin-bottom: 2rem !important;
+  border: 1px solid rgba(255, 255, 255, 0.2) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1) !important;
+}
 
-{% block breadcrumb_content %}
-  {{ super() }}
-  <li class="active"><a href="">{{ h.resource_display_name(res)|truncate(30) }}</a></li>
-{% endblock %}
+.breadcrumb li {
+  display: inline-block !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+  font-weight: 500 !important;
+}
 
-{% block pre_primary %}
-  {% block resource %}
-    <section class="module module-resource" role="complementary">
-      {% block resource_inner %}
-      <div class="module-content">
-        <div class="actions">
-          {% block resource_actions %}
-          <ul>
-            {% block resource_actions_inner %}
-            {% if h.check_access('package_update', {'id':pkg.id }) and not is_activity_archive %}
-              <li>{% link_for _('Manage'), named_route=pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
-            {% endif %}
-            {% if res.url and h.is_url(res.url) %}
-              <li>
-                <div class="btn-group">
-                <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
-                  {% if res.resource_type in ('listing', 'service') %}
-                    <i class="fa fa-eye"></i> {{ _('View') }}
-                  {% elif  res.resource_type == 'api' %}
-                    <i class="fa fa-key"></i> {{ _('API Endpoint') }}
-                  {% elif not res.has_views and not res.url_type == 'upload' %}
-                    <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
-                  {% else %}
-                    <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
-                  {% endif %}
-                </a>
-                {% block download_resource_button %}
-                  {% if res.datastore_active %}
-                <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                    <span class="caret"></span>
-                  </button>
-                <ul class="dropdown-menu">
-                  <li>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}"
-                      target="_blank"><span>CSV</span></a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='tsv', bom=True) }}"
-                      target="_blank"><span>TSV</span></a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='json') }}"
-                      target="_blank"><span>JSON</span></a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='xml') }}"
-                      target="_blank"><span>XML</span></a>
-                  </li>
-                </ul>
-                  {% endif %}
-                {% endblock %}
-                </div>
-              </li>
-            {% endif %}
-            {% endblock %}
-          </ul>
-          {% endblock %}
-        </div>
-        {% block resource_content %}
-          {% block package_archive_notice %}
-            {% if is_activity_archive %}
-              <div id="activity-archive-notice" class="alert alert-danger">
-                {% trans url=h.url_for(pkg.type ~ '.read', id=pkg.id) %}
-                You're currently viewing an old version of this dataset. To see the
-                current version, click <a href="{{ url }}">here</a>.
-                {% endtrans %}
-              </div>
-            {% endif %}
-          {% endblock %}
-          {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
-          {% block resource_read_url %}
-            {% if res.url and h.is_url(res.url) %}
-              <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ res.url }}" title="{{ res.url }}">{{ res.url }}</a></p>
-            {% elif res.url %}
-              <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
-            {% endif %}
-          {% endblock %}
-          <div class="prose notes" property="rdfs:label">
-            {% if res.description %}
-              {{ h.render_markdown(res.description) }}
-            {% endif %}
-            {% if not res.description and package.notes %}
-              <h3>{{ _('Dataset description:') }}</h3>
-              <blockquote>{{ h.markdown_extract(h.get_translated(package, 'notes')) }}</blockquote>
-              <p>{% trans dataset=package.title, url=h.url_for(package.type ~ '.read', id=package.id if is_activity_archive else package.name) %}Source: <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
-            {% endif %}
-          </div>
-        {% endblock %}
-      {% if not is_activity_archive %}
-      {% block data_preview %}
-      {% block resource_view %}
-        {% block resource_view_nav %}
-          {% set resource_preview = h.resource_preview(resource, package) %}
-          {% snippet "package/snippets/resource_views_list.html",
-             views=resource_views,
-             pkg=pkg,
-             is_edit=false,
-             view_id=current_resource_view['id'],
-             resource_preview=resource_preview,
-             resource=resource,
-             extra_class="nav-tabs nav-tabs-plain"
-           %}
-        {% endblock %}
-          {% block resource_view_content %}
-            <div class="resource-view">
-              {% set resource_preview = h.resource_preview(resource, package) %}
-              {% set views_created = res.has_views or resource_preview %}
-              {% if views_created %}
-                {% if resource_preview and not current_resource_view %}
-                  {{ h.resource_preview(resource, package) }}
-                {% else %}
-                  {% for resource_view in resource_views %}
-                    {% if resource_view == current_resource_view %}
-                      {% snippet 'package/snippets/resource_view.html',
-                         resource_view=resource_view,
-                         resource=resource,
-                         package=package
-                       %}
-                    {% endif %}
-                  {% endfor %}
-                {% endif %}
-              {% else %}
-                {# Views not created #}
-                <div class="data-viewer-info">
-                  <p>{{ _("There are no views created for this resource yet.") }}</p>
-                  {% if h.check_access('resource_view_create', {'resource_id': resource.id}) %}
-                    <p class="text-muted">
-                      <i class="fa fa-info-circle"></i>
-                      {{ _("Not seeing the views you were expecting?")}}
-                      <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
-                        {{ _('Click here for more information.') }}</a>
-                    </p>
-                    <div id="data-view-info" class="collapse">
-                      <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
-                      <ul>
-                        <li>{{ _("No view has been created that is suitable for this resource")}}</li>
-                        <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
-                        <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
-                      </ul>
-                    </div>
-                  {% endif %}
-                </div>
-              {% endif %}
-            </div>
-          {% endblock %}
-        </div>
-      {% endblock %}
-      {% endblock %}
-      {% endif %}
-      {% endblock %}
-    </section>
-  {% endblock %}
-{% endblock %}
+.breadcrumb li::after {
+  content: '/' !important;
+  margin: 0 0.5rem !important;
+  color: rgba(255, 255, 255, 0.5) !important;
+}
 
-{% block primary_content %}
-  {% block resource_additional_information %}
-    {% if res %}
-      <section class="module">
-        {% block resource_additional_information_inner %}
-        <div class="module-content">
-          <h2>{{ _('Additional Information') }}</h2>
-          <table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more">
-            <thead>
-              <tr>
-                <th scope="col">{{ _('Field') }}</th>
-                <th scope="col">{{ _('Value') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">{{ _('Data last updated') }}</th>
-                <td>{{ h.render_datetime(res.last_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Metadata last updated') }}</th>
-                <td>{{ h.render_datetime(res.metadata_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Created') }}</th>
-                <td>{{ h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Format') }}</th>
-                <td>{{ res.format or res.mimetype_inner or res.mimetype or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('License') }}</th>
-                <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
-              </tr>
-              {% for key, value in h.format_resource_items(res.items()) %}
-                {% if key not in ('created', 'metadata modified', 'last modified', 'format') %}
-                  <tr class="toggle-more"><th scope="row">{{ key | capitalize }}</th><td>{{ value }}</td></tr>
-                {% endif %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% endblock %}
-      </section>
-    {% endif %}
-  {% endblock %}
-{% endblock %}
+.breadcrumb li:last-child::after {
+  display: none !important;
+}
 
-{% block secondary_content %}
+.breadcrumb a {
+  color: rgba(255, 255, 255, 0.9) !important;
+  text-decoration: none !important;
+  transition: all 0.3s ease !important;
+}
 
-  {% block resources_list %}
-    {% snippet "package/snippets/resources.html", pkg=pkg, active=res.id, action='read', is_activity_archive=is_activity_archive %}
-  {% endblock %}
+.breadcrumb a:hover {
+  color: #ffffff !important;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+}
 
-  {% block resource_license %}
-    {% snippet "snippets/social.html" %}
-  {% endblock %}
-{% endblock %}
+/* Main Layout Grid */
+.row {
+  display: grid !important;
+  grid-template-columns: 1fr 350px !important;
+  gap: 2rem !important;
+  align-items: start !important;
+}
+
+/* Module Base Styles */
+.module {
+  background: rgba(255, 255, 255, 0.95) !important;
+  backdrop-filter: blur(20px) !important;
+  border-radius: 24px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  overflow: hidden !important;
+  transition: all 0.4s ease !important;
+  margin-bottom: 2rem !important;
+}
+
+.module:hover {
+  transform: translateY(-5px) !important;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15) !important;
+}
+
+.module-content {
+  padding: 2.5rem !important;
+}
+
+/* Resource Section */
+.module-resource {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.95)) !important;
+  border: 2px solid rgba(99, 102, 241, 0.2) !important;
+}
+
+/* Page Heading */
+.page-heading {
+  font-size: 2.5rem !important;
+  font-weight: 800 !important;
+  color: #1a202c !important;
+  margin-bottom: 1.5rem !important;
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  line-height: 1.2 !important;
+}
+
+/* Actions Section */
+.actions {
+  margin-bottom: 2rem !important;
+  padding: 1.5rem !important;
+  background: linear-gradient(135deg, #f7fafc, #edf2f7) !important;
+  border-radius: 16px !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.actions ul {
+  list-style: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: flex !important;
+  gap: 1rem !important;
+  flex-wrap: wrap !important;
+}
+
+.actions li {
+  margin: 0 !important;
+}
+
+/* Modern Button Styles */
+.btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.5rem !important;
+  padding: 0.875rem 1.5rem !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  border-radius: 12px !important;
+  text-decoration: none !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border: none !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.btn::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent) !important;
+  transition: left 0.6s !important;
+}
+
+.btn:hover::before {
+  left: 100% !important;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  color: white !important;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4) !important;
+  color: white !important;
+}
+
+.btn-default {
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #4a5568 !important;
+  border: 2px solid #e2e8f0 !important;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.btn-default:hover {
+  background: white !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+  border-color: #cbd5e0 !important;
+  color: #2d3748 !important;
+}
+
+/* Dropdown Enhancements */
+.btn-group {
+  position: relative !important;
+  display: inline-flex !important;
+}
+
+.dropdown-toggle {
+  border-top-left-radius: 0 !important;
+  border-bottom-left-radius: 0 !important;
+  border-left: 1px solid rgba(255, 255, 255, 0.3) !important;
+  padding: 0.875rem 1rem !important;
+}
+
+.dropdown-menu {
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15) !important;
+  padding: 0.5rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.dropdown-menu li {
+  margin: 0 !important;
+}
+
+.dropdown-menu a {
+  display: block !important;
+  padding: 0.75rem 1rem !important;
+  color: #4a5568 !important;
+  text-decoration: none !important;
+  border-radius: 8px !important;
+  transition: all 0.2s ease !important;
+  font-weight: 500 !important;
+}
+
+.dropdown-menu a:hover {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  transform: translateX(4px) !important;
+}
+
+/* Alert Styles */
+.alert {
+  padding: 1.5rem 2rem !important;
+  border-radius: 16px !important;
+  border: none !important;
+  margin-bottom: 2rem !important;
+  font-weight: 500 !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.alert-danger {
+  background: rgba(254, 226, 226, 0.9) !important;
+  color: #c53030 !important;
+  border-left: 4px solid #e53e3e !important;
+}
+
+/* URL Display */
+.text-muted {
+  color: #718096 !important;
+  font-size: 0.875rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.ellipsis {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+}
+
+.resource-url-analytics {
+  color: #667eea !important;
+  text-decoration: none !important;
+  font-weight: 500 !important;
+  transition: all 0.2s ease !important;
+}
+
+.resource-url-analytics:hover {
+  color: #764ba2 !important;
+  text-decoration: underline !important;
+}
+
+/* Notes and Description */
+.prose {
+  font-size: 1rem !important;
+  line-height: 1.7 !important;
+  color: #4a5568 !important;
+}
+
+.prose h3 {
+  color: #2d3748 !important;
+  font-weight: 700 !important;
+  margin-top: 2rem !important;
+  margin-bottom: 1rem !important;
+}
+
+.prose blockquote {
+  border-left: 4px solid #667eea !important;
+  padding-left: 1.5rem !important;
+  margin: 1.5rem 0 !important;
+  font-style: italic !important;
+  background: rgba(102, 126, 234, 0.05) !important;
+  padding: 1rem 1.5rem !important;
+  border-radius: 0 12px 12px 0 !important;
+}
+
+/* Navigation Tabs */
+.nav-tabs {
+  border-bottom: 2px solid #e2e8f0 !important;
+  margin-bottom: 2rem !important;
+  display: flex !important;
+  gap: 0.5rem !important;
+}
+
+.nav-tabs li {
+  margin-bottom: -2px !important;
+}
+
+.nav-tabs a {
+  display: block !important;
+  padding: 1rem 1.5rem !important;
+  color: #718096 !important;
+  text-decoration: none !important;
+  border-radius: 12px 12px 0 0 !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  background: rgba(247, 250, 252, 0.8) !important;
+  border: 2px solid transparent !important;
+}
+
+.nav-tabs .active a,
+.nav-tabs a:hover {
+  color: #667eea !important;
+  background: white !important;
+  border-color: #e2e8f0 !important;
+  border-bottom-color: white !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Resource View */
+.resource-view {
+  background: white !important;
+  border-radius: 16px !important;
+  padding: 2rem !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Data Viewer Info */
+.data-viewer-info {
+  text-align: center !important;
+  padding: 3rem !important;
+  background: linear-gradient(135deg, #f7fafc, #edf2f7) !important;
+  border-radius: 16px !important;
+  border: 2px dashed #cbd5e0 !important;
+}
+
+.data-viewer-info p {
+  margin-bottom: 1rem !important;
+  color: #718096 !important;
+}
+
+/* Table Styles */
+.table {
+  width: 100% !important;
+  margin-bottom: 0 !important;
+  background: transparent !important;
+  border-collapse: separate !important;
+  border-spacing: 0 !important;
+}
+
+.table-striped tbody tr:nth-child(odd) {
+  background: rgba(102, 126, 234, 0.02) !important;
+}
+
+.table-bordered {
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+}
+
+.table th,
+.table td {
+  padding: 1rem 1.5rem !important;
+  border-top: 1px solid #e2e8f0 !important;
+  vertical-align: top !important;
+}
+
+.table thead th {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.1em !important;
+  border-top: none !important;
+}
+
+.table tbody th {
+  font-weight: 600 !important;
+  color: #4a5568 !important;
+  background: rgba(247, 250, 252, 0.8) !important;
+  width: 200px !important;
+}
+
+/* Sidebar Styles */
+.row > div:last-child {
+  position: sticky !important;
+  top: 2rem !important;
+  height: fit-content !important;
+}
+
+/* Social and License Snippets */
+.social-links {
+  display: flex !important;
+  gap: 1rem !important;
+  justify-content: center !important;
+  padding: 1.5rem !important;
+}
+
+/* Icons */
+.fa, .glyphicon {
+  margin-right: 0.5rem !important;
+  font-size: 1em !important;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .row {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem !important;
+  }
+  
+  .container {
+    padding: 1rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .page-heading {
+    font-size: 2rem !important;
+  }
+  
+  .actions ul {
+    flex-direction: column !important;
+  }
+  
+  .btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  
+  .nav-tabs {
+    flex-direction: column !important;
+  }
+}
+
+/* Additional Information Table Enhancement */
+.table tbody tr {
+  transition: all 0.2s ease !important;
+}
+
+.table tbody tr:hover {
+  background: rgba(102, 126, 234, 0.08) !important;
+  transform: scale(1.01) !important;
+}
+
+/* Collapse Animation */
+.collapse {
+  overflow: hidden !important;
+  transition: max-height 0.3s ease !important;
+}
+
+.collapse:not(.in) {
+  max-height: 0 !important;
+}
+
+.collapse.in {
+  max-height: 500px !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px !important;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(226, 232, 240, 0.3) !important;
+  border-radius: 4px !important;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  border-radius: 4px !important;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #5a6fd8, #6b4490) !important;
+}
+
+/* Loading States */
+.loading {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.loading::after {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: -100% !important;
+  width: 100% !important;
+  height: 100% !important;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent) !important;
+  animation: loading 1.5s infinite !important;
+}
+
+@keyframes loading {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+/* Focus States for Accessibility */
+.btn:focus,
+a:focus,
+button:focus {
+  outline: 2px solid #667eea !important;
+  outline-offset: 2px !important;
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background: white !important;
+  }
+  
+  .module {
+    background: white !important;
+    box-shadow: none !important;
+    border: 1px solid #ccc !important;
+  }
+  
+  .btn {
+    display: none !important;
+  }
+}

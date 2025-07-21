@@ -1,1057 +1,375 @@
-{% extends "package/base.html" %}
-
-{% set res = resource %}
-
-{% block head_extras -%}
-  {{ super() }}
-  {% set description = h.markdown_extract(h.get_translated(res, 'description'), extract_length=200) if res.description else h.markdown_extract(h.get_translated(package, 'notes'), extract_length=200) %}
-  <meta property="og:title" content="{{ h.dataset_display_name(package) }} - {{ h.resource_display_name(res) }} - {{ g.site_title }}">
-  <meta property="og:description" content="{{ description|forceescape }}">
+<!-- Updated API Request Handler with Authentication -->
+<script>
+  // API Request Handler with Authentication
+  class APIRequestHandler {
+    constructor() {
+      this.corsProxyUrls = [
+        '', // Direct request first
+        'https://api.allorigins.win/get?url=',
+        'https://corsproxy.io/?',
+        'https://thingproxy.freeboard.io/fetch/'
+      ];
+    }
   
-  <style>
-    /* Modern Resource Page CSS - Embedded */
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-    body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
-      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+    // Get CKAN session cookie
+    getCKANAuthCookie() {
+      // Get auth_tkt cookie which CKAN uses for authentication
+      const cookies = document.cookie.split(';');
+      for (let cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'auth_tkt' || name === 'ckan') {
+          return value;
+        }
+      }
+      return null;
     }
-
-    .breadcrumb {
-      background: rgba(255, 255, 255, 0.9) !important;
-      backdrop-filter: blur(10px) !important;
-      border: 1px solid rgba(226, 232, 240, 0.6) !important;
-      border-radius: 12px !important;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
+  
+    // Get CKAN API Key from user profile (if available in page)
+    getCKANAPIKey() {
+      // Try to get API key from meta tags or data attributes
+      const apiKeyMeta = document.querySelector('meta[name="ckan-api-key"]');
+      if (apiKeyMeta) return apiKeyMeta.content;
+      
+      // Try to get from user data if exposed
+      const userDataEl = document.querySelector('[data-user-api-key]');
+      if (userDataEl) return userDataEl.dataset.userApiKey;
+      
+      return null;
     }
-
-    .breadcrumb > li > a {
-      color: #667eea !important;
-      font-weight: 500 !important;
-      transition: color 0.2s ease !important;
+  
+    // Get CSRF token for CKAN
+    getCSRFToken() {
+      // CKAN typically uses a CSRF token in forms
+      const csrfInput = document.querySelector('input[name="csrf_token"], meta[name="csrf-token"]');
+      if (csrfInput) {
+        return csrfInput.value || csrfInput.content;
+      }
+      return null;
     }
-
-    .breadcrumb > li > a:hover {
-      color: #4f46e5 !important;
-      text-decoration: none !important;
-    }
-
-    .module {
-      background: rgba(255, 255, 255, 0.95) !important;
-      border: 1px solid rgba(226, 232, 240, 0.8) !important;
-      border-radius: 16px !important;
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08) !important;
-      transition: all 0.3s ease !important;
-    }
-
-    .module:hover {
-      transform: translateY(-2px) !important;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    .module-content {
-      padding: 2rem !important;
-    }
-
-    .module-resource {
-      border-left: 4px solid #667eea !important;
-    }
-
-    .page-heading {
-      font-size: 2.25rem !important;
-      font-weight: 700 !important;
-      background: linear-gradient(135deg, #667eea, #764ba2) !important;
-      -webkit-background-clip: text !important;
-      background-clip: text !important;
-      -webkit-text-fill-color: transparent !important;
-      margin-bottom: 1.5rem !important;
-    }
-
-    .actions {
-      background: linear-gradient(135deg, #f1f5f9, #e2e8f0) !important;
-      border-radius: 12px !important;
-      padding: 1.5rem !important;
-      margin-bottom: 2rem !important;
-      border: 1px solid rgba(226, 232, 240, 0.6) !important;
-    }
-
-    .btn {
-      border-radius: 10px !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-      position: relative !important;
-      overflow: hidden !important;
-    }
-
-    .btn::before {
-      content: '' !important;
-      position: absolute !important;
-      top: 0 !important;
-      left: -100% !important;
-      width: 100% !important;
-      height: 100% !important;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
-      transition: left 0.5s !important;
-    }
-
-    .btn:hover::before {
-      left: 100% !important;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-      border: none !important;
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25) !important;
-    }
-
-    .btn-primary:hover {
-      transform: translateY(-1px) !important;
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35) !important;
-    }
-
-    .btn-default {
-      background: rgba(255, 255, 255, 0.9) !important;
-      border: 2px solid #e2e8f0 !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
-    }
-
-    .btn-default:hover {
-      background: white !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    .dropdown-menu {
-      background: rgba(255, 255, 255, 0.98) !important;
-      backdrop-filter: blur(15px) !important;
-      border: 1px solid rgba(226, 232, 240, 0.8) !important;
-      border-radius: 10px !important;
-      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12) !important;
-    }
-
-    .dropdown-menu > li > a {
-      border-radius: 6px !important;
-      margin: 2px !important;
-      transition: all 0.2s ease !important;
-      font-weight: 500 !important;
-    }
-
-    .dropdown-menu > li > a:hover {
-      background: linear-gradient(135deg, #667eea, #764ba2) !important;
-      color: white !important;
-    }
-
-    .alert {
-      border-radius: 12px !important;
-      border: none !important;
-      font-weight: 500 !important;
-    }
-
-    .alert-danger {
-      background: rgba(254, 226, 226, 0.9) !important;
-      color: #b91c1c !important;
-      border-left: 4px solid #dc2626 !important;
-    }
-
-    .alert-success {
-      background: rgba(209, 250, 229, 0.9) !important;
-      color: #059669 !important;
-      border-left: 4px solid #10b981 !important;
-    }
-
-    .alert-info {
-      background: rgba(219, 234, 254, 0.9) !important;
-      color: #1d4ed8 !important;
-      border-left: 4px solid #3b82f6 !important;
-    }
-
-    .resource-url-analytics {
-      color: #667eea !important;
-      font-weight: 500 !important;
-      transition: color 0.2s ease !important;
-    }
-
-    .resource-url-analytics:hover {
-      color: #4f46e5 !important;
-    }
-
-    .nav-tabs {
-      border-bottom: 2px solid #e2e8f0 !important;
-    }
-
-    .nav-tabs > li > a {
-      border-radius: 12px 12px 0 0 !important;
-      font-weight: 500 !important;
-      transition: all 0.3s ease !important;
-    }
-
-    .nav-tabs > .active > a,
-    .nav-tabs > li > a:hover {
-      color: #667eea !important;
-      background: white !important;
-      border-color: #e2e8f0 !important;
-      border-bottom-color: white !important;
-    }
-
-    .resource-view {
-      background: white !important;
-      border-radius: 16px !important;
-      padding: 2rem !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-      border: 1px solid #e2e8f0 !important;
-    }
-
-    .data-viewer-info {
-      background: linear-gradient(135deg, #f7fafc, #edf2f7) !important;
-      border-radius: 16px !important;
-      border: 2px dashed #cbd5e0 !important;
-      padding: 2rem !important;
-      text-align: center !important;
-    }
-
-    .table {
-      border-collapse: separate !important;
-      border-spacing: 0 !important;
-    }
-
-    .table-bordered {
-      border: 1px solid #e2e8f0 !important;
-      border-radius: 12px !important;
-      overflow: hidden !important;
-    }
-
-    .table thead th {
-      background: linear-gradient(135deg, #667eea, #764ba2) !important;
-      color: white !important;
-      font-weight: 600 !important;
-      text-transform: uppercase !important;
-      font-size: 0.75rem !important;
-      letter-spacing: 0.1em !important;
-      border: none !important;
-    }
-
-    .table-striped tbody tr:nth-child(odd) {
-      background: rgba(102, 126, 234, 0.02) !important;
-    }
-
-    .table tbody tr:hover {
-      background: rgba(102, 126, 234, 0.08) !important;
-      transition: background 0.2s ease !important;
-    }
-
-    .table tbody th {
-      font-weight: 600 !important;
-      color: #4a5568 !important;
-      background: rgba(247, 250, 252, 0.8) !important;
-    }
-
-    .prose blockquote {
-      border-left: 4px solid #667eea !important;
-      background: rgba(102, 126, 234, 0.05) !important;
-      border-radius: 0 12px 12px 0 !important;
-    }
-
-    .text-muted {
-      color: #64748b !important;
-    }
-
-    .collapse {
-      transition: all 0.3s ease !important;
-    }
-
-    .fa {
-      margin-right: 0.5rem !important;
-    }
-
-    /* API Response Styles */
-    .api-response-container {
-      background: white !important;
-      border-radius: 16px !important;
-      padding: 2rem !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-      border: 1px solid #e2e8f0 !important;
-      margin-top: 2rem !important;
-    }
-
-    .api-loading {
-      text-align: center !important;
-      padding: 3rem !important;
-    }
-
-    .spinner {
-      border: 4px solid #f3f4f6 !important;
-      border-top: 4px solid #667eea !important;
-      border-radius: 50% !important;
-      width: 40px !important;
-      height: 40px !important;
-      animation: spin 1s linear infinite !important;
-      margin: 0 auto 1rem !important;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    .json-viewer {
-      background: #1e293b !important;
-      color: #e2e8f0 !important;
-      border-radius: 12px !important;
-      padding: 1.5rem !important;
-      font-family: 'Monaco', 'Consolas', monospace !important;
-      font-size: 0.875rem !important;
-      overflow-x: auto !important;
-      max-height: 400px !important;
-      overflow-y: auto !important;
-    }
-
-    .json-key {
-      color: #38bdf8 !important;
-    }
-
-    .json-string {
-      color: #34d399 !important;
-    }
-
-    .json-number {
-      color: #f59e0b !important;
-    }
-
-    .json-boolean {
-      color: #f472b6 !important;
-    }
-
-    .json-null {
-      color: #6b7280 !important;
-    }
-
-    .api-controls {
-      display: flex !important;
-      gap: 1rem !important;
-      margin-bottom: 1.5rem !important;
-      flex-wrap: wrap !important;
-    }
-
-    .method-selector {
-      padding: 0.5rem 1rem !important;
-      border: 2px solid #e2e8f0 !important;
-      border-radius: 8px !important;
-      background: white !important;
-      font-weight: 500 !important;
-    }
-
-    .headers-input {
-      width: 100% !important;
-      padding: 0.75rem !important;
-      border: 2px solid #e2e8f0 !important;
-      border-radius: 8px !important;
-      font-family: monospace !important;
-      margin-bottom: 1rem !important;
-    }
-
-    .copy-button {
-      position: absolute !important;
-      top: 10px !important;
-      right: 10px !important;
-      background: rgba(102, 126, 234, 0.8) !important;
-      color: white !important;
-      border: none !important;
-      padding: 0.5rem !important;
-      border-radius: 6px !important;
-      cursor: pointer !important;
-      font-size: 0.75rem !important;
-    }
-
-    .response-headers {
-      background: #f8fafc !important;
-      border-radius: 8px !important;
-      padding: 1rem !important;
-      margin-bottom: 1rem !important;
-      font-family: monospace !important;
-      font-size: 0.875rem !important;
-    }
-
-    @media (max-width: 768px) {
-      .page-heading {
-        font-size: 1.875rem !important;
+  
+    async makeRequest(url, method = 'GET', customHeaders = {}, body = null) {
+      const loadingContainer = document.getElementById('api-loading');
+      const responseContainer = document.getElementById('api-response');
+      const errorContainer = document.getElementById('api-error');
+  
+      // Show loading
+      loadingContainer.style.display = 'block';
+      responseContainer.style.display = 'none';
+      errorContainer.style.display = 'none';
+  
+      // Build authentication headers
+      const authHeaders = {};
+      
+      // Add CKAN session cookie
+      const authCookie = this.getCKANAuthCookie();
+      if (authCookie) {
+        authHeaders['Cookie'] = `auth_tkt=${authCookie}`;
       }
       
-      .module-content {
-        padding: 1.5rem !important;
+      // Add API key if available
+      const apiKey = this.getCKANAPIKey();
+      if (apiKey) {
+        authHeaders['Authorization'] = apiKey;
+        authHeaders['X-CKAN-API-Key'] = apiKey;
       }
       
-      .actions {
-        padding: 1rem !important;
+      // Add CSRF token
+      const csrfToken = this.getCSRFToken();
+      if (csrfToken) {
+        authHeaders['X-CSRF-Token'] = csrfToken;
       }
-
-      .view-buttons {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-      }
-
-      .btn-secondary {
-        width: 100% !important;
-        justify-content: center !important;
-      }
-
-      .api-controls {
-        flex-direction: column !important;
-      }
-    }
-  </style>
-
-  <script>
-    // API Request Handler
-    class APIRequestHandler {
-      constructor() {
-        this.corsProxyUrls = [
-          '', // Direct request first
-          'https://api.allorigins.win/get?url=',
-          'https://corsproxy.io/?',
-          'https://thingproxy.freeboard.io/fetch/'
-        ];
-      }
-
-      async makeRequest(url, method = 'GET', headers = {}, body = null) {
-        const loadingContainer = document.getElementById('api-loading');
-        const responseContainer = document.getElementById('api-response');
-        const errorContainer = document.getElementById('api-error');
-
-        // Show loading
-        loadingContainer.style.display = 'block';
-        responseContainer.style.display = 'none';
-        errorContainer.style.display = 'none';
-
-        // Try direct request first, then fallback to CORS proxies
-        for (let i = 0; i < this.corsProxyUrls.length; i++) {
-          try {
-            const proxyUrl = this.corsProxyUrls[i];
-            let requestUrl;
-            let requestOptions;
-            
-            if (proxyUrl === '') {
-              // Direct request
-              requestUrl = url;
-              requestOptions = {
-                method: method,
-                headers: {
-                  'Accept': 'application/json, text/plain, */*',
-                  'Content-Type': 'application/json',
-                  ...headers
-                },
-                mode: 'cors',
-                credentials: 'omit'
-              };
-            } else if (proxyUrl.includes('allorigins.win')) {
-              // AllOrigins format
-              requestUrl = `${proxyUrl}${encodeURIComponent(url)}`;
-              requestOptions = {
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json'
-                }
-              };
-            } else {
-              // Other proxies
-              requestUrl = proxyUrl + encodeURIComponent(url);
-              requestOptions = {
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json, text/plain, */*'
-                }
-              };
-            }
-
-            // Add body for POST/PUT requests on direct calls only
-            if (proxyUrl === '' && body && ['POST', 'PUT', 'PATCH'].includes(method)) {
-              requestOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
-            }
-
-            console.log(`Attempting request ${i + 1}/${this.corsProxyUrls.length}: ${requestUrl}`);
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-            requestOptions.signal = controller.signal;
-
-            const response = await fetch(requestUrl, requestOptions);
-            clearTimeout(timeoutId);
-            
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            // Parse response based on proxy type
-            let data;
-            let responseHeaders = {};
-            
-            if (proxyUrl.includes('allorigins.win')) {
-              const result = await response.json();
-              try {
-                data = JSON.parse(result.contents);
-              } catch {
-                data = result.contents;
-              }
-              responseHeaders = result.headers || {};
-            } else {
-              const contentType = response.headers.get('content-type') || '';
-              
-              if (contentType.includes('application/json')) {
-                data = await response.json();
-              } else {
-                const text = await response.text();
-                try {
-                  data = JSON.parse(text);
-                } catch {
-                  data = text;
-                }
-              }
-              
-              // Get response headers
-              response.headers.forEach((value, key) => {
-                responseHeaders[key] = value;
-              });
-            }
-
+  
+      // Check if this is a CKAN API endpoint
+      const isCKANAPI = url.includes('/api/') || url.includes('/action/');
+      
+      // Merge headers
+      const headers = {
+        'Accept': 'application/json, text/plain, */*',
+        'Content-Type': 'application/json',
+        ...authHeaders,
+        ...customHeaders
+      };
+  
+      // If it's a CKAN API, try direct request with credentials
+      if (isCKANAPI) {
+        try {
+          const requestOptions = {
+            method: method,
+            headers: headers,
+            mode: 'cors',
+            credentials: 'include', // Include cookies
+            cache: 'no-cache'
+          };
+  
+          if (body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+            requestOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
+          }
+  
+          console.log('Attempting authenticated CKAN API request...');
+          
+          const response = await fetch(url, requestOptions);
+          
+          if (response.ok) {
+            const data = await response.json();
             loadingContainer.style.display = 'none';
-            
-            const proxyMethod = proxyUrl === '' ? 'direct' : `proxy (${proxyUrl.split('/')[2]})`;
-            this.displayResponse(data, responseHeaders, response.status, proxyMethod);
-            return; // Success, exit the loop
-
-          } catch (error) {
-            console.log(`Request ${i + 1} failed:`, error.message);
-            
-            // If this was the last attempt, show error
-            if (i === this.corsProxyUrls.length - 1) {
-              loadingContainer.style.display = 'none';
-              this.displayError(`All ${this.corsProxyUrls.length} request methods failed.\n\nLast error: ${error.message}\n\nThis API might:\n- Not support CORS\n- Require authentication\n- Be temporarily unavailable`, null);
+            this.displayResponse(data, this.getResponseHeaders(response), response.status, 'authenticated');
+            return;
+          }
+        } catch (error) {
+          console.log('Authenticated request failed:', error.message);
+        }
+      }
+  
+      // Fallback to proxy requests for non-CKAN or failed requests
+      for (let i = 0; i < this.corsProxyUrls.length; i++) {
+        try {
+          const proxyUrl = this.corsProxyUrls[i];
+          let requestUrl;
+          let requestOptions;
+          
+          if (proxyUrl === '') {
+            // Direct request
+            requestUrl = url;
+            requestOptions = {
+              method: method,
+              headers: headers,
+              mode: 'cors',
+              credentials: 'omit'
+            };
+          } else if (proxyUrl.includes('allorigins.win')) {
+            // AllOrigins format
+            requestUrl = `${proxyUrl}${encodeURIComponent(url)}`;
+            requestOptions = {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json'
+              }
+            };
+          } else {
+            // Other proxies
+            requestUrl = proxyUrl + encodeURIComponent(url);
+            requestOptions = {
+              method: 'GET',
+              headers: {
+                'Accept': 'application/json, text/plain, */*'
+              }
+            };
+          }
+  
+          if (proxyUrl === '' && body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+            requestOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
+          }
+  
+          console.log(`Attempting request ${i + 1}/${this.corsProxyUrls.length}: ${requestUrl}`);
+  
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
+  
+          requestOptions.signal = controller.signal;
+  
+          const response = await fetch(requestUrl, requestOptions);
+          clearTimeout(timeoutId);
+          
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+  
+          let data;
+          let responseHeaders = {};
+          
+          if (proxyUrl.includes('allorigins.win')) {
+            const result = await response.json();
+            try {
+              data = JSON.parse(result.contents);
+            } catch {
+              data = result.contents;
             }
-            // Otherwise, continue to next proxy
+            responseHeaders = result.headers || {};
+          } else {
+            const contentType = response.headers.get('content-type') || '';
+            
+            if (contentType.includes('application/json')) {
+              data = await response.json();
+            } else {
+              const text = await response.text();
+              try {
+                data = JSON.parse(text);
+              } catch {
+                data = text;
+              }
+            }
+            
+            responseHeaders = this.getResponseHeaders(response);
+          }
+  
+          loadingContainer.style.display = 'none';
+          
+          const proxyMethod = proxyUrl === '' ? 'direct' : `proxy (${proxyUrl.split('/')[2]})`;
+          this.displayResponse(data, responseHeaders, response.status, proxyMethod);
+          return;
+  
+        } catch (error) {
+          console.log(`Request ${i + 1} failed:`, error.message);
+          
+          if (i === this.corsProxyUrls.length - 1) {
+            loadingContainer.style.display = 'none';
+            this.displayError(`All ${this.corsProxyUrls.length} request methods failed.\n\nLast error: ${error.message}\n\nThis API might:\n- Not support CORS\n- Require authentication\n- Be temporarily unavailable`, null);
           }
         }
       }
-
-      getCSRFToken() {
-        return '';
-      }
-
-      getAuthHeaders() {
-        return {};
-      }
-
-      displayResponse(data, headers, status, method = 'direct') {
-        const responseContainer = document.getElementById('api-response');
-        const statusElement = document.getElementById('response-status');
-        const headersElement = document.getElementById('response-headers');
-        const bodyElement = document.getElementById('response-body');
-        const methodElement = document.getElementById('response-method');
-
-        statusElement.textContent = `Status: ${status} (${method})`;
-        statusElement.className = status >= 200 && status < 300 ? 'alert alert-success' : 'alert alert-danger';
-
-        // Show method info
-        if (methodElement) {
-          methodElement.textContent = method;
-          methodElement.className = method === 'direct' ? 'label label-success' : 'label label-info';
-        }
-
-        // Display headers
-        if (headers && Object.keys(headers).length > 0) {
-          headersElement.innerHTML = Object.entries(headers)
-            .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
-            .join('<br>');
-          headersElement.style.display = 'block';
-        } else {
-          headersElement.style.display = 'none';
-        }
-
-        // Display response body
-        if (typeof data === 'object') {
-          bodyElement.innerHTML = this.formatJSON(data);
-        } else {
-          bodyElement.innerHTML = `<pre>${this.escapeHtml(data)}</pre>`;
-        }
-
-        responseContainer.style.display = 'block';
-      }
-
-      displayError(error, status) {
-        const errorContainer = document.getElementById('api-error');
-        const errorMessage = document.getElementById('error-message');
-        
-        errorMessage.innerHTML = `
-          <strong>Request Failed</strong><br>
-          ${status ? `Status: ${status}<br>` : ''}
-          Error: ${this.escapeHtml(error)}
-        `;
-        
-        errorContainer.style.display = 'block';
-      }
-
-      formatJSON(obj) {
-        let json;
-        try {
-          json = JSON.stringify(obj, null, 2);
-        } catch (e) {
-          json = String(obj);
-        }
-        
-        return '<pre>' + json
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/(".*?")\s*:/g, '<span class="json-key">$1</span>:')
-          .replace(/:\s*(".*?")/g, ': <span class="json-string">$1</span>')
-          .replace(/:\s*(\b\d+\.?\d*\b)/g, ': <span class="json-number">$1</span>')
-          .replace(/:\s*(\btrue\b|\bfalse\b)/g, ': <span class="json-boolean">$1</span>')
-          .replace(/:\s*(\bnull\b)/g, ': <span class="json-null">$1</span>') + '</pre>';
-      }
-
-      escapeHtml(unsafe) {
-        return unsafe
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
-      }
     }
-
-    // Initialize API handler
-    let apiHandler;
-    
-    document.addEventListener('DOMContentLoaded', function() {
-      apiHandler = new APIRequestHandler();
-      
-      // Auto-test API if resource is API type
-      const resourceType = '{{ res.resource_type }}';
-      const resourceFormat = '{{ res.format }}';
-      const resourceUrl = '{{ res.url }}';
-      
-      if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
-          resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
-        testAPI();
-      }
-    });
-
-    function testAPI() {
-      const resourceUrl = '{{ res.url }}';
-      if (resourceUrl) {
-        const method = document.getElementById('method-selector')?.value || 'GET';
-        const headersText = document.getElementById('headers-input')?.value || '{}';
-        
-        try {
-          const headers = JSON.parse(headersText);
-          apiHandler.makeRequest(resourceUrl, method, headers);
-        } catch (e) {
-          apiHandler.displayError('Invalid JSON in headers field: ' + e.message, null);
-        }
-      } else {
-        apiHandler.displayError('No URL found for this resource', null);
-      }
-    }
-
-    function copyResponse() {
-      const responseBody = document.getElementById('response-body');
-      const text = responseBody.textContent || responseBody.innerText;
-      
-      navigator.clipboard.writeText(text).then(() => {
-        const button = event.target;
-        const originalText = button.textContent;
-        button.textContent = 'Copied!';
-        setTimeout(() => {
-          button.textContent = originalText;
-        }, 2000);
+  
+    getResponseHeaders(response) {
+      const headers = {};
+      response.headers.forEach((value, key) => {
+        headers[key] = value;
       });
+      return headers;
     }
-
-    function addChart() {
-      alert('Grafik ekleme özelliği aktif edilecek!');
-      // Grafik ekleme işlevselliği buraya gelecek
+  
+    displayResponse(data, headers, status, method = 'direct') {
+      const responseContainer = document.getElementById('api-response');
+      const statusElement = document.getElementById('response-status');
+      const headersElement = document.getElementById('response-headers');
+      const bodyElement = document.getElementById('response-body');
+      const methodElement = document.getElementById('response-method');
+  
+      // Update status with authentication info
+      let statusText = `Status: ${status}`;
+      if (method === 'authenticated') {
+        statusText += ' (authenticated request)';
+      } else {
+        statusText += ` (${method})`;
+      }
+      
+      statusElement.textContent = statusText;
+      statusElement.className = status >= 200 && status < 300 ? 'alert alert-success' : 'alert alert-danger';
+  
+      // Show method info
+      if (methodElement) {
+        methodElement.textContent = method;
+        methodElement.className = method === 'authenticated' ? 'label label-primary' : 
+                                 method === 'direct' ? 'label label-success' : 'label label-info';
+      }
+  
+      // Display headers
+      if (headers && Object.keys(headers).length > 0) {
+        headersElement.innerHTML = Object.entries(headers)
+          .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+          .join('<br>');
+        headersElement.style.display = 'block';
+      } else {
+        headersElement.style.display = 'none';
+      }
+  
+      // Display response body
+      if (typeof data === 'object') {
+        bodyElement.innerHTML = this.formatJSON(data);
+      } else {
+        bodyElement.innerHTML = `<pre>${this.escapeHtml(data)}</pre>`;
+      }
+  
+      responseContainer.style.display = 'block';
     }
-
-    function addFilter() {
-      alert('Filtre ekleme özelliği aktif edilecek!');
-      // Filtre ekleme işlevselliği buraya gelecek
+  
+    displayError(error, status) {
+      const errorContainer = document.getElementById('api-error');
+      const errorMessage = document.getElementById('error-message');
+      
+      errorMessage.innerHTML = `
+        <strong>Request Failed</strong><br>
+        ${status ? `Status: ${status}<br>` : ''}
+        Error: ${this.escapeHtml(error)}
+        <br><br>
+        <strong>Troubleshooting:</strong><br>
+        - Make sure you are logged in to CKAN<br>
+        - Check if the API requires specific authentication<br>
+        - Verify the API endpoint is correct<br>
+        - Some APIs may not support browser requests due to CORS
+      `;
+      
+      errorContainer.style.display = 'block';
     }
-  </script>
-{% endblock -%}
-
-{% block subtitle %}{{ h.dataset_display_name(package) }} {{ g.template_title_delimiter }} {{ h.resource_display_name(res) }}{% endblock %}
-
-{% block breadcrumb_content_selected %}{% endblock %}
-
-{% block breadcrumb_content %}
-  {{ super() }}
-  <li class="active"><a href="">{{ h.resource_display_name(res)|truncate(30) }}</a></li>
-{% endblock %}
-
-{% block pre_primary %}
-  {% block resource %}
-    <section class="module module-resource" role="complementary">
-      {% block resource_inner %}
-      <div class="module-content">
-        <div class="actions">
-          {% block resource_actions %}
-          <ul>
-            {% block resource_actions_inner %}
-            {% if h.check_access('package_update', {'id':pkg.id }) and not is_activity_archive %}
-              <li>{% link_for _('Manage'), named_route=pkg.type ~ '_resource.edit', id=pkg.name, resource_id=res.id, class_='btn btn-default', icon='wrench' %}</li>
-            {% endif %}
-            {% if res.url and h.is_url(res.url) %}
-              <li>
-                <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
-                  {% if res.resource_type in ('listing', 'service') %}
-                    <i class="fa fa-eye"></i> {{ _('View') }}
-                  {% elif res.resource_type == 'api' or res.format|lower == 'api' %}
-                    <i class="fa fa-code"></i> {{ _('API Endpoint') }}
-                  {% elif not res.has_views and not res.url_type == 'upload' %}
-                    <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
-                  {% else %}
-                    <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
-                  {% endif %}
-                </a>
-              </li>
-            {% endif %}
-            {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-              <li>
-                <button class="btn btn-default" onclick="testAPI()">
-                  <i class="fa fa-play"></i> {{ _('Test API') }}
-                </button>
-              </li>
-            {% endif %}
-            {% endblock %}
-          </ul>
-          {% endblock %}
-        </div>
-        {% block resource_content %}
-          {% block package_archive_notice %}
-            {% if is_activity_archive %}
-              <div id="activity-archive-notice" class="alert alert-danger">
-                {% trans url=h.url_for(pkg.type ~ '.read', id=pkg.id) %}
-                You're currently viewing an old version of this dataset. To see the
-                current version, click <a href="{{ url }}">here</a>.
-                {% endtrans %}
-              </div>
-            {% endif %}
-          {% endblock %}
-          {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
-          {% block resource_read_url %}
-            {% if res.url and h.is_url(res.url) %}
-              <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ res.url }}" title="{{ res.url }}">{{ res.url }}</a></p>
-            {% elif res.url %}
-              <p class="text-muted break-word">{{ _('URL:') }} {{ res.url }}</p>
-            {% endif %}
-          {% endblock %}
-          <div class="prose notes" property="rdfs:label">
-            {% if res.description %}
-              {{ h.render_markdown(res.description) }}
-            {% endif %}
-            {% if not res.description and package.notes %}
-              <h3>{{ _('Dataset description:') }}</h3>
-              <blockquote>{{ h.markdown_extract(h.get_translated(package, 'notes')) }}</blockquote>
-              <p>{% trans dataset=package.title, url=h.url_for(package.type ~ '.read', id=package.id if is_activity_archive else package.name) %}Source: <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
-            {% endif %}
-          </div>
-
-          {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-            <!-- API Testing Interface -->
-            <div class="api-response-container">
-              <h3><i class="fa fa-code"></i> API Response</h3>
-              
-              <div class="api-controls">
-                <select id="method-selector" class="method-selector">
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="PUT">PUT</option>
-                  <option value="DELETE">DELETE</option>
-                  <option value="PATCH">PATCH</option>
-                </select>
-                
-                <button class="btn btn-primary" onclick="testAPI()">
-                  <i class="fa fa-play"></i> Send Request
-                </button>
-              </div>
-
-              <textarea id="headers-input" class="headers-input" placeholder='{"Authorization": "Bearer YOUR_TOKEN", "Content-Type": "application/json"}'>{}</textarea>
-
-              <div id="api-loading" class="api-loading" style="display:none;">
-                <div class="spinner"></div>
-                <p>Making API request...</p>
-              </div>
-
-              <div id="api-error" class="alert alert-danger" style="display:none;">
-                <div id="error-message"></div>
-              </div>
-
-              <div id="api-response" style="display:none;">
-                <div id="response-status" class="alert"></div>
-                
-                <div id="response-headers" class="response-headers" style="display:none;">
-                  <strong>Response Headers:</strong><br>
-                </div>
-                
-                <div style="position:relative;">
-                  <button class="copy-button" onclick="copyResponse()">Copy</button>
-                  <div id="response-body" class="json-viewer"></div>
-                </div>
-              </div>
-            </div>
-          {% endif %}
-
-        {% endblock %}
-      {% if not is_activity_archive %}
-      {% block data_preview %}
-      {% block resource_view %}
-        {% block resource_view_nav %}
-          <!-- Modern View Controls -->
-          {% set resource_preview = h.resource_preview(resource, package) %}
-          {% snippet "package/snippets/resource_views_list.html",
-             views=resource_views,
-             pkg=pkg,
-             is_edit=false,
-             view_id=current_resource_view['id'],
-             resource_preview=resource_preview,
-             resource=resource,
-             extra_class="nav-tabs nav-tabs-plain"
-           %}
-        {% endblock %}
-          {% block resource_view_content %}
-            <div class="resource-view">
-              {% set resource_preview = h.resource_preview(resource, package) %}
-              {% set views_created = res.has_views or resource_preview %}
-              {% if views_created %}
-                {% if resource_preview and not current_resource_view %}
-                  {{ h.resource_preview(resource, package) }}
-                {% else %}
-                  {% for resource_view in resource_views %}
-                    {% if resource_view == current_resource_view %}
-                      {% snippet 'package/snippets/resource_view.html',
-                         resource_view=resource_view,
-                         resource=resource,
-                         package=package
-                       %}
-                    {% endif %}
-                  {% endfor %}
-                {% endif %}
-              {% else %}
-                {# Views not created #}
-                <div class="data-viewer-info">
-                  <p>{{ _("There are no views created for this resource yet.") }}</p>
-                  {% if h.check_access('resource_view_create', {'resource_id': resource.id}) %}
-                    <p class="text-muted">
-                      <i class="fa fa-info-circle"></i>
-                      {{ _("Not seeing the views you were expecting?")}}
-                      <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
-                        {{ _('Click here for more information.') }}</a>
-                    </p>
-                    <div id="data-view-info" class="collapse">
-                      <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
-                      <ul>
-                        <li>{{ _("No view has been created that is suitable for this resource")}}</li>
-                        <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
-                        <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
-                      </ul>
-                    </div>
-                  {% endif %}
-                </div>
-              {% endif %}
-            </div>
-          {% endblock %}
-        </div>
-      {% endblock %}
-      {% endblock %}
-      {% endif %}
-      {% endblock %}
-    </section>
-  {% endblock %}
-{% endblock %}
-
-{% block primary_content %}
-  {% block resource_additional_information %}
-    {% if res %}
-      <section class="module">
-        {% block resource_additional_information_inner %}
-        <div class="module-content">
-          <h2>{{ _('Additional Information') }}</h2>
-          <table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more">
-            <thead>
-              <tr>
-                <th scope="col">{{ _('Field') }}</th>
-                <th scope="col">{{ _('Value') }}</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th scope="row">{{ _('Data last updated') }}</th>
-                <td>{{ h.render_datetime(res.last_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Metadata last updated') }}</th>
-                <td>{{ h.render_datetime(res.metadata_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Created') }}</th>
-                <td>{{ h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Format') }}</th>
-                <td>{{ res.format or res.mimetype_inner or res.mimetype or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('License') }}</th>
-                <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
-              </tr>
-              {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-              <tr>
-                <th scope="row">{{ _('API Status') }}</th>
-                <td id="api-status-indicator">
-                  <span class="text-muted">
-                    <i class="fa fa-spinner fa-spin"></i> Testing connection...
-                  </span>
-                </td>
-              </tr>
-              {% endif %}
-              {% for key, value in h.format_resource_items(res.items()) %}
-                {% if key not in ('created', 'metadata modified', 'last modified', 'format') %}
-                  <tr class="toggle-more"><th scope="row">{{ key | capitalize }}</th><td>{{ value }}</td></tr>
-                {% endif %}
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-        {% endblock %}
-      </section>
-    {% endif %}
-  {% endblock %}
-{% endblock %}
-
-{% block secondary_content %}
-
-  {% block resources_list %}
-    {% snippet "package/snippets/resources.html", pkg=pkg, active=res.id, action='read', is_activity_archive=is_activity_archive %}
-  {% endblock %}
-
-  {% block resource_license %}
-    {% snippet "snippets/social.html" %}
-  {% endblock %}
-
-  {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-    <!-- API Documentation Sidebar -->
-    <section class="module">
-      <div class="module-content">
-        <h3><i class="fa fa-book"></i> API Information</h3>
-        
-        <div class="api-info">
-          <p><strong>Endpoint:</strong></p>
-          <code style="word-break: break-all;">{{ res.url }}</code>
-          
-          <div style="margin-top: 1rem;">
-            <p><strong>Common Parameters:</strong></p>
-            <ul class="list-unstyled">
-              <li><code>format</code> - Response format (json, xml, csv)</li>
-              <li><code>limit</code> - Number of results to return</li>
-              <li><code>offset</code> - Starting point for results</li>
-              <li><code>q</code> - Search query</li>
-            </ul>
-          </div>
-
-          <div style="margin-top: 1rem;">
-            <p><strong>Authentication:</strong></p>
-            <p class="text-muted small">
-              This API request includes your current CKAN session credentials.
-              For external access, you may need to provide an API key.
-            </p>
-          </div>
-
-          <div style="margin-top: 1rem;">
-            <p><strong>CORS & Proxy Info:</strong></p>
-            <p class="text-muted small">
-              Bu API test aracı şu yöntemleri sırasıyla dener:<br>
-              1. Direkt bağlantı<br>
-              2. AllOrigins proxy (güvenilir)<br>
-              3. CorsProxy.io<br>
-              4. ThingProxy (FreeBoarder)
-            </p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- API Examples Sidebar -->
-    <section class="module">
-      <div class="module-content">
-        <h3><i class="fa fa-code"></i> Example Requests</h3>
-        
-        <div class="api-examples">
-          <h4>cURL Example:</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>curl -X GET "{{ res.url }}" \
-  -H "Accept: application/json" \
-  -H "User-Agent: CKAN-Client/1.0"</code></pre>
-
-          <h4>JavaScript Example:</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>fetch('{{ res.url }}', {
-  method: 'GET',
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
+  
+    formatJSON(obj) {
+      let json;
+      try {
+        json = JSON.stringify(obj, null, 2);
+      } catch (e) {
+        json = String(obj);
+      }
+      
+      return '<pre>' + json
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/(".*?")\s*:/g, '<span class="json-key">$1</span>:')
+        .replace(/:\s*(".*?")/g, ': <span class="json-string">$1</span>')
+        .replace(/:\s*(\b\d+\.?\d*\b)/g, ': <span class="json-number">$1</span>')
+        .replace(/:\s*(\btrue\b|\bfalse\b)/g, ': <span class="json-boolean">$1</span>')
+        .replace(/:\s*(\bnull\b)/g, ': <span class="json-null">$1</span>') + '</pre>';
+    }
+  
+    escapeHtml(unsafe) {
+      return unsafe
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
   }
-})
-.then(response => response.json())
-.then(data => console.log(data));</code></pre>
-
-          <h4>Test via Browser Console:</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>// Test directly in browser console
-fetch('{{ res.url }}')
-  .then(r => r.json())
-  .then(d => console.log(d))
-  .catch(e => console.error('CORS Error:', e));</code></pre>
-        </div>
-      </div>
-    </section>
-  {% endif %}
-
-{% endblock %}
-
-<!-- Note: No backend proxy needed - works with client-side CORS solutions -->
-
-<script>
-// Additional API status checking
-document.addEventListener('DOMContentLoaded', function() {
+  
+  // Initialize API handler
+  let apiHandler;
+  
+  document.addEventListener('DOMContentLoaded', function() {
+    apiHandler = new APIRequestHandler();
+    
+    // Check if user is logged in
+    const authCookie = apiHandler.getCKANAuthCookie();
+    if (authCookie) {
+      console.log('CKAN authentication detected');
+    }
+    
+    // Auto-test API if resource is API type
     const resourceType = '{{ res.resource_type }}';
     const resourceFormat = '{{ res.format }}';
     const resourceUrl = '{{ res.url }}';
     
-    // Check if this is an API resource
     if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
         resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
-        
-        // Check if this is an API resource and auto-test
-        setTimeout(() => {
-          const statusIndicator = document.getElementById('api-status-indicator');
-          if (statusIndicator) {
-            // Update status as testing
-            statusIndicator.innerHTML = '<span class="text-info"><i class="fa fa-spinner fa-spin"></i> Testing API...</span>';
-            
-            // Auto-test the API
-            testAPI();
-            
-            // Update status after test
-            setTimeout(() => {
-              const responseContainer = document.getElementById('api-response');
-              const errorContainer = document.getElementById('api-error');
-              
-              if (responseContainer && responseContainer.style.display !== 'none') {
-                statusIndicator.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> API Working</span>';
-              } else if (errorContainer && errorContainer.style.display !== 'none') {
-                statusIndicator.innerHTML = '<span class="text-danger"><i class="fa fa-times-circle"></i> API Error</span>';
-              } else {
-                statusIndicator.innerHTML = '<span class="text-warning"><i class="fa fa-question-circle"></i> Status Unknown</span>';
-              }
-            }, 5000);
-          }
-        }, 500);
+      // Add authentication indicator
+      const authIndicator = document.createElement('div');
+      authIndicator.className = 'alert alert-info';
+      authIndicator.style.marginBottom = '1rem';
+      authIndicator.innerHTML = authCookie ? 
+        '<i class="fa fa-lock"></i> Using your CKAN session for authentication' :
+        '<i class="fa fa-unlock"></i> Not authenticated - API requests may fail';
+      
+      const apiContainer = document.querySelector('.api-response-container');
+      if (apiContainer) {
+        apiContainer.insertBefore(authIndicator, apiContainer.firstChild);
+      }
+      
+      testAPI();
     }
-});
-</script>
+  });
+  
+  function testAPI() {
+    const resourceUrl = '{{ res.url }}';
+    if (resourceUrl) {
+      const method = document.getElementById('method-selector')?.value || 'GET';
+      const headersText = document.getElementById('headers-input')?.value || '{}';
+      
+      try {
+        const headers = JSON.parse(headersText);
+        apiHandler.makeRequest(resourceUrl, method, headers);
+      } catch (e) {
+        apiHandler.displayError('Invalid JSON in headers field: ' + e.message, null);
+      }
+    } else {
+      apiHandler.displayError('No URL found for this resource', null);
+    }
+  }
+  </script>

@@ -153,6 +153,18 @@
       border-left: 4px solid #dc2626 !important;
     }
 
+    .alert-success {
+      background: rgba(209, 250, 229, 0.9) !important;
+      color: #059669 !important;
+      border-left: 4px solid #10b981 !important;
+    }
+
+    .alert-info {
+      background: rgba(219, 234, 254, 0.9) !important;
+      color: #1d4ed8 !important;
+      border-left: 4px solid #3b82f6 !important;
+    }
+
     .resource-url-analytics {
       color: #667eea !important;
       font-weight: 500 !important;
@@ -251,6 +263,114 @@
       margin-right: 0.5rem !important;
     }
 
+    /* API Response Styles */
+    .api-response-container {
+      background: white !important;
+      border-radius: 16px !important;
+      padding: 2rem !important;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+      border: 1px solid #e2e8f0 !important;
+      margin-top: 2rem !important;
+    }
+
+    .api-loading {
+      text-align: center !important;
+      padding: 3rem !important;
+    }
+
+    .spinner {
+      border: 4px solid #f3f4f6 !important;
+      border-top: 4px solid #667eea !important;
+      border-radius: 50% !important;
+      width: 40px !important;
+      height: 40px !important;
+      animation: spin 1s linear infinite !important;
+      margin: 0 auto 1rem !important;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .json-viewer {
+      background: #1e293b !important;
+      color: #e2e8f0 !important;
+      border-radius: 12px !important;
+      padding: 1.5rem !important;
+      font-family: 'Monaco', 'Consolas', monospace !important;
+      font-size: 0.875rem !important;
+      overflow-x: auto !important;
+      max-height: 400px !important;
+      overflow-y: auto !important;
+    }
+
+    .json-key {
+      color: #38bdf8 !important;
+    }
+
+    .json-string {
+      color: #34d399 !important;
+    }
+
+    .json-number {
+      color: #f59e0b !important;
+    }
+
+    .json-boolean {
+      color: #f472b6 !important;
+    }
+
+    .json-null {
+      color: #6b7280 !important;
+    }
+
+    .api-controls {
+      display: flex !important;
+      gap: 1rem !important;
+      margin-bottom: 1.5rem !important;
+      flex-wrap: wrap !important;
+    }
+
+    .method-selector {
+      padding: 0.5rem 1rem !important;
+      border: 2px solid #e2e8f0 !important;
+      border-radius: 8px !important;
+      background: white !important;
+      font-weight: 500 !important;
+    }
+
+    .headers-input {
+      width: 100% !important;
+      padding: 0.75rem !important;
+      border: 2px solid #e2e8f0 !important;
+      border-radius: 8px !important;
+      font-family: monospace !important;
+      margin-bottom: 1rem !important;
+    }
+
+    .copy-button {
+      position: absolute !important;
+      top: 10px !important;
+      right: 10px !important;
+      background: rgba(102, 126, 234, 0.8) !important;
+      color: white !important;
+      border: none !important;
+      padding: 0.5rem !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      font-size: 0.75rem !important;
+    }
+
+    .response-headers {
+      background: #f8fafc !important;
+      border-radius: 8px !important;
+      padding: 1rem !important;
+      margin-bottom: 1rem !important;
+      font-family: monospace !important;
+      font-size: 0.875rem !important;
+    }
+
     @media (max-width: 768px) {
       .page-heading {
         font-size: 1.875rem !important;
@@ -273,21 +393,206 @@
         width: 100% !important;
         justify-content: center !important;
       }
-    }
 
-    /* JavaScript functions for Chart and Filter buttons */
-    function addChart() {
-      alert('Grafik ekleme özelliği aktif edilecek!');
-      // Buraya grafik ekleme kodları gelecek
-    }
-
-    function addFilter() {
-      alert('Filtre ekleme özelliği aktif edilecek!');
-      // Buraya filtre ekleme kodları gelecek
+      .api-controls {
+        flex-direction: column !important;
+      }
     }
   </style>
 
   <script>
+    // API Request Handler
+    class APIRequestHandler {
+      constructor() {
+        this.proxyEndpoint = '/api/proxy'; // CKAN proxy endpoint
+      }
+
+      async makeRequest(url, method = 'GET', headers = {}, body = null) {
+        const loadingContainer = document.getElementById('api-loading');
+        const responseContainer = document.getElementById('api-response');
+        const errorContainer = document.getElementById('api-error');
+
+        // Show loading
+        loadingContainer.style.display = 'block';
+        responseContainer.style.display = 'none';
+        errorContainer.style.display = 'none';
+
+        try {
+          // Get CSRF token from CKAN
+          const csrfToken = this.getCSRFToken();
+          
+          // Prepare request options
+          const requestOptions = {
+            method: 'POST', // Always POST to proxy
+            credentials: 'include', // Include cookies and credentials
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': csrfToken,
+              ...this.getAuthHeaders()
+            },
+            body: JSON.stringify({
+              target_url: url,
+              method: method,
+              headers: headers,
+              body: body
+            })
+          };
+
+          const response = await fetch(this.proxyEndpoint, requestOptions);
+          const result = await response.json();
+
+          loadingContainer.style.display = 'none';
+
+          if (result.success) {
+            this.displayResponse(result.data, result.headers, result.status);
+          } else {
+            this.displayError(result.error, result.status);
+          }
+
+        } catch (error) {
+          loadingContainer.style.display = 'none';
+          this.displayError(`Network Error: ${error.message}`, null);
+        }
+      }
+
+      getCSRFToken() {
+        // Try to get CSRF token from meta tag or cookie
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag) return metaTag.getAttribute('content');
+        
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+          const [name, value] = cookie.trim().split('=');
+          if (name === 'csrf_token') return value;
+        }
+        return '';
+      }
+
+      getAuthHeaders() {
+        // Get auth headers from CKAN session
+        const headers = {};
+        
+        // Try to get API key from various sources
+        const apiKeyMeta = document.querySelector('meta[name="api-key"]');
+        if (apiKeyMeta) {
+          headers['Authorization'] = apiKeyMeta.getAttribute('content');
+        }
+
+        // Add user agent
+        headers['User-Agent'] = 'CKAN-Resource-Viewer/1.0';
+        
+        return headers;
+      }
+
+      displayResponse(data, headers, status) {
+        const responseContainer = document.getElementById('api-response');
+        const statusElement = document.getElementById('response-status');
+        const headersElement = document.getElementById('response-headers');
+        const bodyElement = document.getElementById('response-body');
+
+        statusElement.textContent = `Status: ${status}`;
+        statusElement.className = status >= 200 && status < 300 ? 'alert alert-success' : 'alert alert-danger';
+
+        // Display headers
+        if (headers) {
+          headersElement.innerHTML = Object.entries(headers)
+            .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
+            .join('<br>');
+          headersElement.style.display = 'block';
+        }
+
+        // Display response body
+        if (typeof data === 'object') {
+          bodyElement.innerHTML = this.formatJSON(data);
+        } else {
+          bodyElement.innerHTML = `<pre>${this.escapeHtml(data)}</pre>`;
+        }
+
+        responseContainer.style.display = 'block';
+      }
+
+      displayError(error, status) {
+        const errorContainer = document.getElementById('api-error');
+        const errorMessage = document.getElementById('error-message');
+        
+        errorMessage.innerHTML = `
+          <strong>Request Failed</strong><br>
+          ${status ? `Status: ${status}<br>` : ''}
+          Error: ${this.escapeHtml(error)}
+        `;
+        
+        errorContainer.style.display = 'block';
+      }
+
+      formatJSON(obj) {
+        const json = JSON.stringify(obj, null, 2);
+        return json
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/(".*?")/g, '<span class="json-string">$1</span>')
+          .replace(/(\b\d+\.?\d*\b)/g, '<span class="json-number">$1</span>')
+          .replace(/(\btrue\b|\bfalse\b)/g, '<span class="json-boolean">$1</span>')
+          .replace(/(\bnull\b)/g, '<span class="json-null">$1</span>')
+          .replace(/(".*?")(?=:)/g, '<span class="json-key">$1</span>');
+      }
+
+      escapeHtml(unsafe) {
+        return unsafe
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+    }
+
+    // Initialize API handler
+    let apiHandler;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      apiHandler = new APIRequestHandler();
+      
+      // Auto-test API if resource is API type
+      const resourceType = '{{ res.resource_type }}';
+      const resourceFormat = '{{ res.format }}';
+      const resourceUrl = '{{ res.url }}';
+      
+      if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
+          resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
+        testAPI();
+      }
+    });
+
+    function testAPI() {
+      const resourceUrl = '{{ res.url }}';
+      if (resourceUrl) {
+        const method = document.getElementById('method-selector')?.value || 'GET';
+        const headersText = document.getElementById('headers-input')?.value || '{}';
+        
+        try {
+          const headers = JSON.parse(headersText);
+          apiHandler.makeRequest(resourceUrl, method, headers);
+        } catch (e) {
+          apiHandler.displayError('Invalid JSON in headers field', null);
+        }
+      }
+    }
+
+    function copyResponse() {
+      const responseBody = document.getElementById('response-body');
+      const text = responseBody.textContent || responseBody.innerText;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        const button = event.target;
+        const originalText = button.textContent;
+        button.textContent = 'Copied!';
+        setTimeout(() => {
+          button.textContent = originalText;
+        }, 2000);
+      });
+    }
+
     function addChart() {
       alert('Grafik ekleme özelliği aktif edilecek!');
       // Grafik ekleme işlevselliği buraya gelecek
@@ -296,102 +601,6 @@
     function addFilter() {
       alert('Filtre ekleme özelliği aktif edilecek!');
       // Filtre ekleme işlevselliği buraya gelecek
-    }
-
-    // API Test Function
-    async function testAPI() {
-      const apiUrl = "{{ res.url }}";
-      const btn = document.getElementById('apiTestBtn');
-      const container = document.getElementById('apiResponseContainer');
-      const statusBadge = document.getElementById('apiStatusBadge');
-      const responseDiv = document.getElementById('apiResponse');
-      
-      // Show loading state
-      btn.disabled = true;
-      btn.innerHTML = '<div class="api-loading"><div class="spinner"></div>API Test Ediliyor...</div>';
-      container.classList.add('show');
-      statusBadge.innerHTML = '<div class="api-loading"><div class="spinner"></div>Istek gönderiliyor...</div>';
-      responseDiv.textContent = '';
-      
-      try {
-        const startTime = Date.now();
-        
-        // CORS proxy for API testing (you might need to configure this)
-        const response = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json, text/plain, */*',
-            'Content-Type': 'application/json'
-          },
-          mode: 'cors' // This might fail due to CORS policy
-        });
-        
-        const endTime = Date.now();
-        const responseTime = endTime - startTime;
-        
-        let responseData;
-        const contentType = response.headers.get('content-type');
-        
-        if (contentType && contentType.includes('application/json')) {
-          responseData = await response.json();
-        } else {
-          responseData = await response.text();
-        }
-        
-        if (response.ok) {
-          // Success
-          statusBadge.className = 'api-status-badge api-status-success';
-          statusBadge.innerHTML = `
-            <i class="fa fa-check-circle"></i>
-            Başarılı - ${response.status} ${response.statusText} (${responseTime}ms)
-          `;
-          
-          responseDiv.className = 'api-response api-response-success';
-          responseDiv.textContent = typeof responseData === 'object' 
-            ? JSON.stringify(responseData, null, 2)
-            : responseData;
-        } else {
-          // HTTP Error
-          statusBadge.className = 'api-status-badge api-status-error';
-          statusBadge.innerHTML = `
-            <i class="fa fa-times-circle"></i>
-            Hata - ${response.status} ${response.statusText} (${responseTime}ms)
-          `;
-          
-          responseDiv.className = 'api-response api-response-error';
-          responseDiv.textContent = `HTTP ${response.status}: ${response.statusText}\n\n${typeof responseData === 'object' ? JSON.stringify(responseData, null, 2) : responseData}`;
-        }
-        
-      } catch (error) {
-        // Network or CORS Error
-        statusBadge.className = 'api-status-badge api-status-error';
-        statusBadge.innerHTML = '<i class="fa fa-exclamation-triangle"></i>API Çalışmıyor';
-        
-        responseDiv.className = 'api-response api-response-error';
-        
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
-          responseDiv.textContent = `CORS Hatası: Bu API'ye tarayıcıdan direkt erişim yapılamıyor.
-
-Olası Çözümler:
-1. API sağlayıcısının CORS ayarlarını kontrol edin
-2. API proxy kullanın
-3. Backend'den API çağrısı yapın
-
-Teknik Detay: ${error.message}`;
-        } else {
-          responseDiv.textContent = `Ağ Hatası: ${error.message}
-
-Bu genellikle şu durumlardan kaynaklanır:
-- API sunucusu çalışmıyor
-- İnternet bağlantısı problemi
-- API endpoint'i yanlış
-- CORS politikası engeli`;
-        }
-      } finally {
-        // Reset button
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-play"></i> API\'yi Tekrar Test Et';
-      }
     }
   </script>
 {% endblock -%}
@@ -422,12 +631,21 @@ Bu genellikle şu durumlardan kaynaklanır:
                 <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
                   {% if res.resource_type in ('listing', 'service') %}
                     <i class="fa fa-eye"></i> {{ _('View') }}
+                  {% elif res.resource_type == 'api' or res.format|lower == 'api' %}
+                    <i class="fa fa-code"></i> {{ _('API Endpoint') }}
                   {% elif not res.has_views and not res.url_type == 'upload' %}
                     <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
                   {% else %}
                     <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
                   {% endif %}
                 </a>
+              </li>
+            {% endif %}
+            {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
+              <li>
+                <button class="btn btn-default" onclick="testAPI()">
+                  <i class="fa fa-play"></i> {{ _('Test API') }}
+                </button>
               </li>
             {% endif %}
             {% endblock %}
@@ -445,29 +663,7 @@ Bu genellikle şu durumlardan kaynaklanır:
               </div>
             {% endif %}
           {% endblock %}
-          {% block resource_read_title %}
-            <div style="display: flex; align-items: center; gap: 1rem;">
-              <h1 class="page-heading" style="margin: 0;">{{ h.resource_display_name(res) | truncate(50) }}</h1>
-              <!-- Format Badge -->
-              {% set format_type = res.format|lower or res.mimetype_inner|lower or res.mimetype|lower or 'unknown' %}
-              <span class="format-badge format-{{ format_type }}">
-                {% if format_type == 'api' %}
-                  <i class="fa fa-cogs"></i>
-                {% elif format_type in ['csv', 'tsv'] %}
-                  <i class="fa fa-table"></i>
-                {% elif format_type == 'json' %}
-                  <i class="fa fa-code"></i>
-                {% elif format_type == 'pdf' %}
-                  <i class="fa fa-file-pdf-o"></i>
-                {% elif format_type in ['xls', 'xlsx'] %}
-                  <i class="fa fa-file-excel-o"></i>
-                {% else %}
-                  <i class="fa fa-file-o"></i>
-                {% endif %}
-                {{ res.format or res.mimetype_inner or res.mimetype or _('unknown') }}
-              </span>
-            </div>
-          {% endblock %}
+          {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
           {% block resource_read_url %}
             {% if res.url and h.is_url(res.url) %}
               <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ res.url }}" title="{{ res.url }}">{{ res.url }}</a></p>
@@ -486,45 +682,57 @@ Bu genellikle şu durumlardan kaynaklanır:
             {% endif %}
           </div>
 
-          <!-- API Test Section - Only show for API resources -->
-          {% set resource_format = res.format|lower or res.mimetype_inner|lower or res.mimetype|lower %}
-          {% if resource_format == 'api' or res.resource_type == 'api' %}
-            <div class="api-test-section">
-              <div class="api-test-header">
-                <div class="api-icon">
-                  <i class="fa fa-cogs"></i>
-                </div>
-                <h3>API Test</h3>
+          {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
+            <!-- API Testing Interface -->
+            <div class="api-response-container">
+              <h3><i class="fa fa-code"></i> API Response</h3>
+              
+              <div class="api-controls">
+                <select id="method-selector" class="method-selector">
+                  <option value="GET">GET</option>
+                  <option value="POST">POST</option>
+                  <option value="PUT">PUT</option>
+                  <option value="DELETE">DELETE</option>
+                  <option value="PATCH">PATCH</option>
+                </select>
+                
+                <button class="btn btn-primary" onclick="testAPI()">
+                  <i class="fa fa-play"></i> Send Request
+                </button>
               </div>
-              <p class="text-muted">Bu API endpoint'ini test edebilir ve yanıtını görebilirsiniz.</p>
-              
-              <button class="btn-api-test" onclick="testAPI()" id="apiTestBtn">
-                <i class="fa fa-play"></i> API'yi Test Et
-              </button>
-              
-              <div class="api-response-container" id="apiResponseContainer">
-                <div class="api-status-badge" id="apiStatusBadge"></div>
-                <div class="api-response" id="apiResponse"></div>
+
+              <textarea id="headers-input" class="headers-input" placeholder='{"Authorization": "Bearer YOUR_TOKEN", "Content-Type": "application/json"}'>{}</textarea>
+
+              <div id="api-loading" class="api-loading" style="display:none;">
+                <div class="spinner"></div>
+                <p>Making API request...</p>
+              </div>
+
+              <div id="api-error" class="alert alert-danger" style="display:none;">
+                <div id="error-message"></div>
+              </div>
+
+              <div id="api-response" style="display:none;">
+                <div id="response-status" class="alert"></div>
+                
+                <div id="response-headers" class="response-headers" style="display:none;">
+                  <strong>Response Headers:</strong><br>
+                </div>
+                
+                <div style="position:relative;">
+                  <button class="copy-button" onclick="copyResponse()">Copy</button>
+                  <div id="response-body" class="json-viewer"></div>
+                </div>
               </div>
             </div>
           {% endif %}
+
         {% endblock %}
       {% if not is_activity_archive %}
       {% block data_preview %}
       {% block resource_view %}
         {% block resource_view_nav %}
           <!-- Modern View Controls -->
-          <div class="view-controls">
-            <div class="view-buttons">
-              <button class="btn btn-secondary btn-sm" onclick="addChart()">
-                <i class="fa fa-bar-chart"></i> Grafik Ekle
-              </button>
-              <button class="btn btn-secondary btn-sm" onclick="addFilter()">
-                <i class="fa fa-filter"></i> Filtre Ekle
-              </button>
-            </div>
-          </div>
-          
           {% set resource_preview = h.resource_preview(resource, package) %}
           {% snippet "package/snippets/resource_views_list.html",
              views=resource_views,
@@ -622,6 +830,16 @@ Bu genellikle şu durumlardan kaynaklanır:
                 <th scope="row">{{ _('License') }}</th>
                 <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
               </tr>
+              {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
+              <tr>
+                <th scope="row">{{ _('API Status') }}</th>
+                <td id="api-status-indicator">
+                  <span class="text-muted">
+                    <i class="fa fa-spinner fa-spin"></i> Testing connection...
+                  </span>
+                </td>
+              </tr>
+              {% endif %}
               {% for key, value in h.format_resource_items(res.items()) %}
                 {% if key not in ('created', 'metadata modified', 'last modified', 'format') %}
                   <tr class="toggle-more"><th scope="row">{{ key | capitalize }}</th><td>{{ value }}</td></tr>
@@ -645,4 +863,160 @@ Bu genellikle şu durumlardan kaynaklanır:
   {% block resource_license %}
     {% snippet "snippets/social.html" %}
   {% endblock %}
+
+  {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
+    <!-- API Documentation Sidebar -->
+    <section class="module">
+      <div class="module-content">
+        <h3><i class="fa fa-book"></i> API Information</h3>
+        
+        <div class="api-info">
+          <p><strong>Endpoint:</strong></p>
+          <code style="word-break: break-all;">{{ res.url }}</code>
+          
+          <div style="margin-top: 1rem;">
+            <p><strong>Common Parameters:</strong></p>
+            <ul class="list-unstyled">
+              <li><code>format</code> - Response format (json, xml, csv)</li>
+              <li><code>limit</code> - Number of results to return</li>
+              <li><code>offset</code> - Starting point for results</li>
+              <li><code>q</code> - Search query</li>
+            </ul>
+          </div>
+
+          <div style="margin-top: 1rem;">
+            <p><strong>Authentication:</strong></p>
+            <p class="text-muted small">
+              This API request includes your current CKAN session credentials.
+              For external access, you may need to provide an API key.
+            </p>
+          </div>
+
+          <div style="margin-top: 1rem;">
+            <p><strong>CORS Support:</strong></p>
+            <p class="text-muted small">
+              Requests are proxied through CKAN to handle CORS restrictions
+              and include proper authentication headers.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- API Examples Sidebar -->
+    <section class="module">
+      <div class="module-content">
+        <h3><i class="fa fa-code"></i> Example Requests</h3>
+        
+        <div class="api-examples">
+          <h4>cURL Example:</h4>
+          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>curl -X GET "{{ res.url }}" \
+  -H "Accept: application/json" \
+  -H "User-Agent: CKAN-Client/1.0"</code></pre>
+
+          <h4>JavaScript Example:</h4>
+          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>fetch('{{ res.url }}', {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));</code></pre>
+
+          <h4>Python Example:</h4>
+          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>import requests
+
+response = requests.get('{{ res.url }}')
+data = response.json()
+print(data)</code></pre>
+        </div>
+      </div>
+    </section>
+  {% endif %}
+
 {% endblock %}
+
+<!-- Backend Proxy Endpoint (Add this to your CKAN plugin) -->
+<!-- 
+CKAN Plugin Code (add to your plugin's blueprint):
+
+@blueprint.route('/api/proxy', methods=['POST'])
+def api_proxy():
+    try:
+        if not c.user:
+            return jsonify({'success': False, 'error': 'Authentication required', 'status': 401}), 401
+        
+        data = request.get_json()
+        target_url = data.get('target_url')
+        method = data.get('method', 'GET')
+        headers = data.get('headers', {})
+        body = data.get('body')
+        
+        if not target_url:
+            return jsonify({'success': False, 'error': 'target_url is required', 'status': 400}), 400
+        
+        # Add user's API key if available
+        if c.userobj and hasattr(c.userobj, 'apikey'):
+            headers['Authorization'] = c.userobj.apikey
+        
+        # Add CKAN user agent
+        headers['User-Agent'] = 'CKAN-Proxy/1.0'
+        
+        # Make the request
+        import requests
+        response = requests.request(
+            method=method,
+            url=target_url,
+            headers=headers,
+            json=body if body else None,
+            timeout=30,
+            allow_redirects=True
+        )
+        
+        # Return response
+        return jsonify({
+            'success': True,
+            'data': response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text,
+            'headers': dict(response.headers),
+            'status': response.status_code
+        })
+        
+    except requests.exceptions.Timeout:
+        return jsonify({'success': False, 'error': 'Request timeout', 'status': 408}), 408
+    except requests.exceptions.ConnectionError:
+        return jsonify({'success': False, 'error': 'Connection error', 'status': 503}), 503
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e), 'status': 500}), 500
+
+-->
+
+<script>
+// Additional API status checking
+document.addEventListener('DOMContentLoaded', function() {
+    const resourceType = '{{ res.resource_type }}';
+    const resourceFormat = '{{ res.format }}';
+    const resourceUrl = '{{ res.url }}';
+    
+    // Check if this is an API resource
+    if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
+        resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
+        
+        // Update API status indicator
+        setTimeout(() => {
+            const statusIndicator = document.getElementById('api-status-indicator');
+            if (statusIndicator) {
+                // Simple connectivity test
+                fetch(resourceUrl, { method: 'HEAD', mode: 'no-cors' })
+                    .then(() => {
+                        statusIndicator.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> API Reachable</span>';
+                    })
+                    .catch(() => {
+                        statusIndicator.innerHTML = '<span class="text-warning"><i class="fa fa-exclamation-triangle"></i> Status Unknown (CORS)</span>';
+                    });
+            }
+        }, 1000);
+    }
+});
+</script>

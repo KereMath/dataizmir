@@ -297,6 +297,102 @@
       alert('Filtre ekleme özelliği aktif edilecek!');
       // Filtre ekleme işlevselliği buraya gelecek
     }
+
+    // API Test Function
+    async function testAPI() {
+      const apiUrl = "{{ res.url }}";
+      const btn = document.getElementById('apiTestBtn');
+      const container = document.getElementById('apiResponseContainer');
+      const statusBadge = document.getElementById('apiStatusBadge');
+      const responseDiv = document.getElementById('apiResponse');
+      
+      // Show loading state
+      btn.disabled = true;
+      btn.innerHTML = '<div class="api-loading"><div class="spinner"></div>API Test Ediliyor...</div>';
+      container.classList.add('show');
+      statusBadge.innerHTML = '<div class="api-loading"><div class="spinner"></div>Istek gönderiliyor...</div>';
+      responseDiv.textContent = '';
+      
+      try {
+        const startTime = Date.now();
+        
+        // CORS proxy for API testing (you might need to configure this)
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors' // This might fail due to CORS policy
+        });
+        
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        let responseData;
+        const contentType = response.headers.get('content-type');
+        
+        if (contentType && contentType.includes('application/json')) {
+          responseData = await response.json();
+        } else {
+          responseData = await response.text();
+        }
+        
+        if (response.ok) {
+          // Success
+          statusBadge.className = 'api-status-badge api-status-success';
+          statusBadge.innerHTML = `
+            <i class="fa fa-check-circle"></i>
+            Başarılı - ${response.status} ${response.statusText} (${responseTime}ms)
+          `;
+          
+          responseDiv.className = 'api-response api-response-success';
+          responseDiv.textContent = typeof responseData === 'object' 
+            ? JSON.stringify(responseData, null, 2)
+            : responseData;
+        } else {
+          // HTTP Error
+          statusBadge.className = 'api-status-badge api-status-error';
+          statusBadge.innerHTML = `
+            <i class="fa fa-times-circle"></i>
+            Hata - ${response.status} ${response.statusText} (${responseTime}ms)
+          `;
+          
+          responseDiv.className = 'api-response api-response-error';
+          responseDiv.textContent = `HTTP ${response.status}: ${response.statusText}\n\n${typeof responseData === 'object' ? JSON.stringify(responseData, null, 2) : responseData}`;
+        }
+        
+      } catch (error) {
+        // Network or CORS Error
+        statusBadge.className = 'api-status-badge api-status-error';
+        statusBadge.innerHTML = '<i class="fa fa-exclamation-triangle"></i>API Çalışmıyor';
+        
+        responseDiv.className = 'api-response api-response-error';
+        
+        if (error.name === 'TypeError' && error.message.includes('fetch')) {
+          responseDiv.textContent = `CORS Hatası: Bu API'ye tarayıcıdan direkt erişim yapılamıyor.
+
+Olası Çözümler:
+1. API sağlayıcısının CORS ayarlarını kontrol edin
+2. API proxy kullanın
+3. Backend'den API çağrısı yapın
+
+Teknik Detay: ${error.message}`;
+        } else {
+          responseDiv.textContent = `Ağ Hatası: ${error.message}
+
+Bu genellikle şu durumlardan kaynaklanır:
+- API sunucusu çalışmıyor
+- İnternet bağlantısı problemi
+- API endpoint'i yanlış
+- CORS politikası engeli`;
+        }
+      } finally {
+        // Reset button
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-play"></i> API\'yi Tekrar Test Et';
+      }
+    }
   </script>
 {% endblock -%}
 
@@ -349,7 +445,29 @@
               </div>
             {% endif %}
           {% endblock %}
-          {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
+          {% block resource_read_title %}
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <h1 class="page-heading" style="margin: 0;">{{ h.resource_display_name(res) | truncate(50) }}</h1>
+              <!-- Format Badge -->
+              {% set format_type = res.format|lower or res.mimetype_inner|lower or res.mimetype|lower or 'unknown' %}
+              <span class="format-badge format-{{ format_type }}">
+                {% if format_type == 'api' %}
+                  <i class="fa fa-cogs"></i>
+                {% elif format_type in ['csv', 'tsv'] %}
+                  <i class="fa fa-table"></i>
+                {% elif format_type == 'json' %}
+                  <i class="fa fa-code"></i>
+                {% elif format_type == 'pdf' %}
+                  <i class="fa fa-file-pdf-o"></i>
+                {% elif format_type in ['xls', 'xlsx'] %}
+                  <i class="fa fa-file-excel-o"></i>
+                {% else %}
+                  <i class="fa fa-file-o"></i>
+                {% endif %}
+                {{ res.format or res.mimetype_inner or res.mimetype or _('unknown') }}
+              </span>
+            </div>
+          {% endblock %}
           {% block resource_read_url %}
             {% if res.url and h.is_url(res.url) %}
               <p class="text-muted ellipsis">{{ _('URL:') }} <a class="resource-url-analytics" href="{{ res.url }}" title="{{ res.url }}">{{ res.url }}</a></p>
@@ -367,13 +485,46 @@
               <p>{% trans dataset=package.title, url=h.url_for(package.type ~ '.read', id=package.id if is_activity_archive else package.name) %}Source: <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
             {% endif %}
           </div>
+
+          <!-- API Test Section - Only show for API resources -->
+          {% set resource_format = res.format|lower or res.mimetype_inner|lower or res.mimetype|lower %}
+          {% if resource_format == 'api' or res.resource_type == 'api' %}
+            <div class="api-test-section">
+              <div class="api-test-header">
+                <div class="api-icon">
+                  <i class="fa fa-cogs"></i>
+                </div>
+                <h3>API Test</h3>
+              </div>
+              <p class="text-muted">Bu API endpoint'ini test edebilir ve yanıtını görebilirsiniz.</p>
+              
+              <button class="btn-api-test" onclick="testAPI()" id="apiTestBtn">
+                <i class="fa fa-play"></i> API'yi Test Et
+              </button>
+              
+              <div class="api-response-container" id="apiResponseContainer">
+                <div class="api-status-badge" id="apiStatusBadge"></div>
+                <div class="api-response" id="apiResponse"></div>
+              </div>
+            </div>
+          {% endif %}
         {% endblock %}
       {% if not is_activity_archive %}
       {% block data_preview %}
       {% block resource_view %}
         {% block resource_view_nav %}
           <!-- Modern View Controls -->
-
+          <div class="view-controls">
+            <div class="view-buttons">
+              <button class="btn btn-secondary btn-sm" onclick="addChart()">
+                <i class="fa fa-bar-chart"></i> Grafik Ekle
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="addFilter()">
+                <i class="fa fa-filter"></i> Filtre Ekle
+              </button>
+            </div>
+          </div>
+          
           {% set resource_preview = h.resource_preview(resource, package) %}
           {% snippet "package/snippets/resource_views_list.html",
              views=resource_views,

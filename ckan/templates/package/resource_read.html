@@ -404,7 +404,12 @@
     // API Request Handler
     class APIRequestHandler {
       constructor() {
-        this.proxyEndpoint = '/api/proxy'; // CKAN proxy endpoint
+        this.corsProxyUrls = [
+          '', // Direct request first
+          'https://api.allorigins.win/raw?url=',
+          'https://corsproxy.io/?',
+          'https://cors-anywhere.herokuapp.com/'
+        ];
       }
 
       async makeRequest(url, method = 'GET', headers = {}, body = null) {
@@ -417,88 +422,112 @@
         responseContainer.style.display = 'none';
         errorContainer.style.display = 'none';
 
-        try {
-          // Get CSRF token from CKAN
-          const csrfToken = this.getCSRFToken();
-          
-          // Prepare request options
-          const requestOptions = {
-            method: 'POST', // Always POST to proxy
-            credentials: 'include', // Include cookies and credentials
-            headers: {
-              'Content-Type': 'application/json',
-              'X-CSRFToken': csrfToken,
-              ...this.getAuthHeaders()
-            },
-            body: JSON.stringify({
-              target_url: url,
-              method: method,
-              headers: headers,
-              body: body
-            })
-          };
+        // Try direct request first, then fallback to CORS proxies
+        for (let i = 0; i < this.corsProxyUrls.length; i++) {
+          try {
+            const proxyUrl = this.corsProxyUrls[i];
+            const requestUrl = proxyUrl + encodeURIComponent(url);
+            const finalUrl = proxyUrl === '' ? url : requestUrl;
+            
+            console.log(`Attempting request ${i + 1}/${this.corsProxyUrls.length}: ${finalUrl}`);
 
-          const response = await fetch(this.proxyEndpoint, requestOptions);
-          const result = await response.json();
+            // Prepare request options
+            const requestOptions = {
+              method: proxyUrl === '' ? method : 'GET', // Proxies usually only support GET
+              headers: {
+                'Accept': 'application/json, text/plain, */*',
+                'Content-Type': 'application/json',
+                ...headers
+              }
+            };
 
-          loadingContainer.style.display = 'none';
+            // Add credentials only for direct requests
+            if (proxyUrl === '') {
+              requestOptions.credentials = 'omit'; // Don't send credentials to avoid CORS issues
+            }
 
-          if (result.success) {
-            this.displayResponse(result.data, result.headers, result.status);
-          } else {
-            this.displayError(result.error, result.status);
+            // Add body for POST/PUT requests on direct calls
+            if (proxyUrl === '' && body && ['POST', 'PUT', 'PATCH'].includes(method)) {
+              requestOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
+            }
+
+            const response = await fetch(finalUrl, requestOptions);
+            
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            // Try to parse as JSON first
+            let data;
+            const contentType = response.headers.get('content-type') || '';
+            
+            if (contentType.includes('application/json')) {
+              data = await response.json();
+            } else {
+              const text = await response.text();
+              try {
+                data = JSON.parse(text);
+              } catch {
+                data = text;
+              }
+            }
+
+            loadingContainer.style.display = 'none';
+            
+            // Get response headers
+            const responseHeaders = {};
+            response.headers.forEach((value, key) => {
+              responseHeaders[key] = value;
+            });
+
+            this.displayResponse(data, responseHeaders, response.status, proxyUrl !== '' ? `via ${proxyUrl}` : 'direct');
+            return; // Success, exit the loop
+
+          } catch (error) {
+            console.log(`Request ${i + 1} failed:`, error.message);
+            
+            // If this was the last attempt, show error
+            if (i === this.corsProxyUrls.length - 1) {
+              loadingContainer.style.display = 'none';
+              this.displayError(`All requests failed. Last error: ${error.message}`, null);
+            }
+            // Otherwise, continue to next proxy
           }
-
-        } catch (error) {
-          loadingContainer.style.display = 'none';
-          this.displayError(`Network Error: ${error.message}`, null);
         }
       }
 
       getCSRFToken() {
-        // Try to get CSRF token from meta tag or cookie
-        const metaTag = document.querySelector('meta[name="csrf-token"]');
-        if (metaTag) return metaTag.getAttribute('content');
-        
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-          const [name, value] = cookie.trim().split('=');
-          if (name === 'csrf_token') return value;
-        }
         return '';
       }
 
       getAuthHeaders() {
-        // Get auth headers from CKAN session
-        const headers = {};
-        
-        // Try to get API key from various sources
-        const apiKeyMeta = document.querySelector('meta[name="api-key"]');
-        if (apiKeyMeta) {
-          headers['Authorization'] = apiKeyMeta.getAttribute('content');
-        }
-
-        // Add user agent
-        headers['User-Agent'] = 'CKAN-Resource-Viewer/1.0';
-        
-        return headers;
+        return {};
       }
 
-      displayResponse(data, headers, status) {
+      displayResponse(data, headers, status, method = 'direct') {
         const responseContainer = document.getElementById('api-response');
         const statusElement = document.getElementById('response-status');
         const headersElement = document.getElementById('response-headers');
         const bodyElement = document.getElementById('response-body');
+        const methodElement = document.getElementById('response-method');
 
-        statusElement.textContent = `Status: ${status}`;
+        statusElement.textContent = `Status: ${status} (${method})`;
         statusElement.className = status >= 200 && status < 300 ? 'alert alert-success' : 'alert alert-danger';
 
+        // Show method info
+        if (methodElement) {
+          methodElement.textContent = method;
+          methodElement.className = method === 'direct' ? 'label label-success' : 'label label-info';
+        }
+
         // Display headers
-        if (headers) {
+        if (headers && Object.keys(headers).length > 0) {
           headersElement.innerHTML = Object.entries(headers)
             .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
             .join('<br>');
           headersElement.style.display = 'block';
+        } else {
+          headersElement.style.display = 'none';
         }
 
         // Display response body
@@ -525,16 +554,22 @@
       }
 
       formatJSON(obj) {
-        const json = JSON.stringify(obj, null, 2);
-        return json
+        let json;
+        try {
+          json = JSON.stringify(obj, null, 2);
+        } catch (e) {
+          json = String(obj);
+        }
+        
+        return '<pre>' + json
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
-          .replace(/(".*?")/g, '<span class="json-string">$1</span>')
-          .replace(/(\b\d+\.?\d*\b)/g, '<span class="json-number">$1</span>')
-          .replace(/(\btrue\b|\bfalse\b)/g, '<span class="json-boolean">$1</span>')
-          .replace(/(\bnull\b)/g, '<span class="json-null">$1</span>')
-          .replace(/(".*?")(?=:)/g, '<span class="json-key">$1</span>');
+          .replace(/(".*?")\s*:/g, '<span class="json-key">$1</span>:')
+          .replace(/:\s*(".*?")/g, ': <span class="json-string">$1</span>')
+          .replace(/:\s*(\b\d+\.?\d*\b)/g, ': <span class="json-number">$1</span>')
+          .replace(/:\s*(\btrue\b|\bfalse\b)/g, ': <span class="json-boolean">$1</span>')
+          .replace(/:\s*(\bnull\b)/g, ': <span class="json-null">$1</span>') + '</pre>';
       }
 
       escapeHtml(unsafe) {
@@ -574,8 +609,10 @@
           const headers = JSON.parse(headersText);
           apiHandler.makeRequest(resourceUrl, method, headers);
         } catch (e) {
-          apiHandler.displayError('Invalid JSON in headers field', null);
+          apiHandler.displayError('Invalid JSON in headers field: ' + e.message, null);
         }
+      } else {
+        apiHandler.displayError('No URL found for this resource', null);
       }
     }
 
@@ -938,59 +975,7 @@ print(data)</code></pre>
 
 {% endblock %}
 
-<!-- Backend Proxy Endpoint (Add this to your CKAN plugin) -->
-<!-- 
-CKAN Plugin Code (add to your plugin's blueprint):
-
-@blueprint.route('/api/proxy', methods=['POST'])
-def api_proxy():
-    try:
-        if not c.user:
-            return jsonify({'success': False, 'error': 'Authentication required', 'status': 401}), 401
-        
-        data = request.get_json()
-        target_url = data.get('target_url')
-        method = data.get('method', 'GET')
-        headers = data.get('headers', {})
-        body = data.get('body')
-        
-        if not target_url:
-            return jsonify({'success': False, 'error': 'target_url is required', 'status': 400}), 400
-        
-        # Add user's API key if available
-        if c.userobj and hasattr(c.userobj, 'apikey'):
-            headers['Authorization'] = c.userobj.apikey
-        
-        # Add CKAN user agent
-        headers['User-Agent'] = 'CKAN-Proxy/1.0'
-        
-        # Make the request
-        import requests
-        response = requests.request(
-            method=method,
-            url=target_url,
-            headers=headers,
-            json=body if body else None,
-            timeout=30,
-            allow_redirects=True
-        )
-        
-        # Return response
-        return jsonify({
-            'success': True,
-            'data': response.json() if response.headers.get('content-type', '').startswith('application/json') else response.text,
-            'headers': dict(response.headers),
-            'status': response.status_code
-        })
-        
-    except requests.exceptions.Timeout:
-        return jsonify({'success': False, 'error': 'Request timeout', 'status': 408}), 408
-    except requests.exceptions.ConnectionError:
-        return jsonify({'success': False, 'error': 'Connection error', 'status': 503}), 503
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e), 'status': 500}), 500
-
--->
+<!-- Note: No backend proxy needed - works with client-side CORS solutions -->
 
 <script>
 // Additional API status checking
@@ -1003,20 +988,31 @@ document.addEventListener('DOMContentLoaded', function() {
     if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
         resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
         
-        // Update API status indicator
+        // Check if this is an API resource and auto-test
         setTimeout(() => {
-            const statusIndicator = document.getElementById('api-status-indicator');
-            if (statusIndicator) {
-                // Simple connectivity test
-                fetch(resourceUrl, { method: 'HEAD', mode: 'no-cors' })
-                    .then(() => {
-                        statusIndicator.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> API Reachable</span>';
-                    })
-                    .catch(() => {
-                        statusIndicator.innerHTML = '<span class="text-warning"><i class="fa fa-exclamation-triangle"></i> Status Unknown (CORS)</span>';
-                    });
-            }
-        }, 1000);
+          const statusIndicator = document.getElementById('api-status-indicator');
+          if (statusIndicator) {
+            // Update status as testing
+            statusIndicator.innerHTML = '<span class="text-info"><i class="fa fa-spinner fa-spin"></i> Testing API...</span>';
+            
+            // Auto-test the API
+            testAPI();
+            
+            // Update status after test
+            setTimeout(() => {
+              const responseContainer = document.getElementById('api-response');
+              const errorContainer = document.getElementById('api-error');
+              
+              if (responseContainer && responseContainer.style.display !== 'none') {
+                statusIndicator.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> API Working</span>';
+              } else if (errorContainer && errorContainer.style.display !== 'none') {
+                statusIndicator.innerHTML = '<span class="text-danger"><i class="fa fa-times-circle"></i> API Error</span>';
+              } else {
+                statusIndicator.innerHTML = '<span class="text-warning"><i class="fa fa-question-circle"></i> Status Unknown</span>';
+              }
+            }, 5000);
+          }
+        }, 500);
     }
 });
 </script>

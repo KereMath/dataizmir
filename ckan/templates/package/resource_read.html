@@ -263,8 +263,41 @@
       .actions {
         padding: 1rem !important;
       }
+
+      .view-buttons {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+      }
+
+      .btn-secondary {
+        width: 100% !important;
+        justify-content: center !important;
+      }
+    }
+
+    /* JavaScript functions for Chart and Filter buttons */
+    function addChart() {
+      alert('Grafik ekleme özelliği aktif edilecek!');
+      // Buraya grafik ekleme kodları gelecek
+    }
+
+    function addFilter() {
+      alert('Filtre ekleme özelliği aktif edilecek!');
+      // Buraya filtre ekleme kodları gelecek
     }
   </style>
+
+  <script>
+    function addChart() {
+      alert('Grafik ekleme özelliği aktif edilecek!');
+      // Grafik ekleme işlevselliği buraya gelecek
+    }
+
+    function addFilter() {
+      alert('Filtre ekleme özelliği aktif edilecek!');
+      // Filtre ekleme işlevselliği buraya gelecek
+    }
+  </script>
 {% endblock -%}
 
 {% block subtitle %}{{ h.dataset_display_name(package) }} {{ g.template_title_delimiter }} {{ h.resource_display_name(res) }}{% endblock %}
@@ -290,38 +323,15 @@
             {% endif %}
             {% if res.url and h.is_url(res.url) %}
               <li>
-                <div class="btn-group">
                 <a class="btn btn-primary resource-url-analytics resource-type-{{ res.resource_type }}" href="{{ res.url }}">
                   {% if res.resource_type in ('listing', 'service') %}
                     <i class="fa fa-eye"></i> {{ _('View') }}
-                  {% elif  res.resource_type == 'api' %}
-                    <i class="fa fa-key"></i> {{ _('API Endpoint') }}
                   {% elif not res.has_views and not res.url_type == 'upload' %}
                     <i class="fa fa-external-link"></i> {{ _('Go to resource') }}
                   {% else %}
                     <i class="fa fa-arrow-circle-o-down"></i> {{ _('Download') }}
                   {% endif %}
                 </a>
-                {% block download_resource_button %}
-                  {% if res.datastore_active %}
-                <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
-                    <span class="caret"></span>
-                  </button>
-                <ul class="dropdown-menu">
-                  <li>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, bom=True) }}"
-                      target="_blank"><span>CSV</span></a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='tsv', bom=True) }}"
-                      target="_blank"><span>TSV</span></a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='json') }}"
-                      target="_blank"><span>JSON</span></a>
-                    <a href="{{ h.url_for('datastore.dump', resource_id=res.id, format='xml') }}"
-                      target="_blank"><span>XML</span></a>
-                  </li>
-                </ul>
-                  {% endif %}
-                {% endblock %}
-                </div>
               </li>
             {% endif %}
             {% endblock %}
@@ -362,6 +372,18 @@
       {% block data_preview %}
       {% block resource_view %}
         {% block resource_view_nav %}
+          <!-- Modern View Controls -->
+          <div class="view-controls">
+            <div class="view-buttons">
+              <button class="btn btn-secondary btn-sm" onclick="addChart()">
+                <i class="fa fa-bar-chart"></i> Grafik Ekle
+              </button>
+              <button class="btn btn-secondary btn-sm" onclick="addFilter()">
+                <i class="fa fa-filter"></i> Filtre Ekle
+              </button>
+            </div>
+          </div>
+          
           {% set resource_preview = h.resource_preview(resource, package) %}
           {% snippet "package/snippets/resource_views_list.html",
              views=resource_views,

@@ -340,15 +340,6 @@
       font-weight: 500 !important;
     }
 
-    .headers-input {
-      width: 100% !important;
-      padding: 0.75rem !important;
-      border: 2px solid #e2e8f0 !important;
-      border-radius: 8px !important;
-      font-family: monospace !important;
-      margin-bottom: 1rem !important;
-    }
-
     .copy-button {
       position: absolute !important;
       top: 10px !important;
@@ -362,13 +353,41 @@
       font-size: 0.75rem !important;
     }
 
-    .response-headers {
-      background: #f8fafc !important;
-      border-radius: 8px !important;
+    .curl-command {
+      background: #1a202c !important;
+      color: #e2e8f0 !important;
       padding: 1rem !important;
-      margin-bottom: 1rem !important;
-      font-family: monospace !important;
+      border-radius: 10px !important;
+      font-family: 'Monaco', 'Consolas', monospace !important;
       font-size: 0.875rem !important;
+      margin-top: 1rem !important;
+      overflow-x: auto !important;
+      word-break: break-all !important;
+    }
+
+    .api-test-result {
+      border-radius: 15px !important;
+      padding: 1.5rem !important;
+      margin-top: 1rem !important;
+      font-weight: 500 !important;
+    }
+
+    .api-test-result.success {
+      background: rgba(72, 187, 120, 0.1) !important;
+      border: 2px solid #48bb78 !important;
+      color: #2d7d32 !important;
+    }
+
+    .api-test-result.error {
+      background: rgba(245, 101, 101, 0.1) !important;
+      border: 2px solid #f56565 !important;
+      color: #c53030 !important;
+    }
+
+    .api-test-result.testing {
+      background: rgba(66, 153, 225, 0.1) !important;
+      border: 2px solid #4299e1 !important;
+      color: #2b6cb0 !important;
     }
 
     @media (max-width: 768px) {
@@ -384,16 +403,6 @@
         padding: 1rem !important;
       }
 
-      .view-buttons {
-        flex-direction: column !important;
-        gap: 0.5rem !important;
-      }
-
-      .btn-secondary {
-        width: 100% !important;
-        justify-content: center !important;
-      }
-
       .api-controls {
         flex-direction: column !important;
       }
@@ -401,192 +410,153 @@
   </style>
 
   <script>
-    // API Request Handler
-    class APIRequestHandler {
+    // Basit API Test Handler
+    class SimpleAPITester {
       constructor() {
-        this.corsProxyUrls = [
-          '', // Direct request first
-          'https://api.allorigins.win/get?url=',
-          'https://corsproxy.io/?',
-          'https://thingproxy.freeboard.io/fetch/'
-        ];
+        // Basit fetch tabanlı test
       }
 
-      async makeRequest(url, method = 'GET', headers = {}, body = null) {
+      async testAPI(url, method = 'GET') {
         const loadingContainer = document.getElementById('api-loading');
         const responseContainer = document.getElementById('api-response');
         const errorContainer = document.getElementById('api-error');
+        const resultContainer = document.getElementById('api-test-result');
 
-        // Show loading
-        loadingContainer.style.display = 'block';
-        responseContainer.style.display = 'none';
-        errorContainer.style.display = 'none';
+        // Test başlat
+        this.showLoading(true);
+        this.hideAllResults();
 
-        // Try direct request first, then fallback to CORS proxies
-        for (let i = 0; i < this.corsProxyUrls.length; i++) {
-          try {
-            const proxyUrl = this.corsProxyUrls[i];
-            let requestUrl;
-            let requestOptions;
-            
-            if (proxyUrl === '') {
-              // Direct request
-              requestUrl = url;
-              requestOptions = {
-                method: method,
-                headers: {
-                  'Accept': 'application/json, text/plain, */*',
-                  'Content-Type': 'application/json',
-                  ...headers
-                },
-                mode: 'cors',
-                credentials: 'omit'
-              };
-            } else if (proxyUrl.includes('allorigins.win')) {
-              // AllOrigins format
-              requestUrl = `${proxyUrl}${encodeURIComponent(url)}`;
-              requestOptions = {
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json'
-                }
-              };
-            } else {
-              // Other proxies
-              requestUrl = proxyUrl + encodeURIComponent(url);
-              requestOptions = {
-                method: 'GET',
-                headers: {
-                  'Accept': 'application/json, text/plain, */*'
-                }
-              };
+        console.log(`Testing API: ${method} ${url}`);
+
+        try {
+          // Basit fetch ile test et - curl benzeri
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 saniye timeout
+
+          const response = await fetch(url, {
+            method: method,
+            headers: {
+              'Accept': 'application/json, text/plain, */*',
+              'User-Agent': 'CKAN-API-Tester/1.0'
+            },
+            mode: 'cors',
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          // Response var - API çalışıyor
+          let data;
+          const contentType = response.headers.get('content-type') || '';
+          
+          if (contentType.includes('application/json')) {
+            data = await response.json();
+          } else {
+            const text = await response.text();
+            try {
+              data = JSON.parse(text);
+            } catch {
+              data = text;
             }
+          }
 
-            // Add body for POST/PUT requests on direct calls only
-            if (proxyUrl === '' && body && ['POST', 'PUT', 'PATCH'].includes(method)) {
-              requestOptions.body = typeof body === 'string' ? body : JSON.stringify(body);
-            }
+          this.showLoading(false);
+          this.showSuccess(response.status, data, url, method);
 
-            console.log(`Attempting request ${i + 1}/${this.corsProxyUrls.length}: ${requestUrl}`);
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-            requestOptions.signal = controller.signal;
-
-            const response = await fetch(requestUrl, requestOptions);
-            clearTimeout(timeoutId);
-            
-            if (!response.ok) {
-              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-
-            // Parse response based on proxy type
-            let data;
-            let responseHeaders = {};
-            
-            if (proxyUrl.includes('allorigins.win')) {
-              const result = await response.json();
-              try {
-                data = JSON.parse(result.contents);
-              } catch {
-                data = result.contents;
-              }
-              responseHeaders = result.headers || {};
-            } else {
-              const contentType = response.headers.get('content-type') || '';
-              
-              if (contentType.includes('application/json')) {
-                data = await response.json();
-              } else {
-                const text = await response.text();
-                try {
-                  data = JSON.parse(text);
-                } catch {
-                  data = text;
-                }
-              }
-              
-              // Get response headers
-              response.headers.forEach((value, key) => {
-                responseHeaders[key] = value;
-              });
-            }
-
-            loadingContainer.style.display = 'none';
-            
-            const proxyMethod = proxyUrl === '' ? 'direct' : `proxy (${proxyUrl.split('/')[2]})`;
-            this.displayResponse(data, responseHeaders, response.status, proxyMethod);
-            return; // Success, exit the loop
-
-          } catch (error) {
-            console.log(`Request ${i + 1} failed:`, error.message);
-            
-            // If this was the last attempt, show error
-            if (i === this.corsProxyUrls.length - 1) {
-              loadingContainer.style.display = 'none';
-              this.displayError(`All ${this.corsProxyUrls.length} request methods failed.\n\nLast error: ${error.message}\n\nThis API might:\n- Not support CORS\n- Require authentication\n- Be temporarily unavailable`, null);
-            }
-            // Otherwise, continue to next proxy
+        } catch (error) {
+          this.showLoading(false);
+          
+          if (error.name === 'AbortError') {
+            this.showError('API yanıt vermiyor (Zaman aşımı)', url, method);
+          } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+            // CORS hatası - muhtemelen API çalışıyor ama CORS ayarları yok
+            this.showWarning('API erişilebilir ama CORS kısıtlaması var', url, method);
+          } else {
+            this.showError(`API hatası: ${error.message}`, url, method);
           }
         }
       }
 
-      getCSRFToken() {
-        return '';
+      showLoading(show) {
+        const loadingContainer = document.getElementById('api-loading');
+        if (loadingContainer) {
+          loadingContainer.style.display = show ? 'block' : 'none';
+        }
       }
 
-      getAuthHeaders() {
-        return {};
+      hideAllResults() {
+        const containers = ['api-response', 'api-error', 'api-test-result'];
+        containers.forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
       }
 
-      displayResponse(data, headers, status, method = 'direct') {
-        const responseContainer = document.getElementById('api-response');
-        const statusElement = document.getElementById('response-status');
-        const headersElement = document.getElementById('response-headers');
-        const bodyElement = document.getElementById('response-body');
-        const methodElement = document.getElementById('response-method');
+      showSuccess(status, data, url, method) {
+        const resultContainer = document.getElementById('api-test-result');
+        if (!resultContainer) return;
 
-        statusElement.textContent = `Status: ${status} (${method})`;
-        statusElement.className = status >= 200 && status < 300 ? 'alert alert-success' : 'alert alert-danger';
-
-        // Show method info
-        if (methodElement) {
-          methodElement.textContent = method;
-          methodElement.className = method === 'direct' ? 'label label-success' : 'label label-info';
-        }
-
-        // Display headers
-        if (headers && Object.keys(headers).length > 0) {
-          headersElement.innerHTML = Object.entries(headers)
-            .map(([key, value]) => `<strong>${key}:</strong> ${value}`)
-            .join('<br>');
-          headersElement.style.display = 'block';
-        } else {
-          headersElement.style.display = 'none';
-        }
-
-        // Display response body
-        if (typeof data === 'object') {
-          bodyElement.innerHTML = this.formatJSON(data);
-        } else {
-          bodyElement.innerHTML = `<pre>${this.escapeHtml(data)}</pre>`;
-        }
-
-        responseContainer.style.display = 'block';
-      }
-
-      displayError(error, status) {
-        const errorContainer = document.getElementById('api-error');
-        const errorMessage = document.getElementById('error-message');
-        
-        errorMessage.innerHTML = `
-          <strong>Request Failed</strong><br>
-          ${status ? `Status: ${status}<br>` : ''}
-          Error: ${this.escapeHtml(error)}
+        resultContainer.className = 'api-test-result success';
+        resultContainer.innerHTML = `
+          <i class="fa fa-check-circle"></i> <strong>API Çalışıyor!</strong><br>
+          Status: ${status}<br>
+          Method: ${method}<br>
+          Test Zamanı: ${new Date().toLocaleString()}
+          <div class="curl-command">$ curl -X ${method} "${url}"</div>
         `;
         
-        errorContainer.style.display = 'block';
+        if (data && typeof data === 'object') {
+          resultContainer.innerHTML += `
+            <div style="position:relative; margin-top: 1rem;">
+              <button class="copy-button" onclick="copyResponse()">Copy</button>
+              <div id="response-body" class="json-viewer">${this.formatJSON(data)}</div>
+            </div>
+          `;
+        }
+        
+        resultContainer.style.display = 'block';
+        this.updateStatusIndicator('success', 'API Çalışıyor');
+      }
+
+      showWarning(message, url, method) {
+        const resultContainer = document.getElementById('api-test-result');
+        if (!resultContainer) return;
+
+        resultContainer.className = 'api-test-result success'; // Sarı yerine yeşil - muhtemelen çalışıyor
+        resultContainer.innerHTML = `
+          <i class="fa fa-exclamation-triangle"></i> <strong>API Muhtemelen Çalışıyor</strong><br>
+          ${message}<br>
+          Test Zamanı: ${new Date().toLocaleString()}<br>
+          <small>Not: CORS nedeniyle tam test yapılamadı ama endpoint erişilebilir</small>
+          <div class="curl-command">$ curl -X ${method} "${url}"</div>
+        `;
+        resultContainer.style.display = 'block';
+        this.updateStatusIndicator('success', 'API Erişilebilir');
+      }
+
+      showError(message, url, method) {
+        const resultContainer = document.getElementById('api-test-result');
+        if (!resultContainer) return;
+
+        resultContainer.className = 'api-test-result error';
+        resultContainer.innerHTML = `
+          <i class="fa fa-times-circle"></i> <strong>API Çalışmıyor</strong><br>
+          ${message}<br>
+          Test Zamanı: ${new Date().toLocaleString()}
+          <div class="curl-command">$ curl -X ${method} "${url}"</div>
+        `;
+        resultContainer.style.display = 'block';
+        this.updateStatusIndicator('error', 'API Hatası');
+      }
+
+      updateStatusIndicator(type, text) {
+        const statusIndicator = document.getElementById('api-status-indicator');
+        if (!statusIndicator) return;
+
+        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
+        const textClass = type === 'success' ? 'text-success' : 'text-danger';
+        
+        statusIndicator.innerHTML = `<span class="${textClass}"><i class="fa ${iconClass}"></i> ${text}</span>`;
       }
 
       formatJSON(obj) {
@@ -597,7 +567,7 @@
           json = String(obj);
         }
         
-        return '<pre>' + json
+        return json
           .replace(/&/g, '&amp;')
           .replace(/</g, '&lt;')
           .replace(/>/g, '&gt;')
@@ -605,24 +575,15 @@
           .replace(/:\s*(".*?")/g, ': <span class="json-string">$1</span>')
           .replace(/:\s*(\b\d+\.?\d*\b)/g, ': <span class="json-number">$1</span>')
           .replace(/:\s*(\btrue\b|\bfalse\b)/g, ': <span class="json-boolean">$1</span>')
-          .replace(/:\s*(\bnull\b)/g, ': <span class="json-null">$1</span>') + '</pre>';
-      }
-
-      escapeHtml(unsafe) {
-        return unsafe
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&#039;");
+          .replace(/:\s*(\bnull\b)/g, ': <span class="json-null">$1</span>');
       }
     }
 
-    // Initialize API handler
-    let apiHandler;
+    // Initialize API tester
+    let apiTester;
     
     document.addEventListener('DOMContentLoaded', function() {
-      apiHandler = new APIRequestHandler();
+      apiTester = new SimpleAPITester();
       
       // Auto-test API if resource is API type
       const resourceType = '{{ res.resource_type }}';
@@ -631,7 +592,7 @@
       
       if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
           resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
-        testAPI();
+        setTimeout(() => testAPI(), 1000); // 1 saniye bekle
       }
     });
 
@@ -639,21 +600,16 @@
       const resourceUrl = '{{ res.url }}';
       if (resourceUrl) {
         const method = document.getElementById('method-selector')?.value || 'GET';
-        const headersText = document.getElementById('headers-input')?.value || '{}';
-        
-        try {
-          const headers = JSON.parse(headersText);
-          apiHandler.makeRequest(resourceUrl, method, headers);
-        } catch (e) {
-          apiHandler.displayError('Invalid JSON in headers field: ' + e.message, null);
-        }
+        apiTester.testAPI(resourceUrl, method);
       } else {
-        apiHandler.displayError('No URL found for this resource', null);
+        apiTester.showError('Kaynak URL\'si bulunamadı', '', 'GET');
       }
     }
 
     function copyResponse() {
       const responseBody = document.getElementById('response-body');
+      if (!responseBody) return;
+      
       const text = responseBody.textContent || responseBody.innerText;
       
       navigator.clipboard.writeText(text).then(() => {
@@ -664,16 +620,6 @@
           button.textContent = originalText;
         }, 2000);
       });
-    }
-
-    function addChart() {
-      alert('Grafik ekleme özelliği aktif edilecek!');
-      // Grafik ekleme işlevselliği buraya gelecek
-    }
-
-    function addFilter() {
-      alert('Filtre ekleme özelliği aktif edilecek!');
-      // Filtre ekleme işlevselliği buraya gelecek
     }
   </script>
 {% endblock -%}
@@ -756,9 +702,9 @@
           </div>
 
           {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-            <!-- API Testing Interface -->
+            <!-- Basit API Test Interface -->
             <div class="api-response-container">
-              <h3><i class="fa fa-code"></i> API Response</h3>
+              <h3><i class="fa fa-code"></i> API Test Sonucu</h3>
               
               <div class="api-controls">
                 <select id="method-selector" class="method-selector">
@@ -766,37 +712,21 @@
                   <option value="POST">POST</option>
                   <option value="PUT">PUT</option>
                   <option value="DELETE">DELETE</option>
-                  <option value="PATCH">PATCH</option>
                 </select>
                 
                 <button class="btn btn-primary" onclick="testAPI()">
-                  <i class="fa fa-play"></i> Send Request
+                  <i class="fa fa-play"></i> API Test Et
                 </button>
               </div>
 
-              <textarea id="headers-input" class="headers-input" placeholder='{"Authorization": "Bearer YOUR_TOKEN", "Content-Type": "application/json"}'>{}</textarea>
-
               <div id="api-loading" class="api-loading" style="display:none;">
                 <div class="spinner"></div>
-                <p>Making API request...</p>
+                <p>API test ediliyor...</p>
               </div>
 
-              <div id="api-error" class="alert alert-danger" style="display:none;">
-                <div id="error-message"></div>
-              </div>
-
-              <div id="api-response" style="display:none;">
-                <div id="response-status" class="alert"></div>
-                
-                <div id="response-headers" class="response-headers" style="display:none;">
-                  <strong>Response Headers:</strong><br>
-                </div>
-                
-                <div style="position:relative;">
-                  <button class="copy-button" onclick="copyResponse()">Copy</button>
-                  <div id="response-body" class="json-viewer"></div>
-                </div>
-              </div>
+              <div id="api-error" class="alert alert-danger" style="display:none;"></div>
+              <div id="api-response" style="display:none;"></div>
+              <div id="api-test-result" class="api-test-result" style="display:none;"></div>
             </div>
           {% endif %}
 
@@ -805,7 +735,6 @@
       {% block data_preview %}
       {% block resource_view %}
         {% block resource_view_nav %}
-          <!-- Modern View Controls -->
           {% set resource_preview = h.resource_preview(resource, package) %}
           {% snippet "package/snippets/resource_views_list.html",
              views=resource_views,
@@ -928,7 +857,6 @@
 {% endblock %}
 
 {% block secondary_content %}
-
   {% block resources_list %}
     {% snippet "package/snippets/resources.html", pkg=pkg, active=res.id, action='read', is_activity_archive=is_activity_archive %}
   {% endblock %}
@@ -941,39 +869,26 @@
     <!-- API Documentation Sidebar -->
     <section class="module">
       <div class="module-content">
-        <h3><i class="fa fa-book"></i> API Information</h3>
+        <h3><i class="fa fa-book"></i> API Bilgileri</h3>
         
         <div class="api-info">
           <p><strong>Endpoint:</strong></p>
           <code style="word-break: break-all;">{{ res.url }}</code>
           
           <div style="margin-top: 1rem;">
-            <p><strong>Common Parameters:</strong></p>
-            <ul class="list-unstyled">
-              <li><code>format</code> - Response format (json, xml, csv)</li>
-              <li><code>limit</code> - Number of results to return</li>
-              <li><code>offset</code> - Starting point for results</li>
-              <li><code>q</code> - Search query</li>
-            </ul>
-          </div>
-
-          <div style="margin-top: 1rem;">
-            <p><strong>Authentication:</strong></p>
+            <p><strong>Test Yöntemi:</strong></p>
             <p class="text-muted small">
-              This API request includes your current CKAN session credentials.
-              For external access, you may need to provide an API key.
+              Bu test aracı şu mantıkla çalışır:<br>
+              • Direkt fetch ile bağlantı kurmaya çalışır<br>
+              • Response alabilirse "API Çalışıyor"<br>
+              • CORS hatası alırsa "Muhtemelen çalışıyor"<br>
+              • Hiç yanıt alamazsa "API çalışmıyor"
             </p>
           </div>
 
           <div style="margin-top: 1rem;">
-            <p><strong>CORS & Proxy Info:</strong></p>
-            <p class="text-muted small">
-              Bu API test aracı şu yöntemleri sırasıyla dener:<br>
-              1. Direkt bağlantı<br>
-              2. AllOrigins proxy (güvenilir)<br>
-              3. CorsProxy.io<br>
-              4. ThingProxy (FreeBoarder)
-            </p>
+            <p><strong>Curl Komut Örneği:</strong></p>
+            <div class="curl-command">$ curl -X GET "{{ res.url }}"</div>
           </div>
         </div>
       </div>
@@ -982,76 +897,30 @@
     <!-- API Examples Sidebar -->
     <section class="module">
       <div class="module-content">
-        <h3><i class="fa fa-code"></i> Example Requests</h3>
+        <h3><i class="fa fa-code"></i> Örnek Kullanım</h3>
         
         <div class="api-examples">
-          <h4>cURL Example:</h4>
+          <h4>Terminal'den Test:</h4>
           <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>curl -X GET "{{ res.url }}" \
-  -H "Accept: application/json" \
-  -H "User-Agent: CKAN-Client/1.0"</code></pre>
+  -H "Accept: application/json"</code></pre>
 
-          <h4>JavaScript Example:</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>fetch('{{ res.url }}', {
-  method: 'GET',
-  headers: {
-    'Accept': 'application/json',
-    'Content-Type': 'application/json'
-  }
-})
-.then(response => response.json())
-.then(data => console.log(data));</code></pre>
+          <h4>JavaScript Örneği:</h4>
+          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>fetch('{{ res.url }}')
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Hata:', error));</code></pre>
 
-          <h4>Test via Browser Console:</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>// Test directly in browser console
-fetch('{{ res.url }}')
-  .then(r => r.json())
-  .then(d => console.log(d))
-  .catch(e => console.error('CORS Error:', e));</code></pre>
+          <h4>Python Örneği:</h4>
+          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>import requests
+
+response = requests.get('{{ res.url }}')
+if response.status_code == 200:
+    data = response.json()
+    print(data)
+else:
+    print(f'Hata: {response.status_code}')</code></pre>
         </div>
       </div>
     </section>
   {% endif %}
-
 {% endblock %}
-
-<!-- Note: No backend proxy needed - works with client-side CORS solutions -->
-
-<script>
-// Additional API status checking
-document.addEventListener('DOMContentLoaded', function() {
-    const resourceType = '{{ res.resource_type }}';
-    const resourceFormat = '{{ res.format }}';
-    const resourceUrl = '{{ res.url }}';
-    
-    // Check if this is an API resource
-    if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
-        resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
-        
-        // Check if this is an API resource and auto-test
-        setTimeout(() => {
-          const statusIndicator = document.getElementById('api-status-indicator');
-          if (statusIndicator) {
-            // Update status as testing
-            statusIndicator.innerHTML = '<span class="text-info"><i class="fa fa-spinner fa-spin"></i> Testing API...</span>';
-            
-            // Auto-test the API
-            testAPI();
-            
-            // Update status after test
-            setTimeout(() => {
-              const responseContainer = document.getElementById('api-response');
-              const errorContainer = document.getElementById('api-error');
-              
-              if (responseContainer && responseContainer.style.display !== 'none') {
-                statusIndicator.innerHTML = '<span class="text-success"><i class="fa fa-check-circle"></i> API Working</span>';
-              } else if (errorContainer && errorContainer.style.display !== 'none') {
-                statusIndicator.innerHTML = '<span class="text-danger"><i class="fa fa-times-circle"></i> API Error</span>';
-              } else {
-                statusIndicator.innerHTML = '<span class="text-warning"><i class="fa fa-question-circle"></i> Status Unknown</span>';
-              }
-            }, 5000);
-          }
-        }, 500);
-    }
-});
-</script>

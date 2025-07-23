@@ -198,4 +198,4 @@ class AdminController(base.BaseController):
         #    h.redirect_to(h.url_for('login'))
         #    return
 
-        return render('admin/api_testing.html')
+        return base.render('admin/api_testing.html')

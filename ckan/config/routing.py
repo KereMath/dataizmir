@@ -94,8 +94,11 @@ def make_map():
     for plugin in p.PluginImplementations(p.IRoutes):
         map = plugin.before_map(map)
 
-    print("DEBUG: /admin/api_testing rotası bağlanıyor mu?") # Bu satırı ekleyin
-    map.connect('/admin/api_testing', controller='admin', action='api_testing')
+
+    map.connect('admin_api_testing', '/admin/api_testing', 
+                controller='admin', action='api_testing', 
+                ckan_core=True, conditions=GET)
+
     # The ErrorController route (handles 404/500 error pages); it should
     # likely stay at the top, ensuring it can always be resolved.
     map.connect('/error/{action}', controller='error', ckan_core=True)

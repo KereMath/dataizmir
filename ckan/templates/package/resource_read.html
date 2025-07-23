@@ -331,10 +331,11 @@ display:none !important;
     }
 
     .api-controls {
-      display: none !important;
+      display: flex !important;
       gap: 1rem !important;
       margin-bottom: 1.5rem !important;
       flex-wrap: wrap !important;
+      align-items: flex-end !important;
     }
 
     .method-selector {
@@ -343,6 +344,61 @@ display:none !important;
       border-radius: 8px !important;
       background: white !important;
       font-weight: 500 !important;
+    }
+
+    .api-url-display {
+      background: #f8f9fa !important;
+      border: 1px solid #dee2e6 !important;
+      border-radius: 8px !important;
+      padding: 12px !important;
+      font-family: 'Courier New', monospace !important;
+      font-size: 13px !important;
+      word-break: break-all !important;
+      color: #007bff !important;
+      margin-bottom: 15px !important;
+    }
+
+    .api-params-section {
+      margin-bottom: 20px !important;
+    }
+
+    .api-params-section h4 {
+      font-size: 16px !important;
+      font-weight: 600 !important;
+      color: #495057 !important;
+      margin-bottom: 10px !important;
+    }
+
+    .params-container {
+      display: grid !important;
+      gap: 10px !important;
+    }
+
+    .param-input-group {
+      display: grid !important;
+      grid-template-columns: 120px 1fr !important;
+      align-items: center !important;
+      gap: 10px !important;
+    }
+
+    .param-label {
+      font-weight: 500 !important;
+      color: #6c757d !important;
+      font-size: 13px !important;
+    }
+
+    .param-input {
+      padding: 8px 12px !important;
+      border: 1px solid #ced4da !important;
+      border-radius: 5px !important;
+      font-size: 13px !important;
+      transition: border-color 0.2s !important;
+    }
+
+    .param-input:focus {
+      outline: none !important;
+      border-color: #80bdff !important;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
     }
 
     .copy-button {
@@ -395,6 +451,38 @@ display:none !important;
       color: #2b6cb0 !important;
     }
 
+    .btn-test-api {
+      background: linear-gradient(45deg, #28a745, #20c997) !important;
+      color: white !important;
+      border: none !important;
+      padding: 10px 20px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      transition: all 0.2s !important;
+    }
+
+    .btn-test-api:hover {
+      transform: translateY(-1px) !important;
+      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3) !important;
+    }
+
+    .btn-clear {
+      background: #6c757d !important;
+      color: white !important;
+      border: none !important;
+      padding: 10px 20px !important;
+      border-radius: 8px !important;
+      font-weight: 600 !important;
+      cursor: pointer !important;
+      transition: all 0.2s !important;
+    }
+
+    .btn-clear:hover {
+      background: #5a6268 !important;
+      transform: translateY(-1px) !important;
+    }
+
     @media (max-width: 768px) {
       .page-heading {
         font-size: 1.875rem !important;
@@ -411,35 +499,107 @@ display:none !important;
       .api-controls {
         flex-direction: column !important;
       }
+
+      .param-input-group {
+        grid-template-columns: 1fr !important;
+      }
     }
   </style>
 
   <script>
-    // Basit API Test Handler
-    class SimpleAPITester {
+    // Parametric API Test Handler
+    class ParametricAPITester {
       constructor() {
-        // Basit fetch tabanlı test
+        this.currentResourceUrl = '{{ res.url }}';
+        this.currentMethod = 'GET';
       }
 
-      async testAPI(url, method = 'GET') {
+      setupApiForm() {
+        const apiContainer = document.getElementById('api-response-container');
+        if (!apiContainer) return;
+
+        const resourceUrl = this.currentResourceUrl;
+        if (!resourceUrl) return;
+
+        // URL'yi göster
+        const urlDisplay = document.getElementById('api-url-display');
+        if (urlDisplay) {
+          urlDisplay.textContent = resourceUrl;
+        }
+
+        // Parametreleri çıkar ve form oluştur
+        const paramMatches = resourceUrl.match(/\{([^}]+)\}/g);
+        const paramsSection = document.getElementById('api-params-section');
+        const paramsContainer = document.getElementById('params-container');
+        
+        if (paramMatches && paramMatches.length > 0 && paramsContainer) {
+          // Parametreler var - formu göster
+          paramsSection.style.display = 'block';
+          let paramsHtml = '';
+          
+          paramMatches.forEach(param => {
+            const paramName = param.replace(/[{}]/g, '');
+            paramsHtml += `
+              <div class="param-input-group">
+                <span class="param-label">${paramName}:</span>
+                <input type="text" class="param-input" id="param_${paramName}" placeholder="${paramName} değerini girin">
+              </div>
+            `;
+          });
+          
+          paramsContainer.innerHTML = paramsHtml;
+        } else {
+          // Parametre yok - gizle
+          paramsSection.style.display = 'none';
+          paramsContainer.innerHTML = '';
+        }
+      }
+
+      async testAPI() {
         const loadingContainer = document.getElementById('api-loading');
-        const responseContainer = document.getElementById('api-response');
-        const errorContainer = document.getElementById('api-error');
         const resultContainer = document.getElementById('api-test-result');
 
         // Test başlat
         this.showLoading(true);
         this.hideAllResults();
 
-        console.log(`Testing API: ${method} ${url}`);
-
         try {
-          // Basit fetch ile test et - curl benzeri
+          let apiUrl = this.currentResourceUrl;
+          
+          // Parametreleri değiştir
+          const paramMatches = apiUrl.match(/\{([^}]+)\}/g);
+          if (paramMatches) {
+            paramMatches.forEach(param => {
+              const paramName = param.replace(/[{}]/g, '');
+              const paramInput = document.getElementById(`param_${paramName}`);
+              if (paramInput) {
+                const paramValue = paramInput.value.trim();
+                if (paramValue) {
+                  apiUrl = apiUrl.replace(param, encodeURIComponent(paramValue));
+                } else {
+                  // Varsayılan değer koy
+                  let defaultValue = 'test';
+                  if (paramName.toLowerCase().includes('id')) defaultValue = '1';
+                  if (paramName.toLowerCase().includes('limit')) defaultValue = '10';
+                  if (paramName.toLowerCase().includes('page')) defaultValue = '1';
+                  if (paramName.toLowerCase().includes('hatid')) defaultValue = '35';
+                  if (paramName.toLowerCase().includes('yon')) defaultValue = '0';
+                  apiUrl = apiUrl.replace(param, defaultValue);
+                }
+              }
+            });
+          }
+
+          console.log(`Testing API: ${this.currentMethod} ${apiUrl}`);
+
+          // Resource sayfasındaki başarılı mantığı kullan
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 saniye timeout
 
-          const response = await fetch(url, {
-            method: method,
+          const startTime = performance.now();
+          
+          const response = await fetch(apiUrl, {
+            method: this.currentMethod,
             headers: {
               'Accept': 'application/json, text/plain, */*',
               'User-Agent': 'CKAN-API-Tester/1.0'
@@ -449,6 +609,8 @@ display:none !important;
           });
 
           clearTimeout(timeoutId);
+          const endTime = performance.now();
+          const responseTime = Math.round(endTime - startTime);
 
           // Response var - API çalışıyor
           let data;
@@ -466,18 +628,18 @@ display:none !important;
           }
 
           this.showLoading(false);
-          this.showSuccess(response.status, data, url, method);
+          this.showSuccess(response.status, data, apiUrl, this.currentMethod, responseTime);
 
         } catch (error) {
           this.showLoading(false);
           
           if (error.name === 'AbortError') {
-            this.showError('API yanıt vermiyor (Zaman aşımı)', url, method);
+            this.showError('API yanıt vermiyor (Zaman aşımı)', apiUrl, this.currentMethod);
           } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
             // CORS hatası - muhtemelen API çalışıyor ama CORS ayarları yok
-            this.showWarning('API erişilebilir ama CORS kısıtlaması var', url, method);
+            this.showWarning('API erişilebilir ama CORS kısıtlaması var', apiUrl, this.currentMethod);
           } else {
-            this.showError(`API hatası: ${error.message}`, url, method);
+            this.showError(`API hatası: ${error.message}`, apiUrl, this.currentMethod);
           }
         }
       }
@@ -497,7 +659,7 @@ display:none !important;
         });
       }
 
-      showSuccess(status, data, url, method) {
+      showSuccess(status, data, url, method, responseTime) {
         const resultContainer = document.getElementById('api-test-result');
         if (!resultContainer) return;
 
@@ -506,6 +668,7 @@ display:none !important;
           <i class="fa fa-check-circle"></i> <strong>API Çalışıyor!</strong><br>
           Status: ${status}<br>
           Method: ${method}<br>
+          Response Time: ${responseTime}ms<br>
           Test Zamanı: ${new Date().toLocaleString()}
           <div class="curl-command">$ curl -X ${method} "${url}"</div>
         `;
@@ -515,6 +678,13 @@ display:none !important;
             <div style="position:relative; margin-top: 1rem;">
               <button class="copy-button" onclick="copyResponse()">Copy</button>
               <div id="response-body" class="json-viewer">${this.formatJSON(data)}</div>
+            </div>
+          `;
+        } else if (data) {
+          resultContainer.innerHTML += `
+            <div style="position:relative; margin-top: 1rem;">
+              <button class="copy-button" onclick="copyResponse()">Copy</button>
+              <div id="response-body" class="json-viewer">${String(data)}</div>
             </div>
           `;
         }
@@ -527,7 +697,7 @@ display:none !important;
         const resultContainer = document.getElementById('api-test-result');
         if (!resultContainer) return;
 
-        resultContainer.className = 'api-test-result success'; // Sarı yerine yeşil - muhtemelen çalışıyor
+        resultContainer.className = 'api-test-result success'; // Yeşil - muhtemelen çalışıyor
         resultContainer.innerHTML = `
           <i class="fa fa-exclamation-triangle"></i> <strong>API Muhtemelen Çalışıyor</strong><br>
           ${message}<br>
@@ -582,32 +752,58 @@ display:none !important;
           .replace(/:\s*(\btrue\b|\bfalse\b)/g, ': <span class="json-boolean">$1</span>')
           .replace(/:\s*(\bnull\b)/g, ': <span class="json-null">$1</span>');
       }
+
+      clearResponse() {
+        this.hideAllResults();
+        
+        // Status indicator'ı temizle
+        const statusIndicator = document.getElementById('api-status-indicator');
+        if (statusIndicator) {
+          statusIndicator.innerHTML = '<span class="text-muted"><i class="fa fa-question-circle"></i> Test edilmedi</span>';
+        }
+        
+        // Parametre inputlarını temizle
+        const paramInputs = document.querySelectorAll('.param-input');
+        paramInputs.forEach(input => {
+          input.value = '';
+        });
+      }
     }
 
     // Initialize API tester
     let apiTester;
     
     document.addEventListener('DOMContentLoaded', function() {
-      apiTester = new SimpleAPITester();
+      apiTester = new ParametricAPITester();
       
-      // Auto-test API if resource is API type
+      // API form'unu hazırla
       const resourceType = '{{ res.resource_type }}';
       const resourceFormat = '{{ res.format }}';
       const resourceUrl = '{{ res.url }}';
       
       if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
           resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
-        setTimeout(() => testAPI(), 1000); // 1 saniye bekle
+        apiTester.setupApiForm();
+        
+        // Method selector event listener
+        const methodSelector = document.getElementById('method-selector');
+        if (methodSelector) {
+          methodSelector.addEventListener('change', function() {
+            apiTester.currentMethod = this.value;
+          });
+        }
       }
     });
 
     function testAPI() {
-      const resourceUrl = '{{ res.url }}';
-      if (resourceUrl) {
-        const method = document.getElementById('method-selector')?.value || 'GET';
-        apiTester.testAPI(resourceUrl, method);
-      } else {
-        apiTester.showError('Kaynak URL\'si bulunamadı', '', 'GET');
+      if (apiTester) {
+        apiTester.testAPI();
+      }
+    }
+
+    function clearApiResponse() {
+      if (apiTester) {
+        apiTester.clearResponse();
       }
     }
 
@@ -665,13 +861,6 @@ display:none !important;
                 </a>
               </li>
             {% endif %}
-            {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-              <li>
-                <button class="btn btn-default" onclick="testAPI()">
-                  <i class="fa fa-play"></i> {{ _('Test API') }}
-                </button>
-              </li>
-            {% endif %}
             {% endblock %}
           </ul>
           {% endblock %}
@@ -707,21 +896,42 @@ display:none !important;
           </div>
 
           {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-            <!-- Basit API Test Interface -->
-            <div class="api-response-container">
-              <h3><i class="fa fa-code"></i> API Test Sonucu</h3>
+            <!-- Parametric API Test Interface -->
+            <div class="api-response-container" id="api-response-container">
+              <h3><i class="fa fa-code"></i> API Test</h3>
               
               <div class="api-controls">
-                <select id="method-selector" class="method-selector">
-                  <option value="GET">GET</option>
-                  <option value="POST">POST</option>
-                  <option value="PUT">PUT</option>
-                  <option value="DELETE">DELETE</option>
-                </select>
+                <div>
+                  <label for="method-selector" style="display: block; margin-bottom: 5px; font-weight: 500; color: #495057;">HTTP Method:</label>
+                  <select id="method-selector" class="method-selector">
+                    <option value="GET">GET</option>
+                    <option value="POST">POST</option>
+                    <option value="PUT">PUT</option>
+                    <option value="DELETE">DELETE</option>
+                  </select>
+                </div>
                 
-                <button class="btn btn-primary" onclick="testAPI()">
-                  <i class="fa fa-play"></i> API Test Et
-                </button>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                  <button class="btn-test-api" onclick="testAPI()">
+                    <i class="fa fa-play"></i> Test API
+                  </button>
+                  
+                  <button class="btn-clear" onclick="clearApiResponse()">
+                    <i class="fa fa-eraser"></i> Clear
+                  </button>
+                </div>
+              </div>
+
+              <div style="margin-bottom: 15px;">
+                <label style="display: block; font-weight: 600; color: #495057; margin-bottom: 8px;">API Endpoint:</label>
+                <div class="api-url-display" id="api-url-display">{{ res.url }}</div>
+              </div>
+
+              <div class="api-params-section" id="api-params-section" style="display: none;">
+                <h4><i class="fa fa-cogs"></i> Parametreler:</h4>
+                <div class="params-container" id="params-container">
+                  <!-- Parameters will be dynamically added here -->
+                </div>
               </div>
 
               <div id="api-loading" class="api-loading" style="display:none;">
@@ -842,7 +1052,7 @@ display:none !important;
                 <th scope="row">{{ _('API Status') }}</th>
                 <td id="api-status-indicator">
                   <span class="text-muted">
-                    <i class="fa fa-spinner fa-spin"></i> Testing connection...
+                    <i class="fa fa-question-circle"></i> Test edilmedi
                   </span>
                 </td>
               </tr>
@@ -881,20 +1091,33 @@ display:none !important;
           <code style="word-break: break-all;">{{ res.url }}</code>
           
           <div style="margin-top: 1rem;">
-            <p><strong>Test Yöntemi:</strong></p>
-            <p class="text-muted small">
-              Bu test aracı şu mantıkla çalışır:<br>
-              • Direkt fetch ile bağlantı kurmaya çalışır<br>
-              • Response alabilirse "API Çalışıyor"<br>
-              • CORS hatası alırsa "Muhtemelen çalışıyor"<br>
-              • Hiç yanıt alamazsa "API çalışmıyor"
-            </p>
+            <p><strong>Test Özellikleri:</strong></p>
+            <ul class="text-muted" style="font-size: 0.875rem; line-height: 1.4;">
+              <li>Parametrik URL'leri destekler ({param} format)</li>
+              <li>Otomatik varsayılan değerler (id=1, hatId=35, vb.)</li>
+              <li>CORS durumu akıllı analiz</li>
+              <li>JSON response formatlanması</li>
+              <li>8 saniye timeout koruması</li>
+            </ul>
           </div>
 
           <div style="margin-top: 1rem;">
-            <p><strong>Curl Komut Örneği:</strong></p>
-            <div class="curl-command">$ curl -X GET "{{ res.url }}"</div>
+            <p><strong>Test Mantığı:</strong></p>
+            <p class="text-muted small">
+              • Response alabilirse "API Çalışıyor"<br>
+              • CORS hatası alırsa "Muhtemelen çalışıyor"<br>
+              • Timeout olursa "API yanıt vermiyor"
+            </p>
           </div>
+
+          {% if '{' in res.url and '}' in res.url %}
+          <div style="margin-top: 1rem;">
+            <p><strong>Parametrik API:</strong></p>
+            <p class="text-muted small">
+              Bu API parametrik bir URL içeriyor. Test etmeden önce gerekli parametreleri doldurun.
+            </p>
+          </div>
+          {% endif %}
         </div>
       </div>
     </section>
@@ -905,25 +1128,49 @@ display:none !important;
         <h3><i class="fa fa-code"></i> Örnek Kullanım</h3>
         
         <div class="api-examples">
-          <h4>Terminal'den Test:</h4>
+          <h4>cURL Komutu:</h4>
           <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>curl -X GET "{{ res.url }}" \
-  -H "Accept: application/json"</code></pre>
+  -H "Accept: application/json" \
+  -H "User-Agent: CKAN-API-Tester/1.0"</code></pre>
 
-          <h4>JavaScript Örneği:</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>fetch('{{ res.url }}')
-  .then(response => response.json())
-  .then(data => console.log(data))
-  .catch(error => console.error('Hata:', error));</code></pre>
+          <h4>JavaScript (Fetch):</h4>
+          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>fetch('{{ res.url }}', {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json',
+    'User-Agent': 'CKAN-API-Tester/1.0'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Hata:', error));</code></pre>
 
-          <h4>Python Örneği:</h4>
+          <h4>Python (Requests):</h4>
           <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>import requests
 
-response = requests.get('{{ res.url }}')
+headers = {
+    'Accept': 'application/json',
+    'User-Agent': 'CKAN-API-Tester/1.0'
+}
+
+response = requests.get('{{ res.url }}', headers=headers)
 if response.status_code == 200:
     data = response.json()
     print(data)
 else:
     print(f'Hata: {response.status_code}')</code></pre>
+
+          {% if '{' in res.url and '}' in res.url %}
+          <h4>Parametrik Kullanım:</h4>
+          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code># Örnek parametreli URL:
+# {{ res.url }}
+
+# JavaScript ile parametre değiştirme:
+let apiUrl = '{{ res.url }}';
+apiUrl = apiUrl.replace('{hatId}', '35');
+apiUrl = apiUrl.replace('{yon}', '0');
+console.log(apiUrl); // Final URL</code></pre>
+          {% endif %}
         </div>
       </div>
     </section>

@@ -98,9 +98,6 @@ def make_map():
     # likely stay at the top, ensuring it can always be resolved.
     map.connect('/error/{action}', controller='error', ckan_core=True)
     map.connect('/error/{action}/{id}', controller='error', ckan_core=True)
-    map.connect('admin_api_testing', '/admin/api_testing',
-            controller='ckan.controllers.admin:AdminController',
-            action='api_testing')
     map.connect(
         '*url',
         controller='home',

@@ -511,7 +511,7 @@ display:none !important;
     class ParametricAPITester {
       constructor() {
         this.currentResourceUrl = '{{ res.url }}';
-        this.currentMethod = 'GET';
+        this.currentMethod = 'GET'; // Sadece GET method
       }
 
       setupApiForm() {
@@ -565,8 +565,9 @@ display:none !important;
 
         try {
           let apiUrl = this.currentResourceUrl;
+          let hasEmptyParams = false;
           
-          // Parametreleri değiştir
+          // Parametreleri değiştir - varsayılan değer KOYMA!
           const paramMatches = apiUrl.match(/\{([^}]+)\}/g);
           if (paramMatches) {
             paramMatches.forEach(param => {
@@ -577,17 +578,17 @@ display:none !important;
                 if (paramValue) {
                   apiUrl = apiUrl.replace(param, encodeURIComponent(paramValue));
                 } else {
-                  // Varsayılan değer koy
-                  let defaultValue = 'test';
-                  if (paramName.toLowerCase().includes('id')) defaultValue = '1';
-                  if (paramName.toLowerCase().includes('limit')) defaultValue = '10';
-                  if (paramName.toLowerCase().includes('page')) defaultValue = '1';
-                  if (paramName.toLowerCase().includes('hatid')) defaultValue = '35';
-                  if (paramName.toLowerCase().includes('yon')) defaultValue = '0';
-                  apiUrl = apiUrl.replace(param, defaultValue);
+                  hasEmptyParams = true;
                 }
               }
             });
+          }
+
+          // Eğer boş parametreler varsa hata göster
+          if (hasEmptyParams) {
+            this.showLoading(false);
+            this.showError('Lütfen tüm parametreleri doldurun', apiUrl, this.currentMethod);
+            return;
           }
 
           console.log(`Testing API: ${this.currentMethod} ${apiUrl}`);
@@ -784,14 +785,6 @@ display:none !important;
       if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
           resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
         apiTester.setupApiForm();
-        
-        // Method selector event listener
-        const methodSelector = document.getElementById('method-selector');
-        if (methodSelector) {
-          methodSelector.addEventListener('change', function() {
-            apiTester.currentMethod = this.value;
-          });
-        }
       }
     });
 
@@ -901,23 +894,13 @@ display:none !important;
               <h3><i class="fa fa-code"></i> API Test</h3>
               
               <div class="api-controls">
-                <div>
-                  <label for="method-selector" style="display: block; margin-bottom: 5px; font-weight: 500; color: #495057;">HTTP Method:</label>
-                  <select id="method-selector" class="method-selector">
-                    <option value="GET">GET</option>
-                    <option value="POST">POST</option>
-                    <option value="PUT">PUT</option>
-                    <option value="DELETE">DELETE</option>
-                  </select>
-                </div>
-                
                 <div style="display: flex; gap: 10px; align-items: flex-end;">
                   <button class="btn-test-api" onclick="testAPI()">
                     <i class="fa fa-play"></i> Test API
                   </button>
                   
                   <button class="btn-clear" onclick="clearApiResponse()">
-                    <i class="fa fa-eraser"></i> Clear
+                    <i class="fa fa-eraser"></i> Temizle
                   </button>
                 </div>
               </div>

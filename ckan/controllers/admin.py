@@ -188,3 +188,14 @@ class AdminController(base.BaseController):
             for msg in msgs:
                 h.flash_error(msg)
             h.redirect_to(controller='admin', action='trash')
+
+
+
+
+    def api_testing(self):
+        # Yetkilendirme kontrolü yapabilirsiniz
+        # if not c.user:
+        #    h.redirect_to(h.url_for('login'))
+        #    return
+
+        return render('admin/api_testing.html')

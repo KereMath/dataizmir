@@ -18,6 +18,14 @@
     </p>
   {% endif %}
 
+  {# YENİ API TEST BUTONU #}
+  <button class="api-test-fab-futuristic" title="API Test" onclick="openApiTestPopup()">
+    <span class="fab-icon">
+      <i class="fa fa-code"></i>
+    </span>
+    <span class="fab-text">API TEST</span>
+  </button>
+
   {# YENİ FÜTÜRİSTİK BUTON #}
   {% if h.check_access('package_create') %}
     <a href="{{ h.url_for('dataset.new') }}" class="add-dataset-fab-futuristic" title="{{ _('Add Dataset') }}">
@@ -28,56 +36,500 @@
     </a>
   {% endif %}
 
-  {# Yeni fütüristik buton için CSS stilleri #}
+  {# API TEST POPUP #}
+  <div id="apiTestPopup" class="api-popup-overlay">
+    <div class="api-popup-content">
+      <div class="api-popup-header">
+        <h3><i class="fa fa-code"></i> API Test - Datasets</h3>
+        <button class="api-popup-close" onclick="closeApiTestPopup()">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="api-popup-body">
+        <div id="apiTestLoading" class="api-loading">
+          <i class="fa fa-spinner fa-spin"></i>
+          <span>API içeren datasetler yükleniyor...</span>
+        </div>
+        <div id="apiTestContent" class="api-content">
+          <!-- API datasets buraya yüklenecek -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# CSS ve JavaScript #}
   <style>
+    /* API Test Butonu Stilleri */
+    .api-test-fab-futuristic {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      
+      position: fixed !important;
+      bottom: 110px !important; /* Add Dataset butonunun üstünde */
+      right: 30px !important;
+      z-index: 1100 !important;
+      
+      width: 60px !important;
+      height: 60px !important;
+      padding: 0 21px !important;
+      
+      background: linear-gradient(45deg, #ff6b35, #f7931e) !important; /* Turuncu gradient */
+      color: #fff !important;
+      border: none !important;
+      cursor: pointer !important;
+      
+      border-radius: 30px !important;
+      box-shadow: 0 5px 15px rgba(255, 107, 53, 0.25), 0 5px 10px rgba(0, 0, 0, 0.22) !important;
+      text-decoration: none !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
+    }
+
+    .api-test-fab-futuristic:hover {
+      width: 180px !important;
+      box-shadow: 0 10px 25px rgba(255, 107, 53, 0.35), 0 8px 15px rgba(0, 0, 0, 0.28) !important;
+      transform: translateY(-2px) !important;
+    }
+
+    /* Add Dataset Butonu Stilleri */
     .add-dataset-fab-futuristic {
       display: flex !important;
       align-items: center !important;
-      justify-content: flex-start !important; /* İkonun solda kalmasını sağlar */
+      justify-content: flex-start !important;
       
       position: fixed !important;
       bottom: 30px !important;
       right: 30px !important;
       z-index: 1100 !important;
       
-      width: 60px !important; /* Başlangıç genişliği (dairesel) */
+      width: 60px !important;
       height: 60px !important;
-      padding: 0 21px !important; /* İkonun kenardan uzaklığı için */
+      padding: 0 21px !important;
       
-      background: linear-gradient(45deg, #0d6efd, #8f00ff) !important; /* Fütüristik gradient */
+      background: linear-gradient(45deg, #0d6efd, #8f00ff) !important;
       color: #fff !important;
       
-      border-radius: 30px !important; /* Dairesel/hap şeklinde olması için */
+      border-radius: 30px !important;
       box-shadow: 0 5px 15px rgba(50, 50, 93, 0.25), 0 5px 10px rgba(0, 0, 0, 0.22) !important;
       text-decoration: none !important;
-      white-space: nowrap !important; /* Yazının alt satıra inmesini engeller */
-      overflow: hidden !important; /* Genişlemeden önce yazıyı gizler */
+      white-space: nowrap !important;
+      overflow: hidden !important;
       
-      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important; /* Akıcı animasyon */
+      transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
     }
 
     .add-dataset-fab-futuristic:hover {
-      width: 210px !important; /* Üzerine gelince genişleyeceği boyut */
+      width: 210px !important;
       box-shadow: 0 10px 25px rgba(50, 50, 93, 0.35), 0 8px 15px rgba(0, 0, 0, 0.28) !important;
       transform: translateY(-2px) !important;
     }
 
+    /* Ortak FAB Icon/Text Stilleri */
+    .api-test-fab-futuristic .fab-icon,
     .add-dataset-fab-futuristic .fab-icon {
       font-size: 22px !important;
       line-height: 1 !important;
     }
     
+    .api-test-fab-futuristic .fab-text,
     .add-dataset-fab-futuristic .fab-text {
       font-size: 16px !important;
       font-weight: 600 !important;
       margin-left: 12px !important;
-      opacity: 0; /* Başlangıçta yazı gizli */
-      transition: opacity 0.3s ease-in-out 0.1s !important; /* Genişleme bittikten sonra yazı belirir */
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out 0.1s !important;
     }
 
+    .api-test-fab-futuristic:hover .fab-text,
     .add-dataset-fab-futuristic:hover .fab-text {
-      opacity: 1; /* Üzerine gelince yazı görünür hale gelir */
+      opacity: 1;
+    }
+
+    /* Popup Stilleri */
+    .api-popup-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      backdrop-filter: blur(5px);
+    }
+
+    .api-popup-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+      width: 90%;
+      max-width: 900px;
+      max-height: 80vh;
+      overflow: hidden;
+      animation: popupSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    @keyframes popupSlideIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+    }
+
+    .api-popup-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 25px;
+      background: linear-gradient(45deg, #ff6b35, #f7931e);
+      color: white;
+    }
+
+    .api-popup-header h3 {
+      margin: 0;
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .api-popup-header h3 i {
+      margin-right: 10px;
+    }
+
+    .api-popup-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 50%;
+      transition: background-color 0.2s;
+    }
+
+    .api-popup-close:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .api-popup-body {
+      padding: 25px;
+      max-height: calc(80vh - 80px);
+      overflow-y: auto;
+    }
+
+    .api-loading {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+      font-size: 16px;
+    }
+
+    .api-loading i {
+      font-size: 24px;
+      margin-right: 10px;
+      color: #ff6b35;
+    }
+
+    .api-content {
+      display: none;
+    }
+
+    /* API Dataset Item Stilleri */
+    .api-dataset-item {
+      background: #f8f9fa;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      border-left: 4px solid #ff6b35;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .api-dataset-item:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .api-dataset-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 8px;
+      display: block;
+      text-decoration: none;
+    }
+
+    .api-dataset-title:hover {
+      color: #ff6b35;
+      text-decoration: none;
+    }
+
+    .api-dataset-description {
+      color: #666;
+      font-size: 14px;
+      margin-bottom: 15px;
+      line-height: 1.5;
+    }
+
+    .api-resources-container {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      border: 1px solid #e9ecef;
+    }
+
+    .api-resources-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .api-resources-title i {
+      margin-right: 6px;
+      color: #ff6b35;
+    }
+
+    .api-resource-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .api-resource-item {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(45deg, #ff6b35, #f7931e);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .api-resource-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(255, 107, 53, 0.3);
+      color: white;
+      text-decoration: none;
+    }
+
+    .api-resource-item i {
+      margin-right: 6px;
+      font-size: 12px;
+    }
+
+    .api-resource-number {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: bold;
+      margin-left: 8px;
+    }
+
+    .api-no-datasets {
+      text-align: center;
+      padding: 60px 20px;
+      color: #666;
+    }
+
+    .api-no-datasets i {
+      font-size: 48px;
+      color: #ddd;
+      margin-bottom: 15px;
+    }
+
+    .api-no-datasets h4 {
+      color: #999;
+      margin-bottom: 8px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .api-popup-content {
+        width: 95%;
+        max-height: 90vh;
+      }
+      
+      .api-popup-header {
+        padding: 15px 20px;
+      }
+      
+      .api-popup-body {
+        padding: 20px;
+      }
     }
   </style>
+
+  <script>
+    function openApiTestPopup() {
+      document.getElementById('apiTestPopup').style.display = 'block';
+      document.body.style.overflow = 'hidden'; // Arka planın kaydırılmasını engelle
+      loadApiDatasets();
+    }
+
+    function closeApiTestPopup() {
+      document.getElementById('apiTestPopup').style.display = 'none';
+      document.body.style.overflow = 'auto'; // Kaydırma işlevini geri yükle
+    }
+
+    // Popup dışına tıklanınca kapat
+    document.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('apiTestPopup').addEventListener('click', function(e) {
+        if (e.target === this) {
+          closeApiTestPopup();
+        }
+      });
+
+      // ESC tuşu ile kapat
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && document.getElementById('apiTestPopup').style.display === 'block') {
+          closeApiTestPopup();
+        }
+      });
+    });
+
+    async function loadApiDatasets() {
+      const loadingDiv = document.getElementById('apiTestLoading');
+      const contentDiv = document.getElementById('apiTestContent');
+      
+      // Loading göster, content gizle
+      loadingDiv.style.display = 'block';
+      contentDiv.style.display = 'none';
+      contentDiv.innerHTML = '';
+
+      try {
+        // CKAN API'den tüm datasetleri çek
+        const response = await fetch('/api/3/action/package_search?rows=1000&include_private=true', {
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (!data.success || !data.result || !data.result.results) {
+          throw new Error('API yanıtı geçersiz');
+        }
+
+        // API içeren datasetleri filtrele
+        const apiDatasets = data.result.results.filter(dataset => {
+          return dataset.resources && dataset.resources.some(resource => {
+            const format = (resource.format || '').toLowerCase();
+            const url = (resource.url || '').toLowerCase();
+            const name = (resource.name || '').toLowerCase();
+            const description = (resource.description || '').toLowerCase();
+            
+            // API olabilecek formatları ve URL pattern'lerini kontrol et
+            return format.includes('api') || 
+                   url.includes('/api/') || 
+                   url.includes('api.') ||
+                   name.includes('api') ||
+                   description.includes('api') ||
+                   format === 'json' && (url.includes('/api/') || name.includes('api')) ||
+                   format === 'xml' && (url.includes('/api/') || name.includes('api'));
+          });
+        });
+
+        console.log(`${apiDatasets.length} API dataset bulundu`);
+        
+        // Sonuçları render et
+        renderApiDatasets(apiDatasets);
+        
+      } catch (error) {
+        console.error('API datasetleri yüklenirken hata:', error);
+        contentDiv.innerHTML = `
+          <div class="api-no-datasets">
+            <i class="fa fa-exclamation-triangle"></i>
+            <h4>Hata Oluştu</h4>
+            <p>API datasetleri yüklenirken bir hata oluştu.</p>
+          </div>
+        `;
+      }
+      
+      // Loading gizle, content göster
+      loadingDiv.style.display = 'none';
+      contentDiv.style.display = 'block';
+    }
+
+    function renderApiDatasets(datasets) {
+      const contentDiv = document.getElementById('apiTestContent');
+      
+      if (datasets.length === 0) {
+        contentDiv.innerHTML = `
+          <div class="api-no-datasets">
+            <i class="fa fa-code"></i>
+            <h4>API Dataset Bulunamadı</h4>
+            <p>Sistemde API içeren herhangi bir dataset bulunamadı.</p>
+          </div>
+        `;
+        return;
+      }
+
+      let html = '';
+      
+      datasets.forEach(dataset => {
+        // API olan resource'ları filtrele
+        const apiResources = dataset.resources.filter(resource => {
+          const format = (resource.format || '').toLowerCase();
+          const url = (resource.url || '').toLowerCase();
+          const name = (resource.name || '').toLowerCase();
+          const description = (resource.description || '').toLowerCase();
+          
+          return format.includes('api') || 
+                 url.includes('/api/') || 
+                 url.includes('api.') ||
+                 name.includes('api') ||
+                 description.includes('api') ||
+                 format === 'json' && (url.includes('/api/') || name.includes('api')) ||
+                 format === 'xml' && (url.includes('/api/') || name.includes('api'));
+        });
+
+        const title = dataset.title || dataset.name || 'İsimsiz Dataset';
+        const description = dataset.notes ? 
+          (dataset.notes.length > 200 ? dataset.notes.substring(0, 200) + '...' : dataset.notes) : 
+          'Açıklama bulunmuyor.';
+        
+        html += `<div class="api-dataset-item">`;
+        html += `<a href="/dataset/${dataset.name}" class="api-dataset-title" target="_blank">${title}</a>`;
+        html += `<div class="api-dataset-description">${description}</div>`;
+        html += `<div class="api-resources-container">`;
+        html += `<div class="api-resources-title"><i class="fa fa-plug"></i>API Endpoints (${apiResources.length})</div>`;
+        html += `<div class="api-resource-list">`;
+        
+        apiResources.forEach((resource, index) => {
+          const resourceName = resource.name || resource.format || `API ${index + 1}`;
+          const resourceUrl = resource.url || '#';
+          
+          html += `<a href="${resourceUrl}" class="api-resource-item" target="_blank" title="${resourceName}">`;
+          html += `<i class="fa fa-external-link"></i>`;
+          html += `${resourceName}`;
+          html += `<span class="api-resource-number">${index + 1}</span>`;
+          html += `</a>`;
+        });
+        
+        html += `</div></div></div>`;
+      });
+
+      contentDiv.innerHTML = html;
+    }
+  </script>
 
 {% endblock %}

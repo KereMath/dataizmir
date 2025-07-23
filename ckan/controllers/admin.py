@@ -194,9 +194,5 @@ class AdminController(base.BaseController):
 
 
     def api_testing(self):
-        # Yetkilendirme kontrolü yapabilirsiniz
-        # if not c.user:
-        #    h.redirect_to(h.url_for('login'))
-        #    return
-
+        print("DEBUG: api_testing fonksiyonu çağrıldı!") # Bu satırı ekleyin
         return render('admin/api_testing.html')

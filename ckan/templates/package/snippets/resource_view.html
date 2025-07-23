@@ -1,478 +1,622 @@
+{% import 'macros/form.html' as form %}
+
 <style>
-  /* Modern Data Preview Styles */
-  .module-content.ckanext-datapreview {
-    background: white !important;
-    border-radius: 16px !important;
-    overflow: hidden !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-    border: 1px solid rgba(226, 232, 240, 0.8) !important;
-  }
-  
-  /* PDF and X-Frame-Options Error Handler */
-  .pdf-viewer-container, .x-frame-error-container {
-    background: white !important;
-    border-radius: 12px !important;
-    overflow: hidden !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-    border: 1px solid rgba(226, 232, 240, 0.8) !important;
-    margin: 1rem 0 !important;
-  }
-  
-  .pdf-viewer-header, .x-frame-error-header {
-    background: linear-gradient(135deg, #f8fafc, #e2e8f0) !important;
-    padding: 1rem 1.5rem !important;
-    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-  }
-  
-  .pdf-viewer-title, .x-frame-error-title {
-    font-size: 1rem !important;
-    font-weight: 600 !important;
-    color: #374151 !important;
-    margin: 0 !important;
-    display: flex !important;
-    align-items: center !important;
-  }
-  
-  .pdf-viewer-title i {
-    margin-right: 0.75rem !important;
-    color: #dc2626 !important;
-  }
-  
-  .x-frame-error-title i {
-    margin-right: 0.75rem !important;
-    color: #f59e0b !important;
-  }
-  
-  .viewer-actions {
-    display: flex !important;
-    gap: 0.75rem !important;
-  }
-  
-  .viewer-actions .btn {
-    background: white !important;
-    border: 2px solid #e2e8f0 !important;
-    color: #374151 !important;
-    padding: 0.5rem 1rem !important;
-    border-radius: 8px !important;
-    font-weight: 600 !important;
-    font-size: 0.875rem !important;
-    transition: all 0.3s ease !important;
-    text-decoration: none !important;
-  }
-  
-  .viewer-actions .btn:hover {
-    background: #f8fafc !important;
-    border-color: #667eea !important;
-    color: #667eea !important;
-    transform: translateY(-1px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  }
-  
-  .viewer-actions .btn-primary {
-    background: linear-gradient(135deg, #667eea, #764ba2) !important;
-    border: none !important;
-    color: white !important;
-  }
-  
-  .viewer-actions .btn-primary:hover {
-    background: linear-gradient(135deg, #5a67d8, #6b46c1) !important;
-    color: white !important;
-  }
-  
-  .viewer-embed-container {
-    padding: 1.5rem !important;
-    background: #f8fafc !important;
+/* Modern Resource View Styles */
+.resource-view {
+  background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
+  border-radius: 20px !important;
+  padding: 0 !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  overflow: hidden !important;
+  transition: all 0.4s ease !important;
+}
+
+.resource-view:hover {
+  transform: translateY(-3px) !important;
+  box-shadow: 0 25px 70px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* View Header with Actions */
+.view-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+  padding: 1.5rem 2rem !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  color: white !important;
+}
+
+.view-title {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  color: white !important;
+}
+
+.view-actions {
+  display: flex !important;
+  gap: 0.75rem !important;
+}
+
+.view-actions .btn {
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  color: white !important;
+  border-radius: 10px !important;
+  padding: 0.5rem 1rem !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.3s ease !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.view-actions .btn:hover {
+  background: rgba(255, 255, 255, 0.25) !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15) !important;
+  color: white !important;
+}
+
+.view-actions .btn i {
+  margin-right: 0.5rem !important;
+}
+
+/* Description Section */
+.view-description {
+  padding: 1.5rem 2rem !important;
+  background: rgba(248, 250, 252, 0.5) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.view-description p {
+  margin: 0 !important;
+  color: #64748b !important;
+  font-size: 0.9rem !important;
+  line-height: 1.6 !important;
+}
+
+/* Content Area */
+.view-content {
+  padding: 2rem !important;
+  background: white !important;
+  min-height: 400px !important;
+}
+
+.ckanext-datapreview {
+  margin: 0 !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  background: white !important;
+}
+
+/* Iframe Styling */
+iframe[data-module="data-viewer"] {
+  border-radius: 12px !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  background: white !important;
+  min-height: 500px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Error State */
+.data-viewer-error {
+  text-align: center !important;
+  padding: 3rem 2rem !important;
+  background: linear-gradient(135deg, #fef2f2, #fef7f7) !important;
+  border-radius: 16px !important;
+  border: 2px dashed #fca5a5 !important;
+  margin: 1rem 0 !important;
+}
+
+.data-viewer-error .text-danger {
+  color: #dc2626 !important;
+  font-weight: 600 !important;
+  margin-bottom: 1.5rem !important;
+  font-size: 1.1rem !important;
+}
+
+.data-viewer-error .btn {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  color: white !important;
+  border: none !important;
+  padding: 1rem 2rem !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  text-decoration: none !important;
+}
+
+.data-viewer-error .btn:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3) !important;
+  color: white !important;
+}
+
+/* Modal Modernization */
+.modal-content {
+  border-radius: 20px !important;
+  border: none !important;
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.15) !important;
+  overflow: hidden !important;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  color: white !important;
+  padding: 2rem !important;
+  border-bottom: none !important;
+}
+
+.modal-title {
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+  margin: 0 !important;
+}
+
+.modal-header .close {
+  color: white !important;
+  opacity: 0.8 !important;
+  font-size: 2rem !important;
+  font-weight: 300 !important;
+  text-shadow: none !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.modal-header .close:hover {
+  opacity: 1 !important;
+}
+
+.modal-body {
+  padding: 2rem !important;
+  background: linear-gradient(145deg, #ffffff, #f8fafc) !important;
+}
+
+.embed-content {
+  background: rgba(102, 126, 234, 0.05) !important;
+  padding: 1rem 1.5rem !important;
+  border-radius: 12px !important;
+  border-left: 4px solid #667eea !important;
+  margin-bottom: 1.5rem !important;
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+/* Form Controls */
+.control-full {
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 1rem !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+}
+
+.control-full:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+  background: white !important;
+}
+
+.control-label {
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin-bottom: 0.5rem !important;
+  font-size: 0.875rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+}
+
+textarea.pre {
+  background: #1f2937 !important;
+  color: #f3f4f6 !important;
+  border: 2px solid #374151 !important;
+  border-radius: 10px !important;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace !important;
+  font-size: 0.875rem !important;
+  line-height: 1.6 !important;
+  padding: 1rem !important;
+}
+
+/* Filter Section Enhancement */
+.resource-view-filters {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-radius: 16px !important;
+  padding: 1.5rem !important;
+  margin: 0 !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
+  backdrop-filter: blur(20px) !important;
+  width: 100% !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.resource-view-filters::before {
+  content: '' !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02)) !important;
+  pointer-events: none !important;
+}
+
+.resource-view-filters * {
+  position: relative !important;
+  z-index: 2 !important;
+  color: #374151 !important;
+}
+
+.resource-view-filters .control-label {
+  color: #374151 !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.resource-view-filters .form-control,
+.resource-view-filters .control-full,
+.resource-view-filters input,
+.resource-view-filters select {
+  background: white !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 1rem !important;
+  color: #374151 !important;
+  font-weight: 500 !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
+  width: 100% !important;
+}
+
+.resource-view-filters .form-control::placeholder,
+.resource-view-filters input::placeholder {
+  color: #9ca3af !important;
+  font-style: normal !important;
+}
+
+.resource-view-filters .form-control:focus,
+.resource-view-filters .control-full:focus,
+.resource-view-filters input:focus,
+.resource-view-filters select:focus {
+  outline: none !important;
+  border-color: #667eea !important;
+  background: white !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+  transform: translateY(-1px) !important;
+}
+
+.resource-view-filters .btn {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  border: none !important;
+  color: white !important;
+  border-radius: 10px !important;
+  padding: 0.75rem 1.5rem !important;
+  font-weight: 600 !important;
+  transition: all 0.3s ease !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-size: 0.875rem !important;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
+  margin-left: 0 !important;
+}
+
+.resource-view-filters .btn:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
+  color: white !important;
+}
+
+.resource-view-filters .btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+}
+
+.resource-view-filters .btn-primary:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1) !important;
+}
+
+/* Filter Grid Layout - Remove left spacing */
+.resource-view-filters .form-group {
+  margin-bottom: 1rem !important;
+  width: 100% !important;
+}
+
+.resource-view-filters .row {
+  margin: 0 !important;
+  width: 100% !important;
+}
+
+.resource-view-filters .col-md-3,
+.resource-view-filters .col-md-4,
+.resource-view-filters .col-md-6,
+.resource-view-filters [class*="col-"] {
+  padding-left: 0 !important;
+  padding-right: 0.75rem !important;
+  width: 100% !important;
+}
+
+.resource-view-filters .col-md-3:first-child,
+.resource-view-filters .col-md-4:first-child,
+.resource-view-filters .col-md-6:first-child,
+.resource-view-filters [class*="col-"]:first-child {
+  padding-left: 0 !important;
+}
+
+/* Filter Title */
+.resource-view-filters h3,
+.resource-view-filters h4 {
+  color: #1f2937 !important;
+  font-weight: 700 !important;
+  margin-bottom: 1.5rem !important;
+  font-size: 1.125rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.resource-view-filters h3:before,
+.resource-view-filters h4:before {
+  content: '🔍' !important;
+  margin-right: 0.75rem !important;
+  font-size: 1.25rem !important;
+}
+
+/* Select Dropdown Styling */
+.resource-view-filters select option {
+  background: white !important;
+  color: #374151 !important;
+  padding: 0.5rem !important;
+}
+
+/* Checkbox and Radio Styling */
+.resource-view-filters input[type="checkbox"],
+.resource-view-filters input[type="radio"] {
+  width: 1.125rem !important;
+  height: 1.125rem !important;
+  margin-right: 0.5rem !important;
+  accent-color: #667eea !important;
+}
+
+/* Filter Tags/Chips */
+.filter-tag {
+  display: inline-block !important;
+  background: rgba(102, 126, 234, 0.1) !important;
+  color: #667eea !important;
+  padding: 0.375rem 0.875rem !important;
+  border-radius: 20px !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+  margin: 0.25rem 0.25rem 0.25rem 0 !important;
+  border: 1px solid rgba(102, 126, 234, 0.2) !important;
+  transition: all 0.3s ease !important;
+}
+
+.filter-tag:hover {
+  background: rgba(102, 126, 234, 0.15) !important;
+  transform: scale(1.05) !important;
+}
+
+.filter-tag .remove {
+  margin-left: 0.5rem !important;
+  cursor: pointer !important;
+  opacity: 0.7 !important;
+}
+
+.filter-tag .remove:hover {
+  opacity: 1 !important;
+}
+
+/* Container override to remove left spacing */
+.resource-view-filters .container,
+.resource-view-filters .container-fluid {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .view-header {
+    flex-direction: column !important;
+    gap: 1rem !important;
     text-align: center !important;
   }
   
-  .viewer-embed-message {
-    background: rgba(239, 68, 68, 0.1) !important;
-    border: 2px dashed #ef4444 !important;
-    border-radius: 12px !important;
-    padding: 2rem !important;
-    color: #dc2626 !important;
-    font-weight: 500 !important;
-    margin-bottom: 1.5rem !important;
-  }
-  
-  .x-frame-embed-message {
-    background: rgba(245, 158, 11, 0.1) !important;
-    border: 2px dashed #f59e0b !important;
-    border-radius: 12px !important;
-    padding: 2rem !important;
-    color: #d97706 !important;
-    font-weight: 500 !important;
-    margin-bottom: 1.5rem !important;
-  }
-  
-  .viewer-embed-message i, .x-frame-embed-message i {
-    font-size: 2rem !important;
-    margin-bottom: 1rem !important;
-    display: block !important;
-  }
-  
-  .viewer-fallback-actions {
-    display: flex !important;
-    gap: 1rem !important;
+  .view-actions {
     justify-content: center !important;
     flex-wrap: wrap !important;
   }
   
-  .viewer-fallback-actions .btn {
-    padding: 1rem 2rem !important;
-    font-weight: 600 !important;
-    border-radius: 10px !important;
-    transition: all 0.3s ease !important;
-    text-decoration: none !important;
-    display: inline-flex !important;
-    align-items: center !important;
-    gap: 0.75rem !important;
+  .view-content {
+    padding: 1rem !important;
   }
   
-  .viewer-fallback-actions .btn-primary {
-    background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
-    color: white !important;
-    border: none !important;
+  .modal-body {
+    padding: 1rem !important;
   }
   
-  .viewer-fallback-actions .btn-primary:hover {
-    background: linear-gradient(135deg, #b91c1c, #991b1b) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3) !important;
-    color: white !important;
-  }
-  
-  .viewer-fallback-actions .btn-secondary {
-    background: white !important;
-    color: #374151 !important;
-    border: 2px solid #e2e8f0 !important;
-  }
-  
-  .viewer-fallback-actions .btn-secondary:hover {
-    background: #f8fafc !important;
-    border-color: #667eea !important;
-    color: #667eea !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
-  }
-  
-  .viewer-fallback-actions .btn-warning {
-    background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-    color: white !important;
-    border: none !important;
-  }
-  
-  .viewer-fallback-actions .btn-warning:hover {
-    background: linear-gradient(135deg, #d97706, #b45309) !important;
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3) !important;
-    color: white !important;
-  }
-  
-  /* Enhanced iframe with error detection */
   iframe[data-module="data-viewer"] {
-    border-radius: 12px !important;
-    border: 1px solid rgba(226, 232, 240, 0.8) !important;
-    background: white !important;
-    min-height: 500px !important;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-    transition: all 0.3s ease !important;
+    min-height: 300px !important;
   }
-  
-  iframe[data-module="data-viewer"].error {
-    border-color: #ef4444 !important;
-    background: #fef2f2 !important;
-  }
-  
-  /* Responsive Design */
-  @media (max-width: 768px) {
-    .viewer-fallback-actions {
-      flex-direction: column !important;
-      align-items: center !important;
-    }
+}
+
+/* Loading Animation */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading iframe {
+  animation: pulse 2s infinite !important;
+}
+
+/* Fullscreen Mode Enhancement */
+.btn[href*="Fullscreen"] {
+  position: relative !important;
+}
+
+.btn[href*="Fullscreen"]::before {
+  content: '🔍' !important;
+  margin-right: 0.5rem !important;
+}
+</style>
+
+{% block resource_view %}
+  <div id="view-{{ resource_view['id'] }}" class="resource-view" data-id="{{ resource_view['id'] }}" data-title="{{ resource_view['title'] }}" data-description="{{ resource_view['descripion'] }}">
     
-    .viewer-fallback-actions .btn {
-      width: 100% !important;
-      max-width: 300px !important;
-    }
-  }
-  </style>
-  
-  <div class="module-content ckanext-datapreview">
-    {% if embed %}
-      {# images can be embedded directly #}
-      <img src="{{ resource_url }}"></img>
-    {% else %}
-      <!-- Smart Resource Detection -->
-      {% set resource_url_lower = resource_url.lower() if resource_url else '' %}
-      {% set raw_resource_url_lower = raw_resource_url.lower() if raw_resource_url else '' %}
-      
-      <!-- PDF Detection: Check both URLs and common PDF patterns -->
-      {% set is_pdf_resource = (
-        '.pdf' in resource_url_lower or 
-        '.pdf' in raw_resource_url_lower or
-        'application/pdf' in resource_url_lower or
-        'pdf' in resource_url_lower or
-        'openfiles.izmir.bel.tr' in resource_url_lower or
-        'docs/' in resource_url_lower
-      ) %}
-      
-      <!-- X-Frame-Options problematic domains -->
-      {% set is_x_frame_blocked = (
-        'openfiles.izmir.bel.tr' in resource_url_lower or
-        'izmir.bel.tr' in resource_url_lower or
-        '.gov.tr' in resource_url_lower
-      ) %}
-      
-      {% if is_pdf_resource %}
-        <!-- PDF Specific Handler -->
-        <div class="pdf-viewer-container">
-          <div class="pdf-viewer-header">
-            <h4 class="pdf-viewer-title">
-              <i class="fa fa-file-pdf-o"></i>
-              PDF Dökümanı
-            </h4>
-            <div class="viewer-actions">
-              <a href="{{ raw_resource_url }}" class="btn btn-secondary" target="_blank">
-                <i class="fa fa-external-link"></i>
-                Yeni Sekmede Aç
-              </a>
-              <a href="{{ raw_resource_url }}" class="btn btn-primary" download>
-                <i class="fa fa-download"></i>
-                İndir
-              </a>
-            </div>
-          </div>
-          
-          <div class="viewer-embed-container">
-            <div class="viewer-embed-message">
-              <i class="fa fa-file-pdf-o"></i>
-              <strong>PDF Dosyası Tespit Edildi</strong><br>
-              Bu PDF dosyası güvenlik nedeniyle doğrudan görüntülenemiyor.
-              <br><small>Yeni sekmede açabilir veya indirebilirsiniz.</small>
-            </div>
-            
-            <div class="viewer-fallback-actions">
-              <a href="{{ raw_resource_url }}" class="btn btn-primary" target="_blank">
-                <i class="fa fa-external-link"></i>
-                PDF'i Yeni Sekmede Görüntüle
-              </a>
-              <a href="{{ raw_resource_url }}" class="btn btn-secondary" download>
-                <i class="fa fa-download"></i>
-                PDF'i Bilgisayara İndir
-              </a>
-            </div>
-          </div>
-        </div>
-        
-      {% elif is_x_frame_blocked %}
-        <!-- X-Frame-Options Blocked Handler -->
-        <div class="x-frame-error-container">
-          <div class="x-frame-error-header">
-            <h4 class="x-frame-error-title">
-              <i class="fa fa-shield"></i>
-              Güvenlik Kısıtlaması
-            </h4>
-            <div class="viewer-actions">
-              <a href="{{ raw_resource_url }}" class="btn btn-secondary" target="_blank">
-                <i class="fa fa-external-link"></i>
-                Yeni Sekmede Aç
-              </a>
-              <a href="{{ raw_resource_url }}" class="btn btn-primary" download>
-                <i class="fa fa-download"></i>
-                İndir
-              </a>
-            </div>
-          </div>
-          
-          <div class="viewer-embed-container">
-            <div class="x-frame-embed-message">
-              <i class="fa fa-shield"></i>
-              <strong>X-Frame-Options Kısıtlaması</strong><br>
-              Bu kaynak sunucu güvenlik ayarları nedeniyle iframe içinde görüntülenemiyor.
-              <br><small>Kaynağı yeni sekmede açmanız gerekiyor.</small>
-            </div>
-            
-            <div class="viewer-fallback-actions">
-              <a href="{{ raw_resource_url }}" class="btn btn-warning" target="_blank">
-                <i class="fa fa-external-link"></i>
-                Kaynağı Yeni Sekmede Aç
-              </a>
-              <a href="{{ raw_resource_url }}" class="btn btn-secondary" download>
-                <i class="fa fa-download"></i>
-                Kaynağı İndir
-              </a>
-            </div>
-          </div>
-        </div>
-        
-      {% else %}
-        <!-- Standard Error Handler with Enhanced Detection -->
-        <div class="data-viewer-error js-hide">
-          <p class="text-danger">
-            <i class="fa fa-info-circle"></i>
-            {{ _('This resource can not be previewed at the moment.') }}
-            <a href="#" data-toggle="collapse" data-target="#data-view-error">
-              {{ _('Click here for more information.') }}
-            </a>
-          </p>
-          <p id="data-view-error" class="collapse"></p>
-          <p>
-            <a href="{{ raw_resource_url }}" class="btn btn-default btn-lg resource-url-analytics" target="_blank">
-              <i class="fa fa-lg fa-arrow-circle-o-down"></i>
-              {{ _('Download resource') }}
-            </a>
-          </p>
-        </div>
-        
-        <!-- Enhanced iframe with error detection -->
-        <iframe src="{{ resource_url }}" 
-                frameborder="0" 
-                width="100%" 
-                data-module="data-viewer" 
-                class="visible-md"
-                onload="handleIframeLoad(this)"
-                onerror="handleIframeError(this, '{{ raw_resource_url }}')">
-          <p>{{ _('Your browser does not support iframes.') }}</p>
-        </iframe>
-      {% endif %}
+    <!-- Modern Header with Actions -->
+    <div class="view-header">
+      <h3 class="view-title">{{ resource_view['title'] or _('Data Preview') }}</h3>
+      <div class="view-actions">
+        <a class="btn btn-glass"
+           target="_blank"
+           href="{{ h.url_for('resource_view', id=package['name'], resource_id=resource['id'], view_id=resource_view['id'], qualified=True) }}">
+          <i class="fa fa-expand"></i>
+          {{ _("Tam Ekran") }}
+        </a>
+        <a class="btn btn-glass"
+           href="#embed-{{ resource_view['id'] }}"
+           data-module="resource-view-embed"
+           data-module-id="{{ resource_view['id'] }}"
+           data-module-url="{{ h.url_for('resource_view', id=package['name'], resource_id=resource['id'], view_id=resource_view['id'], qualified=True) }}">
+          <i class="fa fa-code"></i>
+          {{ _("Embed Kodu") }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Description Section -->
+    {% if resource_view['description'] %}
+    <div class="view-description">
+      <p>{{ h.render_markdown(resource_view['description']) }}</p>
+    </div>
     {% endif %}
-  </div>
-  
-  <script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // Enhanced iframe error detection
-    const iframe = document.querySelector('iframe[data-module="data-viewer"]');
-    if (iframe) {
-      
-      // Set a timeout to detect if iframe failed to load
-      const timeoutId = setTimeout(function() {
-        // If iframe is still loading after 8 seconds, assume it failed
-        if (iframe.style.display !== 'none') {
-          console.warn('Iframe loading timeout - showing fallback');
-          handleIframeError(iframe, iframe.getAttribute('data-fallback-url') || '{{ raw_resource_url }}');
-        }
-      }, 8000);
-      
-      // Clear timeout if iframe loads successfully
-      iframe.addEventListener('load', function() {
-        clearTimeout(timeoutId);
+
+    <!-- Main Content Area -->
+    <div class="view-content">
+      <div class="ckanext-datapreview">
+        {% if not to_preview and h.resource_view_is_filterable(resource_view) %}
+          <!-- <div class="resource-view-filters">
+            {% snippet 'package/snippets/resource_view_filters.html', resource=resource %}
+          </div> -->
+        {% endif %}
         
-        // Additional check: try to access iframe content to detect X-Frame-Options
-        try {
-          // This will throw an error if X-Frame-Options blocks access
-          const iframeDoc = this.contentDocument || this.contentWindow.document;
-          if (!iframeDoc || iframeDoc.body.innerHTML.trim() === '') {
-            throw new Error('Empty or blocked content');
-          }
-          console.log('Iframe loaded successfully');
-        } catch (error) {
-          console.warn('Iframe blocked by X-Frame-Options:', error);
-          handleIframeError(this, '{{ raw_resource_url }}');
-        }
-      });
-      
-      // Handle explicit iframe errors
-      iframe.addEventListener('error', function() {
-        clearTimeout(timeoutId);
-        handleIframeError(this, '{{ raw_resource_url }}');
-      });
-    }
-  });
-  
-  function handleIframeLoad(iframe) {
-    console.log('Iframe load event fired');
-    
-    // Try to detect X-Frame-Options blocking
-    setTimeout(function() {
-      try {
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-        if (!iframeDoc) {
-          throw new Error('Cannot access iframe content');
-        }
-      } catch (error) {
-        console.warn('X-Frame-Options detected:', error);
-        handleIframeError(iframe, iframe.src);
-      }
-    }, 1000);
-  }
-  
-  function handleIframeError(iframe, fallbackUrl) {
-    console.log('Handling iframe error for:', iframe.src);
-    
-    // Hide the iframe
-    iframe.style.display = 'none';
-    iframe.classList.add('error');
-    
-    // Show the error div
-    const errorDiv = iframe.parentElement.querySelector('.data-viewer-error');
-    if (errorDiv) {
-      errorDiv.classList.remove('js-hide');
-      errorDiv.style.display = 'block';
-      
-      // Update error details
-      const errorDetails = errorDiv.querySelector('#data-view-error');
-      if (errorDetails) {
-        errorDetails.innerHTML = `
-          <div class="alert alert-warning" style="margin-top: 1rem; border-radius: 10px;">
-            <strong><i class="fa fa-exclamation-triangle"></i> Görüntülenme Sorunu</strong><br><br>
-            <strong>Muhtemel Nedenler:</strong><br>
-            • <strong>X-Frame-Options:</strong> Sunucu güvenlik ayarları iframe'i engelliyor<br>
-            • <strong>CORS Kısıtlaması:</strong> Cross-origin erişim izni yok<br>
-            • <strong>Ağ Sorunu:</strong> Bağlantı veya sunucu hatası<br>
-            • <strong>İçerik Türü:</strong> Kaynak iframe'de görüntülenemez<br><br>
-            
-            <div class="viewer-fallback-actions" style="margin-top: 1rem;">
-              <a href="${fallbackUrl}" class="btn btn-warning" target="_blank" style="margin: 0.25rem;">
-                <i class="fa fa-external-link"></i> Yeni Sekmede Aç
-              </a>
-              <a href="${fallbackUrl}" class="btn btn-secondary" download style="margin: 0.25rem;">
-                <i class="fa fa-download"></i> İndir
-              </a>
+        {% if not h.resource_view_is_iframed(resource_view) %}
+          {{ h.rendered_resource_view(resource_view, resource, package) }}
+        {% else %}
+          <div class="data-viewer-error js-hide">
+            <p class="text-danger">
+              <i class="fa fa-exclamation-triangle fa-2x"></i><br><br>
+              {{ _('Bu kaynak görünümü şu anda kullanılamıyor.') }}
+            </p>
+            <a href="#" data-toggle="collapse" data-target="#data-view-error" class="btn btn-outline-secondary">
+              {{ _('Daha fazla bilgi için tıklayın') }}
+            </a>
+            <div id="data-view-error" class="collapse mt-3"></div>
+            <br><br>
+            <a href="{{ resource.url }}" class="btn btn-lg resource-url-analytics" target="_blank">
+              <i class="fa fa-download fa-lg"></i>
+              {{ _('Kaynağı İndir') }}
+            </a>
+          </div>
+          
+          {% if not to_preview %}
+            {% set current_filters = request.args.get('filters') %}
+            {% if current_filters %}
+              {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
+                resource_id=resource['id'],
+                view_id=resource_view['id'],
+                filters=current_filters, qualified=true)  %}
+            {% else %}
+              {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
+                resource_id=resource['id'],
+                view_id=resource_view['id'], qualified=true)  %}
+            {% endif %}
+          {% else %}
+            {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'], resource_id=resource['id'], qualified=true) + '?' + h.urlencode({'resource_view': h.dump_json(resource_view)}) %}
+          {% endif %}
+          
+          <iframe src="{{ src }}" 
+                  frameborder="0" 
+                  width="100%" 
+                  data-module="data-viewer"
+                  class="loading">
+            <p>{{ _('Tarayıcınız iframe desteklemiyor.') }}</p>
+          </iframe>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Modern Embed Modal -->
+    <div id="embed-{{ resource_view['id'] }}" class="modal fade resource-view-embed">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3 class="modal-title">
+              <i class="fa fa-code"></i>
+              {{ _("Embed Kaynak Görünümü") }}
+            </h3>
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+          </div>
+          <div class="modal-body">
+            <p class="embed-content">
+              <i class="fa fa-info-circle"></i>
+              {{ _("Bu embed kodunu CMS veya blog yazılımınıza kopyalayıp yapıştırabilirsiniz") }}
+            </p>
+            <div class="row">
+              <div class="col-md-6">
+                {{ form.input("width", label=_("Genişlik"), value=700, classes=["control-full"]) }}
+              </div>
+              <div class="col-md-6">
+                {{ form.input("height", label=_("Yükseklik"), value=400, classes=["control-full"]) }}
+              </div>
+            </div>
+            <div class="mt-3">
+              {{ form.textarea("code", label=_("HTML Kodu"), value="", classes=["pre"], rows=5, placeholder="<iframe src='...'></iframe>") }}
             </div>
           </div>
-        `;
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced iframe loading
+    document.addEventListener('DOMContentLoaded', function() {
+      const iframe = document.querySelector('iframe[data-module="data-viewer"]');
+      if (iframe) {
+        iframe.addEventListener('load', function() {
+          this.classList.remove('loading');
+        });
       }
-    } else {
-      // Create a new error container if none exists
-      const errorContainer = document.createElement('div');
-      errorContainer.className = 'x-frame-error-container';
-      errorContainer.innerHTML = `
-        <div class="x-frame-error-header">
-          <h4 class="x-frame-error-title">
-            <i class="fa fa-shield"></i>
-            Görüntüleme Hatası
-          </h4>
-          <div class="viewer-actions">
-            <a href="${fallbackUrl}" class="btn btn-secondary" target="_blank">
-              <i class="fa fa-external-link"></i>
-              Yeni Sekmede Aç
-            </a>
-          </div>
-        </div>
-        <div class="viewer-embed-container">
-          <div class="x-frame-embed-message">
-            <i class="fa fa-exclamation-triangle"></i>
-            <strong>Kaynak Bu Çerçevede Görüntülenemiyor</strong><br>
-            Sunucu güvenlik ayarları veya içerik türü nedeniyle iframe içinde görüntülenemiyor.
-          </div>
-          <div class="viewer-fallback-actions">
-            <a href="${fallbackUrl}" class="btn btn-warning" target="_blank">
-              <i class="fa fa-external-link"></i>
-              Yeni Sekmede Aç
-            </a>
-            <a href="${fallbackUrl}" class="btn btn-secondary" download>
-              <i class="fa fa-download"></i>
-              İndir
-            </a>
-          </div>
-        </div>
-      `;
       
-      iframe.parentElement.insertBefore(errorContainer, iframe);
-    }
-  }
+      // Auto-generate embed code
+      const widthInput = document.querySelector('input[name="width"]');
+      const heightInput = document.querySelector('input[name="height"]');
+      const codeTextarea = document.querySelector('textarea[name="code"]');
+      
+      function updateEmbedCode() {
+        const width = widthInput.value || 700;
+        const height = heightInput.value || 400;
+        const embedUrl = "{{ h.url_for('resource_view', id=package['name'], resource_id=resource['id'], view_id=resource_view['id'], qualified=True) }}";
+        
+        const embedCode = `<iframe src="${embedUrl}" width="${width}" height="${height}" frameborder="0"></iframe>`;
+        codeTextarea.value = embedCode;
+      }
+      
+      if (widthInput && heightInput && codeTextarea) {
+        widthInput.addEventListener('input', updateEmbedCode);
+        heightInput.addEventListener('input', updateEmbedCode);
+        updateEmbedCode(); // Initial generation
+      }
+    });
   </script>
+{% endblock %}

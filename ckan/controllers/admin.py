@@ -9,7 +9,6 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.model as model
 import ckan.logic as logic
 from ckan.controllers.home import CACHE_PARAMETERS
-from ckan.lib.base import render # Bu satır dosyanın en başında olmalı
 
 
 c = base.c
@@ -189,10 +188,3 @@ class AdminController(base.BaseController):
             for msg in msgs:
                 h.flash_error(msg)
             h.redirect_to(controller='admin', action='trash')
-
-
-
-
-    def api_testing(self):
-        print("DEBUG: api_testing fonksiyonu çağrıldı!") # Bu satırı ekleyin
-        return render('admin/api_testing.html')

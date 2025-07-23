@@ -41,9 +41,16 @@
     <div class="api-popup-content">
       <div class="api-popup-header">
         <h3><i class="fa fa-code"></i> API Test - Datasets</h3>
-        <button class="api-popup-close" onclick="closeApiTestPopup()">
-          <i class="fa fa-times"></i>
-        </button>
+        <div class="api-popup-controls">
+          <select id="itemsPerPageApi" class="items-per-page-select">
+            <option value="5">5 / sayfa</option>
+            <option value="10" selected>10 / sayfa</option>
+            <option value="20">20 / sayfa</option>
+          </select>
+          <button class="api-popup-close" onclick="closeApiTestPopup()">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
       </div>
       <div class="api-popup-body">
         <div id="apiTestLoading" class="api-loading">
@@ -51,13 +58,69 @@
           <span>API içeren datasetler yükleniyor...</span>
         </div>
         <div id="apiTestContent" class="api-content">
-          <!-- API datasets buraya yüklenecek -->
+          <div class="api-table-container">
+            <table class="api-datasets-table">
+              <thead>
+                <tr>
+                  <th style="width: 40px;">#</th>
+                  <th style="width: 200px;">Dataset</th>
+                  <th style="width: 250px;">Açıklama</th>
+                  <th>API Resources</th>
+                </tr>
+              </thead>
+              <tbody id="apiTableBody">
+                <!-- API datasets buraya yüklenecek -->
+              </tbody>
+            </table>
+          </div>
+          <div class="api-pagination" id="apiPagination"></div>
         </div>
       </div>
     </div>
   </div>
 
-  {# CSS ve JavaScript #}
+  {# API TEST REQUEST POPUP #}
+  <div id="apiRequestPopup" class="api-request-overlay">
+    <div class="api-request-content">
+      <div class="api-request-header">
+        <h3><i class="fa fa-play-circle"></i> API Test Request</h3>
+        <button class="api-request-close" onclick="closeApiRequestPopup()">
+          <i class="fa fa-times"></i>
+        </button>
+      </div>
+      <div class="api-request-body">
+        <div class="api-request-info">
+          <div class="api-request-url-section">
+            <label>API Endpoint:</label>
+            <div class="api-url-display" id="apiUrlDisplay"></div>
+          </div>
+          <div class="api-request-params" id="apiRequestParams" style="display: none;">
+            <label>Parametreler:</label>
+            <div class="params-container" id="paramsContainer"></div>
+          </div>
+          <div class="api-request-actions">
+            <button class="api-test-btn" onclick="executeApiRequest()">
+              <i class="fa fa-play"></i> Test Et
+            </button>
+            <button class="api-clear-btn" onclick="clearResponse()">
+              <i class="fa fa-eraser"></i> Temizle
+            </button>
+          </div>
+        </div>
+        <div class="api-response-section">
+          <div class="api-response-header">
+            <label>Response:</label>
+            <div class="response-status" id="responseStatus"></div>
+          </div>
+          <div class="api-response-content">
+            <pre id="apiResponseContent">Henüz test edilmedi...</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {# CSS Stilleri #}
   <style>
     /* API Test Butonu Stilleri */
     .api-test-fab-futuristic {
@@ -66,7 +129,7 @@
       justify-content: flex-start !important;
       
       position: fixed !important;
-      bottom: 110px !important; /* Add Dataset butonunun üstünde */
+      bottom: 110px !important;
       right: 30px !important;
       z-index: 1100 !important;
       
@@ -74,7 +137,7 @@
       height: 60px !important;
       padding: 0 21px !important;
       
-      background: linear-gradient(45deg, #ff6b35, #f7931e) !important; /* Turuncu gradient */
+      background: linear-gradient(45deg, #ff6b35, #f7931e) !important;
       color: #fff !important;
       border: none !important;
       cursor: pointer !important;
@@ -127,7 +190,7 @@
       transform: translateY(-2px) !important;
     }
 
-    /* Ortak FAB Icon/Text Stilleri */
+    /* Ortak FAB Stilleri */
     .api-test-fab-futuristic .fab-icon,
     .add-dataset-fab-futuristic .fab-icon {
       font-size: 22px !important;
@@ -148,7 +211,7 @@
       opacity: 1;
     }
 
-    /* Popup Stilleri */
+    /* Ana Popup Stilleri */
     .api-popup-overlay {
       display: none;
       position: fixed;
@@ -169,50 +232,55 @@
       background: #fff;
       border-radius: 15px;
       box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-      width: 90%;
-      max-width: 900px;
-      max-height: 80vh;
+      width: 95%;
+      max-width: 1100px;
+      max-height: 85vh;
       overflow: hidden;
       animation: popupSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
-    }
-
-    @keyframes popupSlideIn {
-      from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.8);
-      }
-      to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
     }
 
     .api-popup-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 25px;
+      padding: 15px 25px;
       background: linear-gradient(45deg, #ff6b35, #f7931e);
       color: white;
     }
 
     .api-popup-header h3 {
       margin: 0;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: 600;
     }
 
-    .api-popup-header h3 i {
-      margin-right: 10px;
+    .api-popup-controls {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .items-per-page-select {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 5px 10px;
+      border-radius: 5px;
+      font-size: 13px;
+    }
+
+    .items-per-page-select option {
+      background: #333;
+      color: white;
     }
 
     .api-popup-close {
       background: none;
       border: none;
       color: white;
-      font-size: 24px;
+      font-size: 20px;
       cursor: pointer;
-      padding: 5px;
+      padding: 8px;
       border-radius: 50%;
       transition: background-color 0.2s;
     }
@@ -222,11 +290,380 @@
     }
 
     .api-popup-body {
-      padding: 25px;
-      max-height: calc(80vh - 80px);
+      padding: 20px;
+      max-height: calc(85vh - 70px);
       overflow-y: auto;
     }
 
+    /* Tablo Stilleri */
+    .api-table-container {
+      background: white;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid #e9ecef;
+      margin-bottom: 20px;
+    }
+
+    .api-datasets-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    .api-datasets-table thead {
+      background: #f8f9fa;
+    }
+
+    .api-datasets-table th {
+      padding: 12px;
+      text-align: left;
+      font-weight: 600;
+      color: #495057;
+      border-bottom: 2px solid #dee2e6;
+    }
+
+    .api-datasets-table td {
+      padding: 15px 12px;
+      border-bottom: 1px solid #e9ecef;
+      vertical-align: top;
+    }
+
+    .api-datasets-table tbody tr:hover {
+      background-color: #f8f9fa;
+    }
+
+    .dataset-number {
+      font-weight: bold;
+      color: #6c757d;
+      font-size: 16px;
+    }
+
+    .dataset-title-link {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .dataset-title-link:hover {
+      text-decoration: underline;
+    }
+
+    .dataset-description {
+      color: #6c757d;
+      line-height: 1.4;
+      font-size: 13px;
+    }
+
+    .api-resources-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .api-resource-item {
+      display: inline-flex;
+      align-items: center;
+      background: linear-gradient(45deg, #28a745, #20c997);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 5px;
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s;
+      position: relative;
+      cursor: pointer;
+      border: none;
+    }
+
+    .api-resource-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(40, 167, 69, 0.3);
+      color: white;
+    }
+
+    .api-resource-item i {
+      margin-right: 5px;
+      font-size: 11px;
+    }
+
+    .api-resource-number {
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      margin-left: 6px;
+    }
+
+    .api-test-resource-btn {
+      background: linear-gradient(45deg, #dc3545, #fd7e14);
+      margin-left: 5px;
+    }
+
+    .api-test-resource-btn:hover {
+      box-shadow: 0 3px 8px rgba(220, 53, 69, 0.3);
+    }
+
+    /* Pagination Stilleri */
+    .api-pagination {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .api-pagination button {
+      padding: 8px 12px;
+      border: 1px solid #dee2e6;
+      background: white;
+      color: #495057;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .api-pagination button:hover:not(:disabled) {
+      background: #e9ecef;
+    }
+
+    .api-pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .api-pagination button.active {
+      background: #ff6b35;
+      color: white;
+      border-color: #ff6b35;
+    }
+
+    .pagination-info {
+      color: #6c757d;
+      font-size: 14px;
+      margin: 0 15px;
+    }
+
+    /* API Request Popup Stilleri */
+    .api-request-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 3000;
+      backdrop-filter: blur(5px);
+    }
+
+    .api-request-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+      width: 90%;
+      max-width: 800px;
+      max-height: 90vh;
+      overflow: hidden;
+      animation: popupSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    }
+
+    .api-request-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background: linear-gradient(45deg, #dc3545, #fd7e14);
+      color: white;
+    }
+
+    .api-request-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .api-request-close {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 5px;
+      border-radius: 50%;
+    }
+
+    .api-request-close:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .api-request-body {
+      padding: 20px;
+      max-height: calc(90vh - 70px);
+      overflow-y: auto;
+    }
+
+    .api-request-info {
+      margin-bottom: 20px;
+    }
+
+    .api-request-url-section,
+    .api-request-params {
+      margin-bottom: 15px;
+    }
+
+    .api-request-url-section label,
+    .api-request-params label {
+      display: block;
+      font-weight: 600;
+      color: #495057;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .api-url-display {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      word-break: break-all;
+      color: #007bff;
+    }
+
+    .params-container {
+      display: grid;
+      gap: 10px;
+    }
+
+    .param-input-group {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .param-label {
+      font-weight: 500;
+      color: #6c757d;
+      font-size: 13px;
+    }
+
+    .param-input {
+      padding: 8px 12px;
+      border: 1px solid #ced4da;
+      border-radius: 5px;
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+
+    .param-input:focus {
+      outline: none;
+      border-color: #80bdff;
+      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+
+    .api-request-actions {
+      display: flex;
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .api-test-btn,
+    .api-clear-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+    }
+
+    .api-test-btn {
+      background: linear-gradient(45deg, #28a745, #20c997);
+      color: white;
+    }
+
+    .api-test-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+    }
+
+    .api-clear-btn {
+      background: #6c757d;
+      color: white;
+    }
+
+    .api-clear-btn:hover {
+      background: #5a6268;
+      transform: translateY(-1px);
+    }
+
+    .api-response-section {
+      border-top: 1px solid #dee2e6;
+      padding-top: 20px;
+    }
+
+    .api-response-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .api-response-header label {
+      font-weight: 600;
+      color: #495057;
+      font-size: 14px;
+    }
+
+    .response-status {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-weight: 600;
+    }
+
+    .response-status.success {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .response-status.error {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .api-response-content {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .api-response-content pre {
+      margin: 0;
+      padding: 15px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    /* Loading ve No Data Stilleri */
     .api-loading {
       text-align: center;
       padding: 40px;
@@ -244,108 +681,6 @@
       display: none;
     }
 
-    /* API Dataset Item Stilleri */
-    .api-dataset-item {
-      background: #f8f9fa;
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      border-left: 4px solid #ff6b35;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .api-dataset-item:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-
-    .api-dataset-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-      margin-bottom: 8px;
-      display: block;
-      text-decoration: none;
-    }
-
-    .api-dataset-title:hover {
-      color: #ff6b35;
-      text-decoration: none;
-    }
-
-    .api-dataset-description {
-      color: #666;
-      font-size: 14px;
-      margin-bottom: 15px;
-      line-height: 1.5;
-    }
-
-    .api-resources-container {
-      background: white;
-      border-radius: 8px;
-      padding: 15px;
-      border: 1px solid #e9ecef;
-    }
-
-    .api-resources-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #495057;
-      margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-    }
-
-    .api-resources-title i {
-      margin-right: 6px;
-      color: #ff6b35;
-    }
-
-    .api-resource-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .api-resource-item {
-      display: inline-flex;
-      align-items: center;
-      background: linear-gradient(45deg, #ff6b35, #f7931e);
-      color: white;
-      padding: 8px 12px;
-      border-radius: 6px;
-      text-decoration: none;
-      font-size: 13px;
-      font-weight: 500;
-      transition: all 0.2s;
-      position: relative;
-    }
-
-    .api-resource-item:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 3px 8px rgba(255, 107, 53, 0.3);
-      color: white;
-      text-decoration: none;
-    }
-
-    .api-resource-item i {
-      margin-right: 6px;
-      font-size: 12px;
-    }
-
-    .api-resource-number {
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      width: 20px;
-      height: 20px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: bold;
-      margin-left: 8px;
-    }
-
     .api-no-datasets {
       text-align: center;
       padding: 60px 20px;
@@ -358,53 +693,101 @@
       margin-bottom: 15px;
     }
 
-    .api-no-datasets h4 {
-      color: #999;
-      margin-bottom: 8px;
+    /* Animasyonlar */
+    @keyframes popupSlideIn {
+      from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+      }
+      to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
     }
 
     /* Responsive */
     @media (max-width: 768px) {
       .api-popup-content {
+        width: 98%;
+        max-height: 95vh;
+      }
+      
+      .api-request-content {
         width: 95%;
-        max-height: 90vh;
+        max-height: 95vh;
       }
       
-      .api-popup-header {
-        padding: 15px 20px;
+      .api-datasets-table {
+        font-size: 12px;
       }
       
-      .api-popup-body {
-        padding: 20px;
+      .api-datasets-table th,
+      .api-datasets-table td {
+        padding: 8px;
+      }
+      
+      .param-input-group {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 
   <script>
+    // Global değişkenler
+    let allApiDatasets = [];
+    let currentApiPage = 1;
+    let apiItemsPerPage = 10;
+    let currentApiResource = null;
+
     function openApiTestPopup() {
       document.getElementById('apiTestPopup').style.display = 'block';
-      document.body.style.overflow = 'hidden'; // Arka planın kaydırılmasını engelle
+      document.body.style.overflow = 'hidden';
       loadApiDatasets();
     }
 
     function closeApiTestPopup() {
       document.getElementById('apiTestPopup').style.display = 'none';
-      document.body.style.overflow = 'auto'; // Kaydırma işlevini geri yükle
+      document.body.style.overflow = 'auto';
     }
 
-    // Popup dışına tıklanınca kapat
+    function openApiRequestPopup(resource, resourceName, datasetName) {
+      currentApiResource = resource;
+      document.getElementById('apiRequestPopup').style.display = 'block';
+      setupApiRequestForm(resource, resourceName, datasetName);
+    }
+
+    function closeApiRequestPopup() {
+      document.getElementById('apiRequestPopup').style.display = 'none';
+      currentApiResource = null;
+    }
+
+    // Event Listeners
     document.addEventListener('DOMContentLoaded', function() {
+      // Popup dışına tıklanınca kapat
       document.getElementById('apiTestPopup').addEventListener('click', function(e) {
-        if (e.target === this) {
-          closeApiTestPopup();
-        }
+        if (e.target === this) closeApiTestPopup();
+      });
+
+      document.getElementById('apiRequestPopup').addEventListener('click', function(e) {
+        if (e.target === this) closeApiRequestPopup();
       });
 
       // ESC tuşu ile kapat
       document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && document.getElementById('apiTestPopup').style.display === 'block') {
-          closeApiTestPopup();
+        if (e.key === 'Escape') {
+          if (document.getElementById('apiRequestPopup').style.display === 'block') {
+            closeApiRequestPopup();
+          } else if (document.getElementById('apiTestPopup').style.display === 'block') {
+            closeApiTestPopup();
+          }
         }
+      });
+
+      // Items per page değişikliği
+      document.getElementById('itemsPerPageApi').addEventListener('change', function() {
+        apiItemsPerPage = parseInt(this.value);
+        currentApiPage = 1;
+        renderApiTable();
       });
     });
 
@@ -412,13 +795,10 @@
       const loadingDiv = document.getElementById('apiTestLoading');
       const contentDiv = document.getElementById('apiTestContent');
       
-      // Loading göster, content gizle
       loadingDiv.style.display = 'block';
       contentDiv.style.display = 'none';
-      contentDiv.innerHTML = '';
 
       try {
-        // CKAN API'den tüm datasetleri çek
         const response = await fetch('/api/3/action/package_search?rows=1000&include_private=true', {
           credentials: 'include'
         });
@@ -430,28 +810,18 @@
         }
 
         // API içeren datasetleri filtrele
-        const apiDatasets = data.result.results.filter(dataset => {
+        allApiDatasets = data.result.results.filter(dataset => {
           return dataset.resources && dataset.resources.some(resource => {
-            const format = (resource.format || '').toLowerCase();
-            const url = (resource.url || '').toLowerCase();
-            const name = (resource.name || '').toLowerCase();
-            const description = (resource.description || '').toLowerCase();
-            
-            // API olabilecek formatları ve URL pattern'lerini kontrol et
-            return format.includes('api') || 
-                   url.includes('/api/') || 
-                   url.includes('api.') ||
-                   name.includes('api') ||
-                   description.includes('api') ||
-                   format === 'json' && (url.includes('/api/') || name.includes('api')) ||
-                   format === 'xml' && (url.includes('/api/') || name.includes('api'));
+            return isApiResource(resource);
           });
+        }).map(dataset => {
+          // API resource'larini filtrele
+          dataset.apiResources = dataset.resources.filter(resource => isApiResource(resource));
+          return dataset;
         });
 
-        console.log(`${apiDatasets.length} API dataset bulundu`);
-        
-        // Sonuçları render et
-        renderApiDatasets(apiDatasets);
+        console.log(`${allApiDatasets.length} API dataset bulundu`);
+        renderApiTable();
         
       } catch (error) {
         console.error('API datasetleri yüklenirken hata:', error);
@@ -464,71 +834,300 @@
         `;
       }
       
-      // Loading gizle, content göster
       loadingDiv.style.display = 'none';
       contentDiv.style.display = 'block';
     }
 
-    function renderApiDatasets(datasets) {
-      const contentDiv = document.getElementById('apiTestContent');
+    function isApiResource(resource) {
+      const format = (resource.format || '').toLowerCase();
+      const url = (resource.url || '').toLowerCase();
+      const name = (resource.name || '').toLowerCase();
+      const description = (resource.description || '').toLowerCase();
       
-      if (datasets.length === 0) {
-        contentDiv.innerHTML = `
-          <div class="api-no-datasets">
-            <i class="fa fa-code"></i>
-            <h4>API Dataset Bulunamadı</h4>
-            <p>Sistemde API içeren herhangi bir dataset bulunamadı.</p>
-          </div>
+      return format.includes('api') || 
+             url.includes('/api/') || 
+             url.includes('api.') ||
+             name.includes('api') ||
+             description.includes('api') ||
+             (format === 'json' && (url.includes('/api/') || name.includes('api'))) ||
+             (format === 'xml' && (url.includes('/api/') || name.includes('api')));
+    }
+
+    function renderApiTable() {
+      const tbody = document.getElementById('apiTableBody');
+      const pagination = document.getElementById('apiPagination');
+      
+      if (allApiDatasets.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="4" class="api-no-datasets">
+              <i class="fa fa-code"></i>
+              <h4>API Dataset Bulunamadı</h4>
+              <p>Sistemde API içeren herhangi bir dataset bulunamadı.</p>
+            </td>
+          </tr>
         `;
+        pagination.innerHTML = '';
+        return;
+      }
+
+      // Pagination hesaplamaları
+      const totalPages = Math.ceil(allApiDatasets.length / apiItemsPerPage);
+      const startIndex = (currentApiPage - 1) * apiItemsPerPage;
+      const endIndex = Math.min(startIndex + apiItemsPerPage, allApiDatasets.length);
+      const pageDatasets = allApiDatasets.slice(startIndex, endIndex);
+
+      // Tablo içeriğini oluştur
+      let html = '';
+      pageDatasets.forEach((dataset, pageIndex) => {
+        const globalIndex = startIndex + pageIndex + 1;
+        const title = dataset.title || dataset.name || 'İsimsiz Dataset';
+        const description = dataset.notes ? 
+          (dataset.notes.length > 150 ? dataset.notes.substring(0, 150) + '...' : dataset.notes) : 
+          'Açıklama bulunmuyor.';
+        
+        html += `<tr>`;
+        html += `<td class="dataset-number">${globalIndex}</td>`;
+        html += `<td><a href="/dataset/${dataset.name}" class="dataset-title-link" target="_blank">${title}</a></td>`;
+        html += `<td class="dataset-description">${description}</td>`;
+        html += `<td>`;
+        html += `<div class="api-resources-list">`;
+        
+        dataset.apiResources.forEach((resource, resIndex) => {
+          const resourceName = resource.name || resource.format || `API ${resIndex + 1}`;
+          const resourceUrl = resource.url || '#';
+          
+          // Direct link button
+          html += `<a href="${resourceUrl}" target="_blank" class="api-resource-item" title="Doğrudan Aç: ${resourceName}">`;
+          html += `<i class="fa fa-external-link"></i>${resourceName}`;
+          html += `<span class="api-resource-number">${resIndex + 1}</span>`;
+          html += `</a>`;
+          
+          // Test button
+          html += `<button class="api-resource-item api-test-resource-btn" onclick="openApiRequestPopup(${JSON.stringify(resource).replace(/"/g, '&quot;')}, '${resourceName.replace(/'/g, "\\'")}', '${title.replace(/'/g, "\\'")}')">`;
+          html += `<i class="fa fa-play"></i>Test`;
+          html += `</button>`;
+        });
+        
+        html += `</div></td>`;
+        html += `</tr>`;
+      });
+
+      tbody.innerHTML = html;
+
+      // Pagination oluştur
+      renderApiPagination(totalPages);
+    }
+
+    function renderApiPagination(totalPages) {
+      const pagination = document.getElementById('apiPagination');
+      
+      if (totalPages <= 1) {
+        pagination.innerHTML = '';
         return;
       }
 
       let html = '';
       
-      datasets.forEach(dataset => {
-        // API olan resource'ları filtrele
-        const apiResources = dataset.resources.filter(resource => {
-          const format = (resource.format || '').toLowerCase();
-          const url = (resource.url || '').toLowerCase();
-          const name = (resource.name || '').toLowerCase();
-          const description = (resource.description || '').toLowerCase();
-          
-          return format.includes('api') || 
-                 url.includes('/api/') || 
-                 url.includes('api.') ||
-                 name.includes('api') ||
-                 description.includes('api') ||
-                 format === 'json' && (url.includes('/api/') || name.includes('api')) ||
-                 format === 'xml' && (url.includes('/api/') || name.includes('api'));
-        });
+      // Previous button
+      html += `<button ${currentApiPage === 1 ? 'disabled' : ''} onclick="changeApiPage(${currentApiPage - 1})">`;
+      html += `<i class="fa fa-chevron-left"></i> Önceki`;
+      html += `</button>`;
 
-        const title = dataset.title || dataset.name || 'İsimsiz Dataset';
-        const description = dataset.notes ? 
-          (dataset.notes.length > 200 ? dataset.notes.substring(0, 200) + '...' : dataset.notes) : 
-          'Açıklama bulunmuyor.';
+      // Page info
+      const startItem = (currentApiPage - 1) * apiItemsPerPage + 1;
+      const endItem = Math.min(currentApiPage * apiItemsPerPage, allApiDatasets.length);
+      html += `<span class="pagination-info">${startItem}-${endItem} / ${allApiDatasets.length}</span>`;
+
+      // Page numbers
+      const startPage = Math.max(1, currentApiPage - 2);
+      const endPage = Math.min(totalPages, currentApiPage + 2);
+
+      if (startPage > 1) {
+        html += `<button onclick="changeApiPage(1)">1</button>`;
+        if (startPage > 2) {
+          html += `<button disabled>...</button>`;
+        }
+      }
+
+      for (let i = startPage; i <= endPage; i++) {
+        html += `<button ${i === currentApiPage ? 'class="active"' : ''} onclick="changeApiPage(${i})">${i}</button>`;
+      }
+
+      if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+          html += `<button disabled>...</button>`;
+        }
+        html += `<button onclick="changeApiPage(${totalPages})">${totalPages}</button>`;
+      }
+
+      // Next button
+      html += `<button ${currentApiPage === totalPages ? 'disabled' : ''} onclick="changeApiPage(${currentApiPage + 1})">`;
+      html += `Sonraki <i class="fa fa-chevron-right"></i>`;
+      html += `</button>`;
+
+      pagination.innerHTML = html;
+    }
+
+    function changeApiPage(page) {
+      currentApiPage = page;
+      renderApiTable();
+    }
+
+    function setupApiRequestForm(resource, resourceName, datasetName) {
+      const urlDisplay = document.getElementById('apiUrlDisplay');
+      const paramsContainer = document.getElementById('paramsContainer');
+      const paramsSection = document.getElementById('apiRequestParams');
+      const responseContent = document.getElementById('apiResponseContent');
+      const responseStatus = document.getElementById('responseStatus');
+
+      // URL'yi göster
+      urlDisplay.textContent = resource.url || 'URL bulunamadı';
+
+      // Response'ı temizle
+      responseContent.textContent = 'Henüz test edilmedi...';
+      responseStatus.textContent = '';
+      responseStatus.className = 'response-status';
+
+      // URL'den parametreleri çıkar
+      const url = resource.url || '';
+      const paramMatches = url.match(/\{([^}]+)\}/g);
+      
+      if (paramMatches && paramMatches.length > 0) {
+        // Parametreler var
+        paramsSection.style.display = 'block';
+        let paramsHtml = '';
         
-        html += `<div class="api-dataset-item">`;
-        html += `<a href="/dataset/${dataset.name}" class="api-dataset-title" target="_blank">${title}</a>`;
-        html += `<div class="api-dataset-description">${description}</div>`;
-        html += `<div class="api-resources-container">`;
-        html += `<div class="api-resources-title"><i class="fa fa-plug"></i>API Endpoints (${apiResources.length})</div>`;
-        html += `<div class="api-resource-list">`;
-        
-        apiResources.forEach((resource, index) => {
-          const resourceName = resource.name || resource.format || `API ${index + 1}`;
-          const resourceUrl = resource.url || '#';
-          
-          html += `<a href="${resourceUrl}" class="api-resource-item" target="_blank" title="${resourceName}">`;
-          html += `<i class="fa fa-external-link"></i>`;
-          html += `${resourceName}`;
-          html += `<span class="api-resource-number">${index + 1}</span>`;
-          html += `</a>`;
+        paramMatches.forEach(param => {
+          const paramName = param.replace(/[{}]/g, '');
+          paramsHtml += `
+            <div class="param-input-group">
+              <span class="param-label">${paramName}:</span>
+              <input type="text" class="param-input" id="param_${paramName}" placeholder="${paramName} değerini girin">
+            </div>
+          `;
         });
         
-        html += `</div></div></div>`;
+        paramsContainer.innerHTML = paramsHtml;
+      } else {
+        // Parametre yok
+        paramsSection.style.display = 'none';
+        paramsContainer.innerHTML = '';
+      }
+    }
+
+    async function executeApiRequest() {
+      if (!currentApiResource) return;
+
+      const responseContent = document.getElementById('apiResponseContent');
+      const responseStatus = document.getElementById('responseStatus');
+
+      // Loading durumu
+      responseContent.textContent = 'Request gönderiliyor...';
+      responseStatus.textContent = 'Loading...';
+      responseStatus.className = 'response-status';
+
+      try {
+        let apiUrl = currentApiResource.url || '';
+        
+        // Parametreleri değiştir
+        const paramMatches = apiUrl.match(/\{([^}]+)\}/g);
+        if (paramMatches) {
+          paramMatches.forEach(param => {
+            const paramName = param.replace(/[{}]/g, '');
+            const paramInput = document.getElementById(`param_${paramName}`);
+            if (paramInput) {
+              const paramValue = paramInput.value.trim();
+              if (paramValue) {
+                apiUrl = apiUrl.replace(param, encodeURIComponent(paramValue));
+              } else {
+                // Varsayılan değer koy
+                let defaultValue = 'test';
+                if (paramName.toLowerCase().includes('id')) defaultValue = '1';
+                if (paramName.toLowerCase().includes('limit')) defaultValue = '10';
+                if (paramName.toLowerCase().includes('page')) defaultValue = '1';
+                if (paramName.toLowerCase().includes('hatid')) defaultValue = '35';
+                if (paramName.toLowerCase().includes('yon')) defaultValue = '0';
+                apiUrl = apiUrl.replace(param, defaultValue);
+              }
+            }
+          });
+        }
+
+        console.log('API Request URL:', apiUrl);
+
+        const startTime = performance.now();
+        
+        // Doğrudan API'ye istek at
+        const response = await fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json, text/plain, */*',
+            'Content-Type': 'application/json'
+          },
+          mode: 'cors'
+        });
+        
+        const endTime = performance.now();
+        const responseTime = Math.round(endTime - startTime);
+
+        const responseText = await response.text();
+        
+        // Status güncelle
+        responseStatus.textContent = `${response.status} ${response.statusText} (${responseTime}ms)`;
+        responseStatus.className = `response-status ${response.ok ? 'success' : 'error'}`;
+
+        // Response'ı formatla
+        try {
+          const jsonData = JSON.parse(responseText);
+          responseContent.textContent = JSON.stringify(jsonData, null, 2);
+        } catch (e) {
+          // JSON değilse raw text göster
+          responseContent.textContent = responseText;
+        }
+
+      } catch (error) {
+        console.error('API request hatası:', error);
+        responseStatus.textContent = 'Request Failed';
+        responseStatus.className = 'response-status error';
+        
+        let errorMessage = `Hata: ${error.message}\n\n`;
+        
+        if (error.message.includes('CORS')) {
+          errorMessage += `CORS Hatası: Bu API endpoint'i tarayıcıdan doğrudan erişime izin vermiyor.\n`;
+          errorMessage += `Çözüm önerileri:\n`;
+          errorMessage += `1. API'yi Postman veya cURL ile test edin\n`;
+          errorMessage += `2. Sunucu tarafından CORS ayarları yapılması gerekiyor\n`;
+          errorMessage += `3. Proxy server kullanılabilir\n\n`;
+        }
+        
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage += `Bağlantı Hatası: API endpoint'ine ulaşılamıyor.\n`;
+          errorMessage += `Kontrol edilecekler:\n`;
+          errorMessage += `1. URL doğru mu?\n`;
+          errorMessage += `2. API servisi çalışıyor mu?\n`;
+          errorMessage += `3. İnternet bağlantısı var mı?\n\n`;
+        }
+        
+        errorMessage += `Test URL: ${currentApiResource.url}`;
+        
+        responseContent.textContent = errorMessage;
+      }
+    }
+
+    function clearResponse() {
+      const responseContent = document.getElementById('apiResponseContent');
+      const responseStatus = document.getElementById('responseStatus');
+      
+      responseContent.textContent = 'Henüz test edilmedi...';
+      responseStatus.textContent = '';
+      responseStatus.className = 'response-status';
+      
+      // Parametre inputlarını da temizle
+      const paramInputs = document.querySelectorAll('.param-input');
+      paramInputs.forEach(input => {
+        input.value = '';
       });
-
-      contentDiv.innerHTML = html;
     }
   </script>
 

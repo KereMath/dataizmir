@@ -19,14 +19,14 @@ this.ckan.module('table-toggle-more', function($) {
         // How much is the colspan?
         var cols = $('thead tr th', this.el).length;
         var template_more = [
-          '<tr class="toggle-show toggle-show-more">',
-          '<td colspan="'+cols+'">',
-          '<small>',
-          '<a href="#" class="show-more">' + this._('Show more') + '</a>',
-          '<a href="#" class="show-less">' + this._('Hide') + '</a>',
-          '</small>',
-          '</td>',
-          '</tr>'
+          // '<tr class="toggle-show toggle-show-more">',
+          // '<td colspan="'+cols+'">',
+          // '<small>',
+          // '<a href="#" class="show-more">' + this._('Show more') + '</a>',
+          // '<a href="#" class="show-less">' + this._('Hide') + '</a>',
+          // '</small>',
+          // '</td>',
+          // '</tr>'
         ].join('\n');
         var template_seperator = [
           '<tr class="toggle-seperator">',

@@ -93,6 +93,7 @@ def make_map():
     # CUSTOM ROUTES HERE
     for plugin in p.PluginImplementations(p.IRoutes):
         map = plugin.before_map(map)
+    map.connect('/admin/api_testing', controller='ckan.controllers.admin:AdminController', action='api_testing')
 
     # The ErrorController route (handles 404/500 error pages); it should
     # likely stay at the top, ensuring it can always be resolved.

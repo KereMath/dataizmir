@@ -9,6 +9,7 @@ import ckan.lib.navl.dictization_functions as dict_fns
 import ckan.model as model
 import ckan.logic as logic
 from ckan.controllers.home import CACHE_PARAMETERS
+from ckan.lib.base import render # Bu satır dosyanın en başında olmalı
 
 
 c = base.c
@@ -198,4 +199,4 @@ class AdminController(base.BaseController):
         #    h.redirect_to(h.url_for('login'))
         #    return
 
-        return base.render('admin/api_testing.html')
+        return render('admin/api_testing.html')

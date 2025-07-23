@@ -90,7 +90,143 @@
   background: white !important;
 }
 
-/* Iframe Styling */
+/* PDF Viewer Specific */
+.pdf-viewer-container {
+  position: relative !important;
+  background: white !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+}
+
+.pdf-viewer-header {
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0) !important;
+  padding: 1rem 1.5rem !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.pdf-viewer-title {
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  color: #374151 !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.pdf-viewer-title i {
+  margin-right: 0.75rem !important;
+  color: #dc2626 !important;
+}
+
+.pdf-viewer-actions {
+  display: flex !important;
+  gap: 0.75rem !important;
+}
+
+.pdf-viewer-actions .btn {
+  background: white !important;
+  border: 2px solid #e2e8f0 !important;
+  color: #374151 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.3s ease !important;
+  text-decoration: none !important;
+}
+
+.pdf-viewer-actions .btn:hover {
+  background: #f8fafc !important;
+  border-color: #667eea !important;
+  color: #667eea !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.pdf-viewer-actions .btn-primary {
+  background: linear-gradient(135deg, #667eea, #764ba2) !important;
+  border: none !important;
+  color: white !important;
+}
+
+.pdf-viewer-actions .btn-primary:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1) !important;
+  color: white !important;
+}
+
+.pdf-embed-container {
+  padding: 1.5rem !important;
+  background: #f8fafc !important;
+  text-align: center !important;
+}
+
+.pdf-embed-message {
+  background: rgba(220, 38, 38, 0.1) !important;
+  border: 2px dashed #dc2626 !important;
+  border-radius: 12px !important;
+  padding: 2rem !important;
+  color: #dc2626 !important;
+  font-weight: 500 !important;
+  margin-bottom: 1.5rem !important;
+}
+
+.pdf-embed-message i {
+  font-size: 2rem !important;
+  margin-bottom: 1rem !important;
+  display: block !important;
+}
+
+.pdf-fallback-actions {
+  display: flex !important;
+  gap: 1rem !important;
+  justify-content: center !important;
+  flex-wrap: wrap !important;
+}
+
+.pdf-fallback-actions .btn {
+  padding: 1rem 2rem !important;
+  font-weight: 600 !important;
+  border-radius: 10px !important;
+  transition: all 0.3s ease !important;
+  text-decoration: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.75rem !important;
+}
+
+.pdf-fallback-actions .btn-primary {
+  background: linear-gradient(135deg, #dc2626, #b91c1c) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.pdf-fallback-actions .btn-primary:hover {
+  background: linear-gradient(135deg, #b91c1c, #991b1b) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.3) !important;
+  color: white !important;
+}
+
+.pdf-fallback-actions .btn-secondary {
+  background: white !important;
+  color: #374151 !important;
+  border: 2px solid #e2e8f0 !important;
+}
+
+.pdf-fallback-actions .btn-secondary:hover {
+  background: #f8fafc !important;
+  border-color: #667eea !important;
+  color: #667eea !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Iframe Styling for non-PDF resources */
 iframe[data-module="data-viewer"] {
   border-radius: 12px !important;
   border: 1px solid rgba(226, 232, 240, 0.8) !important;
@@ -219,209 +355,6 @@ textarea.pre {
   padding: 1rem !important;
 }
 
-/* Filter Section Enhancement */
-.resource-view-filters {
-  background: rgba(255, 255, 255, 0.98) !important;
-  border-radius: 16px !important;
-  padding: 1.5rem !important;
-  margin: 0 !important;
-  border: 1px solid rgba(226, 232, 240, 0.8) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08) !important;
-  backdrop-filter: blur(20px) !important;
-  width: 100% !important;
-  position: relative !important;
-  overflow: hidden !important;
-}
-
-.resource-view-filters::before {
-  content: '' !important;
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.02), rgba(118, 75, 162, 0.02)) !important;
-  pointer-events: none !important;
-}
-
-.resource-view-filters * {
-  position: relative !important;
-  z-index: 2 !important;
-  color: #374151 !important;
-}
-
-.resource-view-filters .control-label {
-  color: #374151 !important;
-  font-weight: 600 !important;
-  font-size: 0.875rem !important;
-  text-transform: uppercase !important;
-  letter-spacing: 0.05em !important;
-  margin-bottom: 0.5rem !important;
-}
-
-.resource-view-filters .form-control,
-.resource-view-filters .control-full,
-.resource-view-filters input,
-.resource-view-filters select {
-  background: white !important;
-  border: 2px solid #e2e8f0 !important;
-  border-radius: 10px !important;
-  padding: 0.75rem 1rem !important;
-  color: #374151 !important;
-  font-weight: 500 !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05) !important;
-  width: 100% !important;
-}
-
-.resource-view-filters .form-control::placeholder,
-.resource-view-filters input::placeholder {
-  color: #9ca3af !important;
-  font-style: normal !important;
-}
-
-.resource-view-filters .form-control:focus,
-.resource-view-filters .control-full:focus,
-.resource-view-filters input:focus,
-.resource-view-filters select:focus {
-  outline: none !important;
-  border-color: #667eea !important;
-  background: white !important;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1), 0 4px 12px rgba(0, 0, 0, 0.1) !important;
-  transform: translateY(-1px) !important;
-}
-
-.resource-view-filters .btn {
-  background: linear-gradient(135deg, #667eea, #764ba2) !important;
-  border: none !important;
-  color: white !important;
-  border-radius: 10px !important;
-  padding: 0.75rem 1.5rem !important;
-  font-weight: 600 !important;
-  transition: all 0.3s ease !important;
-  text-transform: none !important;
-  letter-spacing: normal !important;
-  font-size: 0.875rem !important;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3) !important;
-  margin-left: 0 !important;
-}
-
-.resource-view-filters .btn:hover {
-  background: linear-gradient(135deg, #5a67d8, #6b46c1) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4) !important;
-  color: white !important;
-}
-
-.resource-view-filters .btn-primary {
-  background: linear-gradient(135deg, #667eea, #764ba2) !important;
-}
-
-.resource-view-filters .btn-primary:hover {
-  background: linear-gradient(135deg, #5a67d8, #6b46c1) !important;
-}
-
-/* Filter Grid Layout - Remove left spacing */
-.resource-view-filters .form-group {
-  margin-bottom: 1rem !important;
-  width: 100% !important;
-}
-
-.resource-view-filters .row {
-  margin: 0 !important;
-  width: 100% !important;
-}
-
-.resource-view-filters .col-md-3,
-.resource-view-filters .col-md-4,
-.resource-view-filters .col-md-6,
-.resource-view-filters [class*="col-"] {
-  padding-left: 0 !important;
-  padding-right: 0.75rem !important;
-  width: 100% !important;
-}
-
-.resource-view-filters .col-md-3:first-child,
-.resource-view-filters .col-md-4:first-child,
-.resource-view-filters .col-md-6:first-child,
-.resource-view-filters [class*="col-"]:first-child {
-  padding-left: 0 !important;
-}
-
-/* Filter Title */
-.resource-view-filters h3,
-.resource-view-filters h4 {
-  color: #1f2937 !important;
-  font-weight: 700 !important;
-  margin-bottom: 1.5rem !important;
-  font-size: 1.125rem !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-.resource-view-filters h3:before,
-.resource-view-filters h4:before {
-  content: '🔍' !important;
-  margin-right: 0.75rem !important;
-  font-size: 1.25rem !important;
-}
-
-/* Select Dropdown Styling */
-.resource-view-filters select option {
-  background: white !important;
-  color: #374151 !important;
-  padding: 0.5rem !important;
-}
-
-/* Checkbox and Radio Styling */
-.resource-view-filters input[type="checkbox"],
-.resource-view-filters input[type="radio"] {
-  width: 1.125rem !important;
-  height: 1.125rem !important;
-  margin-right: 0.5rem !important;
-  accent-color: #667eea !important;
-}
-
-/* Filter Tags/Chips */
-.filter-tag {
-  display: inline-block !important;
-  background: rgba(102, 126, 234, 0.1) !important;
-  color: #667eea !important;
-  padding: 0.375rem 0.875rem !important;
-  border-radius: 20px !important;
-  font-size: 0.8rem !important;
-  font-weight: 500 !important;
-  margin: 0.25rem 0.25rem 0.25rem 0 !important;
-  border: 1px solid rgba(102, 126, 234, 0.2) !important;
-  transition: all 0.3s ease !important;
-}
-
-.filter-tag:hover {
-  background: rgba(102, 126, 234, 0.15) !important;
-  transform: scale(1.05) !important;
-}
-
-.filter-tag .remove {
-  margin-left: 0.5rem !important;
-  cursor: pointer !important;
-  opacity: 0.7 !important;
-}
-
-.filter-tag .remove:hover {
-  opacity: 1 !important;
-}
-
-/* Container override to remove left spacing */
-.resource-view-filters .container,
-.resource-view-filters .container-fluid {
-  padding-left: 0 !important;
-  padding-right: 0 !important;
-  margin-left: 0 !important;
-  margin-right: 0 !important;
-  width: 100% !important;
-  max-width: 100% !important;
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
   .view-header {
@@ -443,8 +376,14 @@ textarea.pre {
     padding: 1rem !important;
   }
   
-  iframe[data-module="data-viewer"] {
-    min-height: 300px !important;
+  .pdf-fallback-actions {
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  
+  .pdf-fallback-actions .btn {
+    width: 100% !important;
+    max-width: 300px !important;
   }
 }
 
@@ -456,16 +395,6 @@ textarea.pre {
 
 .loading iframe {
   animation: pulse 2s infinite !important;
-}
-
-/* Fullscreen Mode Enhancement */
-.btn[href*="Fullscreen"] {
-  position: relative !important;
-}
-
-.btn[href*="Fullscreen"]::before {
-  content: '🔍' !important;
-  margin-right: 0.5rem !important;
 }
 </style>
 
@@ -504,53 +433,100 @@ textarea.pre {
     <div class="view-content">
       <div class="ckanext-datapreview">
         {% if not to_preview and h.resource_view_is_filterable(resource_view) %}
-          <!-- <div class="resource-view-filters">
-            {% snippet 'package/snippets/resource_view_filters.html', resource=resource %}
-          </div> -->
+          <!-- Filters removed for cleaner view -->
         {% endif %}
         
         {% if not h.resource_view_is_iframed(resource_view) %}
           {{ h.rendered_resource_view(resource_view, resource, package) }}
         {% else %}
-          <div class="data-viewer-error js-hide">
-            <p class="text-danger">
-              <i class="fa fa-exclamation-triangle fa-2x"></i><br><br>
-              {{ _('Bu kaynak görünümü şu anda kullanılamıyor.') }}
-            </p>
-            <a href="#" data-toggle="collapse" data-target="#data-view-error" class="btn btn-outline-secondary">
-              {{ _('Daha fazla bilgi için tıklayın') }}
-            </a>
-            <div id="data-view-error" class="collapse mt-3"></div>
-            <br><br>
-            <a href="{{ resource.url }}" class="btn btn-lg resource-url-analytics" target="_blank">
-              <i class="fa fa-download fa-lg"></i>
-              {{ _('Kaynağı İndir') }}
-            </a>
-          </div>
+          <!-- PDF Detection and Special Handling -->
+          {% set is_pdf = resource.format and resource.format.lower() == 'pdf' %}
+          {% set resource_url_lower = resource.url.lower() if resource.url else '' %}
+          {% set is_pdf_url = '.pdf' in resource_url_lower %}
           
-          {% if not to_preview %}
-            {% set current_filters = request.args.get('filters') %}
-            {% if current_filters %}
-              {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
-                resource_id=resource['id'],
-                view_id=resource_view['id'],
-                filters=current_filters, qualified=true)  %}
-            {% else %}
-              {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
-                resource_id=resource['id'],
-                view_id=resource_view['id'], qualified=true)  %}
-            {% endif %}
+          {% if is_pdf or is_pdf_url %}
+            <!-- PDF Specific Viewer -->
+            <div class="pdf-viewer-container">
+              <div class="pdf-viewer-header">
+                <h4 class="pdf-viewer-title">
+                  <i class="fa fa-file-pdf-o"></i>
+                  PDF Dökümanı
+                </h4>
+                <div class="pdf-viewer-actions">
+                  <a href="{{ resource.url }}" class="btn btn-secondary" target="_blank">
+                    <i class="fa fa-external-link"></i>
+                    Yeni Sekmede Aç
+                  </a>
+                  <a href="{{ resource.url }}" class="btn btn-primary" download>
+                    <i class="fa fa-download"></i>
+                    İndir
+                  </a>
+                </div>
+              </div>
+              
+              <div class="pdf-embed-container">
+                <div class="pdf-embed-message">
+                  <i class="fa fa-shield"></i>
+                  <strong>Güvenlik Kısıtlaması</strong><br>
+                  Bu PDF dosyası sunucu güvenlik ayarları nedeniyle doğrudan burada görüntülenemiyor.
+                  <br><small>(X-Frame-Options: sameorigin)</small>
+                </div>
+                
+                <div class="pdf-fallback-actions">
+                  <a href="{{ resource.url }}" class="btn btn-primary" target="_blank">
+                    <i class="fa fa-external-link"></i>
+                    PDF'i Yeni Sekmede Görüntüle
+                  </a>
+                  <a href="{{ resource.url }}" class="btn btn-secondary" download>
+                    <i class="fa fa-download"></i>
+                    PDF'i Bilgisayara İndir
+                  </a>
+                </div>
+              </div>
+            </div>
           {% else %}
-            {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'], resource_id=resource['id'], qualified=true) + '?' + h.urlencode({'resource_view': h.dump_json(resource_view)}) %}
+            <!-- Normal iframe for non-PDF resources -->
+            <div class="data-viewer-error js-hide">
+              <p class="text-danger">
+                <i class="fa fa-exclamation-triangle fa-2x"></i><br><br>
+                {{ _('Bu kaynak görünümü şu anda kullanılamıyor.') }}
+              </p>
+              <a href="#" data-toggle="collapse" data-target="#data-view-error" class="btn btn-outline-secondary">
+                {{ _('Daha fazla bilgi için tıklayın') }}
+              </a>
+              <div id="data-view-error" class="collapse mt-3"></div>
+              <br><br>
+              <a href="{{ resource.url }}" class="btn btn-lg resource-url-analytics" target="_blank">
+                <i class="fa fa-download fa-lg"></i>
+                {{ _('Kaynağı İndir') }}
+              </a>
+            </div>
+            
+            {% if not to_preview %}
+              {% set current_filters = request.args.get('filters') %}
+              {% if current_filters %}
+                {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
+                  resource_id=resource['id'],
+                  view_id=resource_view['id'],
+                  filters=current_filters, qualified=true)  %}
+              {% else %}
+                {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'],
+                  resource_id=resource['id'],
+                  view_id=resource_view['id'], qualified=true)  %}
+              {% endif %}
+            {% else %}
+              {% set src = h.url_for(package['type'] ~ '_resource.view', id=package['name'], resource_id=resource['id'], qualified=true) + '?' + h.urlencode({'resource_view': h.dump_json(resource_view)}) %}
+            {% endif %}
+            
+            <iframe src="{{ src }}" 
+                    frameborder="0" 
+                    width="100%" 
+                    data-module="data-viewer"
+                    class="loading"
+                    onerror="handleIframeError(this)">
+              <p>{{ _('Tarayıcınız iframe desteklemiyor.') }}</p>
+            </iframe>
           {% endif %}
-          
-          <iframe src="{{ src }}" 
-                  frameborder="0" 
-                  width="100%" 
-                  data-module="data-viewer"
-                  class="loading">
-            <p>{{ _('Tarayıcınız iframe desteklemiyor.') }}</p>
-          </iframe>
         {% endif %}
       </div>
     </div>
@@ -589,13 +565,25 @@ textarea.pre {
   </div>
 
   <script>
-    // Enhanced iframe loading
+    // Enhanced iframe loading and error handling
     document.addEventListener('DOMContentLoaded', function() {
       const iframe = document.querySelector('iframe[data-module="data-viewer"]');
       if (iframe) {
         iframe.addEventListener('load', function() {
           this.classList.remove('loading');
         });
+        
+        // Iframe error detection
+        iframe.addEventListener('error', function() {
+          handleIframeError(this);
+        });
+        
+        // Check if iframe failed to load after timeout
+        setTimeout(function() {
+          if (iframe.classList.contains('loading')) {
+            handleIframeError(iframe);
+          }
+        }, 10000); // 10 second timeout
       }
       
       // Auto-generate embed code
@@ -618,5 +606,39 @@ textarea.pre {
         updateEmbedCode(); // Initial generation
       }
     });
+
+    // Handle iframe errors (X-Frame-Options, network issues, etc.)
+    function handleIframeError(iframe) {
+      const errorDiv = iframe.parentElement.querySelector('.data-viewer-error');
+      if (errorDiv) {
+        errorDiv.classList.remove('js-hide');
+        errorDiv.style.display = 'block';
+        
+        // Hide the iframe
+        iframe.style.display = 'none';
+        
+        // Update error message
+        const errorDetails = errorDiv.querySelector('#data-view-error');
+        if (errorDetails) {
+          errorDetails.innerHTML = `
+            <div class="alert alert-warning">
+              <strong>Muhtemel Nedenler:</strong><br>
+              • Sunucu güvenlik ayarları (X-Frame-Options)<br>
+              • CORS (Cross-Origin Resource Sharing) kısıtlaması<br>
+              • Ağ bağlantı sorunu<br>
+              • Kaynak geçici olarak erişilemez durumda<br><br>
+              <strong>Çözüm:</strong> Kaynağı yeni sekmede açmayı veya doğrudan indirmeyi deneyin.
+            </div>
+          `;
+        }
+      }
+    }
+
+    // PDF.js integration fallback (if needed)
+    function loadPDFViewer(pdfUrl, containerId) {
+      // This is a placeholder for PDF.js integration
+      // Could be implemented if you want inline PDF viewing
+      console.log('PDF viewer could be loaded here for:', pdfUrl);
+    }
   </script>
 {% endblock %}

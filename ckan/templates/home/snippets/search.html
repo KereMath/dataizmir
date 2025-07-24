@@ -45,19 +45,211 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Arama formunu ve input alanını seçiyoruz.
+  // Türkçe karakter dönüştürme fonksiyonu
+  function turkishToNormalized(text) {
+    if (!text) return '';
+    
+    // Türkçe karakter dönüşüm tablosu
+    const turkishChars = {
+      'Ç': 'C', 'ç': 'c',
+      'Ğ': 'G', 'ğ': 'g', 
+      'İ': 'I', 'ı': 'i',
+      'Ö': 'O', 'ö': 'o',
+      'Ş': 'S', 'ş': 's',
+      'Ü': 'U', 'ü': 'u'
+    };
+    
+    return text.replace(/[ÇçĞğİıÖöŞşÜü]/g, function(match) {
+      return turkishChars[match] || match;
+    });
+  }
+
+  // Gelişmiş arama terimi hazırlama fonksiyonu
+  function prepareSearchTerms(searchTerm) {
+    if (!searchTerm) return [];
+    
+    const terms = [];
+    const cleanTerm = searchTerm.trim();
+    
+    // 1. Orijinal arama terimi
+    terms.push(cleanTerm);
+    
+    // 2. Normalize edilmiş arama terimi (Türkçe karakterler İngilizce'ye çevrilmiş)
+    const normalizedTerm = turkishToNormalized(cleanTerm);
+    if (normalizedTerm !== cleanTerm) {
+      terms.push(normalizedTerm);
+    }
+    
+    // 3. Küçük harfli versiyonları da ekle
+    const lowerOriginal = cleanTerm.toLowerCase();
+    const lowerNormalized = normalizedTerm.toLowerCase();
+    
+    if (!terms.includes(lowerOriginal)) {
+      terms.push(lowerOriginal);
+    }
+    if (!terms.includes(lowerNormalized)) {
+      terms.push(lowerNormalized);
+    }
+    
+    // 4. Büyük harfli versiyonları da ekle
+    const upperOriginal = cleanTerm.toUpperCase();
+    const upperNormalized = normalizedTerm.toUpperCase();
+    
+    if (!terms.includes(upperOriginal)) {
+      terms.push(upperOriginal);
+    }
+    if (!terms.includes(upperNormalized)) {
+      terms.push(upperNormalized);
+    }
+    
+    // Benzersiz terimleri döndür
+    return [...new Set(terms)].filter(term => term.length > 0);
+  }
+
+  // Arama formunu ve input alanını seçiyoruz
   const searchForm = document.querySelector('.search-form');
   const searchInput = document.getElementById('field-main-search');
 
   if (searchForm && searchInput) {
-    // Form gönderildiğinde (Enter'a basıldığında veya butona tıklandığında) çalışacak.
-    searchForm.addEventListener('submit', function() {
+    // Form gönderildiğinde (Enter'a basıldığında veya butona tıklandığında) çalışacak
+    searchForm.addEventListener('submit', function(e) {
       const searchTerm = searchInput.value.trim();
+      
       if (searchTerm) {
-        // Input'taki değeri 'globalSearchTerm' adıyla localStorage'a kaydediyoruz.
+        // Türkçe karakter kontrolü ve uyarı
+        const normalizedTerm = turkishToNormalized(searchTerm);
+        const hasTurkishChars = normalizedTerm !== searchTerm;
+        
+        if (hasTurkishChars) {
+          console.log(`🔤 Türkçe karakter tespit edildi: "${searchTerm}" → "${normalizedTerm}"`);
+          console.log('🔍 Gelişmiş arama aktif: Hem orijinal hem normalize edilmiş karakterlerle arama yapılacak');
+        }
+        
+        // Orijinal arama terimini localStorage'a kaydet
+        // Ana tabloda bu terim kullanılarak gelişmiş arama yapılacak
         localStorage.setItem('globalSearchTerm', searchTerm);
+        
+        // Form normal şekilde gönderilsin - CKAN'ın kendi arama mantığı çalışsın
+        console.log(`📤 Form gönderiliyor: "${searchTerm}"`);
+        console.log('💾 localStorage\'a kaydedildi, ana tabloda gelişmiş arama yapılacak');
+        
+        // URL'ye de arama terimini ekle (CKAN'ın standart davranışı)
+        const currentAction = searchForm.action;
+        const separator = currentAction.includes('?') ? '&' : '?';
+        const newAction = `${currentAction}${separator}q=${encodeURIComponent(searchTerm)}`;
+        
+        // Form action'ını güncelle
+        searchForm.action = newAction;
+      }
+    });
+
+    // Input alanında gerçek zamanlı karakter kontrolü
+    searchInput.addEventListener('input', function() {
+      const currentValue = this.value;
+      const normalizedValue = turkishToNormalized(currentValue);
+      
+      // Türkçe karakter varsa görsel geri bildirim verebiliriz
+      if (normalizedValue !== currentValue && currentValue.length > 0) {
+        // İsteğe bağlı: Input'a özel bir class ekleyebiliriz
+        this.setAttribute('data-has-turkish-chars', 'true');
+        this.title = `Türkçe karakterli arama: "${currentValue}"\nAyrıca şu şekilde de aranacak: "${normalizedValue}"`;
+      } else {
+        this.removeAttribute('data-has-turkish-chars');
+        this.title = '';
+      }
+    });
+
+    // Enter tuşu ile arama
+    searchInput.addEventListener('keypress', function(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        searchForm.dispatchEvent(new Event('submit'));
+      }
+    });
+
+    // Sayfa yüklendiğinde mevcut URL'den arama terimini al
+    const urlParams = new URLSearchParams(window.location.search);
+    const qParam = urlParams.get('q');
+    if (qParam) {
+      searchInput.value = qParam;
+      console.log(`🔗 URL'den arama terimi alındı: "${qParam}"`);
+      
+      // Türkçe karakter kontrolü
+      const normalizedParam = turkishToNormalized(qParam);
+      if (normalizedParam !== qParam) {
+        console.log(`🔤 URL'deki arama teriminde Türkçe karakter: "${qParam}" → "${normalizedParam}"`);
+        searchInput.setAttribute('data-has-turkish-chars', 'true');
+        searchInput.title = `Türkçe karakterli arama: "${qParam}"\nAyrıca şu şekilde de aranacak: "${normalizedParam}"`;
+      }
+    }
+  }
+
+  // Global arama testi fonksiyonu (geliştirme amaçlı)
+  window.testTurkishSearch = function(testTerm) {
+    console.log('=== TÜRKÇE ARAMA TESTİ ===');
+    console.log(`Test terimi: "${testTerm}"`);
+    
+    const searchTerms = prepareSearchTerms(testTerm);
+    console.log('Hazırlanan arama terimleri:', searchTerms);
+    
+    const normalizedTerm = turkishToNormalized(testTerm);
+    console.log(`Normalize edilmiş: "${normalizedTerm}"`);
+    
+    const hasTurkishChars = normalizedTerm !== testTerm;
+    console.log(`Türkçe karakter var mı: ${hasTurkishChars}`);
+    
+    console.log('=== TEST TAMAMLANDI ===');
+    
+    return {
+      original: testTerm,
+      normalized: normalizedTerm,
+      hasTurkishChars: hasTurkishChars,
+      allTerms: searchTerms
+    };
+  };
+
+  // Geliştirme amaçlı test örnekleri
+  if (window.location.hostname === 'localhost' || window.location.hostname.includes('dev')) {
+    console.log('🧪 Geliştirme modu tespit edildi. Türkçe arama testleri:');
+    
+    const testCases = [
+      'ithalat',
+      'İthalat', 
+      'ITHALAT',
+      'ihracat',
+      'İhracat',
+      'ticaret',
+      'Ticaret',
+      'göç',
+      'Göç',
+      'özet',
+      'Özet',
+      'şirket',
+      'Şirket'
+    ];
+    
+    testCases.forEach(testCase => {
+      const result = window.testTurkishSearch(testCase);
+      if (result.hasTurkishChars) {
+        console.log(`✓ "${result.original}" → "${result.normalized}"`);
       }
     });
   }
 });
+
+// CSS stilleri - Türkçe karakter görsel geri bildirimi için
+const style = document.createElement('style');
+style.textContent = `
+  /* Türkçe karakterli input için görsel geri bildirim */
+  input[data-has-turkish-chars="true"] {
+    border-left: 3px solid #17a2b8 !important;
+    background-image: linear-gradient(45deg, transparent 30%, rgba(23, 162, 184, 0.1) 30%, rgba(23, 162, 184, 0.1) 70%, transparent 70%);
+  }
+  
+  /* Hover durumunda tooltip benzeri efekt */
+  input[data-has-turkish-chars="true"]:focus {
+    box-shadow: 0 0 0 0.2rem rgba(23, 162, 184, 0.3) !important;
+  }
+`;
+document.head.appendChild(style);
 </script>

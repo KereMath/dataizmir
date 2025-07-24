@@ -704,6 +704,59 @@
     var startX = 0;
     var startWidth = 0;
 
+    // YENİ: Türkçe karakter dönüştürme fonksiyonu
+    function turkishToNormalized(text) {
+      if (!text) return '';
+      
+      // Türkçe karakter dönüşüm tablosu
+      const turkishChars = {
+        'Ç': 'C', 'ç': 'c',
+        'Ğ': 'G', 'ğ': 'g',
+        'İ': 'I', 'ı': 'i',
+        'Ö': 'O', 'ö': 'o',
+        'Ş': 'S', 'ş': 's',
+        'Ü': 'U', 'ü': 'u'
+      };
+      
+      return text.replace(/[ÇçĞğİıÖöŞşÜü]/g, function(match) {
+        return turkishChars[match] || match;
+      });
+    }
+
+    // YENİ: Gelişmiş arama fonksiyonu - hem orijinal hem normalize edilmiş metinlerde arar
+    function searchInText(searchTerm, targetText) {
+      if (!searchTerm || !targetText) return false;
+      
+      // Hem arama terimini hem hedef metni küçük harfe çevir
+      const normalizedSearchTerm = searchTerm.toLowerCase();
+      const normalizedTargetText = targetText.toLowerCase();
+      
+      // 1. Direkt arama (orijinal karakterlerle)
+      if (normalizedTargetText.includes(normalizedSearchTerm)) {
+        return true;
+      }
+      
+      // 2. Türkçe karaktersiz arama (normalize edilmiş)
+      const searchTermNormalized = turkishToNormalized(normalizedSearchTerm);
+      const targetTextNormalized = turkishToNormalized(normalizedTargetText);
+      
+      if (targetTextNormalized.includes(searchTermNormalized)) {
+        return true;
+      }
+      
+      // 3. Çift yönlü arama - arama terimi Türkçe karakterli, hedef metin Türkçe karaktersiz olabilir
+      if (normalizedTargetText.includes(searchTermNormalized)) {
+        return true;
+      }
+      
+      // 4. Ters arama - hedef metin Türkçe karakterli, arama terimi Türkçe karaktersiz olabilir
+      if (targetTextNormalized.includes(normalizedSearchTerm)) {
+        return true;
+      }
+      
+      return false;
+    }
+
     // PERFORMANS: Debounce fonksiyonu
     function debounce(func, wait) {
         let timeout;
@@ -1153,7 +1206,7 @@
     }
     
     function filterDatasets() {
-      var searchVal = document.getElementById("searchTitle").value.trim().toLowerCase();
+      var searchVal = document.getElementById("searchTitle").value.trim();
       var sortOrder = document.getElementById("sortOrder").value;
 
       filteredDatasets = allDatasets.filter(function(pkg) {
@@ -1161,7 +1214,9 @@
         if (pkg.private === true && !showPrivate) return false;
         if (pkg.private !== true && !showPublic) return false;
         
-        if (searchVal && !(pkg.title || pkg.name || '').toLowerCase().includes(searchVal)) return false;
+        // YENİ: Gelişmiş Türkçe karakter destekli arama
+        if (searchVal && !searchInText(searchVal, pkg.title || pkg.name || '')) return false;
+        
         if (selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
         if (selectedUsers.size && !selectedUsers.has(pkg.creatorUsername)) return false;
 
@@ -1578,13 +1633,20 @@
       subtree: true 
     });
 
+    // YENİ: Gelişmiş global arama ve filtre uygulama fonksiyonu
     function applyGlobalSearchAndFilter() {
       const searchTerm = localStorage.getItem('globalSearchTerm');
       if (searchTerm) {
         const titleSearchInput = document.getElementById('searchTitle');
         if (titleSearchInput) {
           titleSearchInput.value = searchTerm;
-          console.log(`'${searchTerm}' local storage'dan alınıp arama kutusuna yazıldı.`);
+          console.log(`'${searchTerm}' localStorage'dan alınıp arama kutusuna yazıldı.`);
+          
+          // Türkçe karakter uyarısı (geliştirme amaçlı)
+          if (turkishToNormalized(searchTerm) !== searchTerm) {
+            console.log(`🔤 Türkçe karakter tespit edildi: "${searchTerm}" → "${turkishToNormalized(searchTerm)}"`);
+            console.log('🔍 Gelişmiş arama aktif: Hem orijinal hem normalize edilmiş karakterlerle arama yapılacak');
+          }
         }
         localStorage.removeItem('globalSearchTerm');
       }

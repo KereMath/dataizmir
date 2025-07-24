@@ -45,23 +45,21 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Türkçe karakter dönüştürme fonksiyonu
-  function turkishToNormalized(text) {
+  // Türkçe'ye özel normalize fonksiyonu - toLowerCase() sorununu çözer
+  function turkishNormalize(text) {
     if (!text) return '';
     
-    // Türkçe karakter dönüşüm tablosu
-    const turkishChars = {
-      'Ç': 'C', 'ç': 'c',
-      'Ğ': 'G', 'ğ': 'g', 
-      'İ': 'I', 'ı': 'i',
-      'Ö': 'O', 'ö': 'o',
-      'Ş': 'S', 'ş': 's',
-      'Ü': 'U', 'ü': 'u'
-    };
+    // Önce Türkçe karakterleri İngilizce karşılıklarına çevir
+    let normalized = text
+      .replace(/Ç/g, 'C').replace(/ç/g, 'c')
+      .replace(/Ğ/g, 'G').replace(/ğ/g, 'g')
+      .replace(/İ/g, 'I').replace(/ı/g, 'i')  // İ->I, ı->i
+      .replace(/Ö/g, 'O').replace(/ö/g, 'o')
+      .replace(/Ş/g, 'S').replace(/ş/g, 's')
+      .replace(/Ü/g, 'U').replace(/ü/g, 'u');
     
-    return text.replace(/[ÇçĞğİıÖöŞşÜü]/g, function(match) {
-      return turkishChars[match] || match;
-    });
+    // Sonra güvenli toLowerCase() uygula
+    return normalized.toLowerCase();
   }
 
   // Gelişmiş arama terimi hazırlama fonksiyonu
@@ -120,9 +118,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const normalizedTerm = turkishToNormalized(searchTerm);
         const hasTurkishChars = normalizedTerm !== searchTerm;
         
+      if (searchTerm) {
+        // Türkçe karakter kontrolü ve uyarı
+        const normalizedTerm = turkishNormalize(searchTerm);
+        const originalLower = searchTerm.toLowerCase();
+        const hasTurkishChars = normalizedTerm !== originalLower;
+        
         if (hasTurkishChars) {
-          console.log(`🔤 Türkçe karakter tespit edildi: "${searchTerm}" → "${normalizedTerm}"`);
-          console.log('🔍 Gelişmiş arama aktif: Hem orijinal hem normalize edilmiş karakterlerle arama yapılacak');
+          console.log(`🔤 Türkçe karakter tespit edildi: "${searchTerm}"`);
+          console.log(`📝 Orijinal toLowerCase: "${originalLower}"`);
+          console.log(`🔧 Türkçe normalize: "${normalizedTerm}"`);
+          console.log('🔍 Gelişmiş arama aktif: Türkçe karakterler düzgün işlenecek');
         }
         
         // Orijinal arama terimini localStorage'a kaydet
@@ -140,6 +146,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Form action'ını güncelle
         searchForm.action = newAction;
+      }
       }
     });
 
@@ -175,36 +182,48 @@ document.addEventListener('DOMContentLoaded', function() {
       console.log(`🔗 URL'den arama terimi alındı: "${qParam}"`);
       
       // Türkçe karakter kontrolü
-      const normalizedParam = turkishToNormalized(qParam);
-      if (normalizedParam !== qParam) {
-        console.log(`🔤 URL'deki arama teriminde Türkçe karakter: "${qParam}" → "${normalizedParam}"`);
+      const normalizedParam = turkishNormalize(qParam);
+      const originalLower = qParam.toLowerCase();
+      if (normalizedParam !== originalLower) {
+        console.log(`🔤 URL'deki arama teriminde Türkçe karakter: "${qParam}"`);
+        console.log(`📝 Orijinal toLowerCase: "${originalLower}"`);
+        console.log(`🔧 Türkçe normalize: "${normalizedParam}"`);
         searchInput.setAttribute('data-has-turkish-chars', 'true');
-        searchInput.title = `Türkçe karakterli arama: "${qParam}"\nAyrıca şu şekilde de aranacak: "${normalizedParam}"`;
+        searchInput.title = `Türkçe karakterli arama: "${qParam}"\nNormalize edilmiş: "${normalizedParam}"`;
       }
     }
   }
 
-  // Global arama testi fonksiyonu (geliştirme amaçlı)
+  // Global arama testi fonksiyonu - DÜZELTİLMİŞ
   window.testTurkishSearch = function(testTerm) {
     console.log('=== TÜRKÇE ARAMA TESTİ ===');
     console.log(`Test terimi: "${testTerm}"`);
     
-    const searchTerms = prepareSearchTerms(testTerm);
-    console.log('Hazırlanan arama terimleri:', searchTerms);
+    const normalizedTerm = turkishNormalize(testTerm);
+    const originalLower = testTerm.toLowerCase();
     
-    const normalizedTerm = turkishToNormalized(testTerm);
-    console.log(`Normalize edilmiş: "${normalizedTerm}"`);
+    console.log(`Orijinal toLowerCase(): "${originalLower}"`);
+    console.log(`Türkçe normalize(): "${normalizedTerm}"`);
     
-    const hasTurkishChars = normalizedTerm !== testTerm;
+    const hasTurkishChars = normalizedTerm !== originalLower;
     console.log(`Türkçe karakter var mı: ${hasTurkishChars}`);
+    
+    // Test verileri
+    const testTargets = ["İthalat Verileri", "ithalat raporu", "ITHALAT"];
+    console.log('\nTest hedefleri:');
+    testTargets.forEach(target => {
+      const targetNormalized = turkishNormalize(target);
+      const matches = targetNormalized.includes(normalizedTerm);
+      console.log(`"${target}" → "${targetNormalized}" → ${matches ? '✅' : '❌'}`);
+    });
     
     console.log('=== TEST TAMAMLANDI ===');
     
     return {
       original: testTerm,
+      originalLower: originalLower,
       normalized: normalizedTerm,
-      hasTurkishChars: hasTurkishChars,
-      allTerms: searchTerms
+      hasTurkishChars: hasTurkishChars
     };
   };
 

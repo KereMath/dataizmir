@@ -34,6 +34,27 @@
   .footer-links ul{margin:0;padding:0;list-style:none;}
   .footer-links li{margin-bottom:6px;text-align:left;}
 
+  /* iletişim sütunu özel stiller */
+  .contact-column {
+      line-height: 1.6;
+  }
+  .contact-column p {
+      margin: 0 0 10px 0;
+      color: #ccc;
+  }
+  .contact-column .contact-text {
+      font-size: 14px;
+      margin-bottom: 8px;
+  }
+  .contact-column .contact-email {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+  }
+  .contact-column .contact-email:hover {
+      color: #4f9eff;
+  }
+
   /* responsive ince ayar */
   @media (max-width:767px){
       .footer-columns{gap:30px;justify-content:center;}
@@ -76,8 +97,9 @@
 
       <!-- İLETİŞİM -------------------------------------------------->
       <div class="footer-column contact-column">
-        <a href="mailto:yenilik@izka.org.tr">
-          Görüş&nbsp;&amp;&nbsp;Öneri<br/>Destek&nbsp;Talebi
+        <p class="contact-text">Görüş ve önerileriniz için:</p>
+        <a href="mailto:yenilik@izka.org.tr" class="contact-email">
+          yenilik@izka.org.tr
         </a>
       </div>
 
@@ -91,4 +113,3 @@
     {% endif %}
   {% endblock %}
 </footer>
-

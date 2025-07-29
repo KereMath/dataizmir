@@ -570,7 +570,15 @@
       <div id="profileCard" class="profile-card" style="display: none;"></div>
       
       <h3>Filtreler</h3>
-      
+      <div class="filter-section">
+        <label>Sıralama</label>
+        <select id="sortOrder">
+          <option value="date_desc">En Yeni Önce</option>
+          <option value="date_asc">En Eski Önce</option>
+          <option value="title_asc">A-Z (Alfabetik)</option>
+          <option value="title_desc">Z-A (Alfabetik)</option>
+        </select>
+      </div>
       <div class="filter-section">
         <label for="searchTitle">Başlıkta Ara</label>
         <input type="search" id="searchTitle" placeholder="Başlık ara...">
@@ -614,15 +622,7 @@
         </div>
       </div>
       
-      <div class="filter-section">
-        <label>Sıralama</label>
-        <select id="sortOrder">
-          <option value="date_desc">En Yeni Önce</option>
-          <option value="date_asc">En Eski Önce</option>
-          <option value="title_asc">A-Z (Alfabetik)</option>
-          <option value="title_desc">Z-A (Alfabetik)</option>
-        </select>
-      </div>
+
     </div>
 
     <div class="main-container">

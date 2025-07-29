@@ -14,9 +14,7 @@
       justify-content:space-between;  /* sola yapışmasın, boşluklu dağılsın */
       gap:60px;                       /* sütun arası boşluk */
   }
-  #sidenav-container {
-display:none !important;
-}
+
   /* sütunlar */
   .footer-column{
       flex:1 1 200px;                 /* min 200px, esnek */
@@ -189,23 +187,9 @@ display:none !important;
       100% { transform: rotate(360deg); }
   }
 
+  /* PDF stilleri gereksizleri kaldır */
   .pdf-download-btn {
-      background: #3498db;
-      color: white;
-      border: none;
-      padding: 8px 15px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: background 0.2s ease;
-      text-decoration: none;
-  }
-
-  .pdf-download-btn:hover {
-      background: #2980b9;
+      display: none;
   }
 
   /* responsive ince ayar */
@@ -302,15 +286,7 @@ display:none !important;
         <div class="pdf-icon">PDF</div>
         <span id="pdfModalTitle">PDF Belge</span>
       </h3>
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <a id="pdfDownloadBtn" class="pdf-download-btn" href="#" target="_blank">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-          </svg>
-          İndir
-        </a>
-        <button class="pdf-modal-close" id="pdfModalClose">×</button>
-      </div>
+      <button class="pdf-modal-close" id="pdfModalClose">×</button>
     </div>
     <div class="pdf-modal-body">
       <div class="pdf-loading" id="pdfLoading">
@@ -329,7 +305,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalClose = document.getElementById('pdfModalClose');
     const pdfIframe = document.getElementById('pdfIframe');
     const pdfLoading = document.getElementById('pdfLoading');
-    const downloadBtn = document.getElementById('pdfDownloadBtn');
 
     // Tüm PDF linklerini bul (hem .pdf-link class'ı olanları hem de .pdf ile bitenleri)
     function findPdfLinks() {
@@ -365,7 +340,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // PDF modal'ını aç
     function openPdfModal(pdfUrl, title) {
         modalTitle.textContent = title || 'PDF Belge';
-        downloadBtn.href = pdfUrl;
         
         // Loading göster, iframe gizle
         pdfLoading.style.display = 'flex';
@@ -375,8 +349,8 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.classList.add('active');
         document.body.style.overflow = 'hidden';
         
-        // PDF'i iframe'e yükle
-        pdfIframe.src = pdfUrl + '#toolbar=1&navpanes=1&scrollbar=1';
+        // PDF'i iframe'e yükle - sadece PDF içeriği, toolbar/navpane yok
+        pdfIframe.src = pdfUrl + '#toolbar=0&navpanes=0&scrollbar=1&view=FitH';
         
         // iframe yüklenince loading'i gizle
         pdfIframe.onload = function() {

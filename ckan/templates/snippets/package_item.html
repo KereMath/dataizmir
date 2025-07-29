@@ -271,12 +271,7 @@
       display: none; /* Checkbox'ları gizle */
     }
 
-    .loading-users {
-      color: #6c757d;
-      font-size: 12px;
-      font-style: italic;
-      padding: 5px 12px;
-    }
+
 
     /* Ana İçerik Kapsayıcısı */
     .main-container {
@@ -453,7 +448,6 @@
     .t-title { width: 200px; min-width: 150px; }
     .t-desc { width: 250px; min-width: 180px; }
     .t-org { width: 150px; min-width: 120px; }
-    .t-user { width: 120px; min-width: 100px; }
     .t-groups { width: 140px; min-width: 120px; }
     .t-tags { width: 140px; min-width: 120px; }
     .t-theme { width: 130px; min-width: 110px; }
@@ -603,13 +597,6 @@
       </div>
       
       <div class="filter-section">
-        <label>Kullanıcılar</label>
-        <div class="multi-select" id="userSelect">
-          <div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>
-        </div>
-      </div>
-      
-      <div class="filter-section">
         <label>Formatlar</label>
         <div class="multi-select" id="fmtSelect"></div>
       </div>
@@ -662,7 +649,6 @@
                 <th class="t-title">Başlık<div class="column-resizer"></div></th>
                 <th class="t-desc">Açıklama<div class="column-resizer"></div></th>
                 <th class="t-org">Organizasyon<div class="column-resizer"></div></th>
-                <th class="t-user">Oluşturan<div class="column-resizer"></div></th>
                 <th class="t-groups">Kategoriler<div class="column-resizer"></div></th>
                 <th class="t-tags">Etiketler<div class="column-resizer"></div></th>
                 <th class="t-theme">Tema<div class="column-resizer"></div></th>
@@ -969,17 +955,6 @@
       updateUsersFilter();
     }
 
-    function updateUsersFilter() {
-      const usernames = Object.values(userCache).filter(Boolean);
-      allUsers = [...new Set(usernames)].sort();
-      if (allUsers.length > 0) {
-        renderMultiSelect("userSelect", allUsers, selectedUsers, debouncedRenderTable);
-      } else if (!usersLoaded) {
-        document.getElementById('userSelect').innerHTML = '<div class="loading-users">👤 Kullanıcı bilgileri yükleniyor...</div>';
-      } else {
-        document.getElementById('userSelect').innerHTML = '<div class="empty-cell" style="padding:10px;">Kullanıcı yok</div>';
-      }
-    }
 
     // YENİ: Tema Profil Kartı Render Fonksiyonu
     function renderThemeProfileCard(themeData) {
@@ -1342,7 +1317,6 @@
             <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
             <td class="t-desc">${desc}</td>
             <td class="t-org">${org}</td>
-            <td class="t-user">${user}</td>
             <td class="t-groups">${groups}</td>
             <td class="t-tags">${tags}</td>
             <td class="t-theme">${theme}</td>
@@ -1931,7 +1905,6 @@
       if (!isLoggedIn) {
         // Giriş yapmamış: t-user, t-actions ve visibility filter gizle
         css += `
-          .t-user { display: none !important; }
           .t-actions { display: none !important; }
           .visibility-filter { display: none !important; }
           #dark { display: none !important; }

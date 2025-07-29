@@ -95,14 +95,17 @@
                 const data = await response.json();
                 
                 if (data.success && data.result && data.result.length > 0) {
-                    allOrganizations = data.result.map(org => ({
-                        name: org.name || '',
-                        display_name: org.display_name || org.title || org.name || '',
-                        package_count: parseInt(org.package_count) || 0,
-                        image_url: org.image_display_url || '/base/images/placeholder-organization.png',
-                        url: '/organization/' + (org.name || ''),
-                        state: org.state || 'unknown'
-                    }));
+                    // Veri seti sayısı 0'dan büyük olanları filtrele
+                    allOrganizations = data.result
+                        .filter(org => parseInt(org.package_count) > 0)
+                        .map(org => ({
+                            name: org.name || '',
+                            display_name: org.display_name || org.title || org.name || '',
+                            package_count: parseInt(org.package_count) || 0,
+                            image_url: org.image_display_url || '/base/images/placeholder-organization.png',
+                            url: '/organization/' + (org.name || ''),
+                            state: org.state || 'unknown'
+                        }));
                     
                     filteredOrganizations = [...allOrganizations];
                     updateUI();
@@ -120,6 +123,7 @@
         function loadFallbackData() {
             allOrganizations = [
               {% for org in page.items %}
+              {% if (org.package_count or 0) > 0 %}
               {
                 name: "{{ org.name }}",
                 display_name: "{{ org.display_name or org.title or org.name }}",
@@ -127,6 +131,7 @@
                 image_url: "{{ org.image_display_url or h.url_for_static('/base/images/placeholder-organization.png') }}",
                 url: "{{ h.url_for((org.type or 'organization') ~ '.read', id=org.name) }}"
               }{% if not loop.last %},{% endif %}
+              {% endif %}
               {% endfor %}
             ];
             
@@ -163,8 +168,9 @@
             const searchTerm = document.getElementById('search-input').value.toLowerCase().trim();
             const sortBy = document.getElementById('sort-select').value;
             
+            // Arama yaparken de veri seti sayısı 0'dan büyük olanları filtrele
             filteredOrganizations = allOrganizations.filter(org => 
-                org.display_name.toLowerCase().includes(searchTerm)
+                org.display_name.toLowerCase().includes(searchTerm) && org.package_count > 0
             );
             
             filteredOrganizations.sort((a, b) => {
@@ -291,7 +297,7 @@
   {% endblock %}
 
 <style>
-/* CKAN layout override’ları */
+/* CKAN layout override'ları */
 body div.row.wrapper:before,
 div.row.wrapper:before{display:none!important;content:none!important}
 @media (min-width: 768px){.col-sm-9{width:100%!important;}}

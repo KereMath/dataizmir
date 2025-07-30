@@ -250,10 +250,10 @@
           </ul>
           <ul>
             {% block footer_links_ckan %}
-              {# Statik PDF linkler - sabit isimler #}
-              <li><a href="/pdf/veripolitikasi.pdf" class="pdf-link">Veri&nbsp;Politikası</a></li>
-              <li><a href="/pdf/kvkk.pdf" class="pdf-link">KVKK</a></li>
-              <li><a href="/pdf/kullanim.pdf" class="pdf-link">Kullanım&nbsp;Koşulları</a></li>
+              {# Statik PDF linkler - CKAN public klasöründen #}
+              <li><a href="{{ h.url_for_static('/pdf/veripolitikasi.pdf') }}" class="pdf-link">Veri&nbsp;Politikası</a></li>
+              <li><a href="{{ h.url_for_static('/pdf/kvkk.pdf') }}" class="pdf-link">KVKK</a></li>
+              <li><a href="{{ h.url_for_static('/pdf/kullanim.pdf') }}" class="pdf-link">Kullanım&nbsp;Koşulları</a></li>
             {% endblock %}
           </ul>
         {% endblock %}

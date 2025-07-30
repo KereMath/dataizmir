@@ -62,13 +62,14 @@ class AdminController(base.BaseController):
         return items
 
     def _save_pdf_file(self, file_upload, pdf_name):
-        """PDF dosyasını public/pdf klasörüne kaydet"""
+        """PDF dosyasını CKAN public/pdf klasörüne kaydet"""
         if not file_upload or not hasattr(file_upload, 'filename'):
             return False
             
-        # Public PDF klasörü
-        pdf_dir = os.path.join(config.get('ckan.site_url', '').replace('http://', '').replace('https://', ''), 'pdf')
-        public_pdf_dir = '/var/www/html/pdf'  # veya sitenizin public dizini
+        # CKAN public PDF klasörü
+        import ckan
+        ckan_path = os.path.dirname(ckan.__file__)
+        public_pdf_dir = os.path.join(ckan_path, 'public', 'pdf')
         
         # Klasör yoksa oluştur
         if not os.path.exists(public_pdf_dir):

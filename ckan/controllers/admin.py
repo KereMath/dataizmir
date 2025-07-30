@@ -63,25 +63,34 @@ class AdminController(base.BaseController):
 
     def _save_pdf_file(self, file_upload, pdf_name):
         """PDF dosyasını CKAN public/pdf klasörüne kaydet"""
+        print(f"_save_pdf_file called with: {pdf_name}")
         if not file_upload or not hasattr(file_upload, 'filename'):
+            print("No file or filename")
             return False
             
         # CKAN public PDF klasörü
         import ckan
         ckan_path = os.path.dirname(ckan.__file__)
         public_pdf_dir = os.path.join(ckan_path, 'public', 'pdf')
+        print(f"Target directory: {public_pdf_dir}")
         
         # Klasör yoksa oluştur
         if not os.path.exists(public_pdf_dir):
+            print("Creating directory...")
             os.makedirs(public_pdf_dir)
             
         # Sabit dosya adıyla kaydet
         file_path = os.path.join(public_pdf_dir, f"{pdf_name}.pdf")
+        print(f"Saving to: {file_path}")
         
-        # Dosyayı kaydet
-        file_upload.save(file_path)
-        
-        return True
+        try:
+            # Dosyayı kaydet
+            file_upload.save(file_path)
+            print(f"File saved successfully: {file_path}")
+            return True
+        except Exception as e:
+            print(f"Error saving file: {str(e)}")
+            return False
 
     def reset_config(self):
         '''FIXME: This method is probably not doing what people would expect.
@@ -119,12 +128,15 @@ class AdminController(base.BaseController):
         if 'save' in data:
             try:
                 # PDF dosyalarını işle - sabit isimlere kaydet
-                pdf_files = ['veripolitikasi', 'kvkk', 'kullanim']
+                pdf_files = ['veripolitikasi', 'kvkv', 'kullanim']
                 for i, pdf_name in enumerate(pdf_files, 1):
                     upload_field = f'pdf_{i}_upload'
+                    print(f"Checking upload field: {upload_field}")
                     if upload_field in request.files and request.files[upload_field].filename:
+                        print(f"Found file: {request.files[upload_field].filename}")
                         # PDF'i public/pdf klasörüne kaydet
-                        self._save_pdf_file(request.files[upload_field], pdf_name)
+                        result = self._save_pdf_file(request.files[upload_field], pdf_name)
+                        print(f"Save result for {pdf_name}: {result}")
 
                 # Normal config processing
                 data_dict = logic.clean_dict(

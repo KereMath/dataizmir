@@ -1,5 +1,8 @@
 # encoding: utf-8
 
+import os
+from werkzeug.datastructures import FileStorage
+
 from ckan.common import config
 
 import ckan.lib.base as base
@@ -58,6 +61,27 @@ class AdminController(base.BaseController):
         ]
         return items
 
+    def _save_pdf_file(self, file_upload, pdf_name):
+        """PDF dosyasını public/pdf klasörüne kaydet"""
+        if not file_upload or not hasattr(file_upload, 'filename'):
+            return False
+            
+        # Public PDF klasörü
+        pdf_dir = os.path.join(config.get('ckan.site_url', '').replace('http://', '').replace('https://', ''), 'pdf')
+        public_pdf_dir = '/var/www/html/pdf'  # veya sitenizin public dizini
+        
+        # Klasör yoksa oluştur
+        if not os.path.exists(public_pdf_dir):
+            os.makedirs(public_pdf_dir)
+            
+        # Sabit dosya adıyla kaydet
+        file_path = os.path.join(public_pdf_dir, f"{pdf_name}.pdf")
+        
+        # Dosyayı kaydet
+        file_upload.save(file_path)
+        
+        return True
+
     def reset_config(self):
         '''FIXME: This method is probably not doing what people would expect.
            It will reset the configuration to values cached when CKAN started.
@@ -72,10 +96,15 @@ class AdminController(base.BaseController):
             h.redirect_to(controller='admin', action='config')
 
         if request.method == 'POST':
-            # remove sys info items
+            # remove sys info items - config'den sil
             for item in self._get_config_form_items():
                 name = item['name']
-                model.delete_system_info(name)
+                try:
+                    # Config değerini sıfırla
+                    logic.get_action('config_option_update')(
+                        {'user': c.user}, {name: ''})
+                except:
+                    pass
             # reset to values in config
             app_globals.reset()
             h.redirect_to(controller='admin', action='config')
@@ -88,7 +117,15 @@ class AdminController(base.BaseController):
         data = request.POST
         if 'save' in data:
             try:
-                # really?
+                # PDF dosyalarını işle - sabit isimlere kaydet
+                pdf_files = ['veripolitikasi', 'kvkk', 'kullanim']
+                for i, pdf_name in enumerate(pdf_files, 1):
+                    upload_field = f'pdf_{i}_upload'
+                    if upload_field in request.files and request.files[upload_field].filename:
+                        # PDF'i public/pdf klasörüne kaydet
+                        self._save_pdf_file(request.files[upload_field], pdf_name)
+
+                # Normal config processing
                 data_dict = logic.clean_dict(
                     dict_fns.unflatten(
                         logic.tuplize_dict(

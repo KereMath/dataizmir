@@ -126,6 +126,12 @@ class AdminController(base.BaseController):
         items = self._get_config_form_items()
         data = request.POST
         if 'save' in data:
+            import logging
+            log = logging.getLogger(__name__)
+            log.info("=== CONFIG SAVE STARTED ===")
+            log.info(f"POST data keys: {list(data.keys())}")
+            log.info(f"Files keys: {list(request.files.keys()) if hasattr(request, 'files') else 'No files'}")
+            
             try:
                 # PDF dosyalarını işle - sabit isimlere kaydet
                 pdf_files = ['veripolitikasi', 'kvkv', 'kullanim']

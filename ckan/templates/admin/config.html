@@ -48,49 +48,15 @@
           </div>
         </div>
 
-        <div class="pro-card">
-          <h3 class="pro-heading"><i class="fa fa-file-pdf-o"></i> Footer PDF Dosyaları</h3>
-          <p class="pro-helper" style="margin-bottom: 1.5rem;">PDF dosyaları sabit isimlerle kaydedilir: veripolitikasi.pdf, kvkk.pdf, kullanim.pdf</p>
-          
-          <div class="pro-field">
-            <label for="pdf_1_upload_file">Veri Politikası PDF</label>
-            <div class="pro-pdf-uploader">
-              <input type="file" name="pdf_1_upload" id="pdf_1_upload_file" accept=".pdf">
-              <div class="pdf-preview" id="pdf_1_preview">
-                <div class="pdf-placeholder">
-                  <i class="fa fa-upload"></i>
-                  <span>veripolitikasi.pdf olarak kaydedilecek</span>
-                </div>
-              </div>
-            </div>
+        <!-- <div class="pro-card">
+          <h3 class="pro-heading"><i class="fa fa-code"></i> Gelişmiş Özelleştirme</h3>
+          <div class="pro-field {% if errors['ckan.site_custom_css'] %}is-invalid{% endif %}">
+            <label for="field-ckan-site-custom-css">Özel CSS</label>
+            <textarea id="field-ckan-site-custom-css" class="code-editor" name="ckan.site_custom_css" rows="15" placeholder=" örn: body { background: #000; }">{{ data['ckan.site_custom_css'] }}</textarea>
+            <p class="pro-helper">Bu CSS kodları her sayfanın başlığına eklenecektir.</p>
+            {% if errors['ckan.site_custom_css'] %}<p class="pro-error">{{ errors['ckan.site_custom_css'][0] }}</p>{% endif %}
           </div>
-
-          <div class="pro-field">
-            <label for="pdf_2_upload_file">KVKK PDF</label>
-            <div class="pro-pdf-uploader">
-              <input type="file" name="pdf_2_upload" id="pdf_2_upload_file" accept=".pdf">
-              <div class="pdf-preview" id="pdf_2_preview">
-                <div class="pdf-placeholder">
-                  <i class="fa fa-upload"></i>
-                  <span>kvkk.pdf olarak kaydedilecek</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="pro-field">
-            <label for="pdf_3_upload_file">Kullanım Koşulları PDF</label>
-            <div class="pro-pdf-uploader">
-              <input type="file" name="pdf_3_upload" id="pdf_3_upload_file" accept=".pdf">
-              <div class="pdf-preview" id="pdf_3_preview">
-                <div class="pdf-placeholder">
-                  <i class="fa fa-upload"></i>
-                  <span>kullanim.pdf olarak kaydedilecek</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        </div> -->
       </div>
 
       {# ──────────────── SAĞ SÜTUN - İÇERİK ──────────────── #}
@@ -178,14 +144,6 @@
   .pro-uploader:hover .pro-btn-remove-img, .pro-btn-remove-img:not(.hidden) { opacity: 1; }
   .pro-btn-remove-img.hidden { display: none; }
 
-  /* PDF Uploader Stilleri */
-  .pro-pdf-uploader { position: relative; border: 2px dashed var(--border-color); border-radius: var(--radius); transition: all .25s; height: 80px; }
-  .pro-pdf-uploader:hover { border-color: var(--accent-color); }
-  .pro-pdf-uploader input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-  .pdf-preview { height: 100%; display: flex; align-items: center; justify-content: center; border-radius: 10px; }
-  .pdf-placeholder { text-align: center; color: var(--text-light); display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
-  .pdf-placeholder i { font-size: 1.5rem; }
-
   .pro-actions { margin-top: 2rem; padding-top: 2rem; border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap:wrap; gap:1rem;}
   .pro-actions-main { display: flex; gap: 1rem; }
   .pro-btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; font-weight: 600; border-radius: 8px; text-decoration: none; transition: all .2s; border: 1px solid transparent; color: #fff; cursor: pointer; }
@@ -198,7 +156,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-  // Logo upload fonksiyonları
   const fileInput = document.getElementById('image_upload_file');
   const preview = document.getElementById('image_preview');
   const placeholder = document.getElementById('image_placeholder');
@@ -249,31 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
       hiddenClearInput.value = 'True';
       fileInput.form.appendChild(hiddenClearInput);
   });
-
-  // PDF upload fonksiyonları - basit versiyon
-  for (let i = 1; i <= 3; i++) {
-    const pdfInput = document.getElementById(`pdf_${i}_upload_file`);
-    const pdfPreview = document.getElementById(`pdf_${i}_preview`);
-
-    if (pdfInput && pdfPreview) {
-      pdfInput.addEventListener('change', () => {
-        const file = pdfInput.files[0];
-        if (file && file.type === 'application/pdf') {
-          const fileNames = ['veripolitikasi.pdf', 'kvkk.pdf', 'kullanim.pdf'];
-          pdfPreview.innerHTML = `
-            <div class="pdf-placeholder">
-              <i class="fa fa-file-pdf-o" style="color: var(--accent-color);"></i>
-              <span>${file.name} → ${fileNames[i-1]}</span>
-            </div>
-          `;
-        }
-      });
-    }
-  }
 });
 </script>
 
 {% endblock %}
+
 
 {% block secondary_content %}
 {# İlgili yardım metinleri kartların içine entegre edildiği için bu blok boş bırakılmıştır. #}

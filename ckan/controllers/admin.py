@@ -1,8 +1,5 @@
 # encoding: utf-8
 
-import os
-from werkzeug.datastructures import FileStorage
-
 from ckan.common import config
 
 import ckan.lib.base as base
@@ -61,37 +58,6 @@ class AdminController(base.BaseController):
         ]
         return items
 
-    def _save_pdf_file(self, file_upload, pdf_name):
-        """PDF dosyasını CKAN public/pdf klasörüne kaydet"""
-        print(f"_save_pdf_file called with: {pdf_name}")
-        if not file_upload or not hasattr(file_upload, 'filename'):
-            print("No file or filename")
-            return False
-            
-        # CKAN public PDF klasörü
-        import ckan
-        ckan_path = os.path.dirname(ckan.__file__)
-        public_pdf_dir = os.path.join(ckan_path, 'public', 'pdf')
-        print(f"Target directory: {public_pdf_dir}")
-        
-        # Klasör yoksa oluştur
-        if not os.path.exists(public_pdf_dir):
-            print("Creating directory...")
-            os.makedirs(public_pdf_dir)
-            
-        # Sabit dosya adıyla kaydet
-        file_path = os.path.join(public_pdf_dir, f"{pdf_name}.pdf")
-        print(f"Saving to: {file_path}")
-        
-        try:
-            # Dosyayı kaydet
-            file_upload.save(file_path)
-            print(f"File saved successfully: {file_path}")
-            return True
-        except Exception as e:
-            print(f"Error saving file: {str(e)}")
-            return False
-
     def reset_config(self):
         '''FIXME: This method is probably not doing what people would expect.
            It will reset the configuration to values cached when CKAN started.
@@ -106,15 +72,10 @@ class AdminController(base.BaseController):
             h.redirect_to(controller='admin', action='config')
 
         if request.method == 'POST':
-            # remove sys info items - config'den sil
+            # remove sys info items
             for item in self._get_config_form_items():
                 name = item['name']
-                try:
-                    # Config değerini sıfırla
-                    logic.get_action('config_option_update')(
-                        {'user': c.user}, {name: ''})
-                except:
-                    pass
+                model.delete_system_info(name)
             # reset to values in config
             app_globals.reset()
             h.redirect_to(controller='admin', action='config')
@@ -126,25 +87,8 @@ class AdminController(base.BaseController):
         items = self._get_config_form_items()
         data = request.POST
         if 'save' in data:
-            import logging
-            log = logging.getLogger(__name__)
-            log.info("=== CONFIG SAVE STARTED ===")
-            log.info(f"POST data keys: {list(data.keys())}")
-            log.info(f"Files keys: {list(request.files.keys()) if hasattr(request, 'files') else 'No files'}")
-            
             try:
-                # PDF dosyalarını işle - sabit isimlere kaydet
-                pdf_files = ['veripolitikasi', 'kvkv', 'kullanim']
-                for i, pdf_name in enumerate(pdf_files, 1):
-                    upload_field = f'pdf_{i}_upload'
-                    print(f"Checking upload field: {upload_field}")
-                    if upload_field in request.files and request.files[upload_field].filename:
-                        print(f"Found file: {request.files[upload_field].filename}")
-                        # PDF'i public/pdf klasörüne kaydet
-                        result = self._save_pdf_file(request.files[upload_field], pdf_name)
-                        print(f"Save result for {pdf_name}: {result}")
-
-                # Normal config processing
+                # really?
                 data_dict = logic.clean_dict(
                     dict_fns.unflatten(
                         logic.tuplize_dict(

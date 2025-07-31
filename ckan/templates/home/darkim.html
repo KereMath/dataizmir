@@ -36,6 +36,38 @@
   transform:translateY(-4px);
   box-shadow:0 32px 64px 0 #00000052;
 }
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr); /* Varsayılan 4 sütun */
+  grid-gap: 1rem;
+  padding: 10px;
+}
+.paydas-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  max-width: 120px;
+  max-height: 80px;
+  border-radius: 5px;
+}
+
+@media (max-width: 1200px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 991px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 767px) {
+  .card-grid {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
 </style>
 
 {# ——— HERO BLOĞU ÇIKARILDI; header artık index.html’de ——— #}

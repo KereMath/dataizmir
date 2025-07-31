@@ -1,6 +1,8 @@
 <!-- tuFGe2ZbspXdfN7ZWJSMqB3Dm/rOf4VSeiXh0zxILNQyXsTJ4L03Oo/H5uXWpVFmAE7Ah+F4POvMLFQIER4N4t3F3lbMXNpC+1egSDCCFEk= -->
 <style>
-  .nav-pills > li.active > a, .nav-pills > li.active > a:hover, .nav-pills > li.active > a:focus {
+  .nav-pills>li.active>a,
+  .nav-pills>li.active>a:hover,
+  .nav-pills>li.active>a:focus {
     color: #fff !important;
     background-color: #4f7cc1 !important;
   }
@@ -23,7 +25,7 @@
   .futuristic-overlay.active {
     opacity: 1 !important;
     visibility: visible !important;
-    display:none !important;
+    display: none !important;
   }
 
   .futuristic-sidebar {
@@ -242,274 +244,455 @@
 
   /* Glow Effect */
   @keyframes glow {
-    0%, 100% { box-shadow: 0 0 5px rgba(79, 124, 193, 0.5); }
-    50% { box-shadow: 0 0 20px rgba(79, 124, 193, 0.8); }
+
+    0%,
+    100% {
+      box-shadow: 0 0 5px rgba(79, 124, 193, 0.5);
+    }
+
+    50% {
+      box-shadow: 0 0 20px rgba(79, 124, 193, 0.8);
+    }
   }
 
   .glow-effect {
     animation: glow 2s ease-in-out infinite !important;
   }
+
+  .desktop-menu {
+    display: flex;
+    gap: 14px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .hamburger-menu {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #4f7cc1;
+    cursor: pointer;
+    margin-left: auto;
+    padding-right: 15px;
+  }
+.mobile-giris,
+.mobile-kayit {
+  font-size: 18px;
+  color: #fff;
+  background: #4f7cc1;
+  padding: 10px 25px;
+  border-radius: 8px;
+  display: inline-block;
+  margin: 10px 0;
+  text-align: center;
+  transition: background 0.3s ease;
+}
+
+.mobile-giris:hover,
+.mobile-kayit:hover {
+  background: #365ba4;
+  color: #fff;
+}
+  .mobile-menu {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    /* Dikey ortalama */
+    align-items: center;
+    /* Yatay ortalama */
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    padding: 40px 20px;
+    overflow-y: auto;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .mobile-menu li {
+    margin: 12px 0;
+    list-style: none;
+  }
+
+  .mobile-menu a {
+    color: #4f7cc1;
+    font-size: 25px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+  }
+
+  .mobile-menu a:focus {
+    background-color: #e6ecf9;
+    color: #1d3d85;
+  }
+
+  .mobile-menu-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
+
+  .mobile-menu-close button {
+    background: none;
+    border: none;
+    font-size: 70px;
+    color: #4f7cc1;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    font-weight: bold;
+  }
+
+  .mobile-menu-close button:hover {
+    transform: rotate(90deg);
+    color: #ff4757;
+  }
+
+  @media (max-width: 930px) {
+    .desktop-menu {
+      display: none;
+    }
+
+    .hamburger-menu {
+      display: block;
+    }
+  }
+  @media (min-width: 930px) {
+  .mobile-menu {
+    display: none !important;
+  }
+}
 </style>
 
 {# ——— GİRİŞ / KAYIT düğmeleri için görünürlük ——— #}
 {% if c.userobj %}
-  <style>.li-giris,.li-kayit{display:none!important}</style>
+<style>
+  .li-giris,
+  .li-kayit {
+    display: none !important
+  }
+</style>
 {% else %}
-  <style>
-    .account-masthead{display:none!important}
-    @media(min-width:768px){
-      .li-giris{
-        background:#4f7cc1;color:#fff!important;border:1px solid #4f7cc1;
-        border-radius:5%;padding:10px 35px!important;margin-right:10px;text-decoration:none!important;
-      }
-      .li-giris:hover{background:#fff;color:#4f7cc1!important}
-      .li-kayit{
-        color:#4f7cc1!important;border:1px solid #4f7cc1;padding:10px 35px!important;text-decoration:none!important;
-      }
-      .li-kayit:hover{background:#4f7cc1!important;color:#fff!important}
+<style>
+  .account-masthead {
+    display: none !important
+  }
+
+  @media(min-width:768px) {
+    .li-giris {
+      background: #4f7cc1;
+      color: #fff !important;
+      border: 1px solid #4f7cc1;
+      border-radius: 5%;
+      padding: 10px 35px !important;
+      margin-right: 10px;
+      text-decoration: none !important;
     }
 
-  </style>
+    .li-giris:hover {
+      background: #fff;
+      color: #4f7cc1 !important
+    }
+
+    .li-kayit {
+      color: #4f7cc1 !important;
+      border: 1px solid #4f7cc1;
+      padding: 10px 35px !important;
+      text-decoration: none !important;
+    }
+
+    .li-kayit:hover {
+      background: #4f7cc1 !important;
+      color: #fff !important
+    }
+  }
+</style>
 {% endif %}
 
 {# ——— HEADER WRAPPER BLOĞU ——— #}
 {% block header_wrapper %}
 
-  {# 1) Eski account‑masthead'i boş bırakarak saklıyoruz (JS çakışmasın) #}
-  {% block header_account %}
+{# 1) Eski account‑masthead'i boş bırakarak saklıyoruz (JS çakışmasın) #}
+{% block header_account %}
+{% endblock %}
+
+{# 2) YENİ HEADER — LOGO • NAV • ACCOUNT MENÜSÜ #}
+<header class="navbar navbar-static-top masthead" style="background-color:transparent;">
+  {% block header_debug %}
+  {% if g.debug and not g.debug_supress_header %}
+  <div class="debug">Controller : {{ c.controller }} | Action : {{ c.action }}</div>
+  {% endif %}
   {% endblock %}
 
-  {# 2) YENİ HEADER — LOGO • NAV • ACCOUNT MENÜSÜ #}
-  <header class="navbar navbar-static-top masthead" style="background-color:transparent;">
-    {% block header_debug %}
-      {% if g.debug and not g.debug_supress_header %}
-        <div class="debug">Controller : {{ c.controller }} | Action : {{ c.action }}</div>
-      {% endif %}
-    {% endblock %}
+  <div class="container">
 
-    <div class="container">
+    <div class="header-flex" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
 
-      <div class="header-flex"
-           style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+      <!-- —— Logo (sol) —— -->
+      <div class="logo-holder">
+        {% block header_logo %}
+        <a class="logo" href="{{ h.url_for('home.index') }}">
+          <img src="{{ h.url_for_static_or_external('/logonew.png') }}" alt="{{ g.site_title }}"
+            title="{{ g.site_title }}" />
+        </a>
+        {% endblock %}
+      </div>
 
-        <!-- —— Logo (sol) —— -->
-        <div class="logo-holder">
-          {% block header_logo %}
-            <a class="logo" href="{{ h.url_for('home.index') }}">
-              <img src="{{ h.url_for_static_or_external('/logonew.png') }}"
-                   alt="{{ g.site_title }}" title="{{ g.site_title }}" />
-            </a>
-          {% endblock %}
-        </div>
+      <!-- ✅ ANA MENÜ: Masaüstü + Mobil -->
+      <nav class="main-nav" style="position:relative; display: contents;">
+        <!-- Masaüstü Menü -->
+        <ul class="nav nav-pills desktop-menu">
+          {{ h.build_nav_main(
+          ('dataset.search', _('Veri Setleri')),
+          ('organization.index', _('Veri Paydaşları')),
+          ('group.index', _('Kategoriler')) ) }}
+          <li><a href="/temalar">{{ _('Temalar') }}</a></li>
+          <li><a href="{{ h.url_for('home.about') }}">İstatistikler</a></li>
+        </ul>
 
-        <!-- —— Ana menü (ortada) —— -->
-        <nav class="main-nav"
-           style="flex:1;display:flex;justify-content:center;">
-          <ul class="nav nav-pills"
-              style="display:flex;gap:14px;margin:0;padding:0;list-style:none;">
-            {{ h.build_nav_main(
-                ('dataset.search', _('Veri Setleri')),
-                ('organization.index', _('Veri Paydaşları')),
-                ('group.index', _('Kategoriler')) ) }}
+        <!-- Mobil Hamburger Butonu -->
+        <button class="hamburger-menu" onclick="toggleMobileMenu()">
+          <i class="fa fa-bars"></i>
+        </button>
 
-            {# --- YENİ EKLENEN SATIR --- #}
-            <li><a href="/temalar">{{ _('Temalar') }}</a></li>
-            
-            <li><a href="{{ h.url_for('home.about') }}">İstatistikler</a></li>
-          </ul>
-        </nav>
+        <!-- Mobil Menü -->
+        <ul class="mobile-menu" id="mobileNavMenu">
+          <li class="mobile-menu-close">
+            <button onclick="toggleMobileMenu()">×</button>
+          </li>
+          {{ h.build_nav_main(
+          ('dataset.search', _('Veri Setleri')),
+          ('organization.index', _('Veri Paydaşları')),
+          ('group.index', _('Kategoriler')) ) }}
+          <li><a href="/temalar">{{ _('Temalar') }}</a></li>
+          <li><a href="{{ h.url_for('home.about') }}">İstatistikler</a></li>
+          {% if not c.userobj %}
+          <li><a href="/user/login" class="mobile-giris">Giriş Yap</a></li>
+          {% if h.check_access('user_create') %}
+          <li><a href="/user/register" class="mobile-kayit">Kayıt Ol</a></li>
+          {% endif %}
+          {% endif %}
+        </ul>
+      </nav>
 
-        <!-- —— Futuristic Account Navigation —— -->
-        {% if c.userobj %}
-        <nav class="account-nav">
-          <button class="sidebar-trigger" onclick="toggleSidebar()">
-            <i class="fa fa-user-circle"></i>
-            <span>{{ c.userobj.display_name }}</span>
-            <i class="fa fa-chevron-right"></i>
-          </button>
-        </nav>
+      <!-- —— Futuristic Account Navigation —— -->
+      {% if c.userobj %}
+      <nav class="account-nav">
+        <button class="sidebar-trigger" onclick="toggleSidebar()">
+          <i class="fa fa-user-circle"></i>
+          <span>{{ c.userobj.display_name }}</span>
+          <i class="fa fa-chevron-right"></i>
+        </button>
+      </nav>
 
-        <!-- Futuristic Sidebar -->
-        <div class="futuristic-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-        <div class="futuristic-sidebar" id="futuristicSidebar">
-          <button class="sidebar-close" onclick="closeSidebar()">
-            <i class="fa fa-times"></i>
-          </button>
-          
-          <div class="sidebar-header">
-            <div class="sidebar-user-info">
-              <div class="sidebar-user-avatar">
-                {{ h.user_image((c.user if c and c.user else ''), size=60) }}
-              </div>
-              <div class="sidebar-user-details">
-                <h3>{{ c.userobj.display_name }}</h3>
-                <p>@{{ c.userobj.name }}</p>
-              </div>
+      <!-- Futuristic Sidebar -->
+      <div class="futuristic-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+      <div class="futuristic-sidebar" id="futuristicSidebar">
+        <button class="sidebar-close" onclick="closeSidebar()">
+          <i class="fa fa-times"></i>
+        </button>
+
+        <div class="sidebar-header">
+          <div class="sidebar-user-info">
+            <div class="sidebar-user-avatar">
+              {{ h.user_image((c.user if c and c.user else ''), size=60) }}
+            </div>
+            <div class="sidebar-user-details">
+              <h3>{{ c.userobj.display_name }}</h3>
+              <p>@{{ c.userobj.name }}</p>
             </div>
           </div>
+        </div>
 
-          <div class="sidebar-content">
-            
-            <!-- Profile Section -->
-            <div class="sidebar-section">
-              <div class="sidebar-section-title">
-                <i class="fa fa-user" style="margin-right:8px!important;"></i>
-                Profil Yönetimi
-              </div>
-              <ul class="sidebar-menu">
-                <li class="sidebar-menu-item">
-                  <a href="{{ h.url_for('user.read', id=c.userobj.name) }}">
-                    <i class="fa fa-eye"></i>
-                    <span>Profilimi Görüntüle</span>
-                  </a>
-                </li>
-                <li class="sidebar-menu-item">
-                  <a href="/user/activity/{{ c.userobj.name }}">
-                    <i class="fa fa-history"></i>
-                    <span>Aktivite Geçmişi</span>
-                  </a>
-                </li>
-                <li class="sidebar-menu-item">
-                  <a href="/user/{{ c.userobj.name }}/api-tokens">
-                    <i class="fa fa-key"></i>
-                    <span>API Tokenları</span>
-                  </a>
-                </li>
-                <li class="sidebar-menu-item">
-                  <a href="{{ h.url_for('user.edit', id=c.userobj.name) }}">
-                    <i class="fa fa-edit"></i>
-                    <span>Profili Düzenle</span>
-                  </a>
-                </li>
-              </ul>
+        <div class="sidebar-content">
+
+          <!-- Profile Section -->
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">
+              <i class="fa fa-user" style="margin-right:8px!important;"></i>
+              Profil Yönetimi
             </div>
+            <ul class="sidebar-menu">
+              <li class="sidebar-menu-item">
+                <a href="{{ h.url_for('user.read', id=c.userobj.name) }}">
+                  <i class="fa fa-eye"></i>
+                  <span>Profilimi Görüntüle</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a href="/user/activity/{{ c.userobj.name }}">
+                  <i class="fa fa-history"></i>
+                  <span>Aktivite Geçmişi</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a href="/user/{{ c.userobj.name }}/api-tokens">
+                  <i class="fa fa-key"></i>
+                  <span>API Tokenları</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a href="{{ h.url_for('user.edit', id=c.userobj.name) }}">
+                  <i class="fa fa-edit"></i>
+                  <span>Profili Düzenle</span>
+                </a>
+              </li>
+            </ul>
+          </div>
 
-            <!-- Dashboard Section -->
-            <div class="sidebar-section">
-              <div class="sidebar-section-title">
-                <i class="fa fa-tachometer" style="margin-right:8px!important;"></i>
-                Dashboard
-              </div>
-              <ul class="sidebar-menu">
-                <li class="sidebar-menu-item">
-                  <a href="{{ h.url_for('dashboard.datasets') }}">
-                    <i class="fa fa-database"></i>
-                    <span>Veri Setleri</span>
-                    {% set new_activities = h.new_activities() %}
-                    {% if new_activities > 0 %}
-                      <span class="sidebar-badge">{{ new_activities }}</span>
-                    {% endif %}
-                  </a>
-                </li>
-                <li class="sidebar-menu-item">
-                  <a href="/dashboard/organizations">
-                    <i class="fa fa-building"></i>
-                    <span>Veri Paydaşları</span>
-                  </a>
-                </li>
-                <li class="sidebar-menu-item">
-                  <a href="/dashboard/groups">
-                    <i class="fa fa-tags"></i>
-                    <span>Kategoriler</span>
-                  </a>
-                </li>
-                              <li class="sidebar-menu-item">
+          <!-- Dashboard Section -->
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">
+              <i class="fa fa-tachometer" style="margin-right:8px!important;"></i>
+              Dashboard
+            </div>
+            <ul class="sidebar-menu">
+              <li class="sidebar-menu-item">
+                <a href="{{ h.url_for('dashboard.datasets') }}">
+                  <i class="fa fa-database"></i>
+                  <span>Veri Setleri</span>
+                  {% set new_activities = h.new_activities() %}
+                  {% if new_activities > 0 %}
+                  <span class="sidebar-badge">{{ new_activities }}</span>
+                  {% endif %}
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a href="/dashboard/organizations">
+                  <i class="fa fa-building"></i>
+                  <span>Veri Paydaşları</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a href="/dashboard/groups">
+                  <i class="fa fa-tags"></i>
+                  <span>Kategoriler</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
                 <a href="/dashboard/temalar">
                   <i class="fa fa-paint-brush"></i>
                   <span>Temalar</span>
                 </a>
               </li>
-                <li class="sidebar-menu-item">
-                  <a href="/dashboard">
-                    <i class="fa fa-activity"></i>
-                    <span>Aktivite Akışı</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <!-- Admin Section -->
-            {% if c.userobj.sysadmin %}
-            <div class="sidebar-section">
-              <div class="sidebar-section-title">
-                <i class="fa fa-gavel" style="margin-right:8px!important;"></i>
-                Yönetici Paneli
-              </div>
-              <ul class="sidebar-menu">
-                <li class="sidebar-menu-item">
-                  <a href="{{ h.url_for(controller='admin', action='index') }}">
-                    <i class="fa fa-users"></i>
-                    <span>Kullanıcılar</span>
-                  </a>
-                </li>
-                <li class="sidebar-menu-item">
-                  <a href="/ckan-admin/config">
-                    <i class="fa fa-cogs"></i>
-                    <span>Site Ayarları</span>
-                  </a>
-                </li>
-                <li class="sidebar-menu-item">
-                  <a href="/ckan-admin/trash">
-                    <i class="fa fa-trash"></i>
-                    <span>Çöp Kutusu</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-            {% endif %}
-
-            <!-- Logout Section -->
-            <div class="sidebar-section">
-              <ul class="sidebar-menu">
-                <li class="sidebar-menu-item">
-                  <a href="{{ h.url_for('/user/_logout') }}" style="color:#ff6b7a!important;">
-                    <i class="fa fa-sign-out"></i>
-                    <span>Güvenli Çıkış</span>
-                  </a>
-                </li>
-              </ul>
-            </div>
-
+              <li class="sidebar-menu-item">
+                <a href="/dashboard">
+                  <i class="fa fa-activity"></i>
+                  <span>Aktivite Akışı</span>
+                </a>
+              </li>
+            </ul>
           </div>
-        </div>
 
-        {% else %}
-        <nav class="account-nav">
-          <a class="li-giris" href="/user/login">Giriş Yap</a>
-          {% if h.check_access('user_create') %}
-            <a class="li-kayit" href="/user/register">Kayıt Ol</a>
+          <!-- Admin Section -->
+          {% if c.userobj.sysadmin %}
+          <div class="sidebar-section">
+            <div class="sidebar-section-title">
+              <i class="fa fa-gavel" style="margin-right:8px!important;"></i>
+              Yönetici Paneli
+            </div>
+            <ul class="sidebar-menu">
+              <li class="sidebar-menu-item">
+                <a href="{{ h.url_for(controller='admin', action='index') }}">
+                  <i class="fa fa-users"></i>
+                  <span>Kullanıcılar</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a href="/ckan-admin/config">
+                  <i class="fa fa-cogs"></i>
+                  <span>Site Ayarları</span>
+                </a>
+              </li>
+              <li class="sidebar-menu-item">
+                <a href="/ckan-admin/trash">
+                  <i class="fa fa-trash"></i>
+                  <span>Çöp Kutusu</span>
+                </a>
+              </li>
+            </ul>
+          </div>
           {% endif %}
-        </nav>
+
+          <!-- Logout Section -->
+          <div class="sidebar-section">
+            <ul class="sidebar-menu">
+              <li class="sidebar-menu-item">
+                <a href="{{ h.url_for('/user/_logout') }}" style="color:#ff6b7a!important;">
+                  <i class="fa fa-sign-out"></i>
+                  <span>Güvenli Çıkış</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+      </div>
+
+      {% else %}
+      <nav class="account-nav">
+        <a class="li-giris" href="/user/login">Giriş Yap</a>
+        {% if h.check_access('user_create') %}
+        <a class="li-kayit" href="/user/register">Kayıt Ol</a>
         {% endif %}
+      </nav>
+      {% endif %}
 
-      </div><!-- /.header-flex -->
+    </div><!-- /.header-flex -->
 
-    </div><!-- /.container -->
-  </header>
+  </div><!-- /.container -->
+</header>
 
-  <script>
-    function toggleSidebar() {
-      const overlay = document.getElementById('sidebarOverlay');
-      const sidebar = document.getElementById('futuristicSidebar');
-      
-      overlay.classList.toggle('active');
-      sidebar.classList.toggle('active');
+<script>
+  function toggleMobileMenu() {
+    const menu = document.getElementById("mobileNavMenu");
+    menu.style.display = (menu.style.display === "flex") ? "none" : "flex";
+  }
+
+  document.addEventListener('click', function (event) {
+    const menu = document.getElementById("mobileNavMenu");
+    const button = document.querySelector(".hamburger-menu");
+    if (!menu.contains(event.target) && !button.contains(event.target)) {
+      menu.style.display = "none";
     }
+  });
+  function toggleSidebar() {
+    const overlay = document.getElementById('sidebarOverlay');
+    const sidebar = document.getElementById('futuristicSidebar');
 
-    function closeSidebar() {
-      const overlay = document.getElementById('sidebarOverlay');
-      const sidebar = document.getElementById('futuristicSidebar');
-      
-      overlay.classList.remove('active');
-      sidebar.classList.remove('active');
+    overlay.classList.toggle('active');
+    sidebar.classList.toggle('active');
+  }
+
+  function closeSidebar() {
+    const overlay = document.getElementById('sidebarOverlay');
+    const sidebar = document.getElementById('futuristicSidebar');
+
+    overlay.classList.remove('active');
+    sidebar.classList.remove('active');
+  }
+
+  // ESC key ile kapat
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+      closeSidebar();
     }
+  });
+  window.addEventListener('resize', function () {
+  const menu = document.getElementById("mobileNavMenu");
+  const desktopBreakpoint = 930; // .desktop-menu için belirttiğin breakpoint
 
-    // ESC key ile kapat
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        closeSidebar();
-      }
-    });
-  </script>
+  if (window.innerWidth > desktopBreakpoint && menu.style.display === "flex") {
+    menu.style.display = "none";
+  }
+});
+</script>
 
-{% endblock %}  {# /header_wrapper #}
+{% endblock %} {# /header_wrapper #}

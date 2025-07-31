@@ -1,3 +1,28 @@
+<style>
+   /* Genel kutu ayarları */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+    @media (max-width: 760px) {
+  #title-container h1 {
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+  .stats{
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+}
+</style>
+
+
+
 {% extends "page.html" %}
 {% import 'macros/form.html' as form %}
 

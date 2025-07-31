@@ -1,3 +1,27 @@
+<style>
+     /* Genel kutu ayarları */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+  @media (max-width: 760px) {
+  #title-container h1 {
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+  .stats{
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+}
+
+</style>
+
 {% extends "page.html" %}
 
 {% block subtitle %}{{ _('Organizations') }}{% endblock %}
@@ -69,7 +93,7 @@
   {% block organizations_list %}
     {% if page.items or request.params %}
       {% if page.items %}
-        <div id="organizations-container">
+        <div id="organizations-container" style="overflow-x: auto;">
           <ul class="media-grid" id="organizations-list" style="padding: 0; margin: 0; list-style: none; min-height: 240px !important; background: none; border: 1px solid #ddd; border-width: 1px 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;">
             </ul>
         </div>
@@ -315,4 +339,60 @@ body.page-organization aside.secondary.col-sm-3{display:none!important;}
 .media-grid:before{display:none!important;}
 
 /* Stillerin geri kalanı değişmediği için kısaltılmıştır */
+.organizations-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  padding: 1rem;
+ 
+  width: 100%;
+  max-width: 100%;
+}
+
+.organization-card {
+  flex: 1 1 calc(20% - 1rem); /* 5 kart sığsın */
+  min-width: 220px;
+  max-width: 240px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 1rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  text-align: center;
+}
+.media-grid {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .media-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+}
+
+/* Daha küçük ekranlarda otomatik olarak daha az kart sığdırır */
+@media (max-width: 1024px) {
+  .organization-card {
+    flex: 1 1 calc(33.333% - 1rem); /* 3'lü grid */
+  }
+}
+
+@media (max-width: 768px) {
+  .organization-card {
+    flex: 1 1 calc(50% - 1rem); /* 2'li grid */
+  }
+}
+
+@media (max-width: 480px) {
+  .organization-card {
+    flex: 1 1 100%; /* 1 kart */
+  }
+}
 </style>

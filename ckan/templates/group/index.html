@@ -1,3 +1,25 @@
+<style>
+      /* Genel kutu ayarları */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+    @media (max-width: 760px) {
+  #title-container h1 {
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+  .stat{
+    margin: 0 auto !important;
+    text-align: center !important;
+  }
+}
+</style>
 {% extends "page.html" %}
 
 {% block subtitle %}{{ _('Groups') }}{% endblock %}
@@ -65,7 +87,7 @@
           <p style="margin-top: 15px; font-size: 16px; color: #555;">Gruplar yükleniyor...</p>
         </div>
 
-        <div id="groups-container" style="display:none;">
+        <div id="groups-container" style="display:none; overflow-x: auto;">
           <ul class="media-grid" id="groups-list" style="padding: 0; margin: 0; list-style: none; display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px;">
             </ul>
         </div>

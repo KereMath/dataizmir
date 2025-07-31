@@ -118,6 +118,16 @@
   {{ super() }}
 {% endblock -%}
 <style>
+      /* Genel kutu ayarları */
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
 /* ► Genel buton gövdesi */
 .butonmarkins{
   position:fixed !important;

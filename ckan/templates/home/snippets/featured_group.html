@@ -1,82 +1,144 @@
 {% set base_url = 'https://dataizmir.izka.org.tr/group/' %}
 <style>
-  .card-grid .card-grid-item span{color:black !important;}
+  .card-grid .card-grid-item span {
+    color: black !important;
+  }
+
   /* === Kart kenarlığı + köşe yuvarlama === */
-  .card.nohover{
-    border:1px solid #dee2e6;
-    border-radius:10px;
-    background:#fff;
-    cursor:pointer;
-    transition: all 0.3s ease-in-out; /* Yumuşak geçiş için */
-  } 
+  .card.nohover {
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    /* Yumuşak geçiş için */
+  }
+
   /* Tüm kartı tıklanabilir yapmak için eklenen stil */
-  .card-grid-item a {display:block; width:100%; height:100%; text-decoration:none; color:#0a1458 !important;}
-  .card-grid-item a .card-content {display:flex; flex-direction:column; justify-content:space-between; height:100%; padding:15px;} /* İçerik için dolgu ve düzen */
+  .card-grid-item a {
+    display: block;
+    width: 100%;
+    height: 100%;
+    text-decoration: none;
+    color: #0a1458 !important;
+  }
+
+  .card-grid-item a .card-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+    padding: 15px;
+  }
+
+  /* İçerik için dolgu ve düzen */
 
   /* Yeni Hover Efekti: Kutucuğun üzerine gelince */
   .card.nohover:hover {
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15); /* Daha belirgin gölge */
-    transform: translateY(-5px); /* Hafif yukarı kalkma */
-    border-color: #0a1458; /* Kenarlık rengi değişimi */
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+    /* Daha belirgin gölge */
+    transform: translateY(-5px);
+    /* Hafif yukarı kalkma */
+    border-color: #0a1458;
+    /* Kenarlık rengi değişimi */
   }
-  .card.nohover:hover .group-title {
-    color: black !important; /* Başlık rengi değişimi */
-  }
-  .card.nohover:hover .btn1-inceleyin span {
-    color: black !important; /* Buton metin rengi değişimi */
-  }
-.card .btn1-inceleyin svg path {
-  stroke: black !important; /* Buton oku rengi mor olsun */
-  opacity: 1 !important;    /* Her zaman görünür olsun */
-}
 
-/* Hover durumundaki değişikliği kaldırmak için bu kuralı silebilirsiniz veya aşağıdaki gibi ayarlayabilirsiniz: */
-.card.nohover:hover .btn1-inceleyin svg path {
-  stroke: black !important; /* Hover'da da mor kalsın */
-}
+  .card.nohover:hover .group-title {
+    color: black !important;
+    /* Başlık rengi değişimi */
+  }
+
+  .card.nohover:hover .btn1-inceleyin span {
+    color: black !important;
+    /* Buton metin rengi değişimi */
+  }
+
+  .card .btn1-inceleyin svg path {
+    stroke: black !important;
+    /* Buton oku rengi mor olsun */
+    opacity: 1 !important;
+    /* Her zaman görünür olsun */
+  }
+
+  .card-content img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    max-width: 120px;
+    max-height: 80px;
+    border-radius: 5px;
+  }
+
+  /* Hover durumundaki değişikliği kaldırmak için bu kuralı silebilirsiniz veya aşağıdaki gibi ayarlayabilirsiniz: */
+  .card.nohover:hover .btn1-inceleyin svg path {
+    stroke: black !important;
+    /* Hover'da da mor kalsın */
+  }
 
   /* Başlık (mavi) */
-  .group-title{font-family:Labrada;font-weight:600;font-size:24px;line-height:26px;text-align:center;margin-top:5px;color:#0a1458; transition: color 0.3s ease-in-out;}
-  
+  .group-title {
+    font-family: Labrada;
+    font-weight: 600;
+    font-size: 24px;
+    line-height: 26px;
+    text-align: center;
+    margin-top: 5px;
+    color: #0a1458;
+    transition: color 0.3s ease-in-out;
+  }
+
   /* === “Veri Setini İnceleyin” butonu === */
-  .btn1-inceleyin{
-    margin-top:5px;
-    display:flex;align-items:center;justify-content:center;gap:6px;
-    text-decoration:none;background:transparent;color:#000;
-    font-family:Labrada;font-weight:600;font-size:16px;line-height:100%;
-    letter-spacing:0;text-align:center;
-    transition: background 0.2s, color 0.2s; /* Buton geçişleri */
+  .btn1-inceleyin {
+    margin-top: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    text-decoration: none;
+    background: transparent;
+    color: #000;
+    font-family: Labrada;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 100%;
+    letter-spacing: 0;
+    text-align: center;
+    transition: background 0.2s, color 0.2s;
+    /* Buton geçişleri */
   }
+
   /* Butonun kendi hover efekti (sadeleştirildi) */
-  .btn1-inceleyin:hover{
-color:#000 !important;
+  .btn1-inceleyin:hover {
+    color: #000 !important;
   }
+
   /* Ok her durumda siyah (kart hoverından etkilenmez) */
-  .btn1-inceleyin svg path, .btn1-inceleyin:hover svg path{color:#000 !important;}
+  .btn1-inceleyin svg path,
+  .btn1-inceleyin:hover svg path {
+    color: #000 !important;
+  }
 </style>
 
 {% set groups = h.get_featured_groups(count=30) %}
 
 {% for group in groups %}
-  <div class="card border card-grid-item nohover">
-    <a href="{{ base_url ~ group.name }}" title="{{ group.title or group.name }}">
-      <div class="card-content">
-        <img class="card-img-top"
-             src="{{ group.image_display_url or h.url_for_static('/base/images/placeholder-group.png') }}"
-             alt="{{ group.title or group.name }}">
+<div class="card border card-grid-item nohover">
+  <a href="{{ base_url ~ group.name }}" title="{{ group.title or group.name }}">
+    <div class="card-content">
+      <img class="card-img-top"
+        src="{{ group.image_display_url or h.url_for_static('/base/images/placeholder-group.png') }}"
+        alt="{{ group.title or group.name }}">
 
-        <div style="margin-top:-4px;" class="group-title">{{ group.title or group.name }}</div>
+      <div style="margin-top:-4px;" class="group-title">{{ group.title or group.name }}</div>
 
-        <span style="margin-top:18px; border-radius: 3px;" class="btn1-inceleyin">
-          <span>{{ group.package_count }} Veri Setini<br>İnceleyin</span>
-          <svg width="14" height="12" viewBox="0 0 14 12"
-               xmlns="http://www.w3.org/2000/svg">
-            <path d="M8.5 1l4.5 5-4.5 5M1 6h11.5"
-                  stroke-width="1.5" fill="none"
-                  stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </span>
-      </div>
-    </a>
-  </div>
+      <span style="margin-top:18px; border-radius: 3px;" class="btn1-inceleyin">
+        <span>{{ group.package_count }} Veri Setini<br>İnceleyin</span>
+        <svg width="14" height="12" viewBox="0 0 14 12" xmlns="http://www.w3.org/2000/svg">
+          <path d="M8.5 1l4.5 5-4.5 5M1 6h11.5" stroke-width="1.5" fill="none" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      </span>
+    </div>
+  </a>
+</div>
 {% endfor %}

@@ -11,11 +11,39 @@ body, html, * {
 /* ——— VAR OLAN STILLER (popüler & kategori) ——— */
 .pop-main { background:url("../../populer_veri_setleri_zemin.png") center/220% auto no-repeat!important; }
 .catg-main{ background:url("../../kategoriler_zemin.png") center/170% auto no-repeat!important; }
-.card-grid{
-    display:grid;
-    grid-template-columns:repeat(5,1fr);   /* her satırda 5 */
-    grid-auto-rows:auto;                   /* satır yüksekliği içeriğe göre */
-    gap:1rem;
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* Varsayılan: 5 kolon */
+    grid-auto-rows: auto;
+    gap: 1rem;
+}
+
+/* Büyük ekranlar (1200px altı) → 4 kolon */
+@media (max-width: 1199px) {
+    .card-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+/* Orta boy ekranlar (992px altı) → 3 kolon */
+@media (max-width: 991px) {
+    .card-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+/* Küçük ekranlar (768px altı) → 2 kolon */
+@media (max-width: 767px) {
+    .card-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Çok küçük ekranlar (576px altı) → 1 kolon */
+@media (max-width: 575px) {
+    .card-grid {
+        grid-template-columns: 1fr;
+    }
 }
 
 .card-grid-popular           { text-align:justify; display:grid; grid-template-columns:repeat(4,1fr); grid-gap:1rem; grid-auto-flow:dense; visibility:hidden; opacity:0; transition:opacity .5s }

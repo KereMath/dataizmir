@@ -1063,6 +1063,9 @@ th {
   -webkit-box-sizing: border-box;
   -moz-box-sizing: border-box;
   box-sizing: border-box;
+    margin: 0;
+      padding: 0;
+     
 }
 *:before,
 *:after {
@@ -9495,7 +9498,6 @@ h4 small {
 }
 .main .secondary {
   padding: 0;
-  z-index: 1;
   padding-right: 1px;
 }
 /* Filters modal */

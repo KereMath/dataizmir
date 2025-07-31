@@ -307,7 +307,7 @@
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
+    width: 95vw;
     height: 100vh;
     z-index: 9999;
     padding: 40px 20px;
@@ -329,6 +329,12 @@
     padding: 8px 16px;
     border-radius: 8px;
     font-weight: bold;
+  }
+  .mobile-menu .mobile-giris{
+    background-color: #e6ecf9;
+  }
+  .mobile-menu  .mobile-kayit{
+    background-color: #e6ecf9;
   }
 
   .mobile-menu a:focus {
@@ -379,16 +385,16 @@
 <style>
   .li-giris,
   .li-kayit {
-    display: none !important
+    display: none !important;
   }
 </style>
 {% else %}
 <style>
   .account-masthead {
-    display: none !important
+    display: none !important;
   }
 
-  @media(min-width:768px) {
+  @media(min-width: 930px) {
     .li-giris {
       background: #4f7cc1;
       color: #fff !important;
@@ -397,11 +403,12 @@
       padding: 10px 35px !important;
       margin-right: 10px;
       text-decoration: none !important;
+      display: inline-block !important;
     }
 
     .li-giris:hover {
       background: #fff;
-      color: #4f7cc1 !important
+      color: #4f7cc1 !important;
     }
 
     .li-kayit {
@@ -409,15 +416,24 @@
       border: 1px solid #4f7cc1;
       padding: 10px 35px !important;
       text-decoration: none !important;
+      display: inline-block !important;
     }
 
     .li-kayit:hover {
       background: #4f7cc1 !important;
-      color: #fff !important
+      color: #fff !important;
+    }
+  }
+
+  @media(max-width: 929px) {
+    .li-giris,
+    .li-kayit {
+      display: none !important;
     }
   }
 </style>
 {% endif %}
+
 
 {# ——— HEADER WRAPPER BLOĞU ——— #}
 {% block header_wrapper %}

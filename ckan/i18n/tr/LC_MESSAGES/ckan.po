@@ -3919,7 +3919,7 @@ msgstr "{actor}, {dataset} veri setine {resource} kaynağını ekledi"
 
 #: ckanext/activity/templates/snippets/activities/new_user.html:6
 msgid "{actor} signed up"
-msgstr "{actor} girip yaptı"
+msgstr "{actor} giriş yaptı"
 
 #: ckanext/activity/templates/snippets/activities/removed_tag.html:6
 msgid "{actor} removed the tag {tag} from the dataset {dataset}"

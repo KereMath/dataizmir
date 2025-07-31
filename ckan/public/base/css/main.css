@@ -9599,7 +9599,8 @@ h4 small {
 
 @media (max-width: 768px) {
   .hero {
-    background-color: #0a1458;
+    background: url("../../BG.png") !important;
+    background-position: center;
   }
 }
 

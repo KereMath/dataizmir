@@ -3,20 +3,24 @@
 {% block subtitle %}{{ _('About') }}{% endblock %}
 
 {% block primary %}
-{# 
-    Bu blok, sayfanın tüm özel stil ve içeriğini barındırır.
+{#
+Bu blok, sayfanın tüm özel stil ve içeriğini barındırır.
 #}
 <style>
-        /* Genel kutu ayarları */
-  *, *::before, *::after {
-    box-sizing: border-box;
-  }
+    /* Genel kutu ayarları */
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
 
-  html, body {
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-  }
+    html,
+    body {
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+    }
+
     :root {
         --primary-color: #4A00E0;
         --secondary-color: #8E2DE2;
@@ -30,7 +34,7 @@
         background-color: var(--bg-light) !important;
         font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
     }
-    
+
     .about-container * {
         box-sizing: border-box;
     }
@@ -44,18 +48,21 @@
         background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         color: white;
     }
+
     .about-hero .hero-content {
         position: relative;
         z-index: 0;
     }
+
     .about-hero h1 {
         font-size: 3.5rem;
         font-weight: 800;
         margin-top: 0;
         margin-bottom: 1rem;
         letter-spacing: -1.5px;
-        text-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     }
+
     .about-hero p.hero-subtitle {
         font-size: 1.5rem;
         font-weight: 400;
@@ -75,6 +82,7 @@
         overflow: hidden;
         z-index: 0;
     }
+
     .hero-shapes li {
         position: absolute;
         display: block;
@@ -85,19 +93,94 @@
         animation: animate-shapes 25s linear infinite;
         bottom: -150px;
     }
-    .hero-shapes li:nth-child(1){ left: 25%; width: 80px; height: 80px; animation-delay: 0s; }
-    .hero-shapes li:nth-child(2){ left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
-    .hero-shapes li:nth-child(3){ left: 70%; width: 20px; height: 20px; animation-delay: 4s; }
-    .hero-shapes li:nth-child(4){ left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 18s; }
-    .hero-shapes li:nth-child(5){ left: 65%; width: 20px; height: 20px; animation-delay: 0s; }
-    .hero-shapes li:nth-child(6){ left: 75%; width: 110px; height: 110px; animation-delay: 3s; }
-    .hero-shapes li:nth-child(7){ left: 35%; width: 150px; height: 150px; animation-delay: 7s; }
-    .hero-shapes li:nth-child(8){ left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 45s; }
-    .hero-shapes li:nth-child(9){ left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
-    .hero-shapes li:nth-child(10){ left: 85%; width: 150px; height: 150px; animation-delay: 0s; animation-duration: 11s; }
+
+    .hero-shapes li:nth-child(1) {
+        left: 25%;
+        width: 80px;
+        height: 80px;
+        animation-delay: 0s;
+    }
+
+    .hero-shapes li:nth-child(2) {
+        left: 10%;
+        width: 20px;
+        height: 20px;
+        animation-delay: 2s;
+        animation-duration: 12s;
+    }
+
+    .hero-shapes li:nth-child(3) {
+        left: 70%;
+        width: 20px;
+        height: 20px;
+        animation-delay: 4s;
+    }
+
+    .hero-shapes li:nth-child(4) {
+        left: 40%;
+        width: 60px;
+        height: 60px;
+        animation-delay: 0s;
+        animation-duration: 18s;
+    }
+
+    .hero-shapes li:nth-child(5) {
+        left: 65%;
+        width: 20px;
+        height: 20px;
+        animation-delay: 0s;
+    }
+
+    .hero-shapes li:nth-child(6) {
+        left: 75%;
+        width: 110px;
+        height: 110px;
+        animation-delay: 3s;
+    }
+
+    .hero-shapes li:nth-child(7) {
+        left: 35%;
+        width: 150px;
+        height: 150px;
+        animation-delay: 7s;
+    }
+
+    .hero-shapes li:nth-child(8) {
+        left: 50%;
+        width: 25px;
+        height: 25px;
+        animation-delay: 15s;
+        animation-duration: 45s;
+    }
+
+    .hero-shapes li:nth-child(9) {
+        left: 20%;
+        width: 15px;
+        height: 15px;
+        animation-delay: 2s;
+        animation-duration: 35s;
+    }
+
+    .hero-shapes li:nth-child(10) {
+        left: 85%;
+        width: 150px;
+        height: 150px;
+        animation-delay: 0s;
+        animation-duration: 11s;
+    }
+
     @keyframes animate-shapes {
-        0%{ transform: translateY(0) rotate(0deg); opacity: 1; border-radius: 0; }
-        100%{ transform: translateY(-1000px) rotate(720deg); opacity: 0; border-radius: 50%; }
+        0% {
+            transform: translateY(0) rotate(0deg);
+            opacity: 1;
+            border-radius: 0;
+        }
+
+        100% {
+            transform: translateY(-1000px) rotate(720deg);
+            opacity: 0;
+            border-radius: 50%;
+        }
     }
 
 
@@ -106,6 +189,7 @@
         padding: 80px 30px;
         background-color: #ffffff;
     }
+
     .stats-container {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -113,6 +197,7 @@
         max-width: 1200px;
         margin: 0 auto;
     }
+
     .stat-card {
         background: #ffffff;
         border: 1px solid var(--border-light);
@@ -120,12 +205,14 @@
         padding: 30px;
         text-align: center;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
     }
+
     .stat-card:hover {
         transform: translateY(-10px);
-        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
     }
+
     .stat-card .stat-icon {
         width: 64px;
         height: 64px;
@@ -137,18 +224,22 @@
         background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
         color: white;
     }
+
     .stat-card .stat-icon svg {
         width: 32px;
         height: 32px;
     }
+
     .stat-card .stat-number {
         font-size: 3rem;
         font-weight: 800;
         color: var(--text-dark);
         line-height: 1;
         margin-bottom: 10px;
-        min-height: 58px; /* Animasyon sırasında zıplamayı önler */
+        min-height: 58px;
+        /* Animasyon sırasında zıplamayı önler */
     }
+
     .stat-card .stat-label {
         font-size: 1.5rem;
         font-weight: 500;
@@ -159,6 +250,7 @@
     .main-content-section {
         padding: 0 30px 80px 30px;
     }
+
     .main-content-wrapper {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -167,7 +259,9 @@
         margin: 0 auto;
         align-items: center;
     }
-    .content-col, .video-col {
+
+    .content-col,
+    .video-col {
         background: #ffffff;
         padding: 40px;
         border-radius: 16px;
@@ -176,85 +270,140 @@
         color: var(--text-light);
         border: 1px solid var(--border-light);
     }
+
     .video-col {
         padding: 0;
         overflow: hidden;
     }
+
     .video-col iframe {
         width: 100%;
         height: 350px;
         display: block;
         border: none;
     }
-    
+
     @media (max-width: 992px) {
-        .about-hero h1 { font-size: 2.8rem; }
-        .about-hero p.hero-subtitle { font-size: 1.25rem; }
-        .stats-container { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+        .about-hero h1 {
+            font-size: 2.8rem;
+        }
+
+        .about-hero p.hero-subtitle {
+            font-size: 1.25rem;
+        }
+
+        .stats-container {
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        }
     }
 
     @media (max-width: 768px) {
-        .about-hero h1 { font-size: 2.2rem; }
-        .about-hero p.hero-subtitle { font-size: 1.5rem; }
-        .stats-container { grid-template-columns: repeat(2, 1fr); }
-        .stat-card .stat-number { font-size: 2.5rem; }
+        .about-hero h1 {
+            font-size: 2.2rem;
+        }
+
+        .about-hero p.hero-subtitle {
+            font-size: 1.5rem;
+        }
+
+        .stats-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stat-card .stat-number {
+            font-size: 2.5rem;
+        }
     }
 </style>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap"
+    rel="stylesheet">
 
 
 <div class="about-container">
     <section class="about-hero">
         <div class="hero-content">
             <h1>Data İzmir Platformu</h1>
-            <p class="hero-subtitle">İzmir için kanıta dayalı politika ve araştırma süreçlerini güçlendiren, herkesin kolayca keşfedebileceği kapsamlı bir veri platformu.</p>
+            <p class="hero-subtitle">İzmir için kanıta dayalı politika ve araştırma süreçlerini güçlendiren, herkesin
+                kolayca keşfedebileceği kapsamlı bir veri platformu.</p>
         </div>
-        <ul class="hero-shapes"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ul>
+        <ul class="hero-shapes">
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+        </ul>
     </section>
 
     <section class="stats-section">
         <div class="stats-container">
             <div class="stat-card">
                 <div class="stat-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" />
+                    </svg>
                 </div>
                 <div id="stat-datasets" class="stat-number">...</div>
                 <div class="stat-label">Veri Seti</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21" />
+                    </svg>
                 </div>
                 <div id="stat-orgs" class="stat-number">...</div>
                 <div class="stat-label">Veri Paydaşı</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                    </svg>
                 </div>
                 <div id="stat-groups" class="stat-number">...</div>
                 <div class="stat-label">Kategori</div>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /><path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                    </svg>
                 </div>
                 <div id="stat-tags" class="stat-number">...</div>
                 <div class="stat-label">Etiket</div>
             </div>
-             <div class="stat-card">
+            <div class="stat-card">
                 <div class="stat-icon">
-                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.28a4.5 4.5 0 01.004-6.364 4.5 4.5 0 016.364-.004m-6.364 6.364l10.94-10.94M3.75 12.565c0-1.01.378-2.017 1.07-2.815a4.505 4.505 0 015.29-1.074m6.364 6.364a4.5 4.5 0 01-6.364-.004m-6.364-6.364a4.5 4.5 0 01.004-6.364A4.5 4.5 0 019.75 3.75m-6 8.815c0-1.01.378-2.017 1.07-2.815a4.505 4.505 0 015.29-1.074m0 0a4.5 4.5 0 016.364-.004" /></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.28a4.5 4.5 0 01.004-6.364 4.5 4.5 0 016.364-.004m-6.364 6.364l10.94-10.94M3.75 12.565c0-1.01.378-2.017 1.07-2.815a4.505 4.505 0 015.29-1.074m6.364 6.364a4.5 4.5 0 01-6.364-.004m-6.364-6.364a4.5 4.5 0 01.004-6.364A4.5 4.5 0 019.75 3.75m-6 8.815c0-1.01.378-2.017 1.07-2.815a4.505 4.505 0 015.29-1.074m0 0a4.5 4.5 0 016.364-.004" />
+                    </svg>
                 </div>
                 <div id="stat-licenses" class="stat-number">...</div>
                 <div class="stat-label">Lisans Tipi</div>
             </div>
         </div>
     </section>
-    
+
     <!-- <section class="main-content-section">
         <div class="main-content-wrapper">
              <div class="content-col">
@@ -269,64 +418,64 @@
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    // API'den veri çekmek için yardımcı fonksiyon
-    const fetchAPI = (action, params = '') => {
-        const url = `/api/3/action/${action}${params ? '?' + params : ''}`;
-        return fetch(url, { 
-            method: 'POST',
-            credentials: 'include' 
-        })
-        .then(response => {
-            if (!response.ok) throw new Error(`Network response was not ok for ${action}`);
-            return response.json();
-        })
-        .then(data => {
-            if (!data.success) throw new Error(`API error for ${action}: ${data.error?.message || 'Unknown error'}`);
-            return data.result;
-        })
-        .catch(error => {
-            console.error(`Error fetching ${action}:`, error);
-            return null; // Hata durumunda null dön
-        });
-    };
+    document.addEventListener('DOMContentLoaded', () => {
+        // API'den veri çekmek için yardımcı fonksiyon
+        const fetchAPI = (action, params = '') => {
+            const url = `/api/3/action/${action}${params ? '?' + params : ''}`;
+            return fetch(url, {
+                method: 'POST',
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error(`Network response was not ok for ${action}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.success) throw new Error(`API error for ${action}: ${data.error?.message || 'Unknown error'}`);
+                    return data.result;
+                })
+                .catch(error => {
+                    console.error(`Error fetching ${action}:`, error);
+                    return null; // Hata durumunda null dön
+                });
+        };
 
-    // Sayı sayma animasyonu
-    const animateCount = (element, finalCount) => {
-        if (finalCount === null || typeof finalCount === 'undefined') {
-            element.textContent = 'N/A';
-            return;
-        }
-        let start = 0;
-        const duration = 1500;
-        const stepTime = Math.max(1, Math.floor(duration / finalCount));
-        
-        const timer = setInterval(() => {
-            start++;
-            element.textContent = start;
-            if (start >= finalCount) {
-                element.textContent = finalCount; // Tam sayıda bitir
-                clearInterval(timer);
+        // Sayı sayma animasyonu
+        const animateCount = (element, finalCount) => {
+            if (finalCount === null || typeof finalCount === 'undefined') {
+                element.textContent = 'N/A';
+                return;
             }
-        }, stepTime);
-    };
+            let start = 0;
+            const duration = 1500;
+            const stepTime = Math.max(1, Math.floor(duration / finalCount));
 
-    // Tüm API isteklerini aynı anda başlat
-    Promise.all([
-        fetchAPI('package_search', 'rows=0&include_private=true'),
-        fetchAPI('organization_list'),
-        fetchAPI('group_list'),
-        fetchAPI('tag_list'),
-        fetchAPI('license_list'),
-    ])
-    .then(([datasets, orgs, groups, tags, licenses]) => {
-        // Sonuçları ilgili HTML elementlerine yazdır
-        animateCount(document.getElementById('stat-datasets'), datasets ? datasets.count : null);
-        animateCount(document.getElementById('stat-orgs'), orgs ? orgs.length : null);
-        animateCount(document.getElementById('stat-groups'), groups ? groups.length : null);
-        animateCount(document.getElementById('stat-tags'), tags ? tags.length : null);
-        animateCount(document.getElementById('stat-licenses'), licenses ? licenses.length : null);
+            const timer = setInterval(() => {
+                start++;
+                element.textContent = start;
+                if (start >= finalCount) {
+                    element.textContent = finalCount; // Tam sayıda bitir
+                    clearInterval(timer);
+                }
+            }, stepTime);
+        };
+
+        // Tüm API isteklerini aynı anda başlat
+        Promise.all([
+            fetchAPI('package_search', 'rows=0&include_private=true'),
+            fetchAPI('organization_list'),
+            fetchAPI('group_list'),
+            fetchAPI('tag_list'),
+            fetchAPI('license_list'),
+        ])
+            .then(([datasets, orgs, groups, tags, licenses]) => {
+                // Sonuçları ilgili HTML elementlerine yazdır
+                animateCount(document.getElementById('stat-datasets'), datasets ? datasets.count : null);
+                animateCount(document.getElementById('stat-orgs'), orgs ? orgs.length : null);
+                animateCount(document.getElementById('stat-groups'), groups ? groups.length : null);
+                animateCount(document.getElementById('stat-tags'), tags ? tags.length : null);
+                animateCount(document.getElementById('stat-licenses'), licenses ? licenses.length : null);
+            });
     });
-});
 </script>
 {% endblock %}

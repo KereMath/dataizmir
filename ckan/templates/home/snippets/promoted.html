@@ -1,18 +1,21 @@
 {# ──────────────────────────────────────────────────────────────
-  Anasayfa (home/index.html) – dataset sayısını API'den çeken sürüm
+Anasayfa (home/index.html) – dataset sayısını API'den çeken sürüm
 ──────────────────────────────────────────────────────────────── #}
 
 {% set intro1 = g.site_intro_text %}
-{% set title  = g.site_title %}
-{% set intro  = g.site_about %}
+{% set title = g.site_title %}
+{% set intro = g.site_about %}
 
 <style>
   /* Genel kutu ayarları */
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     box-sizing: border-box;
   }
 
-  html, body {
+  html,
+  body {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
@@ -124,13 +127,13 @@
       width: 100%;
     }
 
-    .textmid > div:first-child {
+    .textmid>div:first-child {
       max-width: 100% !important;
       min-width: 100% !important;
       margin-left: 0 !important;
     }
 
-    .textmid > div:nth-child(2) {
+    .textmid>div:nth-child(2) {
       width: 100% !important;
       margin-left: 0 !important;
     }
@@ -224,19 +227,19 @@
 
 <!-- Dataset sayısını çek ve güncelle -->
 <script>
-fetch('/api/3/action/package_search?rows=0&include_private=true', {
-  credentials: 'include'
-})
-.then(function(response) { return response.json(); })
-.then(function(data) {
-  if (data.success && data.result && typeof data.result.count === 'number') {
-    var countElement = document.getElementById('dataset-count-main');
-    if (countElement) {
-      countElement.textContent = data.result.count;
-    }
-  }
-})
-.catch(function(error) {
-  console.error('Dataset sayısı alınırken hata:', error);
-});
+  fetch('/api/3/action/package_search?rows=0&include_private=true', {
+    credentials: 'include'
+  })
+    .then(function (response) { return response.json(); })
+    .then(function (data) {
+      if (data.success && data.result && typeof data.result.count === 'number') {
+        var countElement = document.getElementById('dataset-count-main');
+        if (countElement) {
+          countElement.textContent = data.result.count;
+        }
+      }
+    })
+    .catch(function (error) {
+      console.error('Dataset sayısı alınırken hata:', error);
+    });
 </script>

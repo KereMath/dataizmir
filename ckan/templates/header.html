@@ -277,24 +277,26 @@
     margin-left: auto;
     padding-right: 15px;
   }
-.mobile-giris,
-.mobile-kayit {
-  font-size: 18px;
-  color: #fff;
-  background: #4f7cc1;
-  padding: 10px 25px;
-  border-radius: 8px;
-  display: inline-block;
-  margin: 10px 0;
-  text-align: center;
-  transition: background 0.3s ease;
-}
 
-.mobile-giris:hover,
-.mobile-kayit:hover {
-  background: #365ba4;
-  color: #fff;
-}
+  .mobile-giris,
+  .mobile-kayit {
+    font-size: 18px;
+    color: #fff;
+    background: #4f7cc1;
+    padding: 10px 25px;
+    border-radius: 8px;
+    display: inline-block;
+    margin: 10px 0;
+    text-align: center;
+    transition: background 0.3s ease;
+  }
+
+  .mobile-giris:hover,
+  .mobile-kayit:hover {
+    background: #365ba4;
+    color: #fff;
+  }
+
   .mobile-menu {
     display: none;
     flex-direction: column;
@@ -364,11 +366,12 @@
       display: block;
     }
   }
+
   @media (min-width: 930px) {
-  .mobile-menu {
-    display: none !important;
+    .mobile-menu {
+      display: none !important;
+    }
   }
-}
 </style>
 
 {# ——— GİRİŞ / KAYIT düğmeleri için görünürlük ——— #}
@@ -686,13 +689,13 @@
     }
   });
   window.addEventListener('resize', function () {
-  const menu = document.getElementById("mobileNavMenu");
-  const desktopBreakpoint = 930; // .desktop-menu için belirttiğin breakpoint
+    const menu = document.getElementById("mobileNavMenu");
+    const desktopBreakpoint = 930; // .desktop-menu için belirttiğin breakpoint
 
-  if (window.innerWidth > desktopBreakpoint && menu.style.display === "flex") {
-    menu.style.display = "none";
-  }
-});
+    if (window.innerWidth > desktopBreakpoint && menu.style.display === "flex") {
+      menu.style.display = "none";
+    }
+  });
 </script>
 
 {% endblock %} {# /header_wrapper #}

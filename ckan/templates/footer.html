@@ -377,7 +377,12 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(isAdminPage ? 'Admin sayfa tespit edildi:' : 'Normal sayfa:', currentPath);
         
         // Her durumda footer'ı en alta yapıştır
-        stickFooterToBottom();
+        if(isAdminPage){
+            stickFooterToBottom();
+
+        }else{
+            
+        }
     }
     
     // Sayfa yüklendiğinde kontrol et

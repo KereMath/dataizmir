@@ -6,7 +6,16 @@
       width:100%;
       padding:60px 0;                 /* height biraz arttı (üst‑alt 60px) */
       position: relative;
-    bottom: 0px;
+      bottom: 0px;
+  }
+
+  /* URL bazlı absolute positioning */
+  .site-footer.admin-page-footer {
+      position: absolute !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      margin-top: 40px !important;
   }
 
   /* sütunları taşıyan satır */
@@ -302,6 +311,79 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ===========================================
+    // URL BAZLI FOOTER POZİSYONLAMA SİSTEMİ
+    // ===========================================
+    
+    function checkUrlAndSetFooterPosition() {
+        const currentPath = window.location.pathname;
+        const footer = document.querySelector('.site-footer');
+        
+        if (!footer) return;
+        
+        // Admin/Edit sayfası URL pattern'leri
+        const adminPagePatterns = [
+            /\/dataset\/.*\/resource\/.*\/edit$/,           // /dataset/.../resource/.../edit
+            /\/dataset\/groups\/.*/,                        // /dataset/groups/...
+            /\/organization\/groups\/.*/,                   // /organization/groups/...
+            /\/dataset\/.*\/resource\/new$/,                // /dataset/.../resource/new
+            /\/organization\/members\/.*/,                  // /organization/members/...
+            /\/group\/members\/.*/,                         // /group/members/...
+            /\/organization\/member_new\/.*/,               // /organization/member_new/...
+            /\/group\/member_new\/.*/,                      // /group/member_new/...
+            /\/ckan-admin\/config$/,                        // /ckan-admin/config
+            /\/temalar$/,                                   // /temalar
+            /\/dashboard\/temalar$/,                        // /dashboard/temalar
+            /\/user\/.*\/api-tokens$/,                      // /user/.../api-tokens
+            /\/user\/edit\/izkaacikveri$/                   // /user/edit/izkaacikveri
+        ];
+        
+        // URL'nin admin sayfası olup olmadığını kontrol et
+        const isAdminPage = adminPagePatterns.some(pattern => pattern.test(currentPath));
+        
+        if (isAdminPage) {
+            // Admin sayfası - footer'ı absolute yap
+            footer.classList.add('admin-page-footer');
+            console.log('Admin sayfa tespit edildi, footer absolute yapıldı:', currentPath);
+        } else {
+            // Normal sayfa - footer'ı relative bırak
+            footer.classList.remove('admin-page-footer');
+            console.log('Normal sayfa, footer relative:', currentPath);
+        }
+    }
+    
+    // Sayfa yüklendiğinde kontrol et
+    checkUrlAndSetFooterPosition();
+    
+    // SPA (Single Page App) durumları için URL değişikliklerini dinle
+    // History API değişikliklerini yakala
+    const originalPushState = history.pushState;
+    const originalReplaceState = history.replaceState;
+    
+    history.pushState = function() {
+        originalPushState.apply(this, arguments);
+        setTimeout(checkUrlAndSetFooterPosition, 50);
+    };
+    
+    history.replaceState = function() {
+        originalReplaceState.apply(this, arguments);
+        setTimeout(checkUrlAndSetFooterPosition, 50);
+    };
+    
+    // Popstate eventi (geri/ileri butonları)
+    window.addEventListener('popstate', function() {
+        setTimeout(checkUrlAndSetFooterPosition, 50);
+    });
+    
+    // Hash değişikliklerini de dinle
+    window.addEventListener('hashchange', function() {
+        setTimeout(checkUrlAndSetFooterPosition, 50);
+    });
+
+    // ===========================================
+    // PDF MODAL SİSTEMİ
+    // ===========================================
+    
     const modal = document.getElementById('pdfModal');
     const modalTitle = document.getElementById('pdfModalTitle');
     const modalClose = document.getElementById('pdfModalClose');
@@ -400,6 +482,8 @@ document.addEventListener('DOMContentLoaded', function() {
         mutations.forEach(function(mutation) {
             if (mutation.addedNodes.length > 0) {
                 attachPdfEvents();
+                // URL değişikliği olabilir, footer pozisyonunu tekrar kontrol et
+                setTimeout(checkUrlAndSetFooterPosition, 100);
             }
         });
     });

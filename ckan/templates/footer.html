@@ -9,13 +9,19 @@
       bottom: 0px;
   }
 
-  /* URL bazlı absolute positioning */
-  .site-footer.admin-page-footer {
-      position: absolute !important;
+  /* Dinamik footer pozisyonlaması - her durumda en altta */
+  .site-footer.sticky-bottom {
+      position: fixed !important;
       bottom: 0 !important;
       left: 0 !important;
       right: 0 !important;
-      margin-top: 40px !important;
+      z-index: 999 !important;
+      box-shadow: 0 -2px 10px rgba(0,0,0,0.1) !important;
+  }
+
+  /* Body'ye footer yüksekliği kadar padding */
+  body.footer-padded {
+      padding-bottom: var(--footer-height, 200px) !important;
   }
 
   /* sütunları taşıyan satır */
@@ -312,8 +318,37 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     // ===========================================
-    // URL BAZLI FOOTER POZİSYONLAMA SİSTEMİ
+    // FOOTER POZİSYONLAMA SİSTEMİ
     // ===========================================
+    
+    function stickFooterToBottom() {
+        const footer = document.querySelector('.site-footer');
+        const body = document.body;
+        
+        if (!footer) return;
+        
+        // Footer yüksekliğini hesapla
+        // Önce sticky class'ını kaldır ki doğal yüksekliği alabilelim
+        footer.classList.remove('sticky-bottom');
+        body.classList.remove('footer-padded');
+        document.documentElement.style.removeProperty('--footer-height');
+        
+        // DOM güncelmesini bekle
+        setTimeout(() => {
+            const footerHeight = footer.offsetHeight;
+            
+            // CSS custom property olarak footer yüksekliği
+            document.documentElement.style.setProperty('--footer-height', footerHeight + 'px');
+            
+            // Footer'ı en alta yapıştır
+            footer.classList.add('sticky-bottom');
+            
+            // Body'ye padding ekle
+            body.classList.add('footer-padded');
+            
+            console.log('Footer en alta yapıştırıldı, yükseklik:', footerHeight + 'px');
+        }, 10);
+    }
     
     function checkUrlAndSetFooterPosition() {
         const currentPath = window.location.pathname;
@@ -334,25 +369,59 @@ document.addEventListener('DOMContentLoaded', function() {
             /\/ckan-admin\/config$/,                        // /ckan-admin/config
             /\/temalar$/,                                   // /temalar
             /\/dashboard\/temalar$/,                        // /dashboard/temalar
-            /\/user\/.*\/api-tokens$/                      // /user/.../api-tokens
+            /\/user\/.*\/api-tokens$/,                      // /user/.../api-tokens
+            /\/user\/edit\/izkaacikveri$/                   // /user/edit/izkaacikveri
         ];
         
         // URL'nin admin sayfası olup olmadığını kontrol et
         const isAdminPage = adminPagePatterns.some(pattern => pattern.test(currentPath));
         
-        if (isAdminPage) {
-            // Admin sayfası - footer'ı absolute yap
-            footer.classList.add('admin-page-footer');
-            console.log('Admin sayfa tespit edildi, footer absolute yapıldı:', currentPath);
-        } else {
-            // Normal sayfa - footer'ı relative bırak
-            footer.classList.remove('admin-page-footer');
-            console.log('Normal sayfa, footer relative:', currentPath);
-        }
+        console.log(isAdminPage ? 'Admin sayfa tespit edildi:' : 'Normal sayfa:', currentPath);
+        
+        // Her durumda footer'ı en alta yapıştır
+        stickFooterToBottom();
     }
     
     // Sayfa yüklendiğinde kontrol et
     checkUrlAndSetFooterPosition();
+    
+    // Resize olaylarında footer'ı yeniden yapıştır
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(stickFooterToBottom, 100);
+    });
+    
+    // Orientation change için (mobil cihazlar)
+    window.addEventListener('orientationchange', function() {
+        setTimeout(stickFooterToBottom, 300);
+    });
+    
+    // Zoom seviyesi değiştiğinde (wheel + ctrl)
+    window.addEventListener('wheel', function(e) {
+        if (e.ctrlKey) {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(stickFooterToBottom, 200);
+        }
+    });
+    
+    // Klavye zoom (ctrl + +/-)
+    window.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(stickFooterToBottom, 200);
+        }
+    });
+    
+    // Window yeniden odaklandığında (zoom, dev tools vs. sonrası)
+    window.addEventListener('focus', function() {
+        setTimeout(stickFooterToBottom, 100);
+    });
+    
+    // Tam sayfa yüklenme sonrası final kontrol
+    window.addEventListener('load', function() {
+        setTimeout(stickFooterToBottom, 200);
+    });
     
     // SPA (Single Page App) durumları için URL değişikliklerini dinle
     // History API değişikliklerini yakala
@@ -478,13 +547,26 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Dinamik içerik için observer (eğer sayfa sonradan PDF linkleri eklerse)
     const observer = new MutationObserver(function(mutations) {
+        let shouldUpdateFooter = false;
+        
         mutations.forEach(function(mutation) {
             if (mutation.addedNodes.length > 0) {
                 attachPdfEvents();
-                // URL değişikliği olabilir, footer pozisyonunu tekrar kontrol et
-                setTimeout(checkUrlAndSetFooterPosition, 100);
+                
+                // Önemli DOM değişiklikleri varsa footer'ı güncelle
+                Array.from(mutation.addedNodes).forEach(node => {
+                    if (node.nodeType === Node.ELEMENT_NODE && 
+                        (node.offsetHeight > 30 || (node.querySelector && node.querySelector('*')))) {
+                        shouldUpdateFooter = true;
+                    }
+                });
             }
         });
+        
+        if (shouldUpdateFooter) {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(stickFooterToBottom, 150);
+        }
     });
     
     observer.observe(document.body, {

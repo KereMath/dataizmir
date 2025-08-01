@@ -59,7 +59,7 @@
         </div> -->
       </div>
 
-      {# ──────────────── SAĞ SÜTUN - İÇERİK ──────────────── #}
+      {# ──────────────── SAĞ SÜTUN - İÇERİK & BELGELER ──────────────── #}
       <div class="pro-column">
         <div class="pro-card">
             <h3 class="pro-heading"><i class="fa fa-file-text-o"></i> Ana Sayfa İçerikleri</h3>
@@ -75,6 +75,58 @@
                 <label for="field-ckan-site-intro-text">Ana Sayfa Tanıtım Metni 2</label>
                 <textarea id="field-ckan-site-intro-text" name="ckan.site_intro_text" rows="6">{{ data['ckan.site_intro_text'] }}</textarea>
                 {% if errors['ckan.site_intro_text'] %}<p class="pro-error">{{ errors['ckan.site_intro_text'][0] }}</p>{% endif %}
+            </div>
+        </div>
+
+        <div class="pro-card">
+            <h3 class="pro-heading"><i class="fa fa-file-pdf-o"></i> Hukuki Belgeler</h3>
+            <p class="pro-helper" style="margin-bottom: 2rem; font-size: 1rem; color: var(--text-light);">
+                Sitenizde kullanılacak hukuki belgeleri PDF formatında yükleyin.
+            </p>
+
+            {# Veri Politikası #}
+            <div class="pro-field">
+                <label for="data_policy_upload_file">Veri Politikası</label>
+                <div class="pro-pdf-uploader">
+                    <input type="file" name="data_policy_upload" id="data_policy_upload_file" accept="application/pdf,.pdf">
+                    <div class="pdf-upload-area" id="data_policy_preview">
+                        <div class="pdf-placeholder" id="data_policy_placeholder">
+                            <i class="fa fa-file-pdf-o"></i>
+                            <span>PDF Dosyası Seçin</span>
+                        </div>
+                    </div>
+                    <button type="button" id="remove_data_policy_btn" class="pro-btn-remove-pdf hidden" title="PDF'i Kaldır">&times;</button>
+                </div>
+            </div>
+
+            {# KVKK #}
+            <div class="pro-field">
+                <label for="kvkk_upload_file">KVKK Politikası</label>
+                <div class="pro-pdf-uploader">
+                    <input type="file" name="kvkk_upload" id="kvkk_upload_file" accept="application/pdf,.pdf">
+                    <div class="pdf-upload-area" id="kvkk_preview">
+                        <div class="pdf-placeholder" id="kvkk_placeholder">
+                            <i class="fa fa-file-pdf-o"></i>
+                            <span>PDF Dosyası Seçin</span>
+                        </div>
+                    </div>
+                    <button type="button" id="remove_kvkk_btn" class="pro-btn-remove-pdf hidden" title="PDF'i Kaldır">&times;</button>
+                </div>
+            </div>
+
+            {# Kullanım Koşulları #}
+            <div class="pro-field">
+                <label for="terms_of_use_upload_file">Kullanım Koşulları</label>
+                <div class="pro-pdf-uploader">
+                    <input type="file" name="terms_of_use_upload" id="terms_of_use_upload_file" accept="application/pdf,.pdf">
+                    <div class="pdf-upload-area" id="terms_of_use_preview">
+                        <div class="pdf-placeholder" id="terms_of_use_placeholder">
+                            <i class="fa fa-file-pdf-o"></i>
+                            <span>PDF Dosyası Seçin</span>
+                        </div>
+                    </div>
+                    <button type="button" id="remove_terms_of_use_btn" class="pro-btn-remove-pdf hidden" title="PDF'i Kaldır">&times;</button>
+                </div>
             </div>
         </div>
       </div>
@@ -423,6 +475,109 @@
     background: linear-gradient(135deg, #b91c1c 0%, var(--danger-color) 100%) !important;
   }
 
+  /* PDF Upload Alanları */
+  .pro-pdf-uploader { 
+    position: relative !important; 
+    border: 3px dashed var(--border-color) !important; 
+    border-radius: 12px !important; 
+    transition: all 0.3s ease !important;
+    overflow: hidden !important;
+  }
+
+  .pro-pdf-uploader:hover { 
+    border-color: var(--accent-color) !important;
+    transform: translateY(-1px) !important;
+    box-shadow: var(--shadow-sm) !important;
+  }
+
+  .pro-pdf-uploader input[type=file] { 
+    position: absolute !important; 
+    inset: 0 !important; 
+    opacity: 0 !important; 
+    cursor: pointer !important; 
+  }
+
+  .pdf-upload-area { 
+    height: 120px !important; 
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    border-radius: 8px !important; 
+    margin: 0 !important; 
+  }
+
+  .pdf-placeholder { 
+    text-align: center !important; 
+    color: var(--text-light) !important; 
+    transition: all 0.3s ease !important; 
+    border-radius: 8px !important; 
+    width: 100% !important; 
+    height: 100% !important; 
+    display: flex !important; 
+    flex-direction: column !important; 
+    justify-content: center !important; 
+    align-items: center !important;
+  }
+
+  .pdf-placeholder i { 
+    font-size: 2.5rem !important; 
+    display: block !important; 
+    margin-bottom: 0.8rem !important;
+    color: var(--accent-color) !important;
+  }
+
+  .pdf-placeholder span {
+    font-size: 1.1rem !important;
+    font-weight: 600 !important;
+  }
+
+  .pdf-placeholder.has-file { 
+    background: rgba(79, 70, 229, 0.1) !important;
+    color: var(--accent-color) !important;
+    border: 2px solid rgba(79, 70, 229, 0.2) !important;
+    border-radius: 8px !important;
+  }
+
+  .pdf-placeholder.has-file i {
+    color: var(--success-color) !important;
+  }
+
+  .pdf-placeholder.has-file span {
+    color: var(--text-dark) !important;
+  }
+
+  .pro-btn-remove-pdf {
+    position: absolute !important; 
+    top: 10px !important; 
+    right: 10px !important; 
+    width: 35px !important; 
+    height: 35px !important;
+    background: rgba(239, 68, 68, 0.9) !important; 
+    color: #fff !important; 
+    border: none !important;
+    border-radius: 50% !important; 
+    display: flex !important; 
+    align-items: center !important; 
+    justify-content: center !important; 
+    font-size: 1.3rem !important;
+    cursor: pointer !important; 
+    transition: all 0.3s ease !important; 
+    opacity: 0 !important;
+  }
+
+  .pro-pdf-uploader:hover .pro-btn-remove-pdf:not(.hidden) { 
+    opacity: 1 !important; 
+  }
+
+  .pro-btn-remove-pdf.hidden { 
+    display: none !important; 
+  }
+
+  .pro-btn-remove-pdf:hover {
+    background: var(--danger-color) !important;
+    transform: scale(1.1) !important;
+  }
+
   /* Textarea özel stil */
   .pro-field textarea {
     resize: vertical !important;
@@ -510,6 +665,7 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // Logo upload fonksiyonalitesi
   const fileInput = document.getElementById('image_upload_file');
   const preview = document.getElementById('image_preview');
   const placeholder = document.getElementById('image_placeholder');
@@ -528,37 +684,96 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  fileInput.addEventListener('change', () => {
-    const file = fileInput.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = e => {
+  if (fileInput) {
+    fileInput.addEventListener('change', () => {
+      const file = fileInput.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          urlInput.value = '';
+          updatePreview(e.target.result);
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+  }
+
+  if (urlInput) {
+    urlInput.addEventListener('input', () => {
+      if (urlInput.value && (urlInput.value.startsWith('http') || urlInput.value.startsWith('/'))) {
+        fileInput.value = '';
+        updatePreview(urlInput.value);
+      } else if (!fileInput.files.length) {
+        updatePreview(null);
+      }
+    });
+  }
+
+  if (removeBtn) {
+    removeBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        fileInput.value = '';
         urlInput.value = '';
-        updatePreview(e.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  });
+        updatePreview(null);
+        const hiddenClearInput = document.createElement('input');
+        hiddenClearInput.type = 'hidden';
+        hiddenClearInput.name = 'clear_logo_upload';
+        hiddenClearInput.value = 'True';
+        fileInput.form.appendChild(hiddenClearInput);
+    });
+  }
 
-  urlInput.addEventListener('input', () => {
-    if (urlInput.value && (urlInput.value.startsWith('http') || urlInput.value.startsWith('/'))) {
-      fileInput.value = '';
-      updatePreview(urlInput.value);
-    } else if (!fileInput.files.length) {
-      updatePreview(null);
-    }
-  });
+  // PDF upload fonksiyonalitesi
+  const pdfTypes = ['data_policy', 'kvkk', 'terms_of_use'];
+  const pdfLabels = {
+    'data_policy': 'Veri Politikası',
+    'kvkk': 'KVKK Politikası', 
+    'terms_of_use': 'Kullanım Koşulları'
+  };
 
-  removeBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      fileInput.value = '';
-      urlInput.value = '';
-      updatePreview(null);
-      const hiddenClearInput = document.createElement('input');
-      hiddenClearInput.type = 'hidden';
-      hiddenClearInput.name = 'clear_logo_upload';
-      hiddenClearInput.value = 'True';
-      fileInput.form.appendChild(hiddenClearInput);
+  pdfTypes.forEach(pdfType => {
+    const pdfFileInput = document.getElementById(`${pdfType}_upload_file`);
+    const pdfPlaceholder = document.getElementById(`${pdfType}_placeholder`);
+    const pdfRemoveBtn = document.getElementById(`remove_${pdfType}_btn`);
+
+    if (pdfFileInput && pdfPlaceholder) {
+      pdfFileInput.addEventListener('change', () => {
+        const file = pdfFileInput.files[0];
+        if (file) {
+          if (file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')) {
+            pdfPlaceholder.classList.add('has-file');
+            pdfPlaceholder.innerHTML = `
+              <i class="fa fa-file-pdf-o"></i>
+              <span>${file.name}</span>
+            `;
+            pdfRemoveBtn.classList.remove('hidden');
+          } else {
+            alert('Sadece PDF dosyaları yüklenebilir!');
+            pdfFileInput.value = '';
+          }
+        }
+      });
+    }
+
+    if (pdfRemoveBtn) {
+      pdfRemoveBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        pdfFileInput.value = '';
+        pdfPlaceholder.classList.remove('has-file');
+        pdfPlaceholder.innerHTML = `
+          <i class="fa fa-file-pdf-o"></i>
+          <span>PDF Dosyası Seçin</span>
+        `;
+        pdfRemoveBtn.classList.add('hidden');
+        
+        // Clear input ekle
+        const hiddenClearInput = document.createElement('input');
+        hiddenClearInput.type = 'hidden';
+        hiddenClearInput.name = `clear_${pdfType}_upload`;
+        hiddenClearInput.value = 'True';
+        pdfFileInput.form.appendChild(hiddenClearInput);
+      });
+    }
   });
 });
 </script>

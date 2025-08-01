@@ -127,26 +127,7 @@
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    min-height: 100vh; /* Minimum viewport yüksekliği */
   }
-
-  /* Sayfa wrapper'ı için flex layout */
-  body {
-    display: flex;
-    flex-direction: column;
-  }
-
-  /* Ana içerik alanının esnek büyümesi */
-  .main {
-    flex: 1 0 auto;
-  }
-
-  /* Footer'ın flex ile alt kısımda kalması */
-  .site-footer {
-    flex-shrink: 0;
-    margin-top: auto;
-  }
-
 /* ► Genel buton gövdesi */
 .butonmarkins{
   position:fixed !important;
@@ -167,7 +148,7 @@
   transition:all .25s ease !important;
 }
 
-/* ► "+" ikonu */
+/* ► “+” ikonu */
 .butonmarkins i{
   font-size:40px !important;     /* 30-40 px arası: 40 px verdik */
   line-height:1 !important;
@@ -190,141 +171,21 @@
 .butonmarkins.show-label .btn-label{
   display:inline-block !important;
 }
-
-/* Footer dinamik pozisyonlama için yardımcı sınıf */
-.footer-sticky {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  z-index: 100 !important;
-}
-
-/* İçerik alanına footer yüksekliği kadar padding eklemek için */
-.content-with-sticky-footer {
-  padding-bottom: var(--footer-height, 200px) !important;
-}
 </style>
 
 <script>
 document.addEventListener('DOMContentLoaded',function(){
   const btn=document.querySelector('.butonmarkins');
-  if(btn) {
-    let timer;
-    const show = () => {
-      btn.classList.add('show-label');
-      clearTimeout(timer);
-      timer = setTimeout(()=>btn.classList.remove('show-label'), 5000); // 5 sn sonra gizle
-    };
+  if(!btn) return;
 
-    btn.addEventListener('mouseenter', show);
-    btn.addEventListener('mouseleave', show);   // imleç çıksa da sayaç devam etsin
-  }
+  let timer;
+  const show = () => {
+    btn.classList.add('show-label');
+    clearTimeout(timer);
+    timer = setTimeout(()=>btn.classList.remove('show-label'), 5000); // 5 sn sonra gizle
+  };
 
-  // ========================
-  // DİNAMİK FOOTER POZİSYONLAMA
-  // ========================
-  
-  function adjustFooterPosition() {
-    const footer = document.querySelector('.site-footer');
-    const mainContent = document.querySelector('.main');
-    const body = document.body;
-    
-    if (!footer || !mainContent) return;
-    
-    // Footer'ın doğal pozisyonunu al
-    footer.classList.remove('footer-sticky');
-    body.classList.remove('content-with-sticky-footer');
-    
-    // CSS custom property'yi temizle
-    document.documentElement.style.removeProperty('--footer-height');
-    
-    // Kısa bir timeout ile DOM'un güncellenmesini bekle
-    setTimeout(() => {
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const bodyHeight = document.body.scrollHeight;
-      
-      // Sayfanın gerçek yüksekliğini al (en büyük değer)
-      const pageHeight = Math.max(documentHeight, bodyHeight, body.offsetHeight);
-      
-      // Eğer sayfa yüksekliği window yüksekliğinden küçük veya eşitse
-      if (pageHeight <= windowHeight) {
-        // Footer yüksekliğini hesapla
-        const footerHeight = footer.offsetHeight;
-        
-        // CSS custom property olarak footer yüksekliğini ayarla
-        document.documentElement.style.setProperty('--footer-height', footerHeight + 'px');
-        
-        // Footer'ı sticky yap
-        footer.classList.add('footer-sticky');
-        
-        // Ana içeriğe padding ekle
-        body.classList.add('content-with-sticky-footer');
-      }
-    }, 10);
-  }
-  
-  // Sayfa yüklendiğinde çalıştır
-  adjustFooterPosition();
-  
-  // Resize eventlerinde çalıştır
-  let resizeTimeout;
-  window.addEventListener('resize', function() {
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(adjustFooterPosition, 100);
-  });
-  
-  // Orientation change için (mobil cihazlar)
-  window.addEventListener('orientationchange', function() {
-    setTimeout(adjustFooterPosition, 300); // Orientation change sonrası biraz bekle
-  });
-  
-  // Zoom seviyesi değiştiğinde (wheel + ctrl)
-  window.addEventListener('wheel', function(e) {
-    if (e.ctrlKey) {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(adjustFooterPosition, 200);
-    }
-  });
-  
-  // Klavye zoom (ctrl + +/-)
-  window.addEventListener('keydown', function(e) {
-    if (e.ctrlKey && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(adjustFooterPosition, 200);
-    }
-  });
-  
-  // DOM değişikliklerini izle (dinamik içerik eklenirse)
-  const observer = new MutationObserver(function(mutations) {
-    let shouldUpdate = false;
-    mutations.forEach(function(mutation) {
-      if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-        // Sadece önemli değişikliklerde güncelle
-        Array.from(mutation.addedNodes).forEach(node => {
-          if (node.nodeType === Node.ELEMENT_NODE && 
-              (node.offsetHeight > 50 || node.querySelector && node.querySelector('*'))) {
-            shouldUpdate = true;
-          }
-        });
-      }
-    });
-    
-    if (shouldUpdate) {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(adjustFooterPosition, 150);
-    }
-  });
-  
-  observer.observe(document.body, {
-    childList: true,
-    subtree: true
-  });
-  
-  // Sayfa tamamen yüklendikten sonra bir kez daha kontrol et
-  window.addEventListener('load', function() {
-    setTimeout(adjustFooterPosition, 100);
-  });
+  btn.addEventListener('mouseenter', show);
+  btn.addEventListener('mouseleave', show);   // imleç çıksa da sayaç devam etsin
 });
 </script>

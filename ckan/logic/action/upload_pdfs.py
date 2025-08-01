@@ -13,7 +13,8 @@ def upload_pdfs(context, data_dict):
     """
     PDF dosyalarını CKAN public dizinine yükler.
     """
-    
+    log.info(f"upload_pdfs çağrıldı! data_dict keys: {list(data_dict.keys())}")
+
     # Yetkili olup olmadığını kontrol et
     model.check_access('sysadmin', context)
     

@@ -3,7 +3,6 @@ import logging
 import ckan.lib.helpers as h
 import ckan.model as model
 from ckan.common import config
-from ckan.lib.uploader import get_storage_path
 import ckan.lib.munge as munge
 from werkzeug.datastructures import FileStorage
 import mimetypes
@@ -12,26 +11,24 @@ log = logging.getLogger(__name__)
 
 def upload_pdfs(context, data_dict):
     """
-    PDF dosyalarını public dizinine yükler.
-    
-    :param context: CKAN context
-    :param data_dict: Upload edilecek dosya bilgileri
-    :returns: Upload edilen dosyaların bilgileri
+    PDF dosyalarını CKAN public dizinine yükler.
     """
     
     # Yetkili olup olmadığını kontrol et
     model.check_access('sysadmin', context)
     
-    # Upload dizinini ayarla
-    storage_path = get_storage_path()
-    if not storage_path:
-        storage_path = config.get('ckan.storage_path', '/tmp')
+    # CKAN public dizinini kullan
+    ckan_root = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+    public_path = os.path.join(ckan_root, 'ckan', 'public')
     
-    public_path = os.path.join(storage_path, 'storage', 'uploads', 'public')
+    # Alternatif: Direkt path belirt
+    # public_path = '/usr/lib/ckan/default/src/ckan/ckan/public'
     
     # Dizin yoksa oluştur
     if not os.path.exists(public_path):
         os.makedirs(public_path, exist_ok=True)
+    
+    log.info(f'PDF upload path: {public_path}')
     
     result = {}
     
@@ -52,7 +49,7 @@ def upload_pdfs(context, data_dict):
             if os.path.exists(file_path):
                 try:
                     os.remove(file_path)
-                    log.info(f'PDF silindi: {filename}')
+                    log.info(f'PDF silindi: {file_path}')
                     result[pdf_type] = {'deleted': True, 'filename': filename}
                 except Exception as e:
                     log.error(f'PDF silinirken hata: {filename} - {str(e)}')
@@ -79,6 +76,8 @@ def upload_pdfs(context, data_dict):
             # Dosyayı kaydet
             file_path = os.path.join(public_path, filename)
             
+            log.info(f'Dosya kaydediliyor: {file_path}')
+            
             # Mevcut dosya varsa yedekle
             if os.path.exists(file_path):
                 backup_path = file_path + '.backup'
@@ -101,10 +100,11 @@ def upload_pdfs(context, data_dict):
                 'filename': filename,
                 'original_filename': uploaded_file.filename,
                 'size': file_size,
-                'url': h.url_for_static(f'/storage/uploads/public/{filename}', qualified=True)
+                'path': file_path,  # Debug için path'i de ekle
+                'url': h.url_for_static(f'/{filename}', qualified=True)
             }
             
-            log.info(f'PDF başarıyla yüklendi: {filename} ({file_size} bytes)')
+            log.info(f'PDF başarıyla yüklendi: {file_path} ({file_size} bytes)')
             
         except Exception as e:
             log.error(f'PDF yüklenirken hata: {filename} - {str(e)}')
@@ -121,96 +121,3 @@ def upload_pdfs(context, data_dict):
                     pass
     
     return result
-
-
-def get_uploaded_pdfs(context, data_dict):
-    """
-    Yüklenmiş PDF dosyalarının listesini getirir.
-    
-    :param context: CKAN context
-    :param data_dict: Parametre dict'i (kullanılmıyor)
-    :returns: PDF dosyalarının bilgileri
-    """
-    
-    storage_path = get_storage_path()
-    if not storage_path:
-        storage_path = config.get('ckan.storage_path', '/tmp')
-    
-    public_path = os.path.join(storage_path, 'storage', 'uploads', 'public')
-    
-    result = {}
-    
-    pdf_types = {
-        'data_policy': 'veri-politikasi.pdf',
-        'kvkk': 'kvkk.pdf',
-        'terms_of_use': 'kullanim-kosullari.pdf'
-    }
-    
-    for pdf_type, filename in pdf_types.items():
-        file_path = os.path.join(public_path, filename)
-        
-        if os.path.exists(file_path):
-            try:
-                file_size = os.path.getsize(file_path)
-                file_mtime = os.path.getmtime(file_path)
-                
-                result[pdf_type] = {
-                    'exists': True,
-                    'filename': filename,
-                    'size': file_size,
-                    'modified_time': file_mtime,
-                    'url': h.url_for_static(f'/storage/uploads/public/{filename}', qualified=True)
-                }
-            except Exception as e:
-                log.error(f'PDF bilgisi alınırken hata: {filename} - {str(e)}')
-                result[pdf_type] = {'exists': False, 'error': str(e)}
-        else:
-            result[pdf_type] = {'exists': False}
-    
-    return result
-
-
-def delete_pdf(context, data_dict):
-    """
-    Belirtilen PDF dosyasını siler.
-    
-    :param context: CKAN context
-    :param data_dict: {'pdf_type': 'data_policy|kvkk|terms_of_use'}
-    :returns: Silme işleminin sonucu
-    """
-    
-    # Yetkili olup olmadığını kontrol et
-    model.check_access('sysadmin', context)
-    
-    pdf_type = data_dict.get('pdf_type')
-    if not pdf_type:
-        return {'error': 'PDF tipi belirtilmedi'}
-    
-    pdf_types = {
-        'data_policy': 'veri-politikasi.pdf',
-        'kvkk': 'kvkk.pdf',
-        'terms_of_use': 'kullanim-kosullari.pdf'
-    }
-    
-    if pdf_type not in pdf_types:
-        return {'error': 'Geçersiz PDF tipi'}
-    
-    filename = pdf_types[pdf_type]
-    
-    storage_path = get_storage_path()
-    if not storage_path:
-        storage_path = config.get('ckan.storage_path', '/tmp')
-    
-    public_path = os.path.join(storage_path, 'storage', 'uploads', 'public')
-    file_path = os.path.join(public_path, filename)
-    
-    if os.path.exists(file_path):
-        try:
-            os.remove(file_path)
-            log.info(f'PDF silindi: {filename}')
-            return {'deleted': True, 'filename': filename}
-        except Exception as e:
-            log.error(f'PDF silinirken hata: {filename} - {str(e)}')
-            return {'error': f'Dosya silinirken hata: {str(e)}'}
-    else:
-        return {'error': 'Dosya bulunamadı'}

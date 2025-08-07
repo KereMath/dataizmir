@@ -232,7 +232,7 @@ def is_authorized(action, context, data_dict=None):
 ROLE_PERMISSIONS = OrderedDict([
     ('admin', ['admin', 'membership']),
     ('editor', ['read', 'delete_dataset', 'create_dataset', 'update_dataset', 'manage_group']),
-    ('member', ['read', 'manage_group']),
+    ('member', ['read', 'manage_group', 'create_dataset', 'update_dataset']),
 ])
 
 

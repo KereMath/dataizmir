@@ -158,6 +158,35 @@ def package_create(context, data_dict):
         schema = package_plugin.create_package_schema()
 
     _check_access('package_create', context, data_dict)
+    
+    # Kullanıcı ID'sini al
+    user_obj = model.User.by_name(user)
+    user_id = user_obj.id if user_obj else None
+
+    # Kullanıcının organizasyondaki rolünü kontrol et
+    from ckan.logic.action.get import organization_list_for_user
+    org_roles = organization_list_for_user(
+        {'user': user, 'ignore_auth': True, 'model': model, 'session': session},
+        {'id': user_id}
+    )
+
+    # Dataset'in atanacağı organizasyonu al
+    selected_org_id = data_dict.get('owner_org')
+    selected_org_name = None
+
+    if selected_org_id:
+        from ckan.model import Group
+        selected_org = model.Group.get(selected_org_id)
+        if selected_org:
+            selected_org_name = selected_org.display_name or selected_org.name
+
+    # Eğer seçilen organizasyon varsa ve kullanıcı burada sadece 'member' ise → private yap
+    if selected_org_name:
+        for org in org_roles:
+            if org.get('display_name') == selected_org_name and org.get('capacity') == 'member':
+                data_dict['private'] = True
+                break
+
 
     if 'api_version' not in context:
         # check_data_dict() is deprecated. If the package_plugin has a

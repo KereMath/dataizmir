@@ -633,34 +633,34 @@ def process_api_data(url, format_type, resource_id):
     try:
         print(f"API verisi işleniyor: {url} ({format_type})")
 
-        # 💡 Standart bir tarayıcı User-Agent'ı ekliyoruz. Bu, birçok 500 hatasını çözer.
+        # 💡 Tarayıcıların gönderdiği standart başlıkları ekleyerek isteği daha güvenilir hale getiriyoruz.
+        # Bu, 502 Bad Gateway gibi hataları çözebilir.
         headers = {
             'Accept': 'application/json, text/plain, */*',
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Connection': 'keep-alive',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Referer': toolkit.config.get('ckan.site_url', 'http://localhost:5000') # Kendi siteni referans göster
         }
 
-        # 💡 Hataları daha iyi yönetmek için try-except bloğu kullanıyoruz.
         try:
-            # SSL doğrulamasını devre dışı bırakmak risklidir, sunucu konfigürasyonunu kontrol et.
             response = requests.get(url, timeout=45, verify=False, headers=headers)
-            response.raise_for_status()  # 4xx veya 5xx hatası varsa exception fırlatır.
+            response.raise_for_status()
         except requests.exceptions.RequestException as e:
-            # Hata durumunda daha açıklayıcı bir mesaj döndürüyoruz.
             print(f"API isteği başarısız oldu: {e}")
-            # Frontend'in anlayabileceği bir JSON hatası döndür.
             return jsonify({
                 'success': False,
                 'error': f"Hedef API'ye ulaşılamadı: {e.__class__.__name__}",
                 'details': str(e)
-            }), 502 # 502 Bad Gateway hatası bu durum için daha uygun.
+            }), 502
 
         json_data = response.json()
         
+        # ... (Bu fonksiyonun geri kalanı aynı kalabilir, aşağısı örnek) ...
+        
         if isinstance(json_data, dict):
-            if 'features' in json_data and json_data.get('type') == 'FeatureCollection':
-                return jsonify({'success': True, 'type': 'geojson_api', 'data': json_data})
-            
-            possible_keys = ['data', 'results', 'items', 'onemliyer', 'records']
+            possible_keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features']
             data_found = False
             for key in possible_keys:
                 if key in json_data and isinstance(json_data[key], list):
@@ -669,11 +669,11 @@ def process_api_data(url, format_type, resource_id):
                     break
             
             if not data_found:
-                for key, value in json_data.items():
+                 for key, value in json_data.items():
                     if isinstance(value, list) and len(value) > 0:
                         json_data = value
                         break
-        
+
         if not isinstance(json_data, list):
             return jsonify({'success': False, 'error': 'API yanıtı beklenen liste formatında değil'}), 400
 
@@ -687,9 +687,7 @@ def process_api_data(url, format_type, resource_id):
             return jsonify({
                 'success': False,
                 'error': 'Koordinat sütunları otomatik bulunamadı',
-                'columns': list(df.columns),
-                'sample_data': df.head(3).to_dict('records'),
-                'suggestions': coord_result['suggestions'],
+                'columns': list(df.columns)
             })
         
         geojson_data = convert_to_geojson(df, coord_result['columns'])
@@ -697,15 +695,13 @@ def process_api_data(url, format_type, resource_id):
         return jsonify({
             'success': True,
             'type': 'api_json',
-            'data': geojson_data,
-            'detected_columns': coord_result['columns'],
-            'detection_confidence': coord_result['confidence']
+            'data': geojson_data
         })
         
     except Exception as e:
         print(f"API data işleme hatası (genel): {e}")
         return jsonify({'success': False, 'error': f'API verisi işlenemedi: {str(e)}'}), 500
-
+        
 def process_tabular_data(url, format_type, resource_id):
     """CSV/Excel dosyalarını parse et ve koordinat sütunlarını akıllıca tespit et"""
     try:

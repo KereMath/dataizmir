@@ -632,55 +632,53 @@ def process_api_data(url, format_type, resource_id):
     """API/JSON endpoint'lerini parse et ve koordinat sütunlarını tespit et"""
     try:
         print(f"API verisi işleniyor: {url} ({format_type})")
-        
-        response = requests.get(url, timeout=30, verify=False, headers={
+
+        # 💡 Standart bir tarayıcı User-Agent'ı ekliyoruz. Bu, birçok 500 hatasını çözer.
+        headers = {
             'Accept': 'application/json, text/plain, */*',
-            'User-Agent': 'CKAN-API-Tester/1.0'
-        })
-        response.raise_for_status()
-        
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+
+        # 💡 Hataları daha iyi yönetmek için try-except bloğu kullanıyoruz.
+        try:
+            # SSL doğrulamasını devre dışı bırakmak risklidir, sunucu konfigürasyonunu kontrol et.
+            response = requests.get(url, timeout=45, verify=False, headers=headers)
+            response.raise_for_status()  # 4xx veya 5xx hatası varsa exception fırlatır.
+        except requests.exceptions.RequestException as e:
+            # Hata durumunda daha açıklayıcı bir mesaj döndürüyoruz.
+            print(f"API isteği başarısız oldu: {e}")
+            # Frontend'in anlayabileceği bir JSON hatası döndür.
+            return jsonify({
+                'success': False,
+                'error': f"Hedef API'ye ulaşılamadı: {e.__class__.__name__}",
+                'details': str(e)
+            }), 502 # 502 Bad Gateway hatası bu durum için daha uygun.
+
         json_data = response.json()
-        
-        print(f"JSON data tipi: {type(json_data)}")
         
         if isinstance(json_data, dict):
             if 'features' in json_data and json_data.get('type') == 'FeatureCollection':
-                return jsonify({
-                    'success': True,
-                    'type': 'geojson_api',
-                    'data': json_data
-                })
-            elif 'data' in json_data and isinstance(json_data['data'], list):
-                json_data = json_data['data']
-            elif 'results' in json_data and isinstance(json_data['results'], list):
-                json_data = json_data['results']
-            elif 'items' in json_data and isinstance(json_data['items'], list):
-                json_data = json_data['items']
-            elif 'onemliyer' in json_data and isinstance(json_data['onemliyer'], list):
-                json_data = json_data['onemliyer']
-            elif 'records' in json_data and isinstance(json_data['records'], list):
-                json_data = json_data['records']
-            else:
+                return jsonify({'success': True, 'type': 'geojson_api', 'data': json_data})
+            
+            possible_keys = ['data', 'results', 'items', 'onemliyer', 'records']
+            data_found = False
+            for key in possible_keys:
+                if key in json_data and isinstance(json_data[key], list):
+                    json_data = json_data[key]
+                    data_found = True
+                    break
+            
+            if not data_found:
                 for key, value in json_data.items():
                     if isinstance(value, list) and len(value) > 0:
                         json_data = value
                         break
-                else:
-                    return jsonify({
-                        'error': 'JSON verisi uygun formatta değil',
-                        'available_fields': list(json_data.keys()),
-                        'debug_info': 'No array field found in JSON'
-                    }), 400
         
         if not isinstance(json_data, list):
-            return jsonify({
-                'error': 'JSON verisi array formatında değil',
-                'data_type': str(type(json_data)),
-                'debug_info': 'Expected list but got ' + str(type(json_data))
-            }), 400
-        
+            return jsonify({'success': False, 'error': 'API yanıtı beklenen liste formatında değil'}), 400
+
         if len(json_data) == 0:
-            return jsonify({'error': 'JSON verisi boş'}), 400
+            return jsonify({'success': False, 'error': 'API yanıtı boş veri döndürdü'}), 400
         
         df = pd.DataFrame(json_data)
         coord_result = smart_detect_coordinate_columns(df)
@@ -688,11 +686,11 @@ def process_api_data(url, format_type, resource_id):
         if not coord_result['found']:
             return jsonify({
                 'success': False,
-                'error': 'Koordinat sütunları otomatik tespit edilemedi',
+                'error': 'Koordinat sütunları otomatik bulunamadı',
                 'columns': list(df.columns),
                 'sample_data': df.head(3).to_dict('records'),
                 'suggestions': coord_result['suggestions'],
-            }), 400
+            })
         
         geojson_data = convert_to_geojson(df, coord_result['columns'])
         
@@ -705,8 +703,8 @@ def process_api_data(url, format_type, resource_id):
         })
         
     except Exception as e:
-        print(f"API data işleme hatası: {str(e)}")
-        return jsonify({'error': f'API verisi işlenemedi: {str(e)}'}), 500
+        print(f"API data işleme hatası (genel): {e}")
+        return jsonify({'success': False, 'error': f'API verisi işlenemedi: {str(e)}'}), 500
 
 def process_tabular_data(url, format_type, resource_id):
     """CSV/Excel dosyalarını parse et ve koordinat sütunlarını akıllıca tespit et"""

@@ -733,11 +733,8 @@
 
        try {
          console.log(`[DEBUG] Resource verisi yükleniyor: ${resourceId}`);
-         console.log(`[DEBUG] Resource info:`, resourceLayer.resource);
-         
          this.showLoadingForResource(resourceId);
-         
-         // WMS, WFS ve GeoTIFF için doğrudan URL kullan
+
          if (['wms', 'wfs', 'geotiff'].includes(resourceLayer.resource.format?.toLowerCase())) {
              await this.addLayerFromUrl(resourceLayer.resource.url, resourceLayer.resource.format?.toLowerCase(), resourceLayer.layer, resourceId);
              resourceLayer.loaded = true;
@@ -746,47 +743,27 @@
          }
 
          const apiUrl = `/api/spatial-resources/${resourceId}/data`;
-         console.log(`[DEBUG] API URL: ${apiUrl}`);
-         
-         const response = await fetch(apiUrl, {
-           credentials: 'include',
-           headers: {
-             'Accept': 'application/json',
-             'Content-Type': 'application/json'
-           }
-         });
-         
-         console.log(`[DEBUG] Response status: ${response.status}`);
+         const response = await fetch(apiUrl, { credentials: 'include' });
          
          if (!response.ok) {
-           const errorText = await response.text();
-           console.error(`[DEBUG] HTTP Error ${response.status}:`, errorText);
-           throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 200)}...`);
+            // Hata yanıtını `error` nesnesi olarak fırlat, böylece catch bloğu işleyebilir.
+            throw response;
          }
          
          const result = await response.json();
-         console.log(`[DEBUG] Parsed JSON result:`, result);
          
          if (!result.success) {
-           console.log(`[DEBUG] API result not successful:`, result);
            if (result.columns) {
-             console.log(`[DEBUG] Manual column selection needed. Columns:`, result.columns);
              this.hideLoadingForResource(resourceId);
              await this.showManualColumnSelection(resourceId, result.columns);
            } else {
-             console.error('[DEBUG] Veri yüklenirken hata:', result.error);
-             this.hideLoadingForResource(resourceId);
-             this.showResourceError(resourceId, result.error || 'Bilinmeyen hata');
+             throw new Error(result.error || 'Bilinmeyen API hatası');
            }
            return;
          }
          
          if (result.type === 'shp') {
-           console.log(`[DEBUG] SHP dosyası tespit edildi, frontend'de işleniyor...`);
            await this.processShpData(result.url, resourceId);
-         } else if (result.type === 'geotiff') {
-           console.log(`[DEBUG] GeoTIFF dosyası tespit edildi, frontend'de işleniyor...`);
-           await this.processGeoTiffData(result.url, resourceId);
          } else {
            this.addGeoJSONToLayer(result.data, resourceLayer.layer, resourceId);
          }
@@ -795,9 +772,30 @@
          this.hideLoadingForResource(resourceId);
          
        } catch (error) {
-         console.error('[DEBUG] Resource data yüklenirken hata:', error);
-         this.hideLoadingForResource(resourceId);
-         this.showResourceError(resourceId, `${error.name}: ${error.message}`);
+            console.error('[DEBUG] Resource data yüklenirken hata:', error);
+            this.hideLoadingForResource(resourceId);
+            
+            let errorMessage = `Bilinmeyen bir hata oluştu: ${error.message || 'Detay yok'}`;
+
+            // Eğer hata bir fetch API'sinden gelen Response nesnesi ise (örn: 500, 404)
+            if (error instanceof Response) {
+                try {
+                    const errorJson = await error.json();
+                    errorMessage = errorJson.error || JSON.stringify(errorJson);
+                    if (errorJson.details) {
+                        errorMessage += ` (Detay: ${errorJson.details.substring(0, 150)}...)`;
+                    }
+                } catch (e) {
+                    errorMessage = `Sunucu Hatası (${error.status}): ${await error.text()}`;
+                }
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            this.showResourceError(resourceId, errorMessage);
+
+            const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+            if (checkbox) checkbox.checked = false;
        }
      }
      

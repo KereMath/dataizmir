@@ -1,45 +1,235 @@
-{% extends "page.html" %}
+{# templates/user/request_reset.html — modern şifre sıfırlama sayfası #}
+<!DOCTYPE html>
+<html lang="{{ g.lang or 'en' }}">
+<head>
+  <meta charset="utf-8">
+  <title>{{ _('Reset your password') }}</title>
 
-{% block subtitle %}{{ _('Reset your password') }}{% endblock %}
+  <!-- Labrada fontunu ekliyoruz -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Labrada:wght@400;500&display=swap">
 
-{% block breadcrumb_content %}
-  <li class="active">{% link_for _('Password Reset'), named_route='user.request_reset' %}</li>
-{% endblock %}
+  <!-- CKAN ana stilleri -->
+  <link rel="stylesheet" href="{{ h.url_for_static('/base/css/main.css') }}">
 
-{% block primary_content %}
-  <article class="module">
-    <div class="module-content">
-      {% block primary_content_inner %}
-      <h1 class="page-heading">{{ _('Reset your password') }}</h1>
-      {% block form %}
+  <style>
+    html,body{margin:0;height:100%}
+    
+    /*========== ÜST ŞERİT ==========*/
+    .page-header{
+      border:none !important;
+      max-width:50%;
+      margin-top:0px;
+      position:fixed;top:0;left:0;width:100%;
+      height:132px;background:#F8F7FA;
+      display:flex;align-items:center;z-index:1000;
+    }
+    .site-logo{margin-left:20px;display:block}
+    .site-logo img{height:48px;width:auto}
+
+    /*========== ANA ALAN ==========*/
+    .page-wrapper{
+      position:fixed;top:132px;left:0;
+      width:100vw;height:calc(100vh - 132px);
+      display:flex;overflow:hidden;
+    }
+    .page-bg{
+      flex:0 0 50vw;
+      background:url('{{ h.url_for_static("/bground.png") }}') center/100% 100% no-repeat;
+      background-color:#F8F7FA;
+    }
+    .page-form-side{
+      flex:1;display:flex;align-items:center;justify-content:center;
+      background:#fff;padding:40px;overflow:auto;
+    }
+
+    /*========== KUTU ==========*/
+    .reset-box{width:100%;max-width:560px;display:flex;flex-direction:column;}
+    
+    .reset-welcome {
+      margin-bottom: 32px;
+      text-align: left;
+    }
+    .reset-welcome-title {
+      color: var(--Light-Text-Primary, #222);
+      font-feature-settings: 'liga' off, 'clig' off;
+      font-family: 'Labrada', serif;
+      font-size: 36px;
+      font-style: normal;
+      font-weight: 500;
+      line-height: 48px;
+      margin-bottom: 4px;
+    }
+    .reset-welcome-desc {
+      color: var(--Light-Text-Secondary, #666);
+      font-feature-settings: 'liga' off, 'clig' off;
+      font-family: 'Labrada', serif;
+      font-size: 24px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 32px;
+      margin-bottom: 0;
+    }
+
+    /*========== FORM TASARIMI ==========*/
+    .reset-box form {margin-top:12px;}
+    .reset-box label{
+      display:block;margin:.8rem 0 .2rem;
+      cursor: pointer;
+      font-size: 18px !important;
+    }
+    .reset-box input{
+      width:100%;padding:.55rem .6rem;border:1px solid #ccc;border-radius:4px;
+      font-size: 16px;
+    }
+    .reset-box button{
+      width:100%;margin-top:1.4rem;padding:.6rem 1rem;
+      border:none;border-radius:4px;cursor:pointer;
+      background:#007acc;color:#fff;font-size:18px;
+      transition: background-color .2s;
+    }
+    .reset-box button:hover{
+      background:#005fa3;
+    }
+
+    /*========== ALTTAN GERİ DÖNÜŞ KUTUSU ==========*/
+    .reset-back-info {
+      margin-top: 36px;
+      text-align: center;
+      font-feature-settings: 'liga' off, 'clig' off;
+      font-family: 'Labrada', serif;
+      font-size: 15px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 22px;
+      color: var(--Light-Text-Secondary, #666);
+    }
+    .reset-back-link {
+      color: #221D5D;
+      font-feature-settings: 'liga' off, 'clig' off;
+      font-family: 'Labrada', serif;
+      font-size: 15px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 22px;
+      text-decoration: none;
+      margin-left: 3px;
+      transition: color .2s;
+    }
+    .reset-back-link:hover { color: #007acc; text-decoration: underline; }
+
+    /*========== BİLGİ KUTUSU ==========*/
+    .reset-info-box {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 24px;
+    }
+    .reset-info-title {
+      font-family: 'Labrada', serif;
+      font-size: 18px;
+      font-weight: 500;
+      color: #222;
+      margin-bottom: 8px;
+    }
+    .reset-info-text {
+      font-family: 'Labrada', serif;
+      font-size: 14px;
+      color: #666;
+      line-height: 20px;
+      margin: 0;
+    }
+
+    /*========== HATA MESAJLARI ==========*/
+    .alert {
+      padding: 12px 16px;
+      margin-bottom: 20px;
+      border-radius: 4px;
+      font-family: 'Labrada', serif;
+      font-size: 14px;
+    }
+    .alert-error {
+      background: #fee;
+      border: 1px solid #fcc;
+      color: #c33;
+    }
+    .alert-success {
+      background: #efe;
+      border: 1px solid #cfc;
+      color: #363;
+    }
+
+    @media (max-width: 1100px) {
+      .page-bg { display: none; }
+      .page-wrapper { left: 0; width: 100vw; }
+      .page-form-side { padding: 30px; }
+    }
+    @media (max-width: 600px) {
+      .reset-box { max-width:100vw; }
+      .page-header { height:80px; }
+      .site-logo img { height:36px; }
+      .page-form-side { padding:12px; }
+      .reset-welcome-title { font-size: 28px; line-height: 36px; }
+      .reset-welcome-desc { font-size: 18px; line-height: 24px; }
+      .reset-info-box { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Sabit üst şerit + logo -->
+  <header class="page-header">
+    <a href="/" class="site-logo">
+      <img src="{{ h.url_for_static_or_external('/logonew.png') }}" alt="Logo">
+    </a>
+  </header>
+
+  <!-- Sol arka plan + sağ form kutusu -->
+  <div class="page-wrapper">
+    <div class="page-bg"></div>
+    <div class="page-form-side">
+      <div class="reset-box">
+
+        <!-- Hoşgeldin yazıları -->
+        <div class="reset-welcome">
+          <div class="reset-welcome-title">Şifrenizi Sıfırlayın</div>
+          <div class="reset-welcome-desc">E-posta adresinizi girin, size sıfırlama bağlantısı gönderelim.</div>
+        </div>
+
+        <!-- Hata/Başarı mesajları -->
+        {% if error_summary %}
+          <div class="alert alert-error">
+            {% for error in error_summary %}
+              <p>{{ error }}</p>
+            {% endfor %}
+          </div>
+        {% endif %}
+
+        <!-- Şifre sıfırlama formu -->
         <form action="" method="post">
-          <div class="form-group">
-            <label for="field-username">{{ _('Email or username') }}</label>
-            <input id="field-username" class="control-medium form-control" name="user" value="" type="text" />
-          </div>
-          <div class="form-actions">
-            {% block form_button %}
-            <button class="btn btn-primary" type="submit" name="reset">{{ _("Request Reset") }}</button>
-            {% endblock %}
-          </div>
+          <label for="field-username">{{ _('Email or username') }}</label>
+          <input id="field-username" name="user" type="text" placeholder="E-posta adresinizi veya kullanıcı adınızı girin" required>
+          
+          <button type="submit" name="reset">{{ _("Request Reset") }}</button>
         </form>
-      {% endblock %}
-      {% endblock %}
-    </div>
-  </article>
-{% endblock %}
 
-{% block secondary_content %}
-  {% block help %}
-  <section class="module module-narrow module-shallow">
-    {% block help_inner %}
-    <h2 class="module-heading">{{ _('How does this work?') }}</h2>
-    <div class="module-content">
-      <p>{% trans %}Enter your email address or username into the box and we
-        will send you an email with a link to enter a new password.
-        {% endtrans %}</p>
+        <!-- Bilgi kutusu -->
+        <div class="reset-info-box">
+          <div class="reset-info-title">Nasıl çalışır?</div>
+          <div class="reset-info-text">
+            E-posta adresinizi veya kullanıcı adınızı girin. Size yeni bir şifre belirlemeniz için bir bağlantı içeren e-posta göndereceğiz.
+          </div>
+        </div>
+
+        <!-- Altta "Giriş sayfasına dön" -->
+        <div class="reset-back-info">
+          Şifrenizi hatırladınız mı?
+          <a class="reset-back-link" href="{{ h.url_for('user.login') }}">Giriş Yapın</a>
+        </div>
+
+      </div>
     </div>
-    {% endblock %}
-  </section>
-  {% endblock %}
-{% endblock %}
+  </div>
+
+</body>
+</html>

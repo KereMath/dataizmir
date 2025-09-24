@@ -451,6 +451,7 @@
     .t-groups { width: 140px; min-width: 120px; }
     .t-tags { width: 140px; min-width: 120px; }
     .t-theme { width: 130px; min-width: 110px; }
+    .t-validity {width: 140px; min-width: 140px;}
     .t-upd { width: 140px; min-width: 140px; }
     .t-formats { width: 120px; min-width: 100px; }
     .t-actions { width: 150px; min-width: 130px; }
@@ -653,6 +654,7 @@
                 <th class="t-tags">Etiketler<div class="column-resizer"></div></th>
                 <th class="t-theme">Tema<div class="column-resizer"></div></th>
                 <th class="t-upd">Güncellenme<div class="column-resizer"></div></th>
+                <th class="t-validity">Veri Geçerlilik Yılı<div class="column-resizer"></div></th>
                 <th class="t-formats">Formatlar<div class="column-resizer"></div></th>
                 <th class="t-actions">İşlemler</th>
               </tr>
@@ -1308,6 +1310,7 @@
           var tags = pkg.tags?.length ? pkg.tags.map(t => `<span class="tag-tag">${t.display_name || t.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
           var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>';
           var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
+          var validity = pkg.metadata_created ? new Date(pkg.metadata_created).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
           var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
           
           var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
@@ -1321,6 +1324,7 @@
             <td class="t-tags">${tags}</td>
             <td class="t-theme">${theme}</td>
             <td class="t-upd">${upd}</td>
+            <td class="t-validity">${validity}</td>
             <td class="t-formats">${formats}</td>
             <td class="t-actions">
               <div class="action-buttons">

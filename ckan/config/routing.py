@@ -12,6 +12,9 @@ from routes.mapper import SubMapper, Mapper as _Mapper
 
 import ckan.plugins as p
 from ckan.common import config, current_app
+from ckan.views.mekansal import mekansal
+from ckan.views.spatial_api import spatial_api
+from ckan.views.officialpdf import officialpdf
 
 named_routes = {}
 
@@ -153,5 +156,7 @@ def make_map():
     map.redirect('/favicon.ico', config.get('ckan.favicon'))
 
     map.redirect('/*(url)/', '/{url}', _redirect_code='301 Moved Permanently')
-
+    current_app.register_blueprint(mekansal)  # <-- BUNU EKLE
+    current_app.register_blueprint(spatial_api)
+    current_app.register_blueprint(officialpdf.officialpdf)
     return map

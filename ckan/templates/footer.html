@@ -267,12 +267,17 @@
           </ul>
           <ul>
             {% block footer_links_ckan %}
-              {% set api_url = 'http://docs.ckan.org/en/{0}/api/'.format(g.ckan_doc_version) %}
-              <li><a href="https://dataizmir.izka.org.tr/veripnihai.pdf" class="pdf-link">Veri&nbsp;Politikası</a></li>
-              <li><a href="https://dataizmir.izka.org.tr/kvkknihai.pdf" class="pdf-link">KVKK</a></li>
-              <li><a href="https://dataizmir.izka.org.tr/kosulnihai.pdf" class="pdf-link">Kullanım&nbsp;Koşulları</a></li>
+                {# Diğer linkleriniz burada kalabilir, örneğin API linki #}
+                {% set api_url = 'http://docs.ckan.org/en/{0}/api/'.format(g.ckan_doc_version) %}
+                
+                {# Yasal dokümanları dinamik olarak listele #}
+                {% if legal_docs_for_footer %}
+                {% for doc in legal_docs_for_footer %}
+                    <li><a href="{{ doc.url }}" class="pdf-link" target="_blank">{{ doc.text|safe }}</a></li>
+                {% endfor %}
+                {% endif %}
             {% endblock %}
-          </ul>
+            </ul>
         {% endblock %}
       </div>
 

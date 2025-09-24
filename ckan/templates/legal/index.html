@@ -1,0 +1,169 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Legal Documents Management') }}{% endblock %}
+
+{% block primary %}
+<style>
+  /* Stil kodları değişmediği için burada yer kaplamaması adına gizlendi. */
+  /* Sizin dosyanızdaki stil kodları aynı kalmalıdır. */
+  .legal-management-container { padding: 20px; max-width: 100%; background-color: #f8f9fa; }
+  .legal-page-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px; border-radius: 12px; margin-bottom: 30px; text-align: center; box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2); }
+  .legal-page-title { font-size: 2.5rem; font-weight: 700; margin: 0 0 15px 0; color: white; }
+  .legal-page-subtitle { font-size: 1.2rem; opacity: 0.9; margin: 0; max-width: 600px; margin: 0 auto; }
+  .legal-info-alert { background: linear-gradient(135deg, #e3f2fd, #f3e5f5); border: 1px solid #90caf9; border-radius: 12px; padding: 25px; margin-bottom: 40px; color: #1565c0; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .legal-info-alert strong { color: #0d47a1; font-size: 16px; }
+  .legal-info-text { margin: 8px 0 0 0; line-height: 1.6; }
+  .legal-documents-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); gap: 30px; margin-bottom: 40px; }
+  .legal-document-card { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); transition: all 0.4s ease; position: relative; overflow: hidden; border: 1px solid #e0e0e0; }
+  .legal-document-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #667eea, #764ba2); }
+  .legal-document-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(0,0,0,0.15); }
+  .document-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 2px solid #f5f5f5; }
+  .document-title-area { flex: 1; }
+  .document-title { font-size: 22px; font-weight: 600; color: #2c3e50; margin-bottom: 8px; }
+  .document-description { color: #7f8c8d; font-size: 14px; line-height: 1.5; }
+  .document-status-badge { padding: 8px 16px; border-radius: 25px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .status-badge-active { background: linear-gradient(135deg, #4caf50, #8bc34a); color: white; }
+  .status-badge-missing { background: linear-gradient(135deg, #f44336, #ff7043); color: white; }
+  .document-meta-info { background: linear-gradient(135deg, #f8f9fa, #e9ecef); border-radius: 8px; padding: 15px; margin: 20px 0; border-left: 4px solid #667eea; }
+  .document-meta-info strong { color: #495057; }
+  .document-upload-area { border: 2px dashed #ddd; border-radius: 8px; padding: 30px 20px; text-align: center; background: #fafafa; cursor: pointer; transition: all 0.3s ease; margin: 20px 0; position: relative; }
+  .document-upload-area:hover { border-color: #667eea; background: #f0f8ff; }
+  .document-upload-area.dragover { border-color: #667eea; background: linear-gradient(135deg, #e3f2fd, #f3e5f5); transform: scale(1.02); }
+  .upload-icon { font-size: 2.5rem; color: #ccc; margin-bottom: 15px; }
+  .document-upload-area:hover .upload-icon { color: #667eea; }
+  .upload-text { font-size: 16px; color: #666; margin-bottom: 8px; font-weight: 500; }
+  .upload-hint { font-size: 12px; color: #999; }
+  .upload-file-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+  .selected-file-display { background: #e8f5e8; border: 1px solid #c3e6c3; border-radius: 8px; padding: 15px; margin: 20px 0; display: none; }
+  .file-info-row { display: flex; align-items: center; gap: 12px; }
+  .file-pdf-icon { font-size: 24px; color: #dc3545; }
+  .file-info-text h5 { margin: 0 0 4px 0; color: #2d5016; font-size: 14px; }
+  .file-info-size { color: #666; font-size: 12px; margin: 0; }
+  .remove-file-btn { background: #dc3545; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; margin-left: auto; }
+  .document-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 20px; }
+  .document-action-btn { padding: 8px 16px; border: none; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+  .document-action-btn:hover { transform: translateY(-1px); text-decoration: none; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+  .action-btn-primary { background: linear-gradient(135deg, #007acc, #0056b3); color: white; }
+  .action-btn-primary:hover { color: white; }
+  .action-btn-success { background: linear-gradient(135deg, #28a745, #20c997); color: white; }
+  .action-btn-success:hover { color: white; }
+  .action-btn-danger { background: linear-gradient(135deg, #dc3545, #c82333); color: white; }
+  .action-btn-danger:hover { color: white; }
+  .action-btn-upload { background: linear-gradient(135deg, #667eea, #764ba2); color: white; }
+  .action-btn-upload:hover { color: white; }
+  .action-btn-upload:disabled { background: #ccc; color: #666; cursor: not-allowed; transform: none; }
+  .legal-usage-notes { background: white; border-radius: 16px; padding: 30px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); border: 1px solid #e0e0e0; }
+  .usage-notes-title { color: #2c3e50; font-size: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+  .usage-notes-list { list-style: none; padding: 0; }
+  .usage-notes-item { padding: 12px 0; border-bottom: 1px solid #f0f0f0; color: #6c757d; line-height: 1.6; position: relative; padding-left: 25px; }
+  .usage-notes-item::before { content: '✓'; position: absolute; left: 0; color: #28a745; font-weight: 600; }
+  .usage-notes-item:last-child { border-bottom: none; }
+  @media (max-width: 768px) { .legal-management-container { padding: 10px; } .legal-page-header { padding: 30px 20px; } .legal-page-title { font-size: 2rem; } .legal-documents-grid { grid-template-columns: 1fr; gap: 20px; } .legal-document-card { padding: 20px; } .document-card-header { flex-direction: column; gap: 15px; align-items: flex-start; } .document-actions { width: 100%; } .document-action-btn { flex: 1; justify-content: center; } }
+</style>
+
+<div class="legal-management-container">
+  
+  <div class="legal-page-header">
+    <h1 class="legal-page-title">Yasal Doküman Yönetimi</h1>
+    <p class="legal-page-subtitle">Sitenin alt kısmında (footer) görünen yasal dokümanları buradan yönetebilirsiniz.</p>
+  </div>
+
+  <div class="legal-info-alert">
+    <strong>Bilgi:</strong>
+    <p class="legal-info-text">Bu sayfada 3 yasal dokümanı (Veri Politikası, KVKK, Kullanım Koşulları) yönetebilirsiniz. Dosyalar maksimum 10MB boyutunda ve PDF formatında olmalıdır.</p>
+  </div>
+
+  <div class="legal-documents-grid">
+    {% for filename, status in pdf_status.items() %}
+    <div class="legal-document-card">
+      
+      <div class="document-card-header">
+        <div class="document-title-area">
+          <h3 class="document-title">{{ status.title }}</h3>
+          <p class="document-description">{{ status.description }}</p>
+        </div>
+        <div class="document-status-badge {% if status.exists %}status-badge-active{% else %}status-badge-missing{% endif %}">
+          {% if status.exists %}Aktif{% else %}Eksik{% endif %}
+        </div>
+      </div>
+
+      {% if status.exists %}
+      <div class="document-meta-info">
+        <strong>Dosya Boyutu:</strong> {{ (status.size / 1024 / 1024) | round(2) }} MB
+      </div>
+      {% endif %}
+
+      <form method="post" action="{{ h.url_for('officialpdf.upload', pdf_type=filename) }}" 
+            enctype="multipart/form-data" class="upload-form" id="form-{{ filename }}">
+        
+        <div class="document-upload-area" id="upload-{{ filename }}">
+          <div class="upload-icon"> <i class="fa fa-cloud-upload"></i> </div>
+          <div class="upload-text">PDF Dosyasını Buraya Sürükleyin</div>
+          <div class="upload-hint">veya tıklayarak seçin (Max 10MB)</div>
+          <input type="file" name="pdf_file" class="upload-file-input" accept=".pdf" id="input-{{ filename }}">
+        </div>
+
+        <div class="selected-file-display" id="selected-{{ filename }}">
+          <div class="file-info-row">
+            <div class="file-pdf-icon"> <i class="fa fa-file-pdf-o"></i> </div>
+            <div class="file-info-text">
+              <h5 id="name-{{ filename }}">-</h5>
+              <p class="file-info-size" id="size-{{ filename }}">-</p>
+            </div>
+            <button type="button" class="remove-file-btn" onclick="removeFile('{{ filename }}')">
+              <i class="fa fa-times"></i>
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <div class="document-actions">
+        {% if status.exists %}
+          <a href="{{ status.url }}" target="_blank" class="document-action-btn action-btn-primary">
+            <i class="fa fa-eye"></i> Görüntüle
+          </a>
+          <button type="submit" form="form-{{ filename }}" class="document-action-btn action-btn-upload" 
+                  id="upload-btn-{{ filename }}" disabled>
+            <i class="fa fa-upload"></i> Güncelle
+          </button>
+          <form method="post" action="{{ h.url_for('officialpdf.delete', pdf_type=filename) }}" 
+                style="display: inline;" 
+                onsubmit="return confirm('{{ status.title }} dosyasını kalıcı olarak silmek istediğinizden emin misiniz?')">
+            <button type="submit" class="document-action-btn action-btn-danger">
+              <i class="fa fa-trash"></i> Sil
+            </button>
+          </form>
+        {% else %}
+          <button type="submit" form="form-{{ filename }}" class="document-action-btn action-btn-success" 
+                  id="upload-btn-{{ filename }}" disabled>
+            <i class="fa fa-upload"></i> PDF Yükle
+          </button>
+        {% endif %}
+      </div>
+
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="legal-usage-notes">
+    <h3 class="usage-notes-title">
+      <i class="fa fa-info-circle"></i>
+      Kullanım Notları
+    </h3>
+    <ul class="usage-notes-list">
+      <li class="usage-notes-item">Yüklenen PDF dosyaları sitenin alt kısmında (footer) otomatik olarak gösterilir.</li>
+      <li class="usage-notes-item">Yeni bir dosya yüklediğinizde, mevcut olanın üzerine yazılır.</li>
+      <li class="usage-notes-item">Dosya boyutu 10MB'ı geçmemelidir.</li>
+      <li class="usage-notes-item">Sadece sistem yöneticileri bu sayfaya erişebilir.</li>
+    </ul>
+  </div>
+
+</div>
+
+<script>
+  // Script kodları değişmediği için burada yer kaplamaması adına gizlendi.
+  // Sizin dosyanızdaki script kodları aynı kalmalıdır.
+document.addEventListener('DOMContentLoaded',function(){const e=["veripnihai.pdf","kvkknihai.pdf","kosulnihai.pdf"];function t(e){const t=document.getElementById("upload-"+e),n=document.getElementById("input-"+e);t&&n&&(t.addEventListener("click",function(e){e.preventDefault(),e.stopPropagation(),n.click()}),n.addEventListener("click",function(e){e.stopPropagation()}),n.addEventListener("change",function(n){n.preventDefault(),n.stopPropagation(),o(e)}),t.addEventListener("dragover",function(e){e.preventDefault(),e.stopPropagation(),t.classList.add("dragover")}),t.addEventListener("dragleave",function(e){e.preventDefault(),e.stopPropagation(),t.contains(e.relatedTarget)||t.classList.remove("dragover")}),t.addEventListener("drop",function(a){a.preventDefault(),a.stopPropagation(),t.classList.remove("dragover");const i=a.dataTransfer.files;if(i.length>0){n.value="";const t=new DataTransfer;t.items.add(i[0]),n.files=t.files,o(e)}}))}function o(e){const t=document.getElementById("input-"+e),o=document.getElementById("upload-"+e),n=document.getElementById("selected-"+e),a=document.getElementById("name-"+e),i=document.getElementById("size-"+e),d=document.getElementById("upload-btn-"+e),l=t.files[0];l?(l.type!=="application/pdf"?(alert("Sadece PDF dosyaları yüklenebilir!"),t.value="",o.style.display="block",n.style.display="none",d.disabled=!0):l.size>10485760?(alert("Dosya boyutu 10MB'dan büyük olamaz!"),t.value="",o.style.display="block",n.style.display="none",d.disabled=!0):(a.textContent=l.name,i.textContent=function(e){if(e===0)return"0 Bytes";const t=1024,o=["Bytes","KB","MB","GB"],n=Math.floor(Math.log(e)/Math.log(t));return Math.round(e/Math.pow(t,n)*100)/100+" "+o[n]}(l.size),o.style.display="none",n.style.display="block",d.disabled=!1)):(o.style.display="block",n.style.display="none",d.disabled=!0)}e.forEach(function(e){t(e)}),window.removeFile=function(e){const t=document.getElementById("input-"+e),o=document.getElementById("upload-"+e),n=document.getElementById("selected-"+e),a=document.getElementById("upload-btn-"+e);t&&o&&n&&a&&(t.value="",o.style.display="block",n.style.display="none",a.disabled=!0)};const n=document.querySelectorAll(".upload-form");n.forEach(function(e){e.addEventListener("submit",function(t){const o=e.querySelector('button[type="submit"]');o&&!o.disabled&&(o.innerHTML='<i class="fa fa-spinner fa-spin"></i> Yükleniyor...',o.disabled=!0)})})});
+</script>
+
+{% endblock %}

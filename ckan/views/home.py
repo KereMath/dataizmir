@@ -89,6 +89,11 @@ def dataset():
     u''' display license page'''
     return base.render(u'home/dataset.html', extra_vars={})
 
+def mekansal():
+    u''' display license page'''
+    return base.render('home/mekansal.html', extra_vars={})
+
+
 
 def redirect_locale(target_locale, path=None):
     if path:
@@ -103,7 +108,8 @@ util_rules = [
     (u'/about', about),
     (u'/gosterge', gosterge),
     (u'/license', license),
-    (u'/dataset', dataset)
+    (u'/dataset', dataset),
+    ('/mekansal', mekansal)
 ]
 for rule, view_func in util_rules:
     home.add_url_rule(rule, view_func=view_func)

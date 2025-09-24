@@ -1,0 +1,1529 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Mekansal Gösterim') }}{% endblock %}
+
+{% block primary %}
+ 
+ <style>
+   /* CKAN arama formunu gizle */
+   .search-form {
+       display:none !important;
+   }
+   
+   /* Genel Sıfırlama ve Kutu Boyutlandırma */
+   * {
+     margin: 0;
+     padding: 0;
+     box-sizing: border-box;
+   }
+
+   /* Temel Gövde Stilleri */
+   body {
+     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+     background-color: #f8f9fa;
+     color: #333;
+   }
+
+   /* Ana Konteyner */
+   .spatial-container {
+     position: relative;
+     height: 100vh;
+     overflow: hidden;
+   }
+
+   /* Floating Panel Toggle Button */
+   .panel-toggle {
+     position: fixed;
+     top: 20px;
+     left: 20px;
+     z-index: 1005;
+     background: #fff;
+     border: none;
+     border-radius: 50%;
+     width: 50px;
+     height: 50px;
+     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+     cursor: pointer;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     font-size: 20px;
+     color: #495057;
+     transition: all 0.3s ease;
+   }
+
+   .panel-toggle:hover {
+     background: #f8f9fa;
+     transform: scale(1.05);
+   }
+
+   .panel-toggle.active {
+     background: #007bff;
+     color: white;
+   }
+
+   /* Sliding Panel */
+   .layers-panel {
+     position: fixed;
+     top: 0;
+     left: -400px;
+     width: 380px;
+     height: 100vh;
+     background: #fff;
+     box-shadow: 2px 0 20px rgba(0,0,0,0.1);
+     z-index: 1004;
+     transition: left 0.3s ease;
+     overflow: hidden;
+     display: flex;
+     flex-direction: column;
+   }
+   
+   .layers-panel.open {
+     left: 0;
+   }
+
+   /* Panel Header */
+   .panel-header {
+     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+     color: white;
+     padding: 20px;
+     position: relative;
+     border-bottom: 1px solid rgba(255,255,255,0.1);
+   }
+
+   .panel-title {
+     font-size: 18px;
+     font-weight: 600;
+     margin-bottom: 15px;
+   }
+
+   .close-panel {
+     position: absolute;
+     top: 15px;
+     right: 15px;
+     background: none;
+     border: none;
+     color: white;
+     font-size: 24px;
+     cursor: pointer;
+     padding: 5px;
+     border-radius: 50%;
+     transition: background 0.2s;
+   }
+
+   .close-panel:hover {
+     background: rgba(255,255,255,0.1);
+   }
+
+   /* Stats Grid */
+   .stats-grid {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 10px;
+   }
+
+   .stat-item {
+     background: rgba(255,255,255,0.15);
+     padding: 10px;
+     border-radius: 8px;
+     text-align: center;
+     backdrop-filter: blur(10px);
+   }
+
+   .stat-number {
+     font-size: 1.4rem;
+     font-weight: 700;
+     display: block;
+   }
+
+   .stat-label {
+     font-size: 0.75rem;
+     opacity: 0.9;
+     margin-top: 3px;
+   }
+
+   /* Search Section */
+   .search-section {
+     padding: 20px;
+     border-bottom: 1px solid #e9ecef;
+   }
+
+   .search-input {
+     width: 100%;
+     padding: 12px 16px;
+     border: 1px solid #ced4da;
+     border-radius: 8px;
+     font-size: 14px;
+     background-color: #fff;
+     transition: all 0.15s ease;
+   }
+
+   .search-input:focus {
+     outline: none;
+     border-color: #007bff;
+     box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+   }
+
+   /* Layers Content */
+   .layers-content {
+     flex: 1;
+     overflow-y: auto;
+     padding-bottom: 20px;
+   }
+
+   /* Package Group Styles */
+   .package-group {
+     margin: 0 20px 15px 20px;
+     border: 1px solid #e9ecef;
+     border-radius: 12px;
+     overflow: hidden;
+     background: white;
+     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+   }
+
+   .package-header {
+     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+     padding: 15px;
+     cursor: pointer;
+     user-select: none;
+     transition: all 0.2s ease;
+     border-bottom: 1px solid rgba(0,0,0,0.05);
+   }
+
+   .package-header:hover {
+     background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+   }
+
+   .package-title-row {
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+     margin-bottom: 8px;
+   }
+
+   .package-title {
+     font-size: 15px;
+     font-weight: 600;
+     color: #2c3e50;
+     margin: 0;
+     flex: 1;
+     line-height: 1.3;
+   }
+
+   .collapse-indicator {
+     background: none;
+     border: none;
+     font-size: 18px;
+     color: #6c757d;
+     cursor: pointer;
+     padding: 4px;
+     border-radius: 4px;
+     transition: all 0.3s ease;
+   }
+
+   .collapse-indicator:hover {
+     background: rgba(108, 117, 125, 0.1);
+   }
+
+   .collapse-indicator.collapsed {
+     transform: rotate(-90deg);
+   }
+
+   .package-meta {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+   }
+
+   .resource-count {
+     background: #28a745;
+     color: white;
+     padding: 3px 8px;
+     border-radius: 12px;
+     font-size: 11px;
+     font-weight: 600;
+   }
+
+   /* Resources Container */
+   .resources-container {
+     display: block;
+     max-height: 400px;
+     overflow-y: auto;
+   }
+
+   .resources-container.collapsed {
+     display: none;
+   }
+
+   /* Resource Item */
+   .resource-item {
+     display: flex;
+     align-items: center;
+     justify-content: space-between;
+     padding: 12px 15px;
+     border-bottom: 1px solid #f1f3f4;
+     transition: all 0.2s ease;
+     cursor: pointer;
+   }
+
+   .resource-item:last-child {
+     border-bottom: none;
+   }
+
+   .resource-item:hover {
+     background: #f8f9fa;
+   }
+
+   .resource-item.active {
+     background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
+     border-left: 4px solid #1976d2;
+   }
+   
+   .resource-item.wms-active {
+     background: linear-gradient(135deg, #d6eaff 0%, #f0f8ff 100%) !important;
+     border-left: 4px solid #2a61a0 !important;
+   }
+
+   .resource-info {
+     flex: 1;
+     min-width: 0;
+   }
+
+   .resource-name {
+     font-size: 13px;
+     font-weight: 500;
+     color: #495057;
+     margin: 0 0 5px 0;
+     white-space: nowrap;
+     overflow: hidden;
+     text-overflow: ellipsis;
+   }
+
+   .resource-meta {
+     display: flex;
+     align-items: center;
+     gap: 8px;
+   }
+
+   .format-badge {
+     display: inline-block;
+     padding: 2px 6px;
+     border-radius: 4px;
+     font-size: 9px;
+     font-weight: 600;
+     text-transform: uppercase;
+   }
+
+   /* Format Colors */
+   .format-geojson { background: #d1ecf1; color: #0c5460; }
+   .format-shp { background: #dcfce7; color: #166534; }
+   .format-kml { background: #ddd6fe; color: #5b21b6; }
+   .format-csv { background: #d4edda; color: #155724; }
+   .format-json { background: #fff3cd; color: #856404; }
+   .format-api { background: #f0f9ff; color: #0c4a6e; }
+   .format-xlsx { background: #e2e3e5; color: #383d41; }
+   .format-other { background: #f1f5f9; color: #475569; }
+   .format-wms { background: #d6eaff; color: #2a61a0; }
+   .format-geotiff { background: #fdf6e3; color: #b58900; }
+
+
+   /* Modern Toggle Switch */
+   .modern-toggle {
+     position: relative;
+     display: inline-block;
+     width: 44px;
+     height: 24px;
+     margin-left: 10px;
+   }
+
+   .modern-toggle input {
+     opacity: 0;
+     width: 0;
+     height: 0;
+   }
+
+   .toggle-slider {
+     position: absolute;
+     cursor: pointer;
+     top: 0;
+     left: 0;
+     right: 0;
+     bottom: 0;
+     background: linear-gradient(135deg, #ddd, #ccc);
+     transition: all .3s ease;
+     border-radius: 24px;
+     box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+   }
+
+   .toggle-slider:before {
+     position: absolute;
+     content: "";
+     height: 18px;
+     width: 18px;
+     left: 3px;
+     bottom: 3px;
+     background: white;
+     transition: all .3s ease;
+     border-radius: 50%;
+     box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+   }
+
+   input:checked + .toggle-slider {
+     background: linear-gradient(135deg, #28a745, #20c997);
+   }
+   
+   .wms-resource input:checked + .toggle-slider {
+     background: linear-gradient(135deg, #2a61a0, #4c82c2);
+   }
+   .geotiff-resource input:checked + .toggle-slider {
+     background: linear-gradient(135deg, #b58900, #cb9700);
+   }
+
+   input:checked + .toggle-slider:before {
+     transform: translateX(20px);
+   }
+
+   /* Bulk Actions */
+   .bulk-actions {
+     padding: 12px 15px;
+     background: rgba(248, 249, 250, 0.8);
+     border-top: 1px solid #dee2e6;
+     display: flex;
+     gap: 8px;
+   }
+
+   .bulk-btn {
+     flex: 1;
+     padding: 6px 12px;
+     border: 1px solid #dee2e6;
+     border-radius: 6px;
+     font-size: 11px;
+     font-weight: 600;
+     background: white;
+     color: #495057;
+     cursor: pointer;
+     transition: all 0.2s ease;
+   }
+
+   .bulk-btn:hover {
+     background: #007bff;
+     color: white;
+     border-color: #007bff;
+   }
+
+   /* Map Container */
+   #map {
+     height: 100vh;
+     width: 100%;
+     border-radius: 0;
+     z-index: 0;
+   }
+
+   /* Loading ve Error */
+   .loading-section, .error-section {
+     text-align: center;
+     padding: 40px 20px;
+     color: #6c757d;
+   }
+
+   .error-section {
+     background: #f8d7da;
+     color: #721c24;
+     margin: 20px;
+     border-radius: 8px;
+   }
+
+   /* Panel Overlay */
+   .panel-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(0,0,0,0.3);
+     z-index: 1003;
+     opacity: 0;
+     visibility: hidden;
+     transition: all 0.3s ease;
+   }
+
+   .panel-overlay.active {
+     opacity: 1;
+     visibility: visible;
+   }
+
+   /* Popup Stilleri */
+   .popup-content {
+     max-width: 280px;
+     font-size: 12px;
+     line-height: 1.4;
+   }
+
+   .popup-content > div {
+     margin-bottom: 6px;
+     word-wrap: break-word;
+   }
+
+   .popup-resource-header {
+     background: linear-gradient(135deg, #007bff, #0056b3);
+     color: white;
+     padding: 8px 12px;
+     margin: -8px -12px 8px -12px;
+     border-radius: 4px 4px 0 0;
+     font-weight: 600;
+   }
+
+   /* Column Selection Modal */
+   .column-modal-overlay {
+     position: fixed;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(0,0,0,0.5);
+     z-index: 2000;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+   }
+
+   .column-modal {
+     background: white;
+     padding: 25px;
+     border-radius: 12px;
+     max-width: 450px;
+     width: 90%;
+     box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+   }
+
+   .column-modal h3 {
+     margin-bottom: 20px;
+     color: #2c3e50;
+     font-size: 18px;
+   }
+
+   .column-select-group {
+     margin: 15px 0;
+   }
+
+   .column-select-group label {
+     display: block;
+     margin-bottom: 8px;
+     font-weight: 500;
+     color: #495057;
+   }
+
+   .column-select-group select {
+     width: 100%;
+     padding: 10px 12px;
+     border: 1px solid #ced4da;
+     border-radius: 6px;
+     font-size: 14px;
+     background: white;
+   }
+
+   .modal-actions {
+     margin-top: 25px;
+     display: flex;
+     justify-content: flex-end;
+     gap: 10px;
+   }
+
+   .modal-btn {
+     padding: 10px 20px;
+     border: none;
+     border-radius: 6px;
+     font-weight: 500;
+     cursor: pointer;
+     transition: all 0.2s;
+   }
+
+   .modal-btn.cancel {
+     background: #6c757d;
+     color: white;
+   }
+
+   .modal-btn.primary {
+     background: #007bff;
+     color: white;
+   }
+
+   .modal-btn:hover {
+     opacity: 0.9;
+   }
+   
+   /* Responsive */
+   @media (max-width: 768px) {
+     .layers-panel {
+       width: 100%;
+       left: -100%;
+     }
+     
+     .panel-toggle {
+       top: 15px;
+       left: 15px;
+       width: 45px;
+       height: 45px;
+     }
+     
+     .stats-grid {
+       grid-template-columns: 1fr;
+       gap: 8px;
+     }
+     
+     .package-group {
+       margin: 0 15px 12px 15px;
+     }
+   }
+ </style>
+
+ <div class="spatial-container">
+   <button class="panel-toggle" id="panelToggle" onclick="spatialMapManager.togglePanel()">
+     <span id="toggleIcon">☰</span>
+   </button>
+
+   <div class="panel-overlay" id="panelOverlay" onclick="spatialMapManager.closePanel()"></div>
+
+   <div class="layers-panel" id="layersPanel">
+     <div class="panel-header">
+       <button class="close-panel" onclick="spatialMapManager.closePanel()">×</button>
+       <div class="panel-title">Mekansal Katmanlar</div>
+       <div class="stats-grid">
+         <div class="stat-item">
+           <span class="stat-number" id="totalSpatialResources">-</span>
+           <div class="stat-label">Kaynak</div>
+         </div>
+         <div class="stat-item">
+           <span class="stat-number" id="totalSpatialPackages">-</span>
+           <div class="stat-label">Paket</div>
+         </div>
+         <div class="stat-item">
+           <span class="stat-number" id="activeLayers">-</span>
+           <div class="stat-label">Aktif Katman</div>
+         </div>
+         <div class="stat-item">
+           <span class="stat-number" id="totalFormats">-</span>
+           <div class="stat-label">Format</div>
+         </div>
+       </div>
+     </div>
+
+     <div class="search-section">
+       <input type="search" class="search-input" id="layerSearch" placeholder="Katman ara...">
+     </div>
+
+     <div class="layers-content" id="spatialLayersContainer">
+       <div class="loading-section">Mekansal katmanlar yükleniyor...</div>
+     </div>
+   </div>
+
+   <div id="map"></div>
+ </div>
+
+ <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+ <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js"></script>
+ <script src="https://unpkg.com/shpjs@3.6.0/dist/shp.min.js"></script>
+
+ <!-- GeoTIFF desteği için georaster kütüphaneleri -->
+ <script src="https://unpkg.com/georaster@1.5.6/dist/georaster.browser.bundle.min.js"></script>
+ <script src="https://unpkg.com/georaster-layer-for-leaflet@3.10.0/dist/georaster-layer-for-leaflet.min.js"></script>
+ <script src="https://unpkg.com/geotiff@2.0.7/dist/geotiff.bundle.min.js"></script>
+
+ <script>
+   console.log('Modern Mekansal Görüntüleme Sistemi Başlıyor');
+
+   class SpatialMapManager {
+     constructor() {
+       this.map = null;
+       this.spatialData = [];
+       this.packageGroups = {};
+       this.resourceLayers = {};
+       this.activeResources = new Set();
+       this.defaultBaseMap = null;
+       this.collapsedPackages = new Set();
+       this.panelOpen = false;
+       this.init();
+     }
+
+     async init() {
+       console.log('Spatial Map Manager başlatılıyor...');
+       try {
+         this.initMap();
+         await this.loadSpatialData();
+         this.setupEventListeners();
+         this.renderLayers();
+         this.updateStats();
+       } catch (error) {
+         console.error('Initialization hatası:', error);
+         this.showError('Mekansal veriler yüklenirken hata oluştu: ' + error.message);
+       }
+     }
+
+     initMap() {
+       console.log('Harita başlatılıyor...');
+       this.map = L.map('map').setView([38.4237, 27.1428], 10);
+       
+       this.defaultBaseMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+         maxZoom: 19,
+         attribution: '© OpenStreetMap contributors'
+       }).addTo(this.map);
+
+       this.map.on('click', () => {
+         if (this.panelOpen) {
+           this.closePanel();
+         }
+       });
+     }
+
+     async loadSpatialData() {
+       try {
+         console.log('Spatial resources API çağrısı...');
+         const response = await fetch('/api/spatial-resources/list', {
+           credentials: 'include'
+         });
+         
+         const data = await response.json();
+         console.log('Spatial API yanıtı:', data);
+         
+         if (!data.success) {
+           throw new Error(data.error || 'Spatial resources API hatası');
+         }
+
+         this.spatialData = data.spatial_resources || [];
+         console.log(`${this.spatialData.length} spatial resource yüklendi`);
+         
+         this.createPackageGroups();
+         
+       } catch (error) {
+         console.error('Spatial data yükleme hatası:', error);
+         throw error;
+       }
+     }
+     
+     createPackageGroups() {
+        this.packageGroups = {};
+        this.spatialData.forEach(resource => {
+            const packageId = resource.package_id;
+            
+            if (!this.packageGroups[packageId]) {
+                this.packageGroups[packageId] = {
+                    id: packageId,
+                    name: resource.package_title,
+                    package_name: resource.package_name,
+                    resources: []
+                };
+            }
+            this.packageGroups[packageId].resources.push(resource);
+
+            this.resourceLayers[resource.resource_id] = {
+                resource: resource,
+                layer: L.layerGroup(),
+                visible: false,
+                loaded: false
+            };
+        });
+
+        console.log(`${Object.keys(this.packageGroups).length} paket grubu oluşturuldu`);
+    }
+
+     async loadResourceData(resourceId) {
+       const resourceLayer = this.resourceLayers[resourceId];
+       if (!resourceLayer || resourceLayer.loaded) return;
+
+       try {
+         console.log(`[DEBUG] Resource verisi yükleniyor: ${resourceId}`);
+         console.log(`[DEBUG] Resource info:`, resourceLayer.resource);
+         
+         this.showLoadingForResource(resourceId);
+         
+         // WMS, WFS ve GeoTIFF için doğrudan URL kullan
+         if (['wms', 'wfs', 'geotiff'].includes(resourceLayer.resource.format?.toLowerCase())) {
+             await this.addLayerFromUrl(resourceLayer.resource.url, resourceLayer.resource.format?.toLowerCase(), resourceLayer.layer, resourceId);
+             resourceLayer.loaded = true;
+             this.hideLoadingForResource(resourceId);
+             return;
+         }
+
+         const apiUrl = `/api/spatial-resources/${resourceId}/data`;
+         console.log(`[DEBUG] API URL: ${apiUrl}`);
+         
+         const response = await fetch(apiUrl, {
+           credentials: 'include',
+           headers: {
+             'Accept': 'application/json',
+             'Content-Type': 'application/json'
+           }
+         });
+         
+         console.log(`[DEBUG] Response status: ${response.status}`);
+         
+         if (!response.ok) {
+           const errorText = await response.text();
+           console.error(`[DEBUG] HTTP Error ${response.status}:`, errorText);
+           throw new Error(`HTTP ${response.status}: ${errorText.substring(0, 200)}...`);
+         }
+         
+         const result = await response.json();
+         console.log(`[DEBUG] Parsed JSON result:`, result);
+         
+         if (!result.success) {
+           console.log(`[DEBUG] API result not successful:`, result);
+           if (result.columns) {
+             console.log(`[DEBUG] Manual column selection needed. Columns:`, result.columns);
+             this.hideLoadingForResource(resourceId);
+             await this.showManualColumnSelection(resourceId, result.columns);
+           } else {
+             console.error('[DEBUG] Veri yüklenirken hata:', result.error);
+             this.hideLoadingForResource(resourceId);
+             this.showResourceError(resourceId, result.error || 'Bilinmeyen hata');
+           }
+           return;
+         }
+         
+         if (result.type === 'shp') {
+           console.log(`[DEBUG] SHP dosyası tespit edildi, frontend'de işleniyor...`);
+           await this.processShpData(result.url, resourceId);
+         } else if (result.type === 'geotiff') {
+           console.log(`[DEBUG] GeoTIFF dosyası tespit edildi, frontend'de işleniyor...`);
+           await this.processGeoTiffData(result.url, resourceId);
+         } else {
+           this.addGeoJSONToLayer(result.data, resourceLayer.layer, resourceId);
+         }
+         
+         resourceLayer.loaded = true;
+         this.hideLoadingForResource(resourceId);
+         
+       } catch (error) {
+         console.error('[DEBUG] Resource data yüklenirken hata:', error);
+         this.hideLoadingForResource(resourceId);
+         this.showResourceError(resourceId, `${error.name}: ${error.message}`);
+       }
+     }
+     
+     async addLayerFromUrl(url, format, layerGroup, resourceId) {
+        layerGroup.clearLayers();
+        let newLayer;
+        const resource = this.resourceLayers[resourceId].resource;
+
+        try {
+            switch (format) {
+                case 'wms':
+                    const layerName = 'eea_clcbb:CLCMask';
+                    newLayer = L.tileLayer.wms(url, {
+                        layers: layerName,
+                        format: 'image/png',
+                        transparent: true,
+                        attribution: `WMS: ${resource.resource_name}`
+                    });
+                    break;
+                    
+                case 'wfs':
+                    newLayer = L.tileLayer.wms(url, {
+                        layers: 'your_wfs_layer_name',
+                        format: 'image/png',
+                        transparent: true,
+                        attribution: `WFS: ${resource.resource_name}`
+                    });
+                    break;
+                    
+                case 'geotiff':
+                    // GeoTIFF işlemi için georaster kullan
+                    console.log('GeoTIFF dosyası işleniyor:', url);
+                    await this.processGeoTiffData(url, resourceId);
+                    return; // İşlem async olduğu için buradan çık
+                    
+                default:
+                    throw new Error('Desteklenmeyen URL tabanlı format: ' + format);
+            }
+            
+            if (newLayer) {
+                layerGroup.addLayer(newLayer);
+                console.log(`${format.toUpperCase()} katmanı başarıyla eklendi: ${resource.resource_name}`);
+            }
+        } catch (error) {
+            console.error(`[DEBUG] Katman ekleme hatası (${format}):`, error);
+            this.showResourceError(resourceId, `${format.toUpperCase()} dosyası işlenemedi: ${error.message}`);
+            const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+            if (checkbox) checkbox.checked = false;
+        }
+     }
+
+     async processGeoTiffData(url, resourceId) {
+       console.log(`[DEBUG] GeoTIFF dosyası işleniyor: ${url}`);
+       
+       try {
+         const resourceLayer = this.resourceLayers[resourceId];
+         const resource = resourceLayer.resource;
+         
+         // GeoTIFF'i fetch et
+         const response = await fetch(url);
+         if (!response.ok) {
+           throw new Error(`HTTP Error: ${response.status}`);
+         }
+         
+         const arrayBuffer = await response.arrayBuffer();
+         
+         // GeoRaster kullanarak parse et
+         const georaster = await window.GeoRaster.parseGeoRaster(arrayBuffer);
+         
+         console.log('GeoRaster metadata:', {
+           width: georaster.width,
+           height: georaster.height,
+           numberOfRasters: georaster.numberOfRasters,
+           pixelHeight: georaster.pixelHeight,
+           pixelWidth: georaster.pixelWidth,
+           projection: georaster.projection,
+           xmin: georaster.xmin,
+           xmax: georaster.xmax,
+           ymin: georaster.ymin,
+           ymax: georaster.ymax
+         });
+         
+         // GeoRaster layer oluştur
+         const georasterLayer = new window.GeoRasterLayer({
+           georaster: georaster,
+           opacity: 0.7,
+           resolution: 256, // Performans için düşük çözünürlük
+           pixelValuesToColorFn: values => {
+             // NDVI veya diğer raster değerlerini renklere dönüştür
+             const value = values[0];
+             if (value === georaster.noDataValue) {
+               return null; // Şeffaf
+             }
+             
+             // Basit bir renk haritası
+             const normalized = (value - georaster.mins[0]) / (georaster.maxs[0] - georaster.mins[0]);
+             const red = Math.round(255 * (1 - normalized));
+             const green = Math.round(255 * normalized);
+             const blue = 0;
+             
+             return `rgba(${red}, ${green}, ${blue}, 0.8)`;
+           }
+         });
+         
+         resourceLayer.layer.clearLayers();
+         resourceLayer.layer.addLayer(georasterLayer);
+         
+         console.log(`GeoTIFF katmanı başarıyla eklendi: ${resource.resource_name}`);
+         
+         // Haritayı GeoTIFF sınırlarına zoomla
+         if (georaster.xmin && georaster.xmax && georaster.ymin && georaster.ymax) {
+           const bounds = [[georaster.ymin, georaster.xmin], [georaster.ymax, georaster.xmax]];
+           this.map.fitBounds(bounds);
+         }
+         
+       } catch (error) {
+         console.error(`GeoTIFF işleme hatası:`, error);
+         
+         // Alternatif olarak basit bir tile layer dene
+         try {
+           console.log('Alternatif GeoTIFF yöntemi deneniyor...');
+           const resourceLayer = this.resourceLayers[resourceId];
+           const resource = resourceLayer.resource;
+           
+           // COG (Cloud Optimized GeoTIFF) olarak işle
+           const tileLayer = L.tileLayer(url + '/{z}/{x}/{y}.png', {
+             attribution: `GeoTIFF: ${resource.resource_name}`,
+             opacity: 0.7,
+             maxZoom: 18
+           });
+           
+           resourceLayer.layer.clearLayers();
+           resourceLayer.layer.addLayer(tileLayer);
+           
+           console.log('GeoTIFF tile layer olarak eklendi');
+         } catch (altError) {
+           console.error('Alternatif GeoTIFF yöntemi de başarısız:', altError);
+           this.showResourceError(resourceId, `GeoTIFF dosyası işlenemedi: ${error.message}`);
+           
+           const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+           if (checkbox) checkbox.checked = false;
+         }
+       }
+     }
+
+     async processShpData(shpUrl, resourceId) {
+       console.log(`[DEBUG] SHP dosyasından GeoJSON oluşturuluyor: ${shpUrl}`);
+       
+       try {
+         const response = await fetch(shpUrl);
+         if (!response.ok) {
+           throw new Error(`HTTP Error: ${response.status}`);
+         }
+         const buffer = await response.arrayBuffer();
+         const geojson = shp.parseZip(buffer);
+         
+         if (!geojson || !geojson.features || geojson.features.length === 0) {
+           throw new Error('SHP dosyasında mekansal veri bulunamadı.');
+         }
+         
+         console.log(`[DEBUG] SHP'den ${geojson.features.length} feature başarıyla parse edildi.`);
+         
+         const resourceLayer = this.resourceLayers[resourceId];
+         this.addGeoJSONToLayer(geojson, resourceLayer.layer, resourceId);
+         
+       } catch (error) {
+         console.error(`SHP işleme hatası: ${error}`);
+         this.showResourceError(resourceId, `SHP dosyası işlenemedi: ${error.message}`);
+         
+         const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+         if (checkbox) {
+           checkbox.checked = false;
+         }
+       }
+     }
+
+     showResourceError(resourceId, errorMessage) {
+       const resourceElement = document.getElementById(`resource-${resourceId}`);
+       if (resourceElement) {
+         const resourceInfo = resourceElement.querySelector('.resource-info');
+         if (resourceInfo) {
+           const existingError = resourceInfo.querySelector('.resource-error');
+           if (existingError) {
+             existingError.remove();
+           }
+           
+           const errorDiv = document.createElement('div');
+           errorDiv.className = 'resource-error';
+           errorDiv.style.cssText = 'color: #dc3545; font-size: 10px; margin-top: 3px; font-style: italic;';
+           errorDiv.textContent = errorMessage.length > 60 ? errorMessage.substring(0, 60) + '...' : errorMessage;
+           errorDiv.title = errorMessage;
+           resourceInfo.appendChild(errorDiv);
+         }
+         
+         const checkbox = resourceElement.querySelector('input[type="checkbox"]');
+         if (checkbox) {
+           checkbox.checked = false;
+         }
+       }
+     }
+
+     addGeoJSONToLayer(geojsonData, layerGroup, resourceId) {
+       try {
+         console.log(`[DEBUG] GeoJSON ekleniyor - Resource ID: ${resourceId}`);
+         
+         layerGroup.clearLayers();
+         
+         const resource = this.spatialData.find(r => r.resource_id === resourceId);
+         
+         if (!resource) {
+           console.error(`[DEBUG] Resource bulunamadı: ${resourceId}`);
+           return;
+         }
+         
+         const color = this.getResourceColor(resourceId);
+         
+         if (!geojsonData || !geojsonData.features) {
+           console.error(`[DEBUG] Geçersiz GeoJSON data:`, geojsonData);
+           return;
+         }
+         
+         console.log(`[DEBUG] GeoJSON features count: ${geojsonData.features.length}`);
+         
+         const geoJsonLayer = L.geoJSON(geojsonData, {
+           pointToLayer: (feature, latlng) => {
+             return L.circleMarker(latlng, {
+               radius: 8,
+               fillColor: color,
+               color: '#fff',
+               weight: 2,
+               opacity: 1,
+               fillOpacity: 0.8
+             });
+           },
+           style: (feature) => {
+             if (feature.geometry && feature.geometry.type !== 'Point') {
+               return {
+                 color: color,
+                 weight: 2,
+                 opacity: 0.8,
+                 fillColor: color,
+                 fillOpacity: 0.3
+               };
+             }
+             return {};
+           },
+           onEachFeature: (feature, layer) => {
+             const popupContent = this.createPopupContent(feature, resource);
+             layer.bindPopup(popupContent, {
+               maxWidth: 300,
+               className: 'custom-popup'
+             });
+             
+             layer.on('mouseover', function(e) {
+               if (feature.geometry && feature.geometry.type !== 'Point') {
+                 this.setStyle({
+                   weight: 3,
+                   fillOpacity: 0.5
+                 });
+               } else {
+                 this.setStyle({
+                   radius: 10
+                 });
+               }
+             });
+             
+             layer.on('mouseout', function(e) {
+               if (feature.geometry && feature.geometry.type !== 'Point') {
+                 this.setStyle({
+                   weight: 2,
+                   fillOpacity: 0.3
+                 });
+               } else {
+                 this.setStyle({
+                   radius: 8
+                 });
+               }
+             });
+           }
+         });
+         
+         layerGroup.addLayer(geoJsonLayer);
+         
+         console.log(`[DEBUG] GeoJSON başarıyla eklendi: ${geojsonData.features?.length || 0} feature (${resource.resource_name})`);
+         
+       } catch (error) {
+         console.error('[DEBUG] GeoJSON ekleme hatası:', error);
+         console.error('[DEBUG] Error stack:', error.stack);
+         this.showResourceError(resourceId, `GeoJSON işlenemedi: ${error.message}`);
+       }
+     }
+
+     createPopupContent(feature, resource) {
+       let content = '<div class="popup-content">';
+       
+       content += `<div class="popup-resource-header">
+         ${resource.resource_name}<br>
+         <small style="opacity: 0.8;">${resource.format || 'Bilinmiyor'}</small>
+       </div>`;
+       
+       if (feature.properties && typeof feature.properties === 'object') {
+         Object.entries(feature.properties).forEach(([key, value]) => {
+           if (value !== null && value !== undefined && value !== '') {
+             content += `<div><strong>${key}:</strong> ${value}</div>`;
+           }
+         });
+       }
+       
+       content += `<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; text-align: center;">
+         <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" target="_blank" 
+           style="color: #007bff; text-decoration: none; font-weight: 500;">Kaynağı Görüntüle →</a>
+       </div>`;
+       
+       content += '</div>';
+       return content;
+     }
+
+     async showManualColumnSelection(resourceId, columns) {
+       return new Promise((resolve) => {
+         const modal = document.createElement('div');
+         modal.className = 'column-modal-overlay';
+         modal.innerHTML = `
+           <div class="column-modal">
+             <h3>Koordinat Sütunlarını Seçin</h3>
+             <div class="column-select-group">
+               <label>Enlem (Latitude) Sütunu:</label>
+               <select id="latColumn">
+                 <option value="">Seçiniz...</option>
+                 ${columns.map(col => `<option value="${col}">${col}</option>`).join('')}
+               </select>
+             </div>
+             <div class="column-select-group">
+               <label>Boylam (Longitude) Sütunu:</label>
+               <select id="lonColumn">
+                 <option value="">Seçiniz...</option>
+                 ${columns.map(col => `<option value="${col}">${col}</option>`).join('')}
+               </select>
+             </div>
+             <div class="modal-actions">
+               <button class="modal-btn cancel" onclick="this.closest('.column-modal-overlay').remove()">İptal</button>
+               <button class="modal-btn primary" onclick="spatialMapManager.processManualSelection('${resourceId}', this)">Uygula</button>
+             </div>
+           </div>
+         `;
+         
+         document.body.appendChild(modal);
+         resolve();
+       });
+     }
+
+     showLoadingForResource(resourceId) {
+       const resourceElement = document.getElementById(`resource-${resourceId}`);
+       if (resourceElement) {
+         const toggle = resourceElement.querySelector('.toggle-slider');
+         if (toggle) {
+           toggle.style.background = 'linear-gradient(135deg, #ffc107, #e0a800)';
+         }
+       }
+     }
+
+     hideLoadingForResource(resourceId) {
+       const resourceElement = document.getElementById(`resource-${resourceId}`);
+       if (resourceElement) {
+         const checkbox = resourceElement.querySelector('input[type="checkbox"]');
+         const toggle = resourceElement.querySelector('.toggle-slider');
+         if (toggle && checkbox) {
+           if (checkbox.checked) {
+             toggle.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+           } else {
+             toggle.style.background = 'linear-gradient(135deg, #ddd, #ccc)';
+           }
+         }
+       }
+     }
+
+     async processManualSelection(resourceId, buttonElement) {
+       const modal = buttonElement.closest('.column-modal-overlay');
+       const latCol = modal.querySelector('#latColumn').value;
+       const lonCol = modal.querySelector('#lonColumn').value;
+       
+       if (!latCol || !lonCol) {
+         alert('Lütfen enlem ve boylam sütunlarını seçin');
+         return;
+       }
+       
+       try {
+         const response = await fetch(`/api/spatial-resources/${resourceId}/process-manual`, {
+           method: 'POST',
+           headers: {
+             'Content-Type': 'application/json'
+           },
+           credentials: 'include',
+           body: JSON.stringify({
+             lat_column: latCol,
+             lon_column: lonCol
+           })
+         });
+         
+         const result = await response.json();
+         
+         if (result.success) {
+           const resourceLayer = this.resourceLayers[resourceId];
+           this.addGeoJSONToLayer(result.data, resourceLayer.layer, resourceId);
+           resourceLayer.loaded = true;
+           modal.remove();
+         } else {
+           alert('Veri işlenirken hata: ' + result.error);
+         }
+         
+       } catch (error) {
+         alert('İstek gönderilirken hata: ' + error.message);
+       }
+     }
+
+     getResourceColor(resourceId) {
+       const colors = [
+         '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 
+         '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD', 
+         '#00D2D3', '#10AC84', '#EE5A24', '#FF6348'
+       ];
+       const hash = resourceId.split('').reduce((a, b) => {
+         a = ((a << 5) - a) + b.charCodeAt(0);
+         return a & a;
+       }, 0);
+       return colors[Math.abs(hash) % colors.length];
+     }
+     
+     async toggleResource(resourceId, isVisible) {
+        const resourceLayer = this.resourceLayers[resourceId];
+        if (!resourceLayer) return;
+
+        if (isVisible) {
+            if (!resourceLayer.loaded) {
+                await this.loadResourceData(resourceId);
+            }
+            if (resourceLayer.loaded) {
+                const layer = this.resourceLayers[resourceId].layer;
+                layer.addTo(this.map);
+                this.activeResources.add(resourceId);
+                resourceLayer.visible = true;
+                
+                // WMS ve GeoTIFF katmanları en alta, diğerleri en üste gelsin
+                if (['wms', 'geotiff'].includes(resourceLayer.resource.format?.toLowerCase())) {
+                     layer.eachLayer(l => l.bringToBack && l.bringToBack());
+                } else {
+                     layer.eachLayer(l => l.bringToFront && l.bringToFront());
+                }
+            }
+        } else {
+            this.map.removeLayer(resourceLayer.layer);
+            this.activeResources.delete(resourceId);
+            resourceLayer.visible = false;
+        }
+
+        const resourceElement = document.getElementById(`resource-${resourceId}`);
+        if (resourceElement) {
+            resourceElement.classList.toggle('active', isVisible);
+        }
+        
+        this.updateStats();
+        this.fitMapToActiveLayers();
+    }
+
+     fitMapToActiveLayers() {
+        if (this.activeResources.size === 0) {
+            return;
+        }
+
+        const allBounds = [];
+        this.activeResources.forEach(resourceId => {
+            const resourceLayer = this.resourceLayers[resourceId];
+            if (resourceLayer && resourceLayer.visible && resourceLayer.layer.getLayers().length > 0) {
+                resourceLayer.layer.eachLayer(layer => {
+                    if (layer.getBounds) {
+                        allBounds.push(layer.getBounds());
+                    } else if (layer.getLatLng) {
+                        const latlng = layer.getLatLng();
+                        allBounds.push(L.latLngBounds([latlng, latlng]));
+                    }
+                });
+            }
+        });
+
+        if (allBounds.length > 0) {
+            const group = new L.featureGroup();
+            allBounds.forEach(bounds => {
+                const tempLayer = L.rectangle(bounds, {opacity: 0});
+                group.addLayer(tempLayer);
+            });
+            if (group.getLayers().length > 0) {
+                this.map.fitBounds(group.getBounds(), { padding: [20, 20] });
+            }
+        }
+    }
+
+     // Panel Methods
+     togglePanel() {
+       if (this.panelOpen) {
+         this.closePanel();
+       } else {
+         this.openPanel();
+       }
+     }
+     
+     openPanel() {
+       const panel = document.getElementById('layersPanel');
+       const overlay = document.getElementById('panelOverlay');
+       const toggle = document.getElementById('panelToggle');
+       const icon = document.getElementById('toggleIcon');
+       
+       panel.classList.add('open');
+       overlay.classList.add('active');
+       toggle.classList.add('active');
+       icon.textContent = '×';
+       this.panelOpen = true;
+     }
+
+     closePanel() {
+       const panel = document.getElementById('layersPanel');
+       const overlay = document.getElementById('panelOverlay');
+       const toggle = document.getElementById('panelToggle');
+       const icon = document.getElementById('toggleIcon');
+       
+       panel.classList.remove('open');
+       overlay.classList.remove('active');
+       toggle.classList.remove('active');
+       icon.textContent = '☰';
+       this.panelOpen = false;
+     }
+
+     togglePackageCollapse(packageId) {
+       if (this.collapsedPackages.has(packageId)) {
+         this.collapsedPackages.delete(packageId);
+       } else {
+         this.collapsedPackages.add(packageId);
+       }
+       
+       const container = document.getElementById(`resources-${packageId}`);
+       const indicator = document.getElementById(`indicator-${packageId}`);
+       
+       if (container && indicator) {
+         if (this.collapsedPackages.has(packageId)) {
+           container.classList.add('collapsed');
+           indicator.classList.add('collapsed');
+         } else {
+           container.classList.remove('collapsed');
+           indicator.classList.remove('collapsed');
+         }
+       }
+     }
+
+     bulkTogglePackage(packageId, enable) {
+       const packageGroup = this.packageGroups[packageId];
+       if (!packageGroup) return;
+       
+       packageGroup.resources.forEach(async (resource) => {
+         await this.toggleResource(resource.resource_id, enable);
+         
+         const checkbox = document.querySelector(`input[data-resource="${resource.resource_id}"]`);
+         if (checkbox) {
+           checkbox.checked = enable;
+         }
+       });
+     }
+
+     setupEventListeners() {
+       const searchInput = document.getElementById('layerSearch');
+       
+       let searchTimeout;
+       searchInput.addEventListener('input', () => {
+         clearTimeout(searchTimeout);
+         searchTimeout = setTimeout(() => {
+           this.filterLayers();
+         }, 300);
+       });
+
+       document.addEventListener('keydown', (e) => {
+         if (e.key === 'Escape') {
+           if (this.panelOpen) {
+             this.closePanel();
+           }
+         }
+       });
+     }
+
+     filterLayers() {
+       const searchTerm = document.getElementById('layerSearch').value.toLowerCase();
+       const layersContainer = document.getElementById('spatialLayersContainer');
+       
+       const filteredResources = this.spatialData.filter(r => 
+         r.package_title.toLowerCase().includes(searchTerm) || 
+         r.resource_name.toLowerCase().includes(searchTerm) || 
+         r.format.toLowerCase().includes(searchTerm)
+       );
+       
+       const groupedResources = {};
+       filteredResources.forEach(res => {
+           if (!groupedResources[res.package_id]) {
+               groupedResources[res.package_id] = { ...this.packageGroups[res.package_id], resources: [] };
+           }
+           groupedResources[res.package_id].resources.push(res);
+       });
+       
+       layersContainer.innerHTML = Object.values(groupedResources).map(group => this.renderPackageGroup(group)).join('');
+     }
+
+     renderLayers() {
+        const container = document.getElementById('spatialLayersContainer');
+        
+        if (this.spatialData.length === 0) {
+            container.innerHTML = `
+                <div class="error-section">
+                    Henüz mekansal kaynak bulunamadı.<br>
+                    <small>Yönetim panelinden kaynakları mekansal olarak işaretleyin.</small>
+                </div>
+            `;
+            return;
+        }
+
+        const html = Object.values(this.packageGroups).map(packageGroup => this.renderPackageGroup(packageGroup)).join('');
+        container.innerHTML = html;
+     }
+     
+     renderPackageGroup(packageGroup) {
+        const isCollapsed = this.collapsedPackages.has(packageGroup.id);
+        const filteredResources = packageGroup.resources;
+        
+        if (filteredResources.length === 0) {
+            return '';
+        }
+        
+        return `
+            <div class="package-group" id="package-${packageGroup.id}">
+                <div class="package-header" onclick="spatialMapManager.togglePackageCollapse('${packageGroup.id}')">
+                    <div class="package-title-row">
+                        <h4 class="package-title">${packageGroup.name}</h4>
+                        <button class="collapse-indicator ${isCollapsed ? 'collapsed' : ''}" id="indicator-${packageGroup.id}">▼</button>
+                    </div>
+                    <div class="package-meta">
+                        <span class="resource-count">${filteredResources.length} kaynak</span>
+                    </div>
+                </div>
+                <div class="resources-container ${isCollapsed ? 'collapsed' : ''}" id="resources-${packageGroup.id}">
+                    ${filteredResources.map(resource => this.renderResourceItem(resource)).join('')}
+                    <div class="bulk-actions">
+                        <button class="bulk-btn" onclick="spatialMapManager.bulkTogglePackage('${packageGroup.id}', true)">
+                            Tümünü Aç
+                        </button>
+                        <button class="bulk-btn" onclick="spatialMapManager.bulkTogglePackage('${packageGroup.id}', false)">
+                            Tümünü Kapat
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+     renderResourceItem(resource) {
+       const format = (resource.format || 'other').toLowerCase();
+       const formatClass = this.getFormatClass(format);
+       const activeClass = this.activeResources.has(resource.resource_id) ? 'active' : '';
+       
+       return `
+         <div class="resource-item ${activeClass}" id="resource-${resource.resource_id}">
+           <div class="resource-info">
+             <div class="resource-name" title="${resource.resource_name}">${resource.resource_name}</div>
+             <div class="resource-meta">
+               <span class="format-badge ${formatClass}">${format.toUpperCase()}</span>
+             </div>
+           </div>
+           <label class="modern-toggle">
+             <input type="checkbox" 
+                     data-resource="${resource.resource_id}" 
+                     onchange="spatialMapManager.toggleResource('${resource.resource_id}', this.checked)">
+             <span class="toggle-slider"></span>
+           </label>
+         </div>
+       `;
+     }
+
+     getFormatClass(format) {
+       const formats = {
+         'csv': 'format-csv', 'json': 'format-json', 'geojson': 'format-geojson',
+         'xlsx': 'format-xlsx', 'xls': 'format-xlsx', 'shp': 'format-shp',
+         'kml': 'format-kml', 'api': 'format-api', 'rest': 'format-api',
+         'wms': 'format-wms', 'geotiff': 'format-geotiff'
+       };
+       return formats[format] || 'format-other';
+     }
+
+     updateStats() {
+       const totalResources = this.spatialData.length;
+       const totalPackages = Object.keys(this.packageGroups).length;
+       const activeResourceCount = this.activeResources.size;
+       const totalFormats = [...new Set(this.spatialData.map(r => r.format))].filter(Boolean).length;
+       
+       document.getElementById('totalSpatialResources').textContent = totalResources.toLocaleString('tr-TR');
+       document.getElementById('totalSpatialPackages').textContent = totalPackages.toLocaleString('tr-TR');
+       document.getElementById('activeLayers').textContent = activeResourceCount.toLocaleString('tr-TR');
+       document.getElementById('totalFormats').textContent = totalFormats.toLocaleString('tr-TR');
+     }
+
+     showError(message) {
+       const container = document.getElementById('spatialLayersContainer');
+       container.innerHTML = `
+         <div class="error-section">
+           ${message}
+         </div>
+       `;
+     }
+   }
+
+   // Global değişken
+   let spatialMapManager;
+
+   // Sayfa yüklendiğinde başlat
+   document.addEventListener('DOMContentLoaded', () => {
+     spatialMapManager = new SpatialMapManager();
+     
+     // GeoRaster kütüphanesinin yüklendiğini kontrol et
+     if (window.GeoRaster && window.GeoRasterLayer) {
+       console.log('GeoRaster kütüphaneleri başarıyla yüklendi');
+     } else {
+       console.warn('GeoRaster kütüphaneleri yüklenemedi - GeoTIFF desteği sınırlı olabilir');
+     }
+   });
+ </script>
+
+{% endblock %}

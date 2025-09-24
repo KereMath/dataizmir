@@ -9,7 +9,7 @@
   <!-- Labrada fontunu Google Fonts üzerinden ekliyoruz -->
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Labrada:wght@400;500&display=swap">
 
-  <!-- CKAN’ın ana stilleri -->
+  <!-- CKAN'ın ana stilleri -->
   <link rel="stylesheet" href="{{ h.url_for_static('/base/css/main.css') }}">
 
   <style>
@@ -69,10 +69,11 @@
       line-height: 32px; /* 146.667% */
       margin-bottom: 0;
     }
-label {
-    cursor: pointer;
-    font-size: 18px !important;
-}
+    label {
+      cursor: pointer;
+      font-size: 18px !important;
+    }
+    
     /*========== FORM TASARIMI ==========*/
     .login-box{width:100%;max-width:560px}
     .login-box h1{margin:0 0 1.5rem;font-size:1.8rem;text-align:center}
@@ -83,6 +84,48 @@ label {
       border:none;border-radius:4px;cursor:pointer;
       background:#007acc;color:#fff;font-size:2rem;
     }
+
+    /*========== ŞİFREMİ UNUTTUM LİNKİ ==========*/
+    .forgot-password-link {
+      display: block;
+      text-align: center;
+      margin-top: 16px;
+      font-family: 'Labrada', serif;
+      font-size: 14px;
+      color: #221D5D;
+      text-decoration: none;
+      transition: color .2s;
+    }
+    .forgot-password-link:hover {
+      color: #007acc;
+      text-decoration: underline;
+    }
+
+    /*========== ALTTAN KAYIT KUTUSU ==========*/
+    .login-register-info {
+      margin-top: 36px;
+      text-align: center;
+      font-feature-settings: 'liga' off, 'clig' off;
+      font-family: 'Labrada', serif;
+      font-size: 15px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 22px;
+      color: var(--Light-Text-Secondary, #666);
+    }
+    .login-register-link {
+      color: #221D5D;
+      font-feature-settings: 'liga' off, 'clig' off;
+      font-family: 'Labrada', serif;
+      font-size: 15px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 22px;
+      text-decoration: none;
+      margin-left: 3px;
+      transition: color .2s;
+    }
+    .login-register-link:hover { color: #007acc; text-decoration: underline; }
 
     @media (max-width: 1100px) {
       .login-wrapper { left: 0; width: 100vw; }
@@ -119,6 +162,7 @@ label {
           <div class="login-welcome-title">Data İzmir Platformuna Hoşgeldiniz!</div>
           <div class="login-welcome-desc">Hesabınıza giriş yaparak verilerimizi incelemeye başlayın...</div>
         </div>
+        
         {% if error_summary %}
           {{ form.errors(errors=error_summary) }}
         {% endif %}
@@ -130,7 +174,15 @@ label {
         <input id="password" name="password" type="password" required>
 
         <button type="submit">{{ _('Login') }}</button>
+
+        <!-- ŞİFREMİ UNUTTUM LİNKİ -->
+        <a href="{{ h.url_for('user.request_reset') }}" class="forgot-password-link">
+          Şifremi unuttum
+        </a>
+
       </form>
+
+
     </div>
   </div>
 

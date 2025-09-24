@@ -259,9 +259,32 @@ def get_spatial_resource_list():
 
 # FILE: spatial_api.py
 
+# FILE: spatial_api.py
+
 @spatial_api.route('/api/spatial-resources/<resource_id>/data')
 def get_spatial_data(resource_id):
     """Resource'un spatial verisini parse ederek harita için hazırlar"""
+
+    # --- YENİ MANUEL URL KONTROLÜ ---
+    MANUAL_URLS = {
+        # Millet Bahçeleri
+        "2541d889-fd96-4611-bfae-7a7419e10a7d": "https://dataizmir.izka.org.tr/dataset/ec344742-2007-4a4e-896a-de12e492395c/resource/2541d889-fd96-4611-bfae-7a7419e10a7d/download/izmir_millet_bahceleri.geojson",
+        # TUSAGA-Aktif İstasyon Bilgileri
+        "471fafb6-42d2-424d-a256-ada765e52945": "https://dataizmir.izka.org.tr/dataset/da6be125-b702-4bb7-b2ee-ad404621be7f/resource/471fafb6-42d2-424d-a256-ada765e52945/download/izmir_tusaga_aktif_istasyonlari.geojson"
+    }
+
+    if resource_id in MANUAL_URLS:
+        print(f"Manuel URL kullanılıyor: {resource_id}")
+        # Manuel URL'ler her zaman GeoJSON olduğu için 'geojson_url' tipiyle direkt frontend'e gönder
+        return jsonify({
+            'success': True,
+            'type': 'geojson_url',
+            'url': MANUAL_URLS[resource_id],
+            'message': 'Manual GeoJSON URL will be fetched by the frontend.'
+        })
+    # --- MANUEL KONTROL SONU ---
+
+    # Manuel listede olmayan kaynaklar için mevcut mantık devam ediyor
     try:
         query = text("""
             SELECT r.url, r.format, p.name as package_name
@@ -286,22 +309,22 @@ def get_spatial_data(resource_id):
         
         print(f"Processing spatial data: {url} (format: {format_type})")
 
-        # MODIFIED LOGIC: Treat API formats like WMS/WFS
-        if format_type in ['json', 'api', 'rest', 'soap']:
-            return jsonify({
-                'success': True,
-                'type': 'api', # New type for the frontend to recognize
-                'url': url,
-                'message': 'API endpoint will be processed on the frontend'
-            })
         if format_type == 'geojson':
             return jsonify({
                 'success': True,
-                'type': 'geojson_url',  # Frontend'in tanıması için yeni tip
+                'type': 'geojson_url',
                 'url': url,
                 'message': 'GeoJSON dosyası doğrudan frontend tarafından çekilecek.'
             })
-        # --- Other formats remain unchanged ---
+
+        if format_type in ['json', 'api', 'rest', 'soap']:
+            return jsonify({
+                'success': True,
+                'type': 'api',
+                'url': url,
+                'message': 'API endpoint will be processed on the frontend'
+            })
+        
         if format_type in ['wms', 'wfs']:
             return jsonify({
                 'success': True,
@@ -326,20 +349,20 @@ def get_spatial_data(resource_id):
                 'url': proxy_url,
                 'message': 'SHP dosyası doğrudan frontendde işlenecek'
             })
-        
+
         elif format_type in ['csv', 'xls', 'xlsx']:
             return process_tabular_data(url, format_type, resource_id)
-        elif format_type in ['kml', 'gpx'] and SPATIAL_SUPPORT:
+        elif format_type in ['kml', 'gpx'] and SPATAL_SUPPORT:
             return process_spatial_files(url, format_type)
         else:
             return jsonify({
                 'error': f'Desteklenmeyen format: {format_type}',
-                'suggestion': 'Desteklenen formatlar: GeoJSON, CSV, Excel, JSON/API, SHP (CKAN GeoView), KML, WMS, WFS, GeoTIFF'
             }), 400
             
     except Exception as e:
         print(f"Spatial data processing error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
 @spatial_api.route('/api/spatial-resources/<resource_id>/columns')
 def get_resource_columns(resource_id):
     """Resource'un sütunlarını döndür (manuel seçim için)"""

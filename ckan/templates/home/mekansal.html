@@ -1325,8 +1325,13 @@
  async processGeoJsonFrontend(url, resourceId) {
         const resourceLayer = this.resourceLayers[resourceId];
         try {
-            console.log(`[DEBUG] Frontend GeoJSON isteği: ${url}`);
-            const response = await fetch(url, { mode: 'cors' });
+            console.log(`[DEBUG] Frontend GeoJSON isteği (kimlik bilgileriyle): ${url}`);
+            
+            // --- DEĞİŞİKLİK BURADA ---
+            const response = await fetch(url, { 
+                mode: 'cors',
+                credentials: 'include' // Kullanıcı çerezlerini isteğe dahil et
+            });
 
             if (!response.ok) {
                 throw new Error(`Dosya yüklenemedi. Sunucu yanıtı: ${response.status} ${response.statusText}`);
@@ -1353,6 +1358,8 @@
             if (checkbox) checkbox.checked = false;
         }
     }
+
+    
      getResourceColor(resourceId) {
        const colors = [
          '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 

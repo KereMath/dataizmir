@@ -261,21 +261,35 @@ def get_spatial_resource_list():
 
 # FILE: spatial_api.py
 
+# FILE: spatial_api.py
+
 @spatial_api.route('/api/spatial-resources/<resource_id>/data')
 def get_spatial_data(resource_id):
     """Resource'un spatial verisini parse ederek harita için hazırlar"""
 
-    # --- YENİ MANUEL URL KONTROLÜ ---
+    # --- MANUEL URL LİSTESİ (YENİ KAYNAKLAR EKLENDİ) ---
     MANUAL_URLS = {
+        # --- Önceki Eklenenler ---
         # Millet Bahçeleri
         "2541d889-fd96-4611-bfae-7a7419e10a7d": "https://dataizmir.izka.org.tr/dataset/ec344742-2007-4a4e-896a-de12e492395c/resource/2541d889-fd96-4611-bfae-7a7419e10a7d/download/izmir_millet_bahceleri.geojson",
         # TUSAGA-Aktif İstasyon Bilgileri
-        "471fafb6-42d2-424d-a256-ada765e52945": "https://dataizmir.izka.org.tr/dataset/da6be125-b702-4bb7-b2ee-ad404621be7f/resource/471fafb6-42d2-424d-a256-ada765e52945/download/izmir_tusaga_aktif_istasyonlari.geojson"
+        "471fafb6-42d2-424d-a256-ada765e52945": "https://dataizmir.izka.org.tr/dataset/da6be125-b702-4bb7-b2ee-ad404621be7f/resource/471fafb6-42d2-424d-a256-ada765e52945/download/izmir_tusaga_aktif_istasyonlari.geojson",
+        
+        # --- Yeni Eklenenler ---
+        # Banliyö İstasyonları
+        "5d8f0495-e7ff-42cd-91bd-ff127c980bd0": "https://acikveri.bizizmir.com/dataset/e3854620-a776-47d4-a63c-9180fc1d4e9e/resource/5d8f0495-e7ff-42cd-91bd-ff127c980bd0/download/izban.geojson",
+        # Tramvay Hatları
+        "97905570-23b5-4066-80e1-37d611d2962c": "https://acikveri.bizizmir.com/dataset/9447be73-ecc1-4715-b6be-f0cbe915aed9/resource/97905570-23b5-4066-80e1-37d611d2962c/download/tramvay.geojson",
+        # İzmir Deprem Tehlike Verisi
+        "6c68a5ff-78cd-417b-a061-5a7afcba018c": "https://dataizmir.izka.org.tr/dataset/9a713c11-30b9-497c-8504-afe00d69f14f/resource/6c68a5ff-78cd-417b-a061-5a7afcba018c/download/izmri_deprem_tehlike.geojson",
+        # Bisiklet Altyapı Haritası
+        "966cffaa-ccf1-4306-8da9-ac0cffbebb88": "https://acikveri.bizizmir.com/dataset/e3553de7-c06d-4082-892b-974d2187a234/resource/966cffaa-ccf1-4306-8da9-ac0cffbebb88/download/bisikletyollari.geojson",
+        # Metro İstasyonları
+        "7424cbc7-fa12-417f-9770-a0c104fc9475": "https://acikveri.bizizmir.com/dataset/d5c5522a-d6f6-4758-a2ec-0dd520e06f55/resource/7424cbc7-fa12-417f-9770-a0c104fc9475/download/metro.geojson"
     }
 
     if resource_id in MANUAL_URLS:
         print(f"Manuel URL kullanılıyor: {resource_id}")
-        # Manuel URL'ler her zaman GeoJSON olduğu için 'geojson_url' tipiyle direkt frontend'e gönder
         return jsonify({
             'success': True,
             'type': 'geojson_url',
@@ -352,7 +366,7 @@ def get_spatial_data(resource_id):
 
         elif format_type in ['csv', 'xls', 'xlsx']:
             return process_tabular_data(url, format_type, resource_id)
-        elif format_type in ['kml', 'gpx'] and SPATAL_SUPPORT:
+        elif format_type in ['kml', 'gpx'] and SPATIAL_SUPPORT:
             return process_spatial_files(url, format_type)
         else:
             return jsonify({
@@ -362,7 +376,6 @@ def get_spatial_data(resource_id):
     except Exception as e:
         print(f"Spatial data processing error: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
 @spatial_api.route('/api/spatial-resources/<resource_id>/columns')
 def get_resource_columns(resource_id):
     """Resource'un sütunlarını döndür (manuel seçim için)"""

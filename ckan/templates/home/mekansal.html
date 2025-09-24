@@ -1068,9 +1068,34 @@
         if (group.getLayers().length > 0) this.map.fitBounds(group.getBounds().pad(0.1));
     }
 
-     togglePanel() { document.getElementById('layersPanel').classList.toggle('open'); document.getElementById('panelOverlay').classList.toggle('active'); document.getElementById('panelToggle').classList.toggle('active'); }
-     closePanel() { document.getElementById('layersPanel').classList.remove('open'); document.getElementById('panelOverlay').classList.remove('active'); document.getElementById('panelToggle').classList.remove('active');}
-     togglePackageCollapse(packageId) { document.getElementById(`resources-${packageId}`).classList.toggle('collapsed'); document.getElementById(`indicator-${packageId}`).classList.toggle('collapsed'); }
+togglePanel() {
+        const panel = document.getElementById('layersPanel');
+        const overlay = document.getElementById('panelOverlay');
+        const toggleButton = document.getElementById('panelToggle');
+        const icon = document.getElementById('toggleIcon');
+
+        // Class'ları değiştir
+        panel.classList.toggle('open');
+        overlay.classList.toggle('active');
+        toggleButton.classList.toggle('active');
+
+        // 💡 İkonu durumuna göre değiştir (eklenen kısım)
+        if (panel.classList.contains('open')) {
+            icon.textContent = '×';
+        } else {
+            icon.textContent = '☰';
+        }
+     }
+
+     closePanel() {
+        document.getElementById('layersPanel').classList.remove('open');
+        document.getElementById('panelOverlay').classList.remove('active');
+        document.getElementById('panelToggle').classList.remove('active');
+        
+        // 💡 İkonu her zaman başlangıç durumuna getir (eklenen kısım)
+        document.getElementById('toggleIcon').textContent = '☰';
+     }
+    togglePackageCollapse(packageId) { document.getElementById(`resources-${packageId}`).classList.toggle('collapsed'); document.getElementById(`indicator-${packageId}`).classList.toggle('collapsed'); }
 
      bulkTogglePackage(packageId, enable) {
         this.packageGroups[packageId].resources.forEach(res => {

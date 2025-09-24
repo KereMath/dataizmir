@@ -1101,7 +1101,7 @@
        }
      }
 
-     async loadResourceData(resourceId) {
+         async loadResourceData(resourceId) {
         const resourceLayer = this.resourceLayers[resourceId];
         if (!resourceLayer || resourceLayer.loaded) return;
 
@@ -1137,10 +1137,11 @@
             
             if (result.type === 'shp') {
                 await this.processShpData(result.url, resourceId);
-                resourceLayer.loaded = true;
-            } else if (result.type === 'api') { // NEW: Handle API type from backend
+            } else if (result.type === 'api') {
                 await this.processApiDataFrontend(result.url, resourceId);
-            } else { // Default case for GeoJSON from backend (e.g., from a processed CSV)
+            } else if (result.type === 'geojson_url') { // <-- YENİ EKLENEN SATIR
+                await this.processGeoJsonFrontend(result.url, resourceId);
+            } else { 
                 this.addGeoJSONToLayer(result.data, resourceLayer.layer, resourceId);
                 resourceLayer.loaded = true;
             }
@@ -1321,7 +1322,37 @@
             alert('İstek gönderilirken hata: ' + error.message);
         }
     }
+ async processGeoJsonFrontend(url, resourceId) {
+        const resourceLayer = this.resourceLayers[resourceId];
+        try {
+            console.log(`[DEBUG] Frontend GeoJSON isteği: ${url}`);
+            const response = await fetch(url, { mode: 'cors' });
 
+            if (!response.ok) {
+                throw new Error(`Dosya yüklenemedi. Sunucu yanıtı: ${response.status} ${response.statusText}`);
+            }
+
+            const geojsonData = await response.json();
+            
+            if (geojsonData.type !== 'FeatureCollection' && geojsonData.type !== 'Feature') {
+                throw new Error('Geçerli bir GeoJSON dosyası değil.');
+            }
+
+            this.addGeoJSONToLayer(geojsonData, resourceLayer.layer, resourceId);
+            resourceLayer.loaded = true;
+
+        } catch (error) {
+            console.error(`[DEBUG] Frontend GeoJSON işleme hatası:`, error);
+            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                this.showResourceError(resourceId, 'GeoJSON Hatası: CORS policy engelliyor olabilir.');
+            } else {
+                this.showResourceError(resourceId, `GeoJSON yüklenemedi: ${error.message}`);
+            }
+            resourceLayer.loaded = false;
+            const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+            if (checkbox) checkbox.checked = false;
+        }
+    }
      getResourceColor(resourceId) {
        const colors = [
          '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', 

@@ -294,7 +294,13 @@ def get_spatial_data(resource_id):
                 'url': url,
                 'message': 'API endpoint will be processed on the frontend'
             })
-        
+        if format_type == 'geojson':
+            return jsonify({
+                'success': True,
+                'type': 'geojson_url',  # Frontend'in tanıması için yeni tip
+                'url': url,
+                'message': 'GeoJSON dosyası doğrudan frontend tarafından çekilecek.'
+            })
         # --- Other formats remain unchanged ---
         if format_type in ['wms', 'wfs']:
             return jsonify({
@@ -321,8 +327,6 @@ def get_spatial_data(resource_id):
                 'message': 'SHP dosyası doğrudan frontendde işlenecek'
             })
         
-        elif format_type == 'geojson':
-            return process_geojson(url)
         elif format_type in ['csv', 'xls', 'xlsx']:
             return process_tabular_data(url, format_type, resource_id)
         elif format_type in ['kml', 'gpx'] and SPATIAL_SUPPORT:

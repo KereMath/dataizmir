@@ -257,6 +257,8 @@ def get_spatial_resource_list():
             'spatial_resources': []
         }), 500
 
+# FILE: spatial_api.py
+
 @spatial_api.route('/api/spatial-resources/<resource_id>/data')
 def get_spatial_data(resource_id):
     """Resource'un spatial verisini parse ederek harita için hazırlar"""
@@ -283,8 +285,17 @@ def get_spatial_data(resource_id):
         format_type = (result.format or '').lower()
         
         print(f"Processing spatial data: {url} (format: {format_type})")
+
+        # MODIFIED LOGIC: Treat API formats like WMS/WFS
+        if format_type in ['json', 'api', 'rest', 'soap']:
+            return jsonify({
+                'success': True,
+                'type': 'api', # New type for the frontend to recognize
+                'url': url,
+                'message': 'API endpoint will be processed on the frontend'
+            })
         
-        # WMS, WFS ve GeoTIFF için sadece URL'i döndürerek iş yükünü frontend'e bırak
+        # --- Other formats remain unchanged ---
         if format_type in ['wms', 'wfs']:
             return jsonify({
                 'success': True,
@@ -294,7 +305,6 @@ def get_spatial_data(resource_id):
             })
         
         elif format_type == 'geotiff':
-            # GeoTIFF için özel durum - COG (Cloud Optimized GeoTIFF) URL'i döndür
             return jsonify({
                 'success': True,
                 'type': 'geotiff',
@@ -315,8 +325,6 @@ def get_spatial_data(resource_id):
             return process_geojson(url)
         elif format_type in ['csv', 'xls', 'xlsx']:
             return process_tabular_data(url, format_type, resource_id)
-        elif format_type in ['json', 'api', 'rest', 'soap']:
-            return process_api_data(url, format_type, resource_id)
         elif format_type in ['kml', 'gpx'] and SPATIAL_SUPPORT:
             return process_spatial_files(url, format_type)
         else:
@@ -328,7 +336,6 @@ def get_spatial_data(resource_id):
     except Exception as e:
         print(f"Spatial data processing error: {str(e)}")
         return jsonify({'error': str(e)}), 500
-
 @spatial_api.route('/api/spatial-resources/<resource_id>/columns')
 def get_resource_columns(resource_id):
     """Resource'un sütunlarını döndür (manuel seçim için)"""
@@ -701,7 +708,7 @@ def process_api_data(url, format_type, resource_id):
     except Exception as e:
         print(f"API data işleme hatası (genel): {e}")
         return jsonify({'success': False, 'error': f'API verisi işlenemedi: {str(e)}'}), 500
-        
+
 def process_tabular_data(url, format_type, resource_id):
     """CSV/Excel dosyalarını parse et ve koordinat sütunlarını akıllıca tespit et"""
     try:

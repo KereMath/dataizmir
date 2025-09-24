@@ -727,78 +727,8 @@
         console.log(`${Object.keys(this.packageGroups).length} paket grubu oluşturuldu`);
     }
 
-     async loadResourceData(resourceId) {
-       const resourceLayer = this.resourceLayers[resourceId];
-       if (!resourceLayer || resourceLayer.loaded) return;
 
-       try {
-         console.log(`[DEBUG] Resource verisi yükleniyor: ${resourceId}`);
-         this.showLoadingForResource(resourceId);
 
-         if (['wms', 'wfs', 'geotiff'].includes(resourceLayer.resource.format?.toLowerCase())) {
-             await this.addLayerFromUrl(resourceLayer.resource.url, resourceLayer.resource.format?.toLowerCase(), resourceLayer.layer, resourceId);
-             resourceLayer.loaded = true;
-             this.hideLoadingForResource(resourceId);
-             return;
-         }
-
-         const apiUrl = `/api/spatial-resources/${resourceId}/data`;
-         const response = await fetch(apiUrl, { credentials: 'include' });
-         
-         if (!response.ok) {
-            // Hata yanıtını `error` nesnesi olarak fırlat, böylece catch bloğu işleyebilir.
-            throw response;
-         }
-         
-         const result = await response.json();
-         
-         if (!result.success) {
-           if (result.columns) {
-             this.hideLoadingForResource(resourceId);
-             await this.showManualColumnSelection(resourceId, result.columns);
-           } else {
-             throw new Error(result.error || 'Bilinmeyen API hatası');
-           }
-           return;
-         }
-         
-         if (result.type === 'shp') {
-           await this.processShpData(result.url, resourceId);
-         } else {
-           this.addGeoJSONToLayer(result.data, resourceLayer.layer, resourceId);
-         }
-         
-         resourceLayer.loaded = true;
-         this.hideLoadingForResource(resourceId);
-         
-       } catch (error) {
-            console.error('[DEBUG] Resource data yüklenirken hata:', error);
-            this.hideLoadingForResource(resourceId);
-            
-            let errorMessage = `Bilinmeyen bir hata oluştu: ${error.message || 'Detay yok'}`;
-
-            // Eğer hata bir fetch API'sinden gelen Response nesnesi ise (örn: 500, 404)
-            if (error instanceof Response) {
-                try {
-                    const errorJson = await error.json();
-                    errorMessage = errorJson.error || JSON.stringify(errorJson);
-                    if (errorJson.details) {
-                        errorMessage += ` (Detay: ${errorJson.details.substring(0, 150)}...)`;
-                    }
-                } catch (e) {
-                    errorMessage = `Sunucu Hatası (${error.status}): ${await error.text()}`;
-                }
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-
-            this.showResourceError(resourceId, errorMessage);
-
-            const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
-            if (checkbox) checkbox.checked = false;
-       }
-     }
-     
      async addLayerFromUrl(url, format, layerGroup, resourceId) {
         layerGroup.clearLayers();
         let newLayer;
@@ -1171,44 +1101,226 @@
        }
      }
 
-     async processManualSelection(resourceId, buttonElement) {
-       const modal = buttonElement.closest('.column-modal-overlay');
-       const latCol = modal.querySelector('#latColumn').value;
-       const lonCol = modal.querySelector('#lonColumn').value;
-       
-       if (!latCol || !lonCol) {
-         alert('Lütfen enlem ve boylam sütunlarını seçin');
-         return;
-       }
-       
-       try {
-         const response = await fetch(`/api/spatial-resources/${resourceId}/process-manual`, {
-           method: 'POST',
-           headers: {
-             'Content-Type': 'application/json'
-           },
-           credentials: 'include',
-           body: JSON.stringify({
-             lat_column: latCol,
-             lon_column: lonCol
-           })
-         });
-         
-         const result = await response.json();
-         
-         if (result.success) {
-           const resourceLayer = this.resourceLayers[resourceId];
-           this.addGeoJSONToLayer(result.data, resourceLayer.layer, resourceId);
-           resourceLayer.loaded = true;
-           modal.remove();
-         } else {
-           alert('Veri işlenirken hata: ' + result.error);
-         }
-         
-       } catch (error) {
-         alert('İstek gönderilirken hata: ' + error.message);
-       }
-     }
+     async loadResourceData(resourceId) {
+        const resourceLayer = this.resourceLayers[resourceId];
+        if (!resourceLayer || resourceLayer.loaded) return;
+
+        try {
+            console.log(`[DEBUG] Resource verisi yükleniyor: ${resourceId}`);
+            this.showLoadingForResource(resourceId);
+
+            if (['wms', 'wfs', 'geotiff'].includes(resourceLayer.resource.format?.toLowerCase())) {
+                await this.addLayerFromUrl(resourceLayer.resource.url, resourceLayer.resource.format?.toLowerCase(), resourceLayer.layer, resourceId);
+                resourceLayer.loaded = true;
+                this.hideLoadingForResource(resourceId);
+                return;
+            }
+
+            const apiUrl = `/api/spatial-resources/${resourceId}/data`;
+            const response = await fetch(apiUrl, { credentials: 'include' });
+            
+            if (!response.ok) {
+                throw response;
+            }
+            
+            const result = await response.json();
+            
+            if (!result.success) {
+                if (result.columns) {
+                    this.hideLoadingForResource(resourceId);
+                    await this.showManualColumnSelection(resourceId, result.columns);
+                } else {
+                    throw new Error(result.error || 'Bilinmeyen API hatası');
+                }
+                return;
+            }
+            
+            if (result.type === 'shp') {
+                await this.processShpData(result.url, resourceId);
+                resourceLayer.loaded = true;
+            } else if (result.type === 'api') { // NEW: Handle API type from backend
+                await this.processApiDataFrontend(result.url, resourceId);
+            } else { // Default case for GeoJSON from backend (e.g., from a processed CSV)
+                this.addGeoJSONToLayer(result.data, resourceLayer.layer, resourceId);
+                resourceLayer.loaded = true;
+            }
+            
+            this.hideLoadingForResource(resourceId);
+            
+        } catch (error) {
+             console.error('[DEBUG] Resource data yüklenirken hata:', error);
+             this.hideLoadingForResource(resourceId);
+             
+             let errorMessage = `Bilinmeyen bir hata oluştu: ${error.message || 'Detay yok'}`;
+
+             if (error instanceof Response) {
+                 try {
+                     const errorJson = await error.json();
+                     errorMessage = errorJson.error || JSON.stringify(errorJson);
+                     if (errorJson.details) {
+                         errorMessage += ` (Detay: ${errorJson.details.substring(0, 150)}...)`;
+                     }
+                 } catch (e) {
+                     errorMessage = `Sunucu Hatası (${error.status}): ${await error.text()}`;
+                 }
+             } else if (error.message) {
+                 errorMessage = error.message;
+             }
+
+             this.showResourceError(resourceId, errorMessage);
+
+             const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+             if (checkbox) checkbox.checked = false;
+        }
+    }
+
+    // NEW HELPER FUNCTION
+    async processApiDataFrontend(apiUrl, resourceId) {
+        const resourceLayer = this.resourceLayers[resourceId];
+        try {
+            console.log(`[DEBUG] Frontend API isteği: ${apiUrl}`);
+            const response = await fetch(apiUrl, { mode: 'cors' });
+
+            if (!response.ok) {
+                throw new Error(`API isteği başarısız: Status ${response.status}`);
+            }
+
+            const jsonData = await response.json();
+            const dataArray = this.findDataArrayInJson(jsonData);
+
+            if (!dataArray || dataArray.length === 0) {
+                throw new Error('API yanıtında uygun formatta (liste) veri bulunamadı.');
+            }
+
+            resourceLayer.fetchedData = dataArray;
+
+            const coordResult = this.smartDetectCoordinateColumnsJS(dataArray);
+
+            if (coordResult.found) {
+                const geojson = this.convertDataToGeoJSON(dataArray, coordResult.columns);
+                this.addGeoJSONToLayer(geojson, resourceLayer.layer, resourceId);
+                resourceLayer.loaded = true;
+            } else {
+                this.hideLoadingForResource(resourceId);
+                await this.showManualColumnSelection(resourceId, coordResult.columns);
+            }
+        } catch (error) {
+            console.error(`[DEBUG] Frontend API işleme hatası:`, error);
+            if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+                 this.showResourceError(resourceId, 'API Hatası: CORS policy engelliyor olabilir.');
+            } else {
+                 this.showResourceError(resourceId, `API verisi işlenemedi: ${error.message}`);
+            }
+            resourceLayer.loaded = false;
+            const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+            if (checkbox) checkbox.checked = false;
+            this.hideLoadingForResource(resourceId);
+        }
+    }
+
+    // NEW HELPER FUNCTION
+    findDataArrayInJson(jsonData) {
+        if (Array.isArray(jsonData)) return jsonData;
+        if (typeof jsonData === 'object' && jsonData !== null) {
+            const keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features'];
+            for (const key of keys) {
+                if (key in jsonData && Array.isArray(jsonData[key])) return jsonData[key];
+            }
+            for (const key in jsonData) {
+                if (Array.isArray(jsonData[key]) && jsonData[key].length > 0) return jsonData[key];
+            }
+        }
+        return null;
+    }
+
+    // NEW HELPER FUNCTION
+    smartDetectCoordinateColumnsJS(dataArray) {
+        if (!dataArray || dataArray.length === 0) {
+            return { found: false, columns: [] };
+        }
+        const columns = Object.keys(dataArray[0]);
+        const latPatterns = [/^(lat|latitude|enlem|y|kuzey)$/i, /lat/i, /enlem/i, /kuzey/i];
+        const lonPatterns = [/^(lon|lng|longitude|boylam|x|dogu)$/i, /lon|lng/i, /boylam/i, /dogu/i];
+        let latCol = null, lonCol = null;
+
+        for (const p of latPatterns) { if (latCol = columns.find(c => p.test(c))) break; }
+        for (const p of lonPatterns) { if (lonCol = columns.find(c => p.test(c))) break; }
+        
+        if (latCol && lonCol && latCol !== lonCol) {
+            return { found: true, columns: { lat: latCol, lon: lonCol } };
+        }
+        return { found: false, columns: columns };
+    }
+
+    // NEW HELPER FUNCTION
+    convertDataToGeoJSON(dataArray, coordColumns) {
+        const features = [];
+        const { lat: latCol, lon: lonCol } = coordColumns;
+        for (const row of dataArray) {
+            try {
+                const lat = parseFloat(String(row[latCol]).replace(',', '.'));
+                const lon = parseFloat(String(row[lonCol]).replace(',', '.'));
+                if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
+                const properties = { ...row };
+                features.push({
+                    type: 'Feature',
+                    geometry: { type: 'Point', coordinates: [lon, lat] },
+                    properties,
+                });
+            } catch (e) { /* ignore row */ }
+        }
+        return { type: 'FeatureCollection', features };
+    }
+
+    // MODIFIED FUNCTION
+    async processManualSelection(resourceId, buttonElement) {
+        const modal = buttonElement.closest('.column-modal-overlay');
+        const latCol = modal.querySelector('#latColumn').value;
+        const lonCol = modal.querySelector('#lonColumn').value;
+        
+        if (!latCol || !lonCol) {
+            alert('Lütfen enlem ve boylam sütunlarını seçin');
+            return;
+        }
+
+        const resourceLayer = this.resourceLayers[resourceId];
+
+        // NEW: Handle client-side data first (for APIs)
+        if (resourceLayer && resourceLayer.fetchedData) {
+            console.log('[DEBUG] Manuel seçim client-side veri ile işleniyor.');
+            try {
+                const geojson = this.convertDataToGeoJSON(resourceLayer.fetchedData, { lat: latCol, lon: lonCol });
+                this.addGeoJSONToLayer(geojson, resourceLayer.layer, resourceId);
+                resourceLayer.loaded = true;
+                this.hideLoadingForResource(resourceId);
+                modal.remove();
+            } catch(error) {
+                 alert('Veri işlenirken hata: ' + error.message);
+            }
+            return;
+        }
+
+        // Fallback to existing backend processing (for CSV, etc.)
+        console.log('[DEBUG] Manuel seçim backend ile işleniyor.');
+        try {
+            const response = await fetch(`/api/spatial-resources/${resourceId}/process-manual`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({ lat_column: latCol, lon_column: lonCol })
+            });
+            const result = await response.json();
+            if (result.success) {
+                this.addGeoJSONToLayer(result.data, resourceLayer.layer, resourceId);
+                resourceLayer.loaded = true;
+                modal.remove();
+            } else {
+                alert('Veri işlenirken hata: ' + result.error);
+            }
+        } catch (error) {
+            alert('İstek gönderilirken hata: ' + error.message);
+        }
+    }
 
      getResourceColor(resourceId) {
        const colors = [

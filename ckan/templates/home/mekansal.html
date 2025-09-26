@@ -375,6 +375,8 @@
     }
 
     addGeoJSONToLayer(geojsonData, layerGroup, resourceId) {
+          console.log('İşlenecek GeoJSON verisi:', resourceId, geojsonData);
+
       try {
         layerGroup.clearLayers();
         const resource = this.spatialData.find(r => r.resource_id === resourceId);

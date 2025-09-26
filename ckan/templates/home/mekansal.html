@@ -374,65 +374,162 @@
       }
     }
 
-    addGeoJSONToLayer(geojsonData, layerGroup, resourceId) {
-          console.log('İşlenecek GeoJSON verisi:', resourceId, geojsonData);
+   /* Cluster + Glow + Pane */
+     addGeoJSONToLayer(geojsonData, layerGroup, resourceId) {
+       try {
+         layerGroup.clearLayers();
+         const resource = this.spatialData.find(r => r.resource_id === resourceId);
+         if (!resource) return;
 
-      try {
-        layerGroup.clearLayers();
-        const resource = this.spatialData.find(r => r.resource_id === resourceId);
-        if (!resource) return;
+         const color = this.getResourceColor(resourceId);
+         const paneName = this.createPaneForResource(resourceId, false);
 
-        const color = this.getResourceColor(resourceId);
-        const paneName = this.createPaneForResource(resourceId, false);
+         // Önce geometrileri ayır
+         const pointFeatures = [];
+         const nonPointFeatures = [];
+         
+         geojsonData.features.forEach(feature => {
+           if (feature.geometry && feature.geometry.type === 'Point') {
+             pointFeatures.push(feature);
+           } else {
+             nonPointFeatures.push(feature);
+           }
+         });
 
-        const cluster = L.markerClusterGroup({
-          spiderfyOnEveryZoom: false, spiderfyOnMaxZoom: true, showCoverageOnHover: false,
-          disableClusteringAtZoom: 16, maxClusterRadius: 50
-        });
+         // Marker Cluster (sadece Point'ler için)
+         const cluster = L.markerClusterGroup({
+           spiderfyOnEveryZoom: false,
+           spiderfyOnMaxZoom: true,
+           showCoverageOnHover: false,
+           disableClusteringAtZoom: 16,
+           maxClusterRadius: 50
+         });
 
-        const getDivIcon = (focused) => L.divIcon({
-          className: focused ? 'pin-glow pin-focus' : 'pin-glow',
-          html: `<div style="width:${focused?18:14}px;height:${focused?18:14}px;background:${color};border:2px solid #fff;border-radius:50%"></div>`,
-          iconSize: [focused?22:18, focused?22:18],
-          iconAnchor: [focused?11:9, focused?11:9]
-        });
+         const getDivIcon = () => L.divIcon({
+           className: 'pin-glow',
+           html: `<div style="width:14px;height:14px;background:${color};border:2px solid #fff;border-radius:50%"></div>`,
+           iconSize: [18,18],
+           iconAnchor: [9,9]
+         });
 
-        const isFocused = (id) => this.focusMode && this.focusedResourceId === id;
+         // Point'leri cluster'a ekle
+         pointFeatures.forEach(feature => {
+           const [lon, lat] = feature.geometry.coordinates;
+           const marker = L.marker([lat, lon], { 
+             icon: getDivIcon(), 
+             pane: paneName 
+           });
+           const popupContent = this.createPopupContent(feature, resource);
+           marker.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
+           cluster.addLayer(marker);
+         });
 
-        const vectorLayer = L.geoJSON(geojsonData, {
-    pane: paneName,
-    filter: (feature) => feature.geometry && feature.geometry.type !== 'Point',
-    
-    // ============ BURAYI DEĞİŞTİRİN ============
-    // Geçici olarak tüm stilleri sabit ve görünür değerlere ayarlayalım
-    style: () => {
-        return {
-            color: '#FF0000', // Sabit, parlak bir renk (kırmızı)
-            weight: 5,        // Çizgiyi kalın yap
-            opacity: 1        // Tamamen görünür yap
-        };
-    },
-    // ============ DEĞİŞİKLİK SONU ============
+         // Vector Layer (Point olmayan geometriler için)
+         let vectorLayer = null;
+         if (nonPointFeatures.length > 0) {
+           const nonPointGeoJSON = {
+             type: 'FeatureCollection',
+             features: nonPointFeatures
+           };
+           
+           console.log(`[DEBUG] Non-point GeoJSON oluşturuluyor:`, nonPointGeoJSON);
+           console.log(`[DEBUG] İlk geometri tipi:`, nonPointFeatures[0]?.geometry?.type);
+           
+           vectorLayer = L.geoJSON(nonPointGeoJSON, {
+             pane: paneName,
+             style: (feature) => {
+               const style = {
+                 color: color, 
+                 weight: 3, 
+                 opacity: 1.0,
+                 fillColor: color, 
+                 fillOpacity: 0.3
+               };
+               console.log(`[DEBUG] Style uygulanıyor:`, style, feature.geometry?.type);
+               return style;
+             },
+             onEachFeature: (feature, layer) => {
+               const popupContent = this.createPopupContent(feature, resource);
+               layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
+               
+               // Hover efektleri
+               if (layer.setStyle) {
+                 layer.on('mouseover', () => {
+                   layer.setStyle({ weight: 4, fillOpacity: 0.5 });
+                 });
+                 layer.on('mouseout', () => {
+                   layer.setStyle({ weight: 3, fillOpacity: 0.3 });
+                 });
+               }
+               
+               console.log(`[DEBUG] Layer oluşturuldu:`, layer, feature.geometry?.type);
+             }
+           });
+           
+           console.log(`[DEBUG] Vector layer oluşturuldu:`, vectorLayer);
+         }
 
-    onEachFeature: (feature, layer) => {
-        const popupContent = this.createPopupContent(feature, resource);
-        layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
-    }
-});
+         // Layer'ları ana gruba ekle
+         if (cluster.getLayers().length > 0) {
+           console.log(`[DEBUG] Cluster ekleniyor:`, cluster.getLayers().length, 'marker');
+           layerGroup.addLayer(cluster);
+         }
+         
+         if (vectorLayer) {
+           console.log(`[DEBUG] Vector layer ekleniyor`);
+           layerGroup.addLayer(vectorLayer);
+           
+           // MANUAL CONTROL: Layer'ı doğrudan haritaya da ekle
+           console.log(`[DEBUG] Layer'ı manuel haritaya ekliyorum`);
+           vectorLayer.addTo(this.map);
+           
+           // Bounds kontrolü
+           try {
+             const bounds = vectorLayer.getBounds();
+             console.log(`[DEBUG] Vector layer bounds:`, bounds);
+             if (bounds.isValid()) {
+               console.log(`[DEBUG] Bounds valid - zoom yapılıyor`);
+               this.map.fitBounds(bounds, { padding: [50, 50] });
+               console.log(`[DEBUG] Harita bounds'a zoom yapıldı`);
+             } else {
+               console.warn(`[DEBUG] Bounds geçersiz!`);
+             }
+           } catch (e) {
+             console.warn(`[DEBUG] Bounds hesaplanamadı:`, e);
+           }
+           
+           // Layer count kontrolü
+           console.log(`[DEBUG] Vector layer içindeki layer sayısı:`, vectorLayer.getLayers().length);
+           
+           // İlk layer'ın koordinatlarını kontrol et
+           if (vectorLayer.getLayers().length > 0) {
+             const firstLayer = vectorLayer.getLayers()[0];
+             console.log(`[DEBUG] İlk layer:`, firstLayer);
+             if (firstLayer.getBounds) {
+               console.log(`[DEBUG] İlk layer bounds:`, firstLayer.getBounds());
+             }
+             if (firstLayer.getLatLngs) {
+               console.log(`[DEBUG] İlk layer koordinatları:`, firstLayer.getLatLngs());
+             }
+           }
+         }
 
-        layerGroup.addLayer(cluster);
-        layerGroup.addLayer(vectorLayer);
+         // referansları sakla
+         const rl = this.resourceLayers[resourceId];
+         rl._cluster = cluster.getLayers().length > 0 ? cluster : null;
+         rl._vector = vectorLayer;
 
-        const rl = this.resourceLayers[resourceId];
-        rl._cluster = cluster; rl._vector = vectorLayer;
+         // Vector layer'ı öne getir
+         if (vectorLayer) {
+           vectorLayer.bringToFront?.();
+         }
 
-        vectorLayer.bringToFront?.();
-      } catch (error) {
-        console.error('[DEBUG] GeoJSON ekleme hatası:', error);
-        this.showResourceError(resourceId, `GeoJSON işlenemedi: ${error.message}`);
-      }
-    }
-
+         console.log(`[DEBUG] Katman eklendi - Points: ${pointFeatures.length}, Non-points: ${nonPointFeatures.length}`);
+       } catch (error) {
+         console.error('[DEBUG] GeoJSON ekleme hatası:', error);
+         this.showResourceError(resourceId, `GeoJSON işlenemedi: ${error.message}`);
+       }
+     }
     createPopupContent(feature, resource) {
       let content = '<div class="popup-content">';
       content += `<div class="popup-resource-header">${resource.resource_name}<br><small style="opacity:.8;">${resource.format || 'Bilinmiyor'}</small></div>`;

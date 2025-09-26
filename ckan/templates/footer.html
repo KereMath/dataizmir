@@ -267,15 +267,18 @@
           </ul>
           <ul>
             {% block footer_links_ckan %}
-                {# Diğer linkleriniz burada kalabilir, örneğin API linki #}
-                {% set api_url = 'http://docs.ckan.org/en/{0}/api/'.format(g.ckan_doc_version) %}
-                
-                {# Yasal dokümanları dinamik olarak listele #}
-                {% if legal_docs_for_footer %}
-                {% for doc in legal_docs_for_footer %}
-                    <li><a href="{{ doc.url }}" class="pdf-link" target="_blank">{{ doc.text|safe }}</a></li>
-                {% endfor %}
-                {% endif %}
+              {# Diğer linkleriniz burada kalabilir, örneğin API linki #}
+              {% set api_url = 'http://docs.ckan.org/en/{0}/api/'.format(g.ckan_doc_version) %}
+              
+              {# === DEĞİŞİKLİK BURADA BAŞLIYOR === #}
+              
+              {# Eski dinamik döngüyü sildik, yerine statik linkleri ekledik. #}
+              <li><a href="/dashboard/legal/serve/veripnihai.pdf" class="pdf-link" target="_blank">Veri&nbsp;Politikası</a></li>
+              <li><a href="/dashboard/legal/serve/kvkknihai.pdf" class="pdf-link" target="_blank">KVKK</a></li>
+              <li><a href="/dashboard/legal/serve/kosulnihai.pdf" class="pdf-link" target="_blank">Kullanım&nbsp;Koşulları</a></li>
+              
+              {# === DEĞİŞİKLİK BURADA BİTİYOR === #}
+
             {% endblock %}
             </ul>
         {% endblock %}

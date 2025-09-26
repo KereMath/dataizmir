@@ -553,6 +553,7 @@
 
      /* Cluster + Glow + Pane */
      /* Cluster + Glow + Pane */
+    /* Cluster + Glow + Pane */
      addGeoJSONToLayer(geojsonData, layerGroup, resourceId) {
        try {
          layerGroup.clearLayers();
@@ -610,27 +611,64 @@
              features: nonPointFeatures
            };
            
+           console.log(`[DEBUG] Non-point GeoJSON oluşturuluyor:`, nonPointGeoJSON);
+           console.log(`[DEBUG] İlk geometri tipi:`, nonPointFeatures[0]?.geometry?.type);
+           
            vectorLayer = L.geoJSON(nonPointGeoJSON, {
              pane: paneName,
-             style: (feature) => ({
-               color: color, weight: 2.5, opacity: 0.95,
-               fillColor: color, fillOpacity: 0.25, className: 'feature-glow'
-             }),
+             style: (feature) => {
+               const style = {
+                 color: color, 
+                 weight: 3, 
+                 opacity: 1.0,
+                 fillColor: color, 
+                 fillOpacity: 0.3
+               };
+               console.log(`[DEBUG] Style uygulanıyor:`, style, feature.geometry?.type);
+               return style;
+             },
              onEachFeature: (feature, layer) => {
                const popupContent = this.createPopupContent(feature, resource);
                layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
-               layer.on('mouseover', () => layer.setStyle({ weight: 3.5, fillOpacity: 0.35 }));
-               layer.on('mouseout',  () => layer.setStyle({ weight: 2.5, fillOpacity: 0.25 }));
+               
+               // Hover efektleri
+               if (layer.setStyle) {
+                 layer.on('mouseover', () => {
+                   layer.setStyle({ weight: 4, fillOpacity: 0.5 });
+                 });
+                 layer.on('mouseout', () => {
+                   layer.setStyle({ weight: 3, fillOpacity: 0.3 });
+                 });
+               }
+               
+               console.log(`[DEBUG] Layer oluşturuldu:`, layer, feature.geometry?.type);
              }
            });
+           
+           console.log(`[DEBUG] Vector layer oluşturuldu:`, vectorLayer);
          }
 
          // Layer'ları ana gruba ekle
          if (cluster.getLayers().length > 0) {
+           console.log(`[DEBUG] Cluster ekleniyor:`, cluster.getLayers().length, 'marker');
            layerGroup.addLayer(cluster);
          }
+         
          if (vectorLayer) {
+           console.log(`[DEBUG] Vector layer ekleniyor`);
            layerGroup.addLayer(vectorLayer);
+           
+           // Bounds kontrolü
+           try {
+             const bounds = vectorLayer.getBounds();
+             console.log(`[DEBUG] Vector layer bounds:`, bounds);
+             if (bounds.isValid()) {
+               this.map.fitBounds(bounds, { padding: [20, 20] });
+               console.log(`[DEBUG] Harita bounds'a zoom yapıldı`);
+             }
+           } catch (e) {
+             console.warn(`[DEBUG] Bounds hesaplanamadı:`, e);
+           }
          }
 
          // referansları sakla

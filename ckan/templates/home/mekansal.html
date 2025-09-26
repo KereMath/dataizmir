@@ -348,6 +348,8 @@
         if (!geojson || !geojson.features || geojson.features.length === 0) throw new Error('SHP dosyasında veri yok.');
         const rl = this.resourceLayers[resourceId];
         this.addGeoJSONToLayer(geojson, rl.layer, resourceId);
+                rl.loaded = true; // EKLENEN SATIR: Artık katmanın yüklendiği biliniyor.
+
       } catch (error) {
         console.error(`SHP işleme hatası: ${error}`);
         this.showResourceError(resourceId, `SHP dosyası işlenemedi: ${error.message}`);

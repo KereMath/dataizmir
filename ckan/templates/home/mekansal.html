@@ -115,7 +115,7 @@
   .dimmed-vector { opacity: .25 !important; }
   .dimmed-marker { opacity: .35 !important; }
 
-  /* === Mini “Seçili Katmanlar” paneli (harita üstünde sol üst) === */
+  /* === Mini "Seçili Katmanlar" paneli (harita üstünde sol üst) === */
   .selected-layers-panel {
     position: sticky; top: 12px; left: 12px;
     display: flex; flex-direction: column; gap: 8px;
@@ -299,8 +299,7 @@
       } catch (error) {
         console.error(`[DEBUG] Katman ekleme hatası (${format}):`, error);
         this.showResourceError(resourceId, `${(format || '').toUpperCase()} dosyası işlenemedi: ${error.message}`);
-        const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
-        if (checkbox) checkbox.checked = false;
+        this.updateResourceToggleState(resourceId, false);
       }
     }
 
@@ -334,8 +333,7 @@
       } catch (error) {
         console.error('GeoTIFF işleme hatası:', error);
         this.showResourceError(resourceId, `GeoTIFF dosyası işlenemedi: ${error.message}`);
-        const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
-        if (checkbox) checkbox.checked = false;
+        this.updateResourceToggleState(resourceId, false);
       }
     }
 
@@ -348,13 +346,12 @@
         if (!geojson || !geojson.features || geojson.features.length === 0) throw new Error('SHP dosyasında veri yok.');
         const rl = this.resourceLayers[resourceId];
         this.addGeoJSONToLayer(geojson, rl.layer, resourceId);
-                rl.loaded = true; // EKLENEN SATIR: Artık katmanın yüklendiği biliniyor.
+        rl.loaded = true; // EKLENEN SATIR: Artık katmanın yüklendiği biliniyor.
 
       } catch (error) {
         console.error(`SHP işleme hatası: ${error}`);
         this.showResourceError(resourceId, `SHP dosyası işlenemedi: ${error.message}`);
-        const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
-        if (checkbox) checkbox.checked = false;
+        this.updateResourceToggleState(resourceId, false);
       }
     }
 
@@ -371,8 +368,6 @@
           div.title = errorMessage;
           info.appendChild(div);
         }
-        const cb = el.querySelector('input[type="checkbox"]');
-        if (cb) cb.checked = false;
       }
     }
 
@@ -547,15 +542,60 @@
       return content;
     }
 
-    showLoadingForResource(resourceId) {
-      const el = document.getElementById(`resource-${resourceId}`);
-      el?.querySelector('.toggle-slider')?.style && (el.querySelector('.toggle-slider').style.background = 'linear-gradient(135deg, #ffc107, #e0a800)');
+    // Yeni yardımcı fonksiyon: toggle butonunun görsel durumunu günceller
+    updateResourceToggleState(resourceId, isActive) {
+      const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+      const resourceItem = document.getElementById(`resource-${resourceId}`);
+      
+      if (checkbox) {
+        checkbox.checked = isActive;
+      }
+      
+      if (resourceItem) {
+        if (isActive) {
+          resourceItem.classList.add('active');
+        } else {
+          resourceItem.classList.remove('active');
+        }
+      }
+      
+      // Toggle slider'ın background'ını güncelle
+      this.updateToggleSliderStyle(resourceId, isActive);
     }
+
+    // Toggle slider'ın stilini günceller
+    updateToggleSliderStyle(resourceId, isActive) {
+      const toggleSlider = document.querySelector(`#resource-${resourceId} .toggle-slider`);
+      if (!toggleSlider) return;
+
+      const resource = this.resourceLayers[resourceId]?.resource;
+      const format = (resource?.format || '').toLowerCase();
+      
+      if (isActive) {
+        // Aktif durum için farklı formatların renklerini ayarla
+        if (format === 'wms') {
+          toggleSlider.style.background = 'linear-gradient(135deg, #2a61a0, #4c82c2)';
+        } else if (format === 'geotiff') {
+          toggleSlider.style.background = 'linear-gradient(135deg, #b58900, #cb9700)';
+        } else {
+          toggleSlider.style.background = 'linear-gradient(135deg, #28a745, #20c997)';
+        }
+      } else {
+        // Pasif durum
+        toggleSlider.style.background = 'linear-gradient(135deg, #ddd, #ccc)';
+      }
+    }
+
+    showLoadingForResource(resourceId) {
+      const toggleSlider = document.querySelector(`#resource-${resourceId} .toggle-slider`);
+      if (toggleSlider) {
+        toggleSlider.style.background = 'linear-gradient(135deg, #ffc107, #e0a800)';
+      }
+    }
+
     hideLoadingForResource(resourceId) {
-      const el = document.getElementById(`resource-${resourceId}`);
-      const cb = el?.querySelector('input[type="checkbox"]');
-      const slider = el?.querySelector('.toggle-slider');
-      if (slider && cb) slider.style.background = cb.checked ? 'linear-gradient(135deg, #28a745, #20c997)' : 'linear-gradient(135deg, #ddd, #ccc)';
+      const isActive = this.activeResources.has(resourceId);
+      this.updateToggleSliderStyle(resourceId, isActive);
     }
 
     async loadResourceData(resourceId) {
@@ -587,7 +627,7 @@
         console.error('[DEBUG] Resource data yüklenirken hata:', error);
         this.hideLoadingForResource(resourceId);
         this.showResourceError(resourceId, error.message || 'Hata');
-        const cb = document.querySelector(`input[data-resource="${resourceId}"]`); if (cb) cb.checked = false;
+        this.updateResourceToggleState(resourceId, false);
       }
     }
 
@@ -613,7 +653,7 @@
         console.error(`[DEBUG] Frontend API işleme hatası:`, error);
         this.showResourceError(resourceId, error.message || 'API verisi işlenemedi');
         rl.loaded = false;
-        const cb = document.querySelector(`input[data-resource="${resourceId}"]`); if (cb) cb.checked = false;
+        this.updateResourceToggleState(resourceId, false);
         this.hideLoadingForResource(resourceId);
       }
     }
@@ -667,7 +707,7 @@
         console.error(`[DEBUG] Frontend GeoJSON işleme hatası:`, error);
         this.showResourceError(resourceId, error.message || 'GeoJSON yüklenemedi');
         rl.loaded = false;
-        const cb = document.querySelector(`input[data-resource="${resourceId}"]`); if (cb) cb.checked = false;
+        this.updateResourceToggleState(resourceId, false);
       }
     }
 
@@ -731,8 +771,8 @@
         if (this.focusedResourceId === resourceId) { this.focusMode = false; this.focusedResourceId = null; }
       }
 
-      const item = document.getElementById(`resource-${resourceId}`);
-      if (item) item.classList.toggle('active', isVisible);
+      // Toggle durumunu güncelle
+      this.updateResourceToggleState(resourceId, isVisible);
 
       this.updateStats();
       this.fitMapToActiveLayers();
@@ -781,7 +821,7 @@
         } catch(_) {}
       }
 
-      // marker cluster içi marker’lar
+      // marker cluster içi marker'lar
       if (rl._cluster) {
         rl._cluster.eachLayer(m => {
           if (m.setOpacity) m.setOpacity(emphasized ? 1.0 : 0.35);
@@ -833,7 +873,7 @@
       }
     }
 
-    /* === Mini Panel: seçili katman chip’leri === */
+    /* === Mini Panel: seçili katman chip'leri === */
     renderSelectedLayersPanel() {
       const panel = document.getElementById('selectedLayersPanel');
       const ids = [...this.activeResources];
@@ -869,7 +909,7 @@
     }
 
     onChipFocus(resourceId) {
-      // aynı chip’e tekrar basılırsa odağı kaldır
+      // aynı chip'e tekrar basılırsa odağı kaldır
       if (this.focusMode && this.focusedResourceId === resourceId) {
         this.clearFocus();
       } else {
@@ -905,8 +945,6 @@
       const pack = this.packageGroups[packageId]; if (!pack) return;
       pack.resources.forEach(async (r) => {
         await this.toggleResource(r.resource_id, enable);
-        const cb = document.querySelector(`input[data-resource="${r.resource_id}"]`);
-        if (cb) cb.checked = enable;
       });
     }
 
@@ -972,8 +1010,10 @@
       const format = (resource.format || 'other').toLowerCase();
       const formatClass = this.getFormatClass(format);
       const activeClass = this.activeResources.has(resource.resource_id) ? 'active' : '';
+      const extraClass = ['wms', 'geotiff'].includes(format) ? `${format}-resource` : '';
+      
       return `
-        <div class="resource-item ${activeClass}" id="resource-${resource.resource_id}">
+        <div class="resource-item ${activeClass} ${extraClass}" id="resource-${resource.resource_id}">
           <div class="resource-info">
             <div class="resource-name" title="${resource.resource_name}">${resource.resource_name}</div>
             <div class="resource-meta"><span class="format-badge ${formatClass}">${format.toUpperCase()}</span></div>

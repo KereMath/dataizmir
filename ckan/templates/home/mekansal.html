@@ -400,26 +400,25 @@
         const isFocused = (id) => this.focusMode && this.focusedResourceId === id;
 
         const vectorLayer = L.geoJSON(geojsonData, {
-          pane: paneName,
-          pointToLayer: (feature, latlng) => {
-            const m = L.marker(latlng, { icon: getDivIcon(isFocused(resourceId)), pane: paneName });
-            cluster.addLayer(m);
-            return m;
-          },
-          style: (feature) => {
-            if (!feature.geometry || feature.geometry.type === 'Point') return {};
-            const focused = isFocused(resourceId);
-            return {
-              color, weight: focused ? 3 : 2.5, opacity: focused ? 0.95 : 0.6,
-              fillColor: color, fillOpacity: focused ? 0.25 : 0.12,
-              className: focused ? 'feature-glow' : ''
-            };
-          },
-          onEachFeature: (feature, layer) => {
-            const popupContent = this.createPopupContent(feature, resource);
-            layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
-          }
-        });
+    pane: paneName,
+    filter: (feature) => feature.geometry && feature.geometry.type !== 'Point',
+    
+    // ============ BURAYI DEĞİŞTİRİN ============
+    // Geçici olarak tüm stilleri sabit ve görünür değerlere ayarlayalım
+    style: () => {
+        return {
+            color: '#FF0000', // Sabit, parlak bir renk (kırmızı)
+            weight: 5,        // Çizgiyi kalın yap
+            opacity: 1        // Tamamen görünür yap
+        };
+    },
+    // ============ DEĞİŞİKLİK SONU ============
+
+    onEachFeature: (feature, layer) => {
+        const popupContent = this.createPopupContent(feature, resource);
+        layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
+    }
+});
 
         layerGroup.addLayer(cluster);
         layerGroup.addLayer(vectorLayer);

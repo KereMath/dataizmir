@@ -551,9 +551,7 @@
        }
      }
 
-     /* Cluster + Glow + Pane */
-     /* Cluster + Glow + Pane */
-    /* Cluster + Glow + Pane */
+/* Cluster + Glow + Pane */
      addGeoJSONToLayer(geojsonData, layerGroup, resourceId) {
        try {
          layerGroup.clearLayers();
@@ -658,16 +656,38 @@
            console.log(`[DEBUG] Vector layer ekleniyor`);
            layerGroup.addLayer(vectorLayer);
            
+           // MANUAL CONTROL: Layer'ı doğrudan haritaya da ekle
+           console.log(`[DEBUG] Layer'ı manuel haritaya ekliyorum`);
+           vectorLayer.addTo(this.map);
+           
            // Bounds kontrolü
            try {
              const bounds = vectorLayer.getBounds();
              console.log(`[DEBUG] Vector layer bounds:`, bounds);
              if (bounds.isValid()) {
-               this.map.fitBounds(bounds, { padding: [20, 20] });
+               console.log(`[DEBUG] Bounds valid - zoom yapılıyor`);
+               this.map.fitBounds(bounds, { padding: [50, 50] });
                console.log(`[DEBUG] Harita bounds'a zoom yapıldı`);
+             } else {
+               console.warn(`[DEBUG] Bounds geçersiz!`);
              }
            } catch (e) {
              console.warn(`[DEBUG] Bounds hesaplanamadı:`, e);
+           }
+           
+           // Layer count kontrolü
+           console.log(`[DEBUG] Vector layer içindeki layer sayısı:`, vectorLayer.getLayers().length);
+           
+           // İlk layer'ın koordinatlarını kontrol et
+           if (vectorLayer.getLayers().length > 0) {
+             const firstLayer = vectorLayer.getLayers()[0];
+             console.log(`[DEBUG] İlk layer:`, firstLayer);
+             if (firstLayer.getBounds) {
+               console.log(`[DEBUG] İlk layer bounds:`, firstLayer.getBounds());
+             }
+             if (firstLayer.getLatLngs) {
+               console.log(`[DEBUG] İlk layer koordinatları:`, firstLayer.getLatLngs());
+             }
            }
          }
 

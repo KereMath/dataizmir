@@ -33,7 +33,7 @@
   html, body { overflow: hidden; height: 100vh; }
   #content { overflow: hidden !important; }
   .site-footer { display: none !important; }
-  
+
   .search-form { display:none !important; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -254,6 +254,112 @@
     color: white; 
   }
 
+  /* Layer Switcher Control */
+  .layer-switcher-control {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    z-index: 1000;
+    min-width: 250px;
+    max-width: 350px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .layer-switcher-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 10px 15px;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .layer-switcher-toggle {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+  }
+
+  .layer-switcher-content {
+    padding: 10px;
+    display: none;
+  }
+
+  .layer-switcher-content.expanded {
+    display: block;
+  }
+
+  .layer-switcher-item {
+    display: flex;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #f0f0f0;
+  }
+
+  .layer-switcher-item:last-child {
+    border-bottom: none;
+  }
+
+  .layer-switcher-checkbox {
+    margin-right: 10px;
+  }
+
+  .layer-switcher-label {
+    flex: 1;
+    font-size: 13px;
+    color: #495057;
+    cursor: pointer;
+  }
+
+  .layer-switcher-opacity {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 20px;
+    padding: 5px 0;
+  }
+
+  .opacity-slider {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .opacity-value {
+    font-size: 11px;
+    color: #6c757d;
+    min-width: 35px;
+    text-align: right;
+  }
+
+  /* WMS Layer Info */
+  .wms-layer-info {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 5px 0;
+    font-size: 11px;
+    color: #6c757d;
+  }
+
+  .wms-layer-list {
+    list-style: none;
+    padding: 0;
+    margin: 5px 0;
+  }
+
+  .wms-layer-list li {
+    padding: 3px 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+
   .loading-section, .error-section { text-align: center; padding: 40px 20px; color: #6c757d; }
   .error-section { background: #f8d7da; color: #721c24; margin: 20px; border-radius: 8px; }
 
@@ -292,11 +398,11 @@
   .selected-layers-panel {
     position: absolute; 
     top: 70px; 
-    right: 120px;
+    right: 10px;
     display: flex; 
     flex-direction: column; 
     gap: 8px;
-    z-index: 1000; 
+    z-index: 999; 
     pointer-events: auto;  
     padding: 12px; 
     max-height: calc(100vh - 100px); 
@@ -308,7 +414,7 @@
     min-width: 280px;
     max-width: calc(100vw - 400px);
   }
-  
+
   @media (max-width: 768px) {
     .selected-layers-panel {
       min-width: 240px;
@@ -317,7 +423,7 @@
       top: 60px;
     }
   }
-  
+
   .sel-chip {
     pointer-events: auto;
     display: grid; 
@@ -401,15 +507,26 @@
       <button class="basemap-button" data-basemap="arazi">⛰️ Arazi</button>
       <button class="basemap-button" data-basemap="sade">📍 Sade</button>
     </div>
-    
+
+    <!-- Layer Switcher Control -->
+    <div class="layer-switcher-control" id="layerSwitcher" style="display: none;">
+      <div class="layer-switcher-header">
+        <span>🗂️ Katman Kontrolü</span>
+        <button class="layer-switcher-toggle" onclick="spatialMapManager.toggleLayerSwitcher()">▼</button>
+      </div>
+      <div class="layer-switcher-content" id="layerSwitcherContent">
+        <!-- Dinamik olarak doldurulacak -->
+      </div>
+    </div>
+
     <div id="map"></div>
-    
+
     <!-- Loading spinner -->
     <div class="loading-spinner" id="loadingSpinner">
       <div class="spinner"></div>
       <div style="text-align: center; color: #495057;">Veri yükleniyor...</div>
     </div>
-    
+
     <!-- Seçili katmanlar paneli -->
     <div class="selected-layers-panel" id="selectedLayersPanel" style="display: none;"></div>
   </div>
@@ -430,7 +547,7 @@
 <script src="https://unpkg.com/geotiff@2.0.7/dist/geotiff.bundle.min.js"></script>
 
 <script>
-  console.log('Modern Mekansal Görüntüleme Sistemi v3.5 - İndirme ve WMS Düzeltmeleri');
+  console.log('Modern Mekansal Görüntüleme Sistemi v4.0 - WMS Layer Switcher Desteği');
 
   class SpatialMapManager {
     constructor() {
@@ -439,7 +556,7 @@
       this.packageGroups = {};
       this.resourceLayers = {};
       this.activeResources = new Set();
-      
+
       // Cache mekanizması
       this.dataCache = new Map();
       this.pendingRequests = new Map();
@@ -467,10 +584,17 @@
       // Tema haritası
       this.themeMap = {};
 
+      // WMS layer bilgileri
+      this.wmsLayers = {};
+      this.wmsLayerStates = {};
+
       // Performans için throttling
       this.renderThrottle = null;
       this.loadingQueue = [];
       this.isLoadingResource = false;
+
+      // Layer Switcher durumu
+      this.layerSwitcherExpanded = false;
 
       this.init();
     }
@@ -498,7 +622,7 @@
           credentials: 'include',
           body: JSON.stringify({ limit: 1 })
         });
-        
+
         const data = await response.json();
         this.isLoggedIn = data.success;
         console.log('Kullanıcı giriş durumu:', this.isLoggedIn);
@@ -550,14 +674,138 @@
 
     switchBasemap(basemap) {
       if (basemap === this.currentBaseMap) return;
-      
+
       this.map.removeLayer(this.baseMaps[this.currentBaseMap]);
       this.baseMaps[basemap].addTo(this.map);
       this.currentBaseMap = basemap;
-      
+
       document.querySelectorAll('.basemap-button').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.basemap === basemap);
       });
+    }
+
+    toggleLayerSwitcher() {
+      this.layerSwitcherExpanded = !this.layerSwitcherExpanded;
+      const content = document.getElementById('layerSwitcherContent');
+      const toggle = document.querySelector('.layer-switcher-toggle');
+      
+      if (this.layerSwitcherExpanded) {
+        content.classList.add('expanded');
+        toggle.textContent = '▲';
+      } else {
+        content.classList.remove('expanded');
+        toggle.textContent = '▼';
+      }
+    }
+
+    updateLayerSwitcher(resourceId, wmsCapabilities) {
+      const layerSwitcher = document.getElementById('layerSwitcher');
+      const content = document.getElementById('layerSwitcherContent');
+      
+      // Layer Switcher'ı göster
+      layerSwitcher.style.display = 'block';
+      
+      // WMS layer bilgilerini sakla
+      this.wmsLayers[resourceId] = wmsCapabilities;
+      
+      // Layer Switcher içeriğini güncelle
+      this.renderLayerSwitcherContent();
+    }
+
+    renderLayerSwitcherContent() {
+      const content = document.getElementById('layerSwitcherContent');
+      let html = '';
+      
+      // Aktif WMS kaynakları için layer listesi oluştur
+      for (const [resourceId, layers] of Object.entries(this.wmsLayers)) {
+        if (!this.activeResources.has(resourceId)) continue;
+        
+        const resource = this.resourceLayers[resourceId].resource;
+        html += `
+          <div class="wms-layer-info">
+            <strong>${resource.resource_name}</strong>
+            <div class="wms-layer-list">
+        `;
+        
+        // Her layer için checkbox ve opacity slider ekle
+        layers.forEach((layer, index) => {
+          const layerId = `${resourceId}_${index}`;
+          const isChecked = this.wmsLayerStates[layerId] !== false;
+          const opacity = this.wmsLayerStates[layerId + '_opacity'] || 100;
+          
+          html += `
+            <div class="layer-switcher-item">
+              <input type="checkbox" 
+                     id="layer_${layerId}" 
+                     class="layer-switcher-checkbox"
+                     ${isChecked ? 'checked' : ''}
+                     onchange="spatialMapManager.toggleWMSLayer('${resourceId}', '${layer.name}', ${index})">
+              <label for="layer_${layerId}" class="layer-switcher-label">
+                ${layer.title || layer.name}
+              </label>
+            </div>
+            <div class="layer-switcher-opacity">
+              <span style="font-size: 11px;">📊</span>
+              <input type="range" 
+                     class="opacity-slider" 
+                     min="0" max="100" 
+                     value="${opacity}"
+                     oninput="spatialMapManager.updateWMSOpacity('${resourceId}', '${layer.name}', this.value, ${index})">
+              <span class="opacity-value">${opacity}%</span>
+            </div>
+          `;
+        });
+        
+        html += '</div></div>';
+      }
+      
+      if (html === '') {
+        html = '<div style="padding: 10px; text-align: center; color: #6c757d;">Aktif WMS katmanı yok</div>';
+      }
+      
+      content.innerHTML = html;
+    }
+
+    toggleWMSLayer(resourceId, layerName, layerIndex) {
+      const layerId = `${resourceId}_${layerIndex}`;
+      const checkbox = document.getElementById(`layer_${layerId}`);
+      const isChecked = checkbox.checked;
+      
+      // State'i güncelle
+      this.wmsLayerStates[layerId] = isChecked;
+      
+      // WMS layer'ı güncelle
+      const rl = this.resourceLayers[resourceId];
+      if (rl && rl.layer) {
+        if (rl.wmsLayerObjs && rl.wmsLayerObjs[layerName]) {
+          const layer = rl.wmsLayerObjs[layerName];
+          if (isChecked) {
+            layer.addTo(this.map);
+          } else {
+            this.map.removeLayer(layer);
+          }
+        }
+      }
+    }
+
+    updateWMSOpacity(resourceId, layerName, value, layerIndex) {
+      const layerId = `${resourceId}_${layerIndex}`;
+      const opacity = value / 100;
+      
+      // State'i güncelle
+      this.wmsLayerStates[layerId + '_opacity'] = value;
+      
+      // Opacity değerini güncelle
+      const opacityValue = document.querySelector(`#layer_${layerId}`).parentElement.nextElementSibling.querySelector('.opacity-value');
+      if (opacityValue) {
+        opacityValue.textContent = value + '%';
+      }
+      
+      // WMS layer opacity'sini güncelle
+      const rl = this.resourceLayers[resourceId];
+      if (rl && rl.wmsLayerObjs && rl.wmsLayerObjs[layerName]) {
+        rl.wmsLayerObjs[layerName].setOpacity(opacity);
+      }
     }
 
     showLoading() {
@@ -586,7 +834,7 @@
 
       const promise = this.fetchSpatialData();
       this.pendingRequests.set(cacheKey, promise);
-      
+
       try {
         const data = await promise;
         this.dataCache.set(cacheKey, { data, timestamp: Date.now() });
@@ -605,17 +853,17 @@
         }
       });
       const data = await response.json();
-      
+
       if (!data.success) throw new Error(data.error || 'Spatial resources API hatası');
-      
+
       let resources = data.spatial_resources || [];
-      
+
       // Giriş yapmamış kullanıcı için private paketleri filtrele
       if (!this.isLoggedIn) {
         const publicPackages = await this.getPublicPackages();
         resources = resources.filter(r => publicPackages.has(r.package_id));
       }
-      
+
       // Tema ve kategori bilgilerini ekle
       const enrichedData = await this.enrichResourcesWithPackageInfo(resources);
       return enrichedData;
@@ -628,7 +876,7 @@
           credentials: 'include'
         });
         const data = await response.json();
-        
+
         if (data.success && data.result && data.result.results) {
           data.result.results.forEach(pkg => {
             if (!pkg.private) {
@@ -667,10 +915,10 @@
                 return null;
               })
           );
-          
+
           const themeResults = await Promise.all(themePromises);
           const tempMap = {};
-          
+
           themeResults.forEach(result => {
             if (result) {
               result.datasets.forEach(dataset => {
@@ -679,7 +927,7 @@
               });
             }
           });
-          
+
           return tempMap;
         }
       } catch (error) {
@@ -691,9 +939,9 @@
     async enrichResourcesWithPackageInfo(resources) {
       // Önce temaları yükle
       this.themeMap = await this.loadThemes();
-      
+
       const packageIds = [...new Set(resources.map(r => r.package_id))];
-      
+
       // Package bilgilerini paralel olarak çek
       const packageInfos = await Promise.all(
         packageIds.map(async (pid) => {
@@ -757,10 +1005,11 @@
           visible: false, 
           loaded: false, 
           _cluster: null, 
-          _vector: null
+          _vector: null,
+          wmsLayerObjs: {} // WMS layer objelerini saklayacağız
         };
       });
-      
+
       // Tüm paketleri başlangıçta collapsed olarak işaretle
       Object.keys(this.packageGroups).forEach(pid => {
         this.collapsedPackages.add(pid);
@@ -771,7 +1020,7 @@
       // Tema ve kategori listelerini oluştur
       const themes = new Set(['']);
       const categories = new Set(['']);
-      
+
       this.spatialData.forEach(resource => {
         if (resource.theme) themes.add(resource.theme);
         resource.groups?.forEach(g => {
@@ -779,7 +1028,7 @@
           if (categoryName) categories.add(categoryName);
         });
       });
-      
+
       // Theme filter
       const themeSelect = document.getElementById('themeFilter');
       themeSelect.innerHTML = '<option value="">Tüm Temalar</option>';
@@ -789,7 +1038,7 @@
         option.textContent = theme;
         themeSelect.appendChild(option);
       });
-      
+
       // Category filter
       const categorySelect = document.getElementById('categoryFilter');
       categorySelect.innerHTML = '<option value="">Tüm Kategoriler</option>';
@@ -803,15 +1052,15 @@
 
     filterPackages() {
       const filtered = {};
-      
+
       Object.values(this.packageGroups).forEach(group => {
         let shouldShow = true;
-        
+
         // Theme filter
         if (this.selectedTheme && group.theme !== this.selectedTheme) {
           shouldShow = false;
         }
-        
+
         // Category filter
         if (this.selectedCategory) {
           const hasCategory = group.groups?.some(g => 
@@ -819,7 +1068,7 @@
           );
           if (!hasCategory) shouldShow = false;
         }
-        
+
         // Search filter
         if (this.searchTerm) {
           const matchesSearch = group.resources.some(r =>
@@ -829,12 +1078,12 @@
           );
           if (!matchesSearch) shouldShow = false;
         }
-        
+
         if (shouldShow) {
           filtered[group.id] = group;
         }
       });
-      
+
       return filtered;
     }
 
@@ -861,6 +1110,17 @@
         this.activeResources.delete(resourceId);
         rl.visible = false;
 
+        // WMS layer bilgilerini temizle
+        if (this.wmsLayers[resourceId]) {
+          delete this.wmsLayers[resourceId];
+          this.renderLayerSwitcherContent();
+          
+          // Eğer hiç WMS layer kalmadıysa Layer Switcher'ı gizle
+          if (Object.keys(this.wmsLayers).length === 0) {
+            document.getElementById('layerSwitcher').style.display = 'none';
+          }
+        }
+
         if (this.focusedResourceId === resourceId) { 
           this.focusMode = false; 
           this.focusedResourceId = null; 
@@ -875,18 +1135,18 @@
 
     async processLoadingQueue() {
       if (this.isLoadingResource || this.loadingQueue.length === 0) return;
-      
+
       this.isLoadingResource = true;
       this.showLoading();
-      
+
       while (this.loadingQueue.length > 0) {
         const { resourceId } = this.loadingQueue.shift();
         const rl = this.resourceLayers[resourceId];
-        
+
         if (!rl.loaded) {
           await this.loadResourceData(resourceId);
         }
-        
+
         if (rl.loaded) {
           rl.layer.addTo(this.map);
           this.activeResources.add(resourceId);
@@ -897,14 +1157,14 @@
             (fmt === 'wms' || fmt === 'geotiff') ? l.bringToBack?.() : l.bringToFront?.(); 
           });
         }
-        
+
         this.updateResourceToggleState(resourceId, true);
         this.updateStats();
         this.fitMapToActiveLayers();
         this.updateEmphasis();
         this.renderSelectedLayersPanel();
       }
-      
+
       this.isLoadingResource = false;
       this.hideLoading();
     }
@@ -915,7 +1175,7 @@
 
       try {
         const fmt = (rl.resource.format || '').toLowerCase();
-        
+
         if (['wms','wfs','geotiff'].includes(fmt)) {
           await this.addLayerFromUrl(rl.resource.url, fmt, rl.layer, resourceId);
           rl.loaded = true;
@@ -934,12 +1194,12 @@
 
         const apiUrl = `/api/spatial-resources/${resourceId}/data`;
         const response = await fetch(apiUrl, { credentials: 'include' });
-        
+
         if (!response.ok) throw response;
         const result = await response.json();
 
         if (!result.success) throw new Error(result.error || 'Bilinmeyen API hatası');
-        
+
         this.dataCache.set(cacheKey, { 
           data: result.data || result.url, 
           type: result.type, 
@@ -975,34 +1235,34 @@
     async downloadResourceData(resourceId) {
       const rl = this.resourceLayers[resourceId];
       if (!rl) return;
-      
+
       const resource = rl.resource;
       const format = (resource.format || '').toLowerCase();
-      
+
       try {
         this.showLoading();
-        
+
         // WMS özel durumu
         if (format === 'wms') {
           alert('WMS servisleri doğrudan indirilemez. GetCapabilities URL\'ini kullanabilirsiniz:\n' + resource.url);
           this.hideLoading();
           return;
         }
-        
+
         // API veya diğer formatlar için
         const apiUrl = `/api/spatial-resources/${resourceId}/data`;
         const response = await fetch(apiUrl, { credentials: 'include' });
-        
+
         if (!response.ok) {
           throw new Error('Veri alınamadı');
         }
-        
+
         const result = await response.json();
-        
+
         let dataToDownload;
         let fileName = resource.resource_name || 'data';
         let mimeType = 'application/json';
-        
+
         // Format'a göre dosya adı ve mime type ayarla
         if (format === 'csv') {
           mimeType = 'text/csv';
@@ -1040,7 +1300,7 @@
         } else {
           fileName += '.json';
         }
-        
+
         // Veriyi hazırla
         if (result.data) {
           dataToDownload = JSON.stringify(result.data, null, 2);
@@ -1057,7 +1317,7 @@
         } else {
           throw new Error('İndirilecek veri bulunamadı');
         }
-        
+
         // Blob oluştur ve indir
         const blob = new Blob([dataToDownload], { type: mimeType });
         const url = URL.createObjectURL(blob);
@@ -1068,7 +1328,7 @@
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
-        
+
         this.hideLoading();
       } catch (error) {
         console.error('İndirme hatası:', error);
@@ -1077,149 +1337,136 @@
       }
     }
 
-    async extractWMSLayerName(url) {
+    async extractWMSLayersInfo(url) {
       try {
         // GetCapabilities isteği yap
         const capabilitiesUrl = url.includes('?') 
           ? `${url}&service=WMS&request=GetCapabilities&version=1.3.0`
           : `${url}?service=WMS&request=GetCapabilities&version=1.3.0`;
-        
+
+        console.log('GetCapabilities URL:', capabilitiesUrl);
+
         const response = await fetch(capabilitiesUrl);
         const text = await response.text();
-        
-        // XML'den layer isimlerini çıkar
+
+        // XML'den layer bilgilerini çıkar
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(text, "text/xml");
-        
-        // Tüm layer isimlerini topla
-        const layerNames = [];
-        const layers = xmlDoc.getElementsByTagName("Layer");
-        
-        // Parent layer'ı atla, sadece queryable layer'ları al
-        for (let i = 0; i < layers.length; i++) {
-          const layer = layers[i];
-          // Queryable attribute kontrolü
-          if (layer.getAttribute('queryable') === '1') {
-            const nameEl = layer.getElementsByTagName("Name")[0];
-            if (nameEl && nameEl.textContent) {
-              layerNames.push(nameEl.textContent);
-            }
+
+        const layers = [];
+        const layerElements = xmlDoc.getElementsByTagName("Layer");
+
+        // İlk Layer genellikle root layer, onu atla
+        for (let i = 1; i < layerElements.length; i++) {
+          const layer = layerElements[i];
+          const nameEl = layer.getElementsByTagName("Name")[0];
+          const titleEl = layer.getElementsByTagName("Title")[0];
+          
+          if (nameEl && nameEl.textContent) {
+            layers.push({
+              name: nameEl.textContent,
+              title: titleEl ? titleEl.textContent : nameEl.textContent,
+              queryable: layer.getAttribute('queryable') === '1'
+            });
           }
         }
-        
-        // TUCBS servisleri için özel durum - tüm layer'ları göster
-        if (url.includes('tucbs') || url.includes('csb.gov.tr')) {
-          // Tüm queryable layer'ları virgülle birleştir
-          if (layerNames.length > 0) {
-            return layerNames.join(',');
-          }
-        }
-        
-        // Tek layer varsa onu döndür
-        if (layerNames.length === 1) {
-          return layerNames[0];
-        }
-        
-        // Birden fazla layer varsa ilkini döndür (veya hepsini)
-        if (layerNames.length > 1) {
-          // İlk birkaç layer'ı göster (performans için)
-          return layerNames.slice(0, 5).join(',');
-        }
-        
-        // Hiç queryable layer yoksa, ilk child layer'ı dene
-        if (layers.length > 1) {
-          const nameElement = layers[1].getElementsByTagName("Name")[0];
-          if (nameElement) {
-            return nameElement.textContent;
-          }
-        }
-        
-        return null;
+
+        console.log('Bulunan WMS Layers:', layers);
+        return layers;
       } catch (error) {
-        console.warn('WMS Layer name alınamadı, varsayılan kullanılacak:', error);
-        
-        // URL'den layer ismini tahmin etmeye çalış
-        if (url.includes('geoserver')) {
-          // GeoServer formatı: /geoserver/workspace/wms
-          const parts = url.split('/');
-          const geoserverIndex = parts.findIndex(p => p === 'geoserver');
-          if (geoserverIndex !== -1 && parts[geoserverIndex + 1]) {
-            const workspace = parts[geoserverIndex + 1];
-            // workspace:layername formatında döndür
-            return workspace;
-          }
-        }
-        
-        return null;
+        console.warn('WMS Layer bilgileri alınamadı:', error);
+        return [];
       }
     }
 
     async addLayerFromUrl(url, format, layerGroup, resourceId) {
       layerGroup.clearLayers();
-      let newLayer;
       const resource = this.resourceLayers[resourceId].resource;
 
       try {
         switch ((format || '').toLowerCase()) {
           case 'wms': {
-            // Önce WMS layer name'i almaya çalış
-            let layerName = resource.wms_layer;
+            // Önce WMS layer bilgilerini al
+            const layers = await this.extractWMSLayersInfo(url);
             
-            if (!layerName) {
-              // GetCapabilities'ten layer name'i çek
-              layerName = await this.extractWMSLayerName(url);
+            if (layers.length > 0) {
+              // Layer Switcher'ı güncelle
+              this.updateLayerSwitcher(resourceId, layers);
               
-              // Hala yoksa URL'den tahmin et
-              if (!layerName && url.includes('geoserver')) {
-                // GeoServer pattern: /geoserver/workspace/wms
-                const urlParts = url.split('/');
-                const geoserverIdx = urlParts.indexOf('geoserver');
-                if (geoserverIdx !== -1 && urlParts[geoserverIdx + 1]) {
-                  const workspace = urlParts[geoserverIdx + 1];
-                  // Genelde workspace:layername formatında
-                  layerName = workspace;
-                }
-              }
+              // Tüm layer'ları ekle (başlangıçta görünür)
+              const paneName = this.createPaneForResource(resourceId, true);
+              const rl = this.resourceLayers[resourceId];
+              
+              layers.forEach((layerInfo, index) => {
+                const wmsLayer = L.tileLayer.wms(url, { 
+                  layers: layerInfo.name,
+                  format: 'image/png',
+                  transparent: true,
+                  version: '1.3.0',
+                  crs: L.CRS.EPSG3857,
+                  uppercase: true,
+                  attribution: `WMS: ${resource.resource_name} - ${layerInfo.title}`,
+                  pane: paneName,
+                  tileSize: 256,
+                  opacity: 1.0
+                });
+
+                // Layer objesini sakla
+                rl.wmsLayerObjs[layerInfo.name] = wmsLayer;
+                
+                // Default olarak layer'ı ekle
+                layerGroup.addLayer(wmsLayer);
+                
+                // State'i kaydet
+                this.wmsLayerStates[`${resourceId}_${index}`] = true;
+                this.wmsLayerStates[`${resourceId}_${index}_opacity`] = 100;
+
+                // Hata durumunda log
+                wmsLayer.on('tileerror', function(error) {
+                  console.error('WMS Tile Error:', error);
+                });
+              });
+              
+              // Layer Switcher içeriğini renderla
+              this.renderLayerSwitcherContent();
+              
+            } else {
+              // Eğer layer bilgisi alınamazsa varsayılan layer kullan
+              console.warn('WMS layer bilgisi alınamadı, varsayılan kullanılıyor');
+              
+              const paneName = this.createPaneForResource(resourceId, true);
+              const newLayer = L.tileLayer.wms(url, { 
+                layers: resource.wms_layer || 'layer',
+                format: 'image/png',
+                transparent: true,
+                version: '1.3.0',
+                crs: L.CRS.EPSG3857,
+                uppercase: true,
+                attribution: `WMS: ${resource.resource_name}`,
+                pane: paneName,
+                tileSize: 256,
+                opacity: 0.8
+              });
+
+              newLayer.on('tileerror', function(error) {
+                console.error('WMS Tile Error:', error);
+              });
+
+              layerGroup.addLayer(newLayer);
             }
-            
-            // Son çare: varsayılan değer
-            if (!layerName) {
-              layerName = 'layer';
-            }
-            
-            console.log('WMS Layer Name:', layerName, 'URL:', url);
-            
-            const paneName = this.createPaneForResource(resourceId, true);
-            newLayer = L.tileLayer.wms(url, { 
-              layers: layerName,
-              format: 'image/png',
-              transparent: true,
-              version: '1.3.0',
-              crs: L.CRS.EPSG3857,
-              uppercase: true,
-              attribution: `WMS: ${resource.resource_name}`,
-              pane: paneName,
-              tileSize: 256,
-              opacity: 0.8
-            });
-            
-            // Hata durumunda log
-            newLayer.on('tileerror', function(error) {
-              console.error('WMS Tile Error:', error);
-            });
-            
             break;
           }
           case 'wfs': {
             const layerName = resource.wfs_layer || 'layer';
             const paneName = this.createPaneForResource(resourceId, true);
-            newLayer = L.tileLayer.wms(url, { 
+            const newLayer = L.tileLayer.wms(url, { 
               layers: layerName, 
               format: 'image/png', 
               transparent: true, 
               attribution: `WFS: ${resource.resource_name}`, 
               pane: paneName 
             });
+            layerGroup.addLayer(newLayer);
             break;
           }
           case 'geotiff':
@@ -1227,9 +1474,6 @@
             return;
           default:
             throw new Error('Desteklenmeyen URL tabanlı format: ' + format);
-        }
-        if (newLayer) { 
-          layerGroup.addLayer(newLayer); 
         }
       } catch (error) {
         console.error(`[DEBUG] Katman ekleme hatası (${format}):`, error);
@@ -1306,16 +1550,16 @@
 
         const pointFeatures = [];
         const nonPointFeatures = [];
-        
+
         // Performans için sadece görünür features'ı işle
         const maxFeatures = 5000;
         let features = geojsonData.features || [];
-        
+
         if (features.length > maxFeatures) {
           console.warn(`Çok fazla feature (${features.length}), ilk ${maxFeatures} tanesi işlenecek`);
           features = features.slice(0, maxFeatures);
         }
-        
+
         features.forEach(feature => {
           if (feature.geometry && feature.geometry.type === 'Point') {
             pointFeatures.push(feature);
@@ -1355,7 +1599,7 @@
           marker.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
           return marker;
         });
-        
+
         if (markers.length > 0) {
           cluster.addLayers(markers);
         }
@@ -1366,7 +1610,7 @@
             type: 'FeatureCollection',
             features: nonPointFeatures
           };
-          
+
           vectorLayer = L.geoJSON(nonPointGeoJSON, {
             pane: paneName,
             style: () => ({
@@ -1379,7 +1623,7 @@
             onEachFeature: (feature, layer) => {
               const popupContent = this.createPopupContent(feature, resource);
               layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
-              
+
               if (layer.setStyle) {
                 layer.on('mouseover', () => {
                   layer.setStyle({ weight: 4, fillOpacity: 0.5 });
@@ -1395,7 +1639,7 @@
         if (cluster.getLayers().length > 0) {
           layerGroup.addLayer(cluster);
         }
-        
+
         if (vectorLayer) {
           layerGroup.addLayer(vectorLayer);
         }
@@ -1531,7 +1775,7 @@
       const modal = buttonElement.closest('.column-modal-overlay');
       const latCol = modal.querySelector('#latColumn').value;
       const lonCol = modal.querySelector('#lonColumn').value;
-      
+
       if (!latCol || !lonCol) {
         alert('Lütfen enlem ve boylam sütunlarını seçin');
         return;
@@ -1558,7 +1802,7 @@
           body: JSON.stringify({ lat_column: latCol, lon_column: lonCol })
         });
         const result = await response.json();
-        
+
         if (result.success) {
           this.addGeoJSONToLayer(result.data, rl.layer, resourceId);
           rl.loaded = true;
@@ -1587,11 +1831,11 @@
     updateResourceToggleState(resourceId, isActive) {
       const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
       const resourceItem = document.getElementById(`resource-${resourceId}`);
-      
+
       if (checkbox) {
         checkbox.checked = isActive;
       }
-      
+
       if (resourceItem) {
         if (isActive) {
           resourceItem.classList.add('active');
@@ -1678,10 +1922,10 @@
 
     fitMapToActiveLayers() {
       if (this.activeResources.size === 0) return;
-      
+
       // Throttle this operation
       if (this.renderThrottle) clearTimeout(this.renderThrottle);
-      
+
       this.renderThrottle = setTimeout(() => {
         const allBounds = [];
         this.activeResources.forEach(resourceId => {
@@ -1697,7 +1941,7 @@
             });
           }
         });
-        
+
         if (allBounds.length > 0) {
           const group = new L.featureGroup();
           allBounds.forEach(b => group.addLayer(L.rectangle(b, {opacity:0})));
@@ -1718,7 +1962,7 @@
       }
 
       panel.style.display = 'flex';
-      
+
       const chips = ids.map(id => {
         const res = this.resourceLayers[id].resource;
         const color = this.getResourceColor(id);
@@ -1773,18 +2017,18 @@
     handleResourceClick(resourceId, event) {
       event.preventDefault();
       event.stopPropagation();
-      
+
       const checkbox = event.currentTarget.querySelector('input[type="checkbox"]');
       const isCurrentlyActive = this.activeResources.has(resourceId);
-      
+
       // Toggle state
       const newState = !isCurrentlyActive;
-      
+
       // Update checkbox
       if (checkbox) {
         checkbox.checked = newState;
       }
-      
+
       // Toggle resource
       this.toggleResource(resourceId, newState);
     }
@@ -1800,13 +2044,13 @@
           this.renderLayers();
         }, 250);
       });
-      
+
       // Theme filter
       document.getElementById('themeFilter').addEventListener('change', (e) => {
         this.selectedTheme = e.target.value;
         this.renderLayers();
       });
-      
+
       // Category filter
       document.getElementById('categoryFilter').addEventListener('change', (e) => {
         this.selectedCategory = e.target.value;
@@ -1820,10 +2064,10 @@
         container.innerHTML = `<div class="error-section">Henüz mekansal kaynak bulunamadı.<br><small>Yönetim panelinden kaynakları mekansal olarak işaretleyin.</small></div>`;
         return;
       }
-      
+
       const filteredGroups = this.filterPackages();
       const html = Object.values(filteredGroups).map(pg => this.renderPackageGroup(pg)).join('');
-      
+
       if (Object.keys(filteredGroups).length === 0) {
         container.innerHTML = `<div class="error-section">Filtrelere uygun kaynak bulunamadı.</div>`;
       } else {
@@ -1835,10 +2079,10 @@
       const isCollapsed = this.collapsedPackages.has(group.id);
       const filteredResources = group.resources || [];
       if (filteredResources.length === 0) return '';
-      
+
       const theme = group.theme || 'Tema yok';
       const categories = group.groups?.map(g => g.display_name || g.name).join(', ') || 'Kategori yok';
-      
+
       return `
         <div class="package-group" id="package-${group.id}">
           <div class="package-header" onclick="spatialMapManager.togglePackageCollapse('${group.id}')">
@@ -1863,7 +2107,7 @@
       const formatClass = this.getFormatClass(format);
       const activeClass = this.activeResources.has(resource.resource_id) ? 'active' : '';
       const extraClass = ['wms', 'geotiff'].includes(format) ? `${format}-resource` : '';
-      
+
       return `
         <div class="resource-item ${activeClass} ${extraClass}" 
              id="resource-${resource.resource_id}">
@@ -1905,7 +2149,7 @@
       const totalPackages = Object.keys(this.packageGroups).length;
       const activeResourceCount = this.activeResources.size;
       const totalFormats = [...new Set(this.spatialData.map(r => r.format))].filter(Boolean).length;
-      
+
       document.getElementById('totalSpatialResources').textContent = totalResources.toLocaleString('tr-TR');
       document.getElementById('totalSpatialPackages').textContent = totalPackages.toLocaleString('tr-TR');
       document.getElementById('activeLayers').textContent = activeResourceCount.toLocaleString('tr-TR');

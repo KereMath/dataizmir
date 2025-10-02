@@ -1537,8 +1537,7 @@
       }
     }
 
-  
-async processGeoTiffData(url, resourceId) {
+  async processGeoTiffData(url, resourceId) {
       try {
         const rl = this.resourceLayers[resourceId];
         
@@ -1560,10 +1559,12 @@ async processGeoTiffData(url, resourceId) {
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
         const arrayBuffer = await response.arrayBuffer();
-        const georaster = await window.GeoRaster.parseGeoRaster(arrayBuffer);
+        
+        // parseGeoRaster doğrudan window'da bulunuyor
+        const georaster = await parseGeoRaster(arrayBuffer);
 
         const paneName = this.createPaneForResource(resourceId, true);
-        const georasterLayer = new window.GeoRasterLayer({
+        const georasterLayer = new GeoRasterLayer({
           georaster, 
           opacity: 0.7, 
           resolution: 256,
@@ -1593,6 +1594,7 @@ async processGeoTiffData(url, resourceId) {
         this.updateResourceToggleState(resourceId, false);
       }
     }
+
 
     async processShpData(shpUrl, resourceId) {
       try {

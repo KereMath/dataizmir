@@ -99,35 +99,6 @@
     letter-spacing: 0.5px;
   }
 
-  /* Tema ve kategori bilgisi için alan */
-  .panel-info-bar {
-    padding: 12px 16px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e9ecef;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    font-size: 13px;
-    color: #495057;
-    flex-shrink: 0;
-  }
-  .info-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-  .info-label {
-    font-weight: 600;
-    color: #6c757d;
-  }
-  .info-value {
-    padding: 3px 8px;
-    background: #fff;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-
   .search-section { 
     padding: 12px 16px; 
     border-bottom: 1px solid #e9ecef; 
@@ -453,7 +424,7 @@
 <script src="https://unpkg.com/geotiff@2.0.7/dist/geotiff.bundle.min.js"></script>
 
 <script>
-  console.log('Modern Mekansal Görüntüleme Sistemi v2.1 - Geliştirilmiş');
+  console.log('Modern Mekansal Görüntüleme Sistemi v3.0 - Performans ve Tema Düzeltmeleri');
 
   class SpatialMapManager {
     constructor() {
@@ -487,6 +458,14 @@
       // Kullanıcı durumu
       this.isLoggedIn = false;
 
+      // Tema haritası
+      this.themeMap = {};
+
+      // Performans için throttling
+      this.renderThrottle = null;
+      this.loadingQueue = [];
+      this.isLoadingResource = false;
+
       this.init();
     }
 
@@ -507,7 +486,6 @@
 
     async checkUserAuth() {
       try {
-        // Session kontrolü
         const response = await fetch('/api/3/action/dashboard_activity_list', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -528,7 +506,8 @@
         center: [38.4237, 27.1428],
         zoom: 10,
         zoomControl: true,
-        scrollWheelZoom: true
+        scrollWheelZoom: true,
+        preferCanvas: true // Performans için canvas renderer kullan
       });
 
       // Farklı harita tabanları
@@ -657,9 +636,59 @@
       return publicPackages;
     }
 
+    async loadThemes() {
+      try {
+        // Tüm temaları çek
+        const themeListResponse = await fetch('/api/3/action/theme_category_list', { credentials: 'include' });
+        const themeListData = await themeListResponse.json();
+
+        if (themeListData.success && themeListData.result) {
+          // Her tema için dataset ilişkilerini çek
+          const themePromises = themeListData.result.map(theme => 
+            fetch(`/api/3/action/theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
+              .then(r => r.json())
+              .then(data => {
+                if (data.success && data.result && data.result.datasets) {
+                  return { 
+                    themeName: theme.name || theme.slug, 
+                    datasets: data.result.datasets 
+                  };
+                }
+                return null;
+              })
+              .catch(err => {
+                console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
+                return null;
+              })
+          );
+          
+          const themeResults = await Promise.all(themePromises);
+          const tempMap = {};
+          
+          themeResults.forEach(result => {
+            if (result) {
+              result.datasets.forEach(dataset => {
+                // Dataset ID'ye göre tema adını kaydet
+                tempMap[dataset.id] = result.themeName;
+              });
+            }
+          });
+          
+          return tempMap;
+        }
+      } catch (error) {
+        console.error("Tema listesi yüklenirken hata:", error);
+      }
+      return {};
+    }
+
     async enrichResourcesWithPackageInfo(resources) {
+      // Önce temaları yükle
+      this.themeMap = await this.loadThemes();
+      
       const packageIds = [...new Set(resources.map(r => r.package_id))];
       
+      // Package bilgilerini paralel olarak çek
       const packageInfos = await Promise.all(
         packageIds.map(async (pid) => {
           try {
@@ -677,8 +706,10 @@
       const packageMap = new Map();
       packageInfos.forEach((pkg, index) => {
         if (pkg) {
-          packageMap.set(packageIds[index], {
-            theme: pkg.theme_name || pkg.theme || null,
+          const packageId = packageIds[index];
+          packageMap.set(packageId, {
+            // Tema bilgisini theme map'ten al
+            theme: this.themeMap[packageId] || null,
             groups: pkg.groups || [],
             tags: pkg.tags || [],
             private: pkg.private || false
@@ -815,10 +846,43 @@
       if (!rl) return;
 
       if (isVisible) {
-        this.showLoading();
-        if (!rl.loaded) { 
-          await this.loadResourceData(resourceId); 
+        // Resource'u yükleme kuyruğuna ekle
+        this.loadingQueue.push({ resourceId, action: 'load' });
+        this.processLoadingQueue();
+      } else {
+        // Kapatma işlemi
+        this.map.removeLayer(rl.layer);
+        this.activeResources.delete(resourceId);
+        rl.visible = false;
+
+        if (this.focusedResourceId === resourceId) { 
+          this.focusMode = false; 
+          this.focusedResourceId = null; 
         }
+
+        this.updateResourceToggleState(resourceId, false);
+        this.updateStats();
+        this.updateEmphasis();
+        this.renderSelectedLayersPanel();
+        
+        document.getElementById('downloadBtn').disabled = this.activeResources.size === 0;
+      }
+    }
+
+    async processLoadingQueue() {
+      if (this.isLoadingResource || this.loadingQueue.length === 0) return;
+      
+      this.isLoadingResource = true;
+      this.showLoading();
+      
+      while (this.loadingQueue.length > 0) {
+        const { resourceId } = this.loadingQueue.shift();
+        const rl = this.resourceLayers[resourceId];
+        
+        if (!rl.loaded) {
+          await this.loadResourceData(resourceId);
+        }
+        
         if (rl.loaded) {
           rl.layer.addTo(this.map);
           this.activeResources.add(resourceId);
@@ -829,25 +893,18 @@
             (fmt === 'wms' || fmt === 'geotiff') ? l.bringToBack?.() : l.bringToFront?.(); 
           });
         }
-        this.hideLoading();
-      } else {
-        this.map.removeLayer(rl.layer);
-        this.activeResources.delete(resourceId);
-        rl.visible = false;
-
-        if (this.focusedResourceId === resourceId) { 
-          this.focusMode = false; 
-          this.focusedResourceId = null; 
-        }
+        
+        this.updateResourceToggleState(resourceId, true);
+        this.updateStats();
+        this.fitMapToActiveLayers();
+        this.updateEmphasis();
+        this.renderSelectedLayersPanel();
+        
+        document.getElementById('downloadBtn').disabled = this.activeResources.size === 0;
       }
-
-      this.updateResourceToggleState(resourceId, isVisible);
-      this.updateStats();
-      this.fitMapToActiveLayers();
-      this.updateEmphasis();
-      this.renderSelectedLayersPanel();
       
-      document.getElementById('downloadBtn').disabled = this.activeResources.size === 0;
+      this.isLoadingResource = false;
+      this.hideLoading();
     }
 
     async loadResourceData(resourceId) {
@@ -1081,7 +1138,16 @@
         const pointFeatures = [];
         const nonPointFeatures = [];
         
-        geojsonData.features.forEach(feature => {
+        // Performans için sadece görünür features'ı işle
+        const maxFeatures = 5000;
+        let features = geojsonData.features || [];
+        
+        if (features.length > maxFeatures) {
+          console.warn(`Çok fazla feature (${features.length}), ilk ${maxFeatures} tanesi işlenecek`);
+          features = features.slice(0, maxFeatures);
+        }
+        
+        features.forEach(feature => {
           if (feature.geometry && feature.geometry.type === 'Point') {
             pointFeatures.push(feature);
           } else {
@@ -1089,6 +1155,7 @@
           }
         });
 
+        // Optimize edilmiş cluster ayarları
         const cluster = L.markerClusterGroup({
           spiderfyOnEveryZoom: false,
           spiderfyOnMaxZoom: true,
@@ -1096,8 +1163,9 @@
           disableClusteringAtZoom: 16,
           maxClusterRadius: 50,
           chunkedLoading: true,
-          chunkInterval: 200,
-          chunkDelay: 10
+          chunkInterval: 50, // Daha hızlı yükleme için azaltıldı
+          chunkDelay: 5,
+          animate: false // Animasyonu kapat
         });
 
         const getDivIcon = () => L.divIcon({
@@ -1107,6 +1175,7 @@
           iconAnchor: [9,9]
         });
 
+        // Batch marker ekleme
         const markers = pointFeatures.map(feature => {
           const [lon, lat] = feature.geometry.coordinates;
           const marker = L.marker([lat, lon], { 
@@ -1440,28 +1509,34 @@
 
     fitMapToActiveLayers() {
       if (this.activeResources.size === 0) return;
-      const allBounds = [];
-      this.activeResources.forEach(resourceId => {
-        const rl = this.resourceLayers[resourceId];
-        if (rl && rl.visible && rl.layer.getLayers().length > 0) {
-          rl.layer.eachLayer(layer => {
-            if (layer.getBounds) {
-              allBounds.push(layer.getBounds());
-            } else if (layer.getLatLng) {
-              const ll = layer.getLatLng();
-              allBounds.push(L.latLngBounds([ll, ll]));
-            }
-          });
-        }
-      });
       
-      if (allBounds.length > 0) {
-        const group = new L.featureGroup();
-        allBounds.forEach(b => group.addLayer(L.rectangle(b, {opacity:0})));
-        if (group.getLayers().length > 0) {
-          this.map.fitBounds(group.getBounds(), { padding: [20, 20] });
+      // Throttle this operation
+      if (this.renderThrottle) clearTimeout(this.renderThrottle);
+      
+      this.renderThrottle = setTimeout(() => {
+        const allBounds = [];
+        this.activeResources.forEach(resourceId => {
+          const rl = this.resourceLayers[resourceId];
+          if (rl && rl.visible && rl.layer.getLayers().length > 0) {
+            rl.layer.eachLayer(layer => {
+              if (layer.getBounds) {
+                allBounds.push(layer.getBounds());
+              } else if (layer.getLatLng) {
+                const ll = layer.getLatLng();
+                allBounds.push(L.latLngBounds([ll, ll]));
+              }
+            });
+          }
+        });
+        
+        if (allBounds.length > 0) {
+          const group = new L.featureGroup();
+          allBounds.forEach(b => group.addLayer(L.rectangle(b, {opacity:0})));
+          if (group.getLayers().length > 0) {
+            this.map.fitBounds(group.getBounds(), { padding: [20, 20], animate: false });
+          }
         }
-      }
+      }, 100);
     }
 
     renderSelectedLayersPanel() {
@@ -1524,6 +1599,25 @@
         container.classList.toggle('collapsed', collapsed);
         indicator.classList.toggle('collapsed', collapsed);
       }
+    }
+
+    handleResourceClick(resourceId, event) {
+      event.preventDefault();
+      event.stopPropagation();
+      
+      const checkbox = event.currentTarget.querySelector('input[type="checkbox"]');
+      const isCurrentlyActive = this.activeResources.has(resourceId);
+      
+      // Toggle state
+      const newState = !isCurrentlyActive;
+      
+      // Update checkbox
+      if (checkbox) {
+        checkbox.checked = newState;
+      }
+      
+      // Toggle resource
+      this.toggleResource(resourceId, newState);
     }
 
     setupEventListeners() {
@@ -1622,12 +1716,6 @@
             <span class="toggle-slider"></span>
           </label>
         </div>`;
-    }
-
-    handleResourceClick(resourceId, event) {
-      event.stopPropagation();
-      const isActive = this.activeResources.has(resourceId);
-      this.toggleResource(resourceId, !isActive);
     }
 
     getFormatClass(format) {

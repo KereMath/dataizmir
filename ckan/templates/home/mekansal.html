@@ -1553,14 +1553,40 @@ async downloadResourceData(resourceId) {
       url = 'https://dataizmir.izka.org.tr/dataset/8fb7040e-304d-4785-a50a-bb86a341e8f3/resource/7acef04c-d0f5-461e-bd19-5940c4e7b520/download/eu-hydro-river-tetwork-database.tif';
     }
     
+    // GeoTIFF kütüphanesi kontrolü
+    if (typeof window.GeoTIFF === 'undefined') {
+      console.error('GeoTIFF kütüphanesi yüklenmemiş');
+      
+      // Basit image overlay olarak göster
+      const paneName = this.createPaneForResource(resourceId, true);
+      
+      // İzmir bölgesi için tahminı bounds
+      const imageBounds = [[37.5, 26.5], [39.5, 28.0]];
+      
+      // Direkt URL'den image overlay oluştur
+      const imageOverlay = L.imageOverlay(url, imageBounds, {
+        opacity: 0.7,
+        pane: paneName
+      });
+      
+      rl.layer.clearLayers();
+      rl.layer.addLayer(imageOverlay);
+      
+      this.map.fitBounds(imageBounds);
+      rl.loaded = true;
+      
+      console.log('GeoTIFF basit image overlay olarak eklendi');
+      return;
+    }
+    
     console.log('GeoTIFF yükleniyor:', url);
     
     const response = await fetch(url);
     if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
     const arrayBuffer = await response.arrayBuffer();
     
-    // GeoTIFF.js kullan
-    const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
+    // window.GeoTIFF kullan
+    const tiff = await window.GeoTIFF.fromArrayBuffer(arrayBuffer);
     const image = await tiff.getImage();
     const width = image.getWidth();
     const height = image.getHeight();
@@ -1568,7 +1594,7 @@ async downloadResourceData(resourceId) {
     
     // Canvas oluştur
     const canvas = document.createElement('canvas');
-    const maxSize = 2048; // Daha yüksek çözünürlük
+    const maxSize = 2048;
     const scale = Math.min(maxSize / width, maxSize / height, 1);
     canvas.width = Math.floor(width * scale);
     canvas.height = Math.floor(height * scale);
@@ -1609,10 +1635,10 @@ async downloadResourceData(resourceId) {
       } else {
         // Nehir ağı için mavi tonları
         const normalized = (value - min) / (max - min);
-        data[i * 4] = Math.floor(20 + normalized * 50);     // R
-        data[i * 4 + 1] = Math.floor(50 + normalized * 100); // G
-        data[i * 4 + 2] = Math.floor(150 + normalized * 105); // B
-        data[i * 4 + 3] = 255; // A
+        data[i * 4] = Math.floor(20 + normalized * 50);
+        data[i * 4 + 1] = Math.floor(50 + normalized * 100);
+        data[i * 4 + 2] = Math.floor(150 + normalized * 105);
+        data[i * 4 + 3] = 255;
       }
     }
     

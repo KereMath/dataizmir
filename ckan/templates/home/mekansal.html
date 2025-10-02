@@ -1091,26 +1091,50 @@
         const parser = new DOMParser();
         const xmlDoc = parser.parseFromString(text, "text/xml");
         
-        // İlk Layer elementini bul
+        // Tüm layer isimlerini topla
+        const layerNames = [];
         const layers = xmlDoc.getElementsByTagName("Layer");
-        if (layers.length > 1) { // İlk layer genelde parent, ikincisi gerçek layer
+        
+        // Parent layer'ı atla, sadece queryable layer'ları al
+        for (let i = 0; i < layers.length; i++) {
+          const layer = layers[i];
+          // Queryable attribute kontrolü
+          if (layer.getAttribute('queryable') === '1') {
+            const nameEl = layer.getElementsByTagName("Name")[0];
+            if (nameEl && nameEl.textContent) {
+              layerNames.push(nameEl.textContent);
+            }
+          }
+        }
+        
+        // TUCBS servisleri için özel durum - tüm layer'ları göster
+        if (url.includes('tucbs') || url.includes('csb.gov.tr')) {
+          // Tüm queryable layer'ları virgülle birleştir
+          if (layerNames.length > 0) {
+            return layerNames.join(',');
+          }
+        }
+        
+        // Tek layer varsa onu döndür
+        if (layerNames.length === 1) {
+          return layerNames[0];
+        }
+        
+        // Birden fazla layer varsa ilkini döndür (veya hepsini)
+        if (layerNames.length > 1) {
+          // İlk birkaç layer'ı göster (performans için)
+          return layerNames.slice(0, 5).join(',');
+        }
+        
+        // Hiç queryable layer yoksa, ilk child layer'ı dene
+        if (layers.length > 1) {
           const nameElement = layers[1].getElementsByTagName("Name")[0];
           if (nameElement) {
             return nameElement.textContent;
           }
         }
         
-        // Alternatif olarak tüm layer isimlerini topla
-        const layerNames = [];
-        for (let layer of layers) {
-          const nameEl = layer.getElementsByTagName("Name")[0];
-          if (nameEl && nameEl.textContent) {
-            layerNames.push(nameEl.textContent);
-          }
-        }
-        
-        // İlk geçerli layer ismini döndür
-        return layerNames.find(name => name && !name.includes('root')) || 'layer';
+        return null;
       } catch (error) {
         console.warn('WMS Layer name alınamadı, varsayılan kullanılacak:', error);
         

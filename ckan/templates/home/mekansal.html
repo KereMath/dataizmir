@@ -258,7 +258,7 @@
   .layer-switcher-control {
     position: absolute;
     top: 10px;
-    right: 10px;
+    right: 120px;
     background: white;
     border-radius: 8px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -398,7 +398,7 @@
   .selected-layers-panel {
     position: absolute; 
     top: 70px; 
-    right: 10px;
+    right: 120px;
     display: flex; 
     flex-direction: column; 
     gap: 8px;
@@ -460,6 +460,22 @@
   .sel-btn:hover { background: #f3f4f6; transform: scale(1.05); }
   .sel-btn.danger:hover { background: #fee2e2; border-color: #fecaca; }
   .sel-btn.active { border-color:#60a5fa; background:#e0f2fe; }
+
+  /* WMS GetCapabilities iframe görüntüleme düzeltmesi */
+  .ckanext-datapreview iframe {
+    width: 100% !important;
+    min-height: 600px !important;
+    background: white !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 8px !important;
+  }
+  
+  /* XML görüntüleme için stil */
+  .ckanext-datapreview {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
 </style>
 
 <div class="page-container">
@@ -696,20 +712,6 @@
         content.classList.remove('expanded');
         toggle.textContent = '▼';
       }
-    }
-
-    updateLayerSwitcher(resourceId, wmsCapabilities) {
-      const layerSwitcher = document.getElementById('layerSwitcher');
-      const content = document.getElementById('layerSwitcherContent');
-      
-      // Layer Switcher'ı göster
-      layerSwitcher.style.display = 'block';
-      
-      // WMS layer bilgilerini sakla
-      this.wmsLayers[resourceId] = wmsCapabilities;
-      
-      // Layer Switcher içeriğini güncelle
-      this.renderLayerSwitcherContent();
     }
 
     renderLayerSwitcherContent() {
@@ -1359,18 +1361,44 @@
         const layers = [];
         const layerElements = xmlDoc.getElementsByTagName("Layer");
 
-        // İlk Layer genellikle root layer, onu atla
-        for (let i = 1; i < layerElements.length; i++) {
-          const layer = layerElements[i];
-          const nameEl = layer.getElementsByTagName("Name")[0];
-          const titleEl = layer.getElementsByTagName("Title")[0];
-          
-          if (nameEl && nameEl.textContent) {
-            layers.push({
-              name: nameEl.textContent,
-              title: titleEl ? titleEl.textContent : nameEl.textContent,
-              queryable: layer.getAttribute('queryable') === '1'
-            });
+        // TUCBS servisleri için özel durum
+        if (url.includes('tucbs') || url.includes('csb.gov.tr')) {
+          // Root layer'ı atla, sadece alt layer'ları al
+          // İlk Layer genellikle root, onun altındaki Layer'ları al
+          for (let i = 0; i < layerElements.length; i++) {
+            const layer = layerElements[i];
+            const nameEl = layer.getElementsByTagName("Name")[0];
+            const titleEl = layer.getElementsByTagName("Title")[0];
+            
+            // Name'i olan ve queryable olan layer'ları al
+            if (nameEl && nameEl.textContent && layer.getAttribute('queryable') === '1') {
+              // Parent layer olmadığından emin ol (child layer kontrolü)
+              const hasChildLayers = layer.getElementsByTagName("Layer").length > 0;
+              
+              // Eğer child layer'ı yoksa (yani kendisi leaf node ise) ekle
+              if (!hasChildLayers) {
+                layers.push({
+                  name: nameEl.textContent,
+                  title: titleEl ? titleEl.textContent : nameEl.textContent,
+                  queryable: true
+                });
+              }
+            }
+          }
+        } else {
+          // Diğer WMS servisleri için normal işlem
+          for (let i = 1; i < layerElements.length; i++) {
+            const layer = layerElements[i];
+            const nameEl = layer.getElementsByTagName("Name")[0];
+            const titleEl = layer.getElementsByTagName("Title")[0];
+            
+            if (nameEl && nameEl.textContent) {
+              layers.push({
+                name: nameEl.textContent,
+                title: titleEl ? titleEl.textContent : nameEl.textContent,
+                queryable: layer.getAttribute('queryable') === '1'
+              });
+            }
           }
         }
 
@@ -1395,14 +1423,18 @@
             console.log('WMS Layers bulundu:', layers);
             
             if (layers.length > 0) {
-              // WMS layer bilgilerini sakla (activeResources kontrolünden önce)
+              // WMS layer bilgilerini sakla
               this.wmsLayers[resourceId] = layers;
               
               // Tüm layer'ları ekle
               const paneName = this.createPaneForResource(resourceId, true);
               const rl = this.resourceLayers[resourceId];
               
-              // İlk layer'ı varsayılan olarak göster, diğerlerini gizle
+              // TUCBS için rastgele bir layer seç
+              const isTucbs = url.includes('tucbs') || url.includes('csb.gov.tr');
+              const randomIndex = isTucbs ? Math.floor(Math.random() * layers.length) : 0;
+              
+              // Layer'ları oluştur
               layers.forEach((layerInfo, index) => {
                 const wmsLayer = L.tileLayer.wms(url, { 
                   layers: layerInfo.name,
@@ -1414,17 +1446,27 @@
                   attribution: `WMS: ${resource.resource_name} - ${layerInfo.title}`,
                   pane: paneName,
                   tileSize: 256,
-                  opacity: 1.0
+                  opacity: 1.0,
+                  // TUCBS için özel parametreler
+                  ...(isTucbs ? {
+                    srs: 'EPSG:3857',
+                    bbox: '{bbox-epsg-3857}',
+                    width: 256,
+                    height: 256
+                  } : {})
                 });
 
                 // Layer objesini sakla
                 if (!rl.wmsLayerObjs) rl.wmsLayerObjs = {};
                 rl.wmsLayerObjs[layerInfo.name] = wmsLayer;
                 
-                // Sadece ilk layer'ı varsayılan olarak ekle
-                if (index === 0) {
+                // TUCBS için rastgele seçilen layer'ı veya normal için ilk layer'ı aktif et
+                const shouldActivate = isTucbs ? (index === randomIndex) : (index === 0);
+                
+                if (shouldActivate) {
                   layerGroup.addLayer(wmsLayer);
                   this.wmsLayerStates[`${resourceId}_${index}`] = true;
+                  console.log(`Aktif edilen layer: ${layerInfo.title} (index: ${index})`);
                 } else {
                   this.wmsLayerStates[`${resourceId}_${index}`] = false;
                 }
@@ -1435,6 +1477,7 @@
                 // Hata durumunda log
                 wmsLayer.on('tileerror', function(error) {
                   console.error('WMS Tile Error:', error);
+                  console.error('Failed URL:', error.tile?.src);
                 });
               });
               

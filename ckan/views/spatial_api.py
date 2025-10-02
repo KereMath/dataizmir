@@ -278,7 +278,17 @@ def get_spatial_data(resource_id):
         # Bisiklet Altyapı Haritası
         "966cffaa-ccf1-4306-8da9-ac0cffbebb88": "https://acikveri.bizizmir.com/dataset/e3553de7-c06d-4082-892b-974d2187a234/resource/966cffaa-ccf1-4306-8da9-ac0cffbebb88/download/bisikletyollari.geojson",
         # Metro İstasyonları
-        "7424cbc7-fa12-417f-9770-a0c104fc9475": "https://acikveri.bizizmir.com/dataset/d5c5522a-d6f6-4758-a2ec-0dd520e06f55/resource/7424cbc7-fa12-417f-9770-a0c104fc9475/download/metro.geojson"
+        "7424cbc7-fa12-417f-9770-a0c104fc9475": "https://acikveri.bizizmir.com/dataset/d5c5522a-d6f6-4758-a2ec-0dd520e06f55/resource/7424cbc7-fa12-417f-9770-a0c104fc9475/download/metro.geojson",
+        
+        # YENİ EKLENEN CSV/EXCEL KAYNAKLARI
+        # EGMS AEPND V2022.0 (XLSX)
+        "d5662ab6-60b4-4bc8-8f5c-3d840391e73e": "https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/d5662ab6-60b4-4bc8-8f5c-3d840391e73e/download/egms_aepnd_v2022.0.xlsx",
+        # EGMS AEPND V2023.0 (CSV)
+        "84dac4aa-a10d-4ed6-afad-915fc8585edb": "https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/84dac4aa-a10d-4ed6-afad-915fc8585edb/download/egms_aepnd_v2023.0.csv",
+        # Yeni Hayvan İçme Suyu (HİS) Göletleri
+        "413173de-3443-4abb-a194-611b102d201c": "https://dataizmir.izka.org.tr/dataset/09e585f5-00b4-4f47-8a03-6a841a242cff/resource/413173de-3443-4abb-a194-611b102d201c/download/hisgoleti-yeni.xlsx",
+        # Otobüs Hat Güzergahlarının Konum Bilgileri
+        "211488": "https://openfiles.izmir.bel.tr/211488/docs/eshot-otobus-hat-guzergahlari.csv"
     }
 
     # 2. CORS sorunu olmayan ve FRONTEND'de işlenecek kaynakların ID'leri
@@ -290,7 +300,15 @@ def get_spatial_data(resource_id):
     # 3. Karar verme mantığı
     if resource_id in MANUAL_URLS:
         correct_url = MANUAL_URLS[resource_id]
-        if resource_id in FRONTEND_FETCH_IDS:
+        
+        # CSV/Excel kaynakları için format'ı belirle
+        if correct_url.endswith('.csv'):
+            print(f"Manuel CSV URL kullanılıyor: {resource_id}")
+            return process_tabular_data(correct_url, 'csv', resource_id)
+        elif correct_url.endswith('.xlsx') or correct_url.endswith('.xls'):
+            print(f"Manuel Excel URL kullanılıyor: {resource_id}")
+            return process_tabular_data(correct_url, 'xlsx', resource_id)
+        elif resource_id in FRONTEND_FETCH_IDS:
             # Bu kaynak sorunsuz, URL'ini frontend'e gönder o halletsin.
             print(f"Manuel URL (Frontend Fetch) kullanılıyor: {resource_id}")
             return jsonify({

@@ -257,14 +257,6 @@ def get_spatial_resource_list():
             'spatial_resources': []
         }), 500
 
-# FILE: spatial_api.py
-
-# FILE: spatial_api.py
-
-# FILE: spatial_api.py
-
-# FILE: spatial_api.py
-
 @spatial_api.route('/api/spatial-resources/<resource_id>/data')
 def get_spatial_data(resource_id):
     """Resource'un spatial verisini parse ederek harita için hazırlar"""
@@ -566,6 +558,7 @@ def process_geojson(url):
     except Exception as e:
         print(f"[DEBUG] General Error: {str(e)}")
         return jsonify({'error': f'GeoJSON yüklenemedi: {str(e)}'}), 500
+
 def process_spatial_files(url, format_type):
     """KML, GPX gibi spatial dosyaları işle"""
     
@@ -667,15 +660,13 @@ def process_api_data(url, format_type, resource_id):
     try:
         print(f"API verisi işleniyor: {url} ({format_type})")
 
-        # 💡 Tarayıcıların gönderdiği standart başlıkları ekleyerek isteği daha güvenilir hale getiriyoruz.
-        # Bu, 502 Bad Gateway gibi hataları çözebilir.
         headers = {
             'Accept': 'application/json, text/plain, */*',
             'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7',
             'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Referer': toolkit.config.get('ckan.site_url', 'http://localhost:5000') # Kendi siteni referans göster
+            'Referer': toolkit.config.get('ckan.site_url', 'http://localhost:5000')
         }
 
         try:
@@ -690,8 +681,6 @@ def process_api_data(url, format_type, resource_id):
             }), 502
 
         json_data = response.json()
-        
-        # ... (Bu fonksiyonun geri kalanı aynı kalabilir, aşağısı örnek) ...
         
         if isinstance(json_data, dict):
             possible_keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features']
@@ -736,6 +725,42 @@ def process_api_data(url, format_type, resource_id):
         print(f"API data işleme hatası (genel): {e}")
         return jsonify({'success': False, 'error': f'API verisi işlenemedi: {str(e)}'}), 500
 
+def clean_coordinate_value(value):
+    """Koordinat değerini temizle - derece sembolü ve diğer karakterleri kaldır"""
+    if pd.isna(value):
+        return None
+    
+    # String'e çevir
+    value_str = str(value).strip()
+    
+    # Boş string kontrolü
+    if not value_str or value_str.lower() == 'nan':
+        return None
+    
+    # Derece sembolünü ve diğer özel karakterleri kaldır
+    # Unicode derece sembolü: ° (\u00B0)
+    # Diğer varyasyonlar: º, ˚
+    value_str = value_str.replace('°', '')
+    value_str = value_str.replace('º', '')
+    value_str = value_str.replace('˚', '')
+    value_str = value_str.replace('′', '')  # Dakika işareti
+    value_str = value_str.replace('″', '')  # Saniye işareti
+    value_str = value_str.replace("'", '')  # Dakika için alternatif
+    value_str = value_str.replace('"', '')  # Saniye için alternatif
+    
+    # Virgülü noktaya çevir
+    value_str = value_str.replace(',', '.')
+    
+    # Gereksiz boşlukları temizle
+    value_str = value_str.strip()
+    
+    # Float'a çevirmeyi dene
+    try:
+        coord = float(value_str)
+        return coord
+    except (ValueError, TypeError):
+        return None
+
 def process_tabular_data(url, format_type, resource_id):
     """CSV/Excel dosyalarını parse et ve koordinat sütunlarını akıllıca tespit et"""
     try:
@@ -748,7 +773,7 @@ def process_tabular_data(url, format_type, resource_id):
     df = None
     if format_type == 'csv':
         delimiters = [',', ';', '\t', '|']
-        encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1254']
+        encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1254', 'utf-8-sig']
         
         for delimiter in delimiters:
             for encoding in encodings:
@@ -758,7 +783,14 @@ def process_tabular_data(url, format_type, resource_id):
                         print(f"CSV başarıyla parse edildi: delimiter='{delimiter}', encoding='{encoding}', sütun sayısı={len(df.columns)}")
                         break
                 except Exception as e:
-                    continue
+                    try:
+                        # Binary olarak da dene
+                        df = pd.read_csv(io.BytesIO(response.content), delimiter=delimiter, encoding=encoding)
+                        if len(df.columns) > 1:
+                            print(f"CSV başarıyla parse edildi (binary): delimiter='{delimiter}', encoding='{encoding}'")
+                            break
+                    except:
+                        continue
             if df is not None and len(df.columns) > 1:
                 break
         
@@ -881,41 +913,49 @@ def smart_detect_coordinate_columns(df):
     }
 
 def check_numeric_ratio(series):
-    """Sütunun ne kadarının sayısal olduğunu kontrol et"""
+    """Sütunun ne kadarının sayısal olduğunu kontrol et - derece sembolleri dahil"""
     try:
-        if series.dtype == 'object':
-            cleaned_series = series.astype(str).str.replace(',', '.').str.strip()
-            numeric_series = pd.to_numeric(cleaned_series, errors='coerce')
-        else:
-            numeric_series = pd.to_numeric(series, errors='coerce')
+        cleaned_values = []
+        for val in series:
+            cleaned = clean_coordinate_value(val)
+            cleaned_values.append(cleaned)
         
-        ratio = numeric_series.notna().sum() / len(series)
+        # None olmayan değerlerin oranını hesapla
+        non_none = sum(1 for v in cleaned_values if v is not None)
+        ratio = non_none / len(series) if len(series) > 0 else 0
+        
         return ratio
     except Exception as e:
+        print(f"check_numeric_ratio error: {e}")
         return 0
 
 def check_coordinate_range(series, coord_type):
-    """Koordinat değer aralığını kontrol et"""
+    """Koordinat değer aralığını kontrol et - derece sembolleri dahil"""
     try:
-        if series.dtype == 'object':
-            cleaned_series = series.astype(str).str.replace(',', '.').str.strip()
-            numeric_series = pd.to_numeric(cleaned_series, errors='coerce').dropna()
-        else:
-            numeric_series = pd.to_numeric(series, errors='coerce').dropna()
+        # Değerleri temizle ve float'a çevir
+        cleaned_values = []
+        for val in series:
+            cleaned = clean_coordinate_value(val)
+            if cleaned is not None:
+                cleaned_values.append(cleaned)
         
-        if len(numeric_series) == 0:
+        if len(cleaned_values) == 0:
             return False
         
-        min_val = numeric_series.min()
-        max_val = numeric_series.max()
+        min_val = min(cleaned_values)
+        max_val = max(cleaned_values)
         
         if coord_type == 'lat':
+            # Enlem için geçerli aralık: -90 ile 90
             result = -95 <= min_val <= 95 and -95 <= max_val <= 95
         else:
+            # Boylam için geçerli aralık: -180 ile 180
             result = -185 <= min_val <= 185 and -185 <= max_val <= 185
         
+        print(f"Range check for {coord_type}: min={min_val}, max={max_val}, valid={result}")
         return result
     except Exception as e:
+        print(f"check_coordinate_range error: {e}")
         return False
 
 def select_best_candidate(candidates):
@@ -981,7 +1021,7 @@ def generate_suggestions(df, lat_candidates, lon_candidates):
     return suggestions
 
 def convert_to_geojson(df, coord_columns):
-    """DataFrame'i GeoJSON'a çevir"""
+    """DataFrame'i GeoJSON'a çevir - derece sembolleri dahil"""
     features = []
     lat_col = coord_columns['lat']
     lon_col = coord_columns['lon']
@@ -990,24 +1030,34 @@ def convert_to_geojson(df, coord_columns):
     
     for idx, row in df.iterrows():
         try:
-            lat_val = str(row[lat_col]).replace(',', '.').strip() if pd.notna(row[lat_col]) else None
-            lon_val = str(row[lon_col]).replace(',', '.').strip() if pd.notna(row[lon_col]) else None
+            # Koordinat değerlerini temizle
+            lat = clean_coordinate_value(row[lat_col])
+            lon = clean_coordinate_value(row[lon_col])
             
-            if not lat_val or not lon_val or lat_val.lower() == 'nan' or lon_val.lower() == 'nan':
+            # Geçersiz koordinatları atla
+            if lat is None or lon is None:
+                print(f"Satır atlandı (idx={idx}): lat veya lon değeri None")
                 continue
-                
-            lat = float(lat_val)
-            lon = float(lon_val)
             
+            # Koordinat aralığı kontrolü
             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
                 print(f"Geçersiz koordinat atlandı: lat={lat}, lon={lon}")
                 continue
             
+            # Properties oluştur
             properties = {}
             for col in df.columns:
                 if col not in [lat_col, lon_col]:
                     value = row[col]
-                    properties[col] = value if pd.notna(value) else None
+                    # NaN veya None değerleri None olarak kaydet
+                    if pd.notna(value):
+                        # Eğer değer string ve derece sembolü içeriyorsa, temizle
+                        if isinstance(value, str) and '°' in value:
+                            properties[col] = value.replace('°', '').strip()
+                        else:
+                            properties[col] = value
+                    else:
+                        properties[col] = None
             
             feature = {
                 "type": "Feature",

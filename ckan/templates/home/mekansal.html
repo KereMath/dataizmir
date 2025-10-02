@@ -716,11 +716,14 @@
       const content = document.getElementById('layerSwitcherContent');
       let html = '';
       
-      // Aktif WMS kaynakları için layer listesi oluştur
+      console.log('WMS Layers:', this.wmsLayers);
+      console.log('Active Resources:', this.activeResources);
+      
+      // Tüm WMS layer'ları göster (activeResources kontrolü olmadan)
       for (const [resourceId, layers] of Object.entries(this.wmsLayers)) {
-        if (!this.activeResources.has(resourceId)) continue;
+        const resource = this.resourceLayers[resourceId]?.resource;
+        if (!resource) continue;
         
-        const resource = this.resourceLayers[resourceId].resource;
         html += `
           <div class="wms-layer-info">
             <strong>${resource.resource_name}</strong>
@@ -1389,14 +1392,17 @@
             // Önce WMS layer bilgilerini al
             const layers = await this.extractWMSLayersInfo(url);
             
+            console.log('WMS Layers bulundu:', layers);
+            
             if (layers.length > 0) {
-              // Layer Switcher'ı güncelle
-              this.updateLayerSwitcher(resourceId, layers);
+              // WMS layer bilgilerini sakla (activeResources kontrolünden önce)
+              this.wmsLayers[resourceId] = layers;
               
-              // Tüm layer'ları ekle (başlangıçta görünür)
+              // Tüm layer'ları ekle
               const paneName = this.createPaneForResource(resourceId, true);
               const rl = this.resourceLayers[resourceId];
               
+              // İlk layer'ı varsayılan olarak göster, diğerlerini gizle
               layers.forEach((layerInfo, index) => {
                 const wmsLayer = L.tileLayer.wms(url, { 
                   layers: layerInfo.name,
@@ -1412,13 +1418,18 @@
                 });
 
                 // Layer objesini sakla
+                if (!rl.wmsLayerObjs) rl.wmsLayerObjs = {};
                 rl.wmsLayerObjs[layerInfo.name] = wmsLayer;
                 
-                // Default olarak layer'ı ekle
-                layerGroup.addLayer(wmsLayer);
+                // Sadece ilk layer'ı varsayılan olarak ekle
+                if (index === 0) {
+                  layerGroup.addLayer(wmsLayer);
+                  this.wmsLayerStates[`${resourceId}_${index}`] = true;
+                } else {
+                  this.wmsLayerStates[`${resourceId}_${index}`] = false;
+                }
                 
-                // State'i kaydet
-                this.wmsLayerStates[`${resourceId}_${index}`] = true;
+                // Opacity state'i kaydet
                 this.wmsLayerStates[`${resourceId}_${index}_opacity`] = 100;
 
                 // Hata durumunda log
@@ -1427,7 +1438,8 @@
                 });
               });
               
-              // Layer Switcher içeriğini renderla
+              // Layer Switcher'ı göster ve güncelle
+              document.getElementById('layerSwitcher').style.display = 'block';
               this.renderLayerSwitcherContent();
               
             } else {

@@ -102,31 +102,17 @@
   .search-section { 
     padding: 12px 16px; 
     border-bottom: 1px solid #e9ecef; 
-    display:flex; 
-    align-items:center; 
-    gap:10px;
     flex-shrink: 0;
   }
-  .search-input { width: 100%; padding: 10px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 14px; background-color: #fff; }
+  .search-input { 
+    width: 100%; 
+    padding: 10px 12px; 
+    border: 1px solid #ced4da; 
+    border-radius: 8px; 
+    font-size: 14px; 
+    background-color: #fff; 
+  }
   .search-input:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15); }
-
-  /* Data download button */
-  .download-btn {
-    flex-shrink: 0;
-    padding: 10px;
-    background: #28a745;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 14px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    transition: background 0.2s;
-  }
-  .download-btn:hover { background: #218838; }
-  .download-btn:disabled { background: #6c757d; cursor: not-allowed; opacity: 0.6; }
 
   .layers-content { 
     flex: 1;
@@ -190,12 +176,36 @@
   .format-wms     { background: #d6eaff; color: #2a61a0; }
   .format-geotiff { background: #fdf6e3; color: #b58900; }
 
+  .resource-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .download-resource-btn {
+    padding: 6px 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+  .download-resource-btn:hover { 
+    background: #218838; 
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+  }
+
   .modern-toggle { 
     position: relative; 
     display: inline-block; 
     width: 44px; 
     height: 24px; 
-    margin-left: 10px; 
     cursor: pointer;
   }
   .modern-toggle input { opacity: 0; width: 0; height: 0; }
@@ -374,10 +384,6 @@
 
       <div class="search-section">
         <input type="search" class="search-input" id="layerSearch" placeholder="Veri seti arayın...">
-        <button class="download-btn" id="downloadBtn" title="Aktif katmanları indir" disabled>
-          <span>💾</span>
-          <span>İndir</span>
-        </button>
       </div>
 
       <div class="layers-content" id="spatialLayersContainer">
@@ -424,7 +430,7 @@
 <script src="https://unpkg.com/geotiff@2.0.7/dist/geotiff.bundle.min.js"></script>
 
 <script>
-  console.log('Modern Mekansal Görüntüleme Sistemi v3.0 - Performans ve Tema Düzeltmeleri');
+  console.log('Modern Mekansal Görüntüleme Sistemi v3.5 - İndirme ve WMS Düzeltmeleri');
 
   class SpatialMapManager {
     constructor() {
@@ -864,8 +870,6 @@
         this.updateStats();
         this.updateEmphasis();
         this.renderSelectedLayersPanel();
-        
-        document.getElementById('downloadBtn').disabled = this.activeResources.size === 0;
       }
     }
 
@@ -899,8 +903,6 @@
         this.fitMapToActiveLayers();
         this.updateEmphasis();
         this.renderSelectedLayersPanel();
-        
-        document.getElementById('downloadBtn').disabled = this.activeResources.size === 0;
       }
       
       this.isLoadingResource = false;
@@ -970,45 +972,98 @@
       }
     }
 
-    async downloadActiveLayersData() {
-      if (this.activeResources.size === 0) {
-        alert('İndirilecek aktif katman yok!');
-        return;
-      }
-
+    async downloadResourceData(resourceId) {
+      const rl = this.resourceLayers[resourceId];
+      if (!rl) return;
+      
+      const resource = rl.resource;
+      const format = (resource.format || '').toLowerCase();
+      
       try {
         this.showLoading();
         
-        const downloadData = {
-          type: 'FeatureCollection',
-          features: []
-        };
-
-        for (const resourceId of this.activeResources) {
-          const rl = this.resourceLayers[resourceId];
-          if (rl && rl.layer) {
-            rl.layer.eachLayer(layer => {
-              if (layer.toGeoJSON) {
-                try {
-                  const geojson = layer.toGeoJSON();
-                  if (geojson.features) {
-                    downloadData.features.push(...geojson.features);
-                  } else if (geojson.type === 'Feature') {
-                    downloadData.features.push(geojson);
-                  }
-                } catch (e) {
-                  console.warn('Layer GeoJSON dönüştürme hatası:', e);
-                }
-              }
-            });
-          }
+        // WMS özel durumu
+        if (format === 'wms') {
+          alert('WMS servisleri doğrudan indirilemez. GetCapabilities URL\'ini kullanabilirsiniz:\n' + resource.url);
+          this.hideLoading();
+          return;
         }
-
-        const blob = new Blob([JSON.stringify(downloadData, null, 2)], { type: 'application/json' });
+        
+        // API veya diğer formatlar için
+        const apiUrl = `/api/spatial-resources/${resourceId}/data`;
+        const response = await fetch(apiUrl, { credentials: 'include' });
+        
+        if (!response.ok) {
+          throw new Error('Veri alınamadı');
+        }
+        
+        const result = await response.json();
+        
+        let dataToDownload;
+        let fileName = resource.resource_name || 'data';
+        let mimeType = 'application/json';
+        
+        // Format'a göre dosya adı ve mime type ayarla
+        if (format === 'csv') {
+          mimeType = 'text/csv';
+          fileName += '.csv';
+        } else if (format === 'geojson') {
+          mimeType = 'application/geo+json';
+          fileName += '.geojson';
+        } else if (format === 'json' || format === 'api' || format === 'rest') {
+          mimeType = 'application/json';
+          fileName += '.json';
+        } else if (format === 'xlsx' || format === 'xls') {
+          // Excel dosyaları için doğrudan URL'den indir
+          if (resource.url) {
+            const a = document.createElement('a');
+            a.href = resource.url;
+            a.download = fileName + (format === 'xlsx' ? '.xlsx' : '.xls');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            this.hideLoading();
+            return;
+          }
+        } else if (format === 'shp') {
+          // SHP için doğrudan ZIP URL'den indir
+          if (result.url) {
+            const a = document.createElement('a');
+            a.href = result.url;
+            a.download = fileName + '.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            this.hideLoading();
+            return;
+          }
+        } else {
+          fileName += '.json';
+        }
+        
+        // Veriyi hazırla
+        if (result.data) {
+          dataToDownload = JSON.stringify(result.data, null, 2);
+        } else if (result.type === 'api' && result.url) {
+          // API verisi için fetch et
+          const apiResponse = await fetch(result.url);
+          const apiData = await apiResponse.json();
+          dataToDownload = JSON.stringify(apiData, null, 2);
+        } else if (result.type === 'geojson_url' && result.url) {
+          // GeoJSON URL'den fetch et
+          const geoResponse = await fetch(result.url);
+          const geoData = await geoResponse.json();
+          dataToDownload = JSON.stringify(geoData, null, 2);
+        } else {
+          throw new Error('İndirilecek veri bulunamadı');
+        }
+        
+        // Blob oluştur ve indir
+        const blob = new Blob([dataToDownload], { type: mimeType });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `spatial_data_${new Date().toISOString().split('T')[0]}.geojson`;
+        a.download = fileName;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
@@ -1017,8 +1072,61 @@
         this.hideLoading();
       } catch (error) {
         console.error('İndirme hatası:', error);
-        alert('Veri indirme sırasında hata oluştu!');
+        alert('Veri indirme sırasında hata oluştu: ' + error.message);
         this.hideLoading();
+      }
+    }
+
+    async extractWMSLayerName(url) {
+      try {
+        // GetCapabilities isteği yap
+        const capabilitiesUrl = url.includes('?') 
+          ? `${url}&service=WMS&request=GetCapabilities&version=1.3.0`
+          : `${url}?service=WMS&request=GetCapabilities&version=1.3.0`;
+        
+        const response = await fetch(capabilitiesUrl);
+        const text = await response.text();
+        
+        // XML'den layer isimlerini çıkar
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, "text/xml");
+        
+        // İlk Layer elementini bul
+        const layers = xmlDoc.getElementsByTagName("Layer");
+        if (layers.length > 1) { // İlk layer genelde parent, ikincisi gerçek layer
+          const nameElement = layers[1].getElementsByTagName("Name")[0];
+          if (nameElement) {
+            return nameElement.textContent;
+          }
+        }
+        
+        // Alternatif olarak tüm layer isimlerini topla
+        const layerNames = [];
+        for (let layer of layers) {
+          const nameEl = layer.getElementsByTagName("Name")[0];
+          if (nameEl && nameEl.textContent) {
+            layerNames.push(nameEl.textContent);
+          }
+        }
+        
+        // İlk geçerli layer ismini döndür
+        return layerNames.find(name => name && !name.includes('root')) || 'layer';
+      } catch (error) {
+        console.warn('WMS Layer name alınamadı, varsayılan kullanılacak:', error);
+        
+        // URL'den layer ismini tahmin etmeye çalış
+        if (url.includes('geoserver')) {
+          // GeoServer formatı: /geoserver/workspace/wms
+          const parts = url.split('/');
+          const geoserverIndex = parts.findIndex(p => p === 'geoserver');
+          if (geoserverIndex !== -1 && parts[geoserverIndex + 1]) {
+            const workspace = parts[geoserverIndex + 1];
+            // workspace:layername formatında döndür
+            return workspace;
+          }
+        }
+        
+        return null;
       }
     }
 
@@ -1030,15 +1138,52 @@
       try {
         switch ((format || '').toLowerCase()) {
           case 'wms': {
-            const layerName = resource.wms_layer || 'layer';
+            // Önce WMS layer name'i almaya çalış
+            let layerName = resource.wms_layer;
+            
+            if (!layerName) {
+              // GetCapabilities'ten layer name'i çek
+              layerName = await this.extractWMSLayerName(url);
+              
+              // Hala yoksa URL'den tahmin et
+              if (!layerName && url.includes('geoserver')) {
+                // GeoServer pattern: /geoserver/workspace/wms
+                const urlParts = url.split('/');
+                const geoserverIdx = urlParts.indexOf('geoserver');
+                if (geoserverIdx !== -1 && urlParts[geoserverIdx + 1]) {
+                  const workspace = urlParts[geoserverIdx + 1];
+                  // Genelde workspace:layername formatında
+                  layerName = workspace;
+                }
+              }
+            }
+            
+            // Son çare: varsayılan değer
+            if (!layerName) {
+              layerName = 'layer';
+            }
+            
+            console.log('WMS Layer Name:', layerName, 'URL:', url);
+            
             const paneName = this.createPaneForResource(resourceId, true);
             newLayer = L.tileLayer.wms(url, { 
-              layers: layerName, 
-              format: 'image/png', 
-              transparent: true, 
-              attribution: `WMS: ${resource.resource_name}`, 
-              pane: paneName 
+              layers: layerName,
+              format: 'image/png',
+              transparent: true,
+              version: '1.3.0',
+              crs: L.CRS.EPSG3857,
+              uppercase: true,
+              attribution: `WMS: ${resource.resource_name}`,
+              pane: paneName,
+              tileSize: 256,
+              opacity: 0.8
             });
+            
+            // Hata durumunda log
+            newLayer.on('tileerror', function(error) {
+              console.error('WMS Tile Error:', error);
+            });
+            
             break;
           }
           case 'wfs': {
@@ -1643,11 +1788,6 @@
         this.selectedCategory = e.target.value;
         this.renderLayers();
       });
-      
-      // Download butonu
-      document.getElementById('downloadBtn').addEventListener('click', () => {
-        this.downloadActiveLayersData();
-      });
     }
 
     renderLayers() {
@@ -1709,12 +1849,20 @@
               <span class="format-badge ${formatClass}">${format.toUpperCase()}</span>
             </div>
           </div>
-          <label class="modern-toggle" onclick="spatialMapManager.handleResourceClick('${resource.resource_id}', event)">
-            <input type="checkbox" 
-                   data-resource="${resource.resource_id}" 
-                   ${this.activeResources.has(resource.resource_id) ? 'checked' : ''}>
-            <span class="toggle-slider"></span>
-          </label>
+          <div class="resource-actions">
+            <button class="download-resource-btn" 
+                    onclick="spatialMapManager.downloadResourceData('${resource.resource_id}')"
+                    title="Veriyi indir">
+              <span>💾</span>
+              <span>İndir</span>
+            </button>
+            <label class="modern-toggle" onclick="spatialMapManager.handleResourceClick('${resource.resource_id}', event)">
+              <input type="checkbox" 
+                     data-resource="${resource.resource_id}" 
+                     ${this.activeResources.has(resource.resource_id) ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
         </div>`;
     }
 

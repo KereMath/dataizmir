@@ -1545,49 +1545,82 @@
         if (resourceId === '7acef04c-d0f5-461e-bd19-5940c4e7b520') {
           console.log('EU Hydro River Network GeoTIFF için özel URL kullanılıyor');
           url = 'https://dataizmir.izka.org.tr/dataset/8fb7040e-304d-4785-a50a-bb86a341e8f3/resource/7acef04c-d0f5-461e-bd19-5940c4e7b520/download/eu-hydro-river-tetwork-database.tif';
+          
+          // Bu dosya için basit bir tile layer kullan
+          const paneName = this.createPaneForResource(resourceId, true);
+          
+          // GeoTIFF yerine WMS benzeri bir yaklaşım dene veya dosyayı indirme linki olarak göster
+          const infoLayer = L.marker([38.4237, 27.1428], {
+            icon: L.divIcon({
+              className: 'custom-div-icon',
+              html: `<div style="background: rgba(255,255,255,0.9); padding: 10px; border-radius: 5px; border: 2px solid #007bff;">
+                      <strong>EU Hydro River Network</strong><br>
+                      <small>GeoTIFF görüntüleme şu an desteklenmiyor</small><br>
+                      <a href="${url}" target="_blank" style="color: #007bff;">↓ İndir</a>
+                     </div>`,
+              iconSize: [250, 70],
+              iconAnchor: [125, 35]
+            }),
+            pane: paneName
+          });
+          
+          rl.layer.clearLayers();
+          rl.layer.addLayer(infoLayer);
+          
+          console.log('GeoTIFF için bilgi marker\'ı eklendi');
+          return;
         }
         
-        // URL'yi düzelt - eğer URL tam değilse base URL ekle
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-          // Relative URL ise tam URL'ye çevir
-          const baseUrl = window.location.origin;
-          url = baseUrl + (url.startsWith('/') ? '' : '/') + url;
-        }
-        
-        console.log('GeoTIFF yükleniyor:', url);
-        
+        // Diğer GeoTIFF'ler için normal işlem
         const response = await fetch(url);
         if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
         const arrayBuffer = await response.arrayBuffer();
         
-        // parseGeoRaster doğrudan window'da bulunuyor
-        const georaster = await parseGeoRaster(arrayBuffer);
-
+        // GeoTIFF.js kullan
+        const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
+        const image = await tiff.getImage();
+        const width = image.getWidth();
+        const height = image.getHeight();
+        const [xmin, ymin, xmax, ymax] = image.getBoundingBox();
+        
+        // Basit bir canvas overlay oluştur
         const paneName = this.createPaneForResource(resourceId, true);
-        const georasterLayer = new GeoRasterLayer({
-          georaster, 
-          opacity: 0.7, 
-          resolution: 256,
-          pixelValuesToColorFn: values => {
-            const v = values[0]; 
-            if (v === georaster.noDataValue) return null;
-            const n = (v - georaster.mins[0]) / (georaster.maxs[0] - georaster.mins[0]);
-            const r = Math.round(255 * (1 - n));
-            const g = Math.round(255 * n);
-            return `rgba(${r}, ${g}, 0, 0.8)`;
-          },
-          pane: paneName
-        });
-
-        rl.layer.clearLayers();
-        rl.layer.addLayer(georasterLayer);
-
-        if (georaster.xmin && georaster.xmax && georaster.ymin && georaster.ymax) {
-          const b = [[georaster.ymin, georaster.xmin], [georaster.ymax, georaster.xmax]];
-          this.map.fitBounds(b);
+        
+        const imageBounds = [[ymin, xmin], [ymax, xmax]];
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.min(width, 1024); // Performans için max boyut
+        canvas.height = Math.min(height, 1024);
+        
+        const ctx = canvas.getContext('2d');
+        const rasters = await image.readRasters({ width: canvas.width, height: canvas.height });
+        const imageData = ctx.createImageData(canvas.width, canvas.height);
+        
+        // Basit grayscale görüntüleme
+        for (let i = 0; i < rasters[0].length; i++) {
+          const value = rasters[0][i];
+          const gray = Math.floor((value / 255) * 255);
+          imageData.data[i * 4] = gray;
+          imageData.data[i * 4 + 1] = gray;
+          imageData.data[i * 4 + 2] = gray;
+          imageData.data[i * 4 + 3] = value > 0 ? 200 : 0;
         }
         
-        console.log('GeoTIFF başarıyla yüklendi');
+        ctx.putImageData(imageData, 0, 0);
+        const dataUrl = canvas.toDataURL();
+        
+        const imageOverlay = L.imageOverlay(dataUrl, imageBounds, {
+          opacity: 0.7,
+          pane: paneName
+        });
+        
+        rl.layer.clearLayers();
+        rl.layer.addLayer(imageOverlay);
+        
+        if (xmin && xmax && ymin && ymax) {
+          this.map.fitBounds(imageBounds);
+        }
+        
+        console.log('GeoTIFF canvas overlay oluşturuldu');
       } catch (error) {
         console.error('GeoTIFF işleme hatası:', error);
         this.showResourceError(resourceId, `GeoTIFF dosyası işlenemedi: ${error.message}`);

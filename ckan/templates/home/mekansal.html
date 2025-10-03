@@ -665,6 +665,43 @@
     border-radius: 8px;
   }
 
+  .pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 16px;
+    margin: 10px 16px;
+  }
+
+  .pagination-btn {
+    padding: 8px 12px;
+    border: 1px solid #dee2e6;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    color: #495057;
+    transition: all 0.2s;
+    min-width: 36px;
+  }
+
+  .pagination-btn:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+  }
+
+  .pagination-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
   /* Loading spinner */
   .loading-spinner {
     position: absolute;
@@ -1155,6 +1192,10 @@
       this.selectedOrganization = '';
       this.selectedFormat = '';
       this.searchTerm = '';
+
+      // Pagination
+      this.currentPage = 1;
+      this.itemsPerPage = 3;
 
       // Kullanıcı durumu
       this.isLoggedIn = false;
@@ -2817,6 +2858,7 @@
         clearTimeout(t);
         t = setTimeout(() => {
           this.searchTerm = searchInput.value.toLowerCase();
+          this.currentPage = 1;
           this.renderLayers();
         }, 250);
       });
@@ -2824,24 +2866,28 @@
       // Organization filter
       document.getElementById('organizationFilter').addEventListener('change', (e) => {
         this.selectedOrganization = e.target.value;
+        this.currentPage = 1;
         this.renderLayers();
       });
 
       // Format filter
       document.getElementById('formatFilter').addEventListener('change', (e) => {
         this.selectedFormat = e.target.value;
+        this.currentPage = 1;
         this.renderLayers();
       });
 
       // Theme filter
       document.getElementById('themeFilter').addEventListener('change', (e) => {
         this.selectedTheme = e.target.value;
+        this.currentPage = 1;
         this.renderLayers();
       });
 
       // Category filter
       document.getElementById('categoryFilter').addEventListener('change', (e) => {
         this.selectedCategory = e.target.value;
+        this.currentPage = 1;
         this.renderLayers();
       });
     }
@@ -2854,13 +2900,53 @@
       }
 
       const filteredGroups = this.filterPackages();
-      const html = Object.values(filteredGroups).map(pg => this.renderPackageGroup(pg)).join('');
+      const allGroups = Object.values(filteredGroups);
 
-      if (Object.keys(filteredGroups).length === 0) {
+      if (allGroups.length === 0) {
         container.innerHTML = `<div class="error-section">Filtrelere uygun kaynak bulunamadı.</div>`;
-      } else {
-        container.innerHTML = html;
+        return;
       }
+
+      // Pagination
+      const totalPages = Math.ceil(allGroups.length / this.itemsPerPage);
+      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+      const endIndex = startIndex + this.itemsPerPage;
+      const paginatedGroups = allGroups.slice(startIndex, endIndex);
+
+      const html = paginatedGroups.map(pg => this.renderPackageGroup(pg)).join('');
+      const paginationHtml = this.renderPagination(totalPages);
+
+      container.innerHTML = html + paginationHtml;
+    }
+
+    renderPagination(totalPages) {
+      if (totalPages <= 1) return '';
+
+      let html = '<div class="pagination-container">';
+
+      // Önceki
+      if (this.currentPage > 1) {
+        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage - 1})">‹</button>`;
+      }
+
+      // Sayfa numaraları
+      for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === this.currentPage ? 'active' : '';
+        html += `<button class="pagination-btn ${activeClass}" onclick="spatialMapManager.goToPage(${i})">${i}</button>`;
+      }
+
+      // Sonraki
+      if (this.currentPage < totalPages) {
+        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage + 1})">›</button>`;
+      }
+
+      html += '</div>';
+      return html;
+    }
+
+    goToPage(page) {
+      this.currentPage = page;
+      this.renderLayers();
     }
 
     renderPackageGroup(group) {

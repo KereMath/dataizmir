@@ -5,7 +5,7 @@
 {% block primary %}
 <style>
   .mekansal-container {
-    padding: 20px;
+    padding: 15px;
     max-width: 100%;
     background-color: #f8f9fa;
   }
@@ -13,31 +13,31 @@
   .page-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 30px;
-    border-radius: 16px;
-    margin-bottom: 25px;
+    padding: 12px 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
     text-align: center;
-    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25);
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
   }
 
   .page-title {
-    font-size: 2.2rem;
+    font-size: 1.4rem;
     font-weight: 700;
-    margin: 0 0 20px 0;
+    margin: 0 0 10px 0;
     text-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
   .stats-bar {
     display: flex;
     justify-content: center;
-    gap: 25px;
+    gap: 10px;
     flex-wrap: wrap;
   }
 
   .stat-item {
     background: rgba(255,255,255,0.2);
-    padding: 15px 25px;
-    border-radius: 12px;
+    padding: 6px 12px;
+    border-radius: 8px;
     backdrop-filter: blur(10px);
     border: 1px solid rgba(255,255,255,0.3);
     text-align: center;
@@ -50,59 +50,59 @@
   }
 
   .stat-number {
-    font-size: 1.8rem;
+    font-size: 1.2rem;
     font-weight: 700;
     display: block;
   }
 
   .stat-label {
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     opacity: 0.95;
-    margin-top: 5px;
+    margin-top: 2px;
   }
 
   /* Modern Layout with Sidebar */
   .content-wrapper {
     display: grid;
-    grid-template-columns: 320px 1fr;
-    gap: 25px;
-    margin-bottom: 20px;
+    grid-template-columns: 280px 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
   }
 
   /* Sidebar Filters */
   .sidebar-filters {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     padding: 0;
     height: fit-content;
     position: sticky;
-    top: 20px;
+    top: 15px;
   }
 
   .sidebar-header {
-    padding: 20px;
+    padding: 10px 12px;
     border-bottom: 2px solid #e9ecef;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 12px 12px 0 0;
+    border-radius: 10px 10px 0 0;
   }
 
   .sidebar-title {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: #2c3e50;
-    margin: 0 0 10px 0;
+    margin: 0 0 8px 0;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
 
   .search-box {
     width: 100%;
-    padding: 10px 14px;
+    padding: 6px 10px;
     border: 2px solid #e9ecef;
-    border-radius: 8px;
-    font-size: 14px;
+    border-radius: 6px;
+    font-size: 12px;
     transition: all 0.2s ease;
   }
 
@@ -121,7 +121,7 @@
   }
 
   .filter-panel-header {
-    padding: 15px 20px;
+    padding: 8px 12px;
     background: white;
     cursor: pointer;
     user-select: none;
@@ -136,26 +136,26 @@
   }
 
   .filter-panel-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
     color: #495057;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
 
   .filter-badge {
     background: #667eea;
     color: white;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 10px;
     font-weight: 600;
   }
 
   .filter-toggle {
     transition: transform 0.3s ease;
-    font-size: 14px;
+    font-size: 12px;
     color: #6c757d;
   }
 
@@ -203,25 +203,25 @@
     position: sticky;
     top: 0;
     background: linear-gradient(180deg, #fafbfc 0%, #e9ecef 100%);
-    padding: 12px 20px;
+    padding: 8px 14px;
     margin: 0;
-    font-size: 13px;
+    font-size: 11px;
     font-weight: 700;
     color: #2c3e50;
     border-bottom: 2px solid #667eea;
     z-index: 10;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
 
   .filter-section-icon {
-    font-size: 14px;
+    font-size: 12px;
   }
 
   .filter-section-content {
-    padding: 12px 20px;
+    padding: 8px 14px;
     max-height: 200px;
     overflow-y: auto;
   }
@@ -246,10 +246,10 @@
   .filter-checkbox-item {
     display: flex;
     align-items: center;
-    padding: 8px 10px;
-    border-radius: 6px;
+    padding: 5px 8px;
+    border-radius: 5px;
     transition: all 0.2s ease;
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .filter-checkbox-item:hover {
@@ -257,40 +257,40 @@
   }
 
   .filter-checkbox-item input[type="checkbox"] {
-    margin-right: 10px;
+    margin-right: 8px;
     cursor: pointer;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 
   .filter-checkbox-item label {
     cursor: pointer;
-    font-size: 13px;
+    font-size: 11px;
     color: #495057;
     flex: 1;
     margin: 0;
   }
 
   .filter-count {
-    font-size: 11px;
+    font-size: 10px;
     color: #6c757d;
     background: #e9ecef;
-    padding: 2px 7px;
-    border-radius: 10px;
-    margin-left: 8px;
+    padding: 1px 5px;
+    border-radius: 8px;
+    margin-left: 6px;
     font-weight: 600;
   }
 
   .clear-filters-btn {
     width: 100%;
-    padding: 12px;
-    margin: 15px 20px 20px 20px;
-    width: calc(100% - 40px);
+    padding: 8px;
+    margin: 10px 14px 14px 14px;
+    width: calc(100% - 28px);
     border: 2px solid #dc3545;
     background: white;
     color: #dc3545;
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -308,26 +308,26 @@
 
   .results-header {
     background: white;
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 15px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 10px;
   }
 
   .results-count {
-    font-size: 15px;
+    font-size: 13px;
     font-weight: 600;
     color: #495057;
   }
 
   .results-count .number {
     color: #667eea;
-    font-size: 18px;
+    font-size: 15px;
   }
 
   .items-per-page {
@@ -355,28 +355,28 @@
 
   .pagination {
     background: white;
-    padding: 20px;
-    border-radius: 12px;
-    margin-top: 20px;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 15px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
   }
 
   .pagination-btn {
-    padding: 8px 14px;
+    padding: 5px 10px;
     border: 2px solid #e9ecef;
     background: white;
-    border-radius: 8px;
-    font-size: 13px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
     color: #495057;
-    min-width: 40px;
+    min-width: 32px;
     text-align: center;
   }
 
@@ -398,35 +398,35 @@
   }
 
   .pagination-info {
-    padding: 8px 16px;
-    font-size: 13px;
+    padding: 5px 10px;
+    font-size: 11px;
     color: #6c757d;
     font-weight: 500;
   }
 
   .packages-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    gap: 15px;
   }
 
   .package-card {
     background: white;
-    border-radius: 14px;
-    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
     overflow: hidden;
     transition: all 0.3s ease;
     border: 2px solid transparent;
   }
 
   .package-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
     border-color: #667eea;
   }
 
   .package-header {
-    padding: 18px 20px;
+    padding: 14px 16px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     border-bottom: 2px solid #dee2e6;
     cursor: pointer;
@@ -442,16 +442,16 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 12px;
-    gap: 12px;
+    margin-bottom: 10px;
+    gap: 10px;
   }
 
   .package-title {
-    font-size: 17px;
+    font-size: 14px;
     font-weight: 600;
     color: #2c3e50;
     text-decoration: none;
-    line-height: 1.4;
+    line-height: 1.3;
     flex: 1;
   }
 
@@ -463,12 +463,12 @@
   .collapse-toggle {
     background: white;
     border: 2px solid #dee2e6;
-    font-size: 16px;
+    font-size: 12px;
     color: #6c757d;
     cursor: pointer;
-    padding: 4px 8px;
+    padding: 2px 5px;
     transition: all 0.3s ease;
-    border-radius: 6px;
+    border-radius: 4px;
   }
 
   .collapse-toggle:hover {
@@ -485,26 +485,26 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 8px;
   }
 
   .package-attributes {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 10px;
-    padding-top: 10px;
+    gap: 4px;
+    margin-top: 6px;
+    padding-top: 6px;
     border-top: 1px solid #dee2e6;
   }
 
   .attribute-badge {
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 10px;
+    padding: 3px 6px;
+    border-radius: 5px;
+    font-size: 9px;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: 4px;
+    gap: 3px;
   }
 
   .attr-org {
@@ -535,25 +535,25 @@
   .resource-count-badge {
     background: #28a745;
     color: white;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 10px;
     font-weight: 600;
   }
 
   .spatial-count-badge {
     background: #007bff;
     color: white;
-    padding: 4px 10px;
-    border-radius: 12px;
-    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 10px;
     font-weight: 600;
-    margin-left: 6px;
+    margin-left: 5px;
   }
 
   .resources-list {
-    padding: 16px;
-    max-height: 450px;
+    padding: 10px;
+    max-height: 350px;
     overflow-y: auto;
     display: block;
     background: #fafbfc;
@@ -567,11 +567,11 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 14px;
-    margin-bottom: 10px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
     background: white;
-    border-radius: 10px;
-    border-left: 4px solid transparent;
+    border-radius: 6px;
+    border-left: 3px solid transparent;
     transition: all 0.3s ease;
     box-shadow: 0 2px 4px rgba(0,0,0,0.04);
   }
@@ -579,7 +579,7 @@
   .resource-item:hover {
     background: #f8f9fa;
     border-left-color: #667eea;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
   }
 
   .resource-item:last-child {
@@ -597,10 +597,10 @@
   }
 
   .resource-name {
-    font-size: 14px;
+    font-size: 11px;
     font-weight: 600;
     color: #495057;
-    margin: 0 0 6px 0;
+    margin: 0 0 4px 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -609,46 +609,46 @@
   .resource-meta {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 4px;
     flex-wrap: wrap;
   }
 
   .resource-attributes {
     display: flex;
     flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 6px;
+    gap: 2px;
+    margin-top: 4px;
   }
 
   .resource-attr-badge {
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 9px;
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 8px;
     font-weight: 600;
     background: #e9ecef;
     color: #495057;
   }
 
   .resource-size {
-    font-size: 11px;
+    font-size: 9px;
     color: #6c757d;
   }
 
   .resource-actions {
     display: flex;
-    gap: 8px;
+    gap: 4px;
     align-items: center;
     flex-shrink: 0;
   }
 
   .format-badge {
     display: inline-block;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 11px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-size: 9px;
     font-weight: 700;
     text-transform: uppercase;
-    min-width: 40px;
+    min-width: 30px;
     text-align: center;
   }
 
@@ -665,15 +665,15 @@
 
   .spatial-indicator {
     color: #059669;
-    font-size: 14px;
-    margin-left: 6px;
+    font-size: 12px;
+    margin-left: 4px;
   }
 
   .spatial-toggle {
     position: relative;
     display: inline-block;
-    width: 48px;
-    height: 26px;
+    width: 40px;
+    height: 22px;
   }
 
   .spatial-toggle input {
@@ -697,8 +697,8 @@
   .toggle-slider:before {
     position: absolute;
     content: "";
-    height: 20px;
-    width: 20px;
+    height: 16px;
+    width: 16px;
     left: 3px;
     bottom: 3px;
     background-color: white;
@@ -711,14 +711,14 @@
   }
 
   input:checked + .toggle-slider:before {
-    transform: translateX(22px);
+    transform: translateX(18px);
   }
 
   .action-btn {
-    padding: 6px 10px;
+    padding: 4px 8px;
     border: none;
-    border-radius: 6px;
-    font-size: 11px;
+    border-radius: 5px;
+    font-size: 9px;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.2s ease;
@@ -749,18 +749,18 @@
 
   .bulk-actions {
     display: flex;
-    gap: 10px;
-    margin-top: 12px;
-    padding-top: 12px;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
     border-top: 2px solid #dee2e6;
   }
 
   .bulk-btn {
     flex: 1;
-    padding: 8px 12px;
+    padding: 5px 8px;
     border: 2px solid #dee2e6;
-    border-radius: 8px;
-    font-size: 12px;
+    border-radius: 6px;
+    font-size: 10px;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.2s ease;
@@ -778,16 +778,16 @@
 
   .loading, .error, .empty-state {
     text-align: center;
-    padding: 60px 20px;
+    padding: 40px 20px;
     color: #6c757d;
     grid-column: 1 / -1;
     background: white;
-    border-radius: 12px;
+    border-radius: 10px;
   }
 
   .empty-icon {
-    font-size: 4rem;
-    margin-bottom: 20px;
+    font-size: 3rem;
+    margin-bottom: 15px;
     opacity: 0.4;
   }
 
@@ -930,15 +930,6 @@
         <div class="results-count">
           <span class="number" id="filteredCount">0</span> sonuç gösteriliyor
         </div>
-        <div class="items-per-page">
-          Sayfa başına:
-          <select id="itemsPerPage" onchange="spatialManager.changeItemsPerPage(this.value)">
-            <option value="10">10</option>
-            <option value="20" selected>20</option>
-            <option value="50">50</option>
-            <option value="100">100</option>
-          </select>
-        </div>
       </div>
 
       <div class="packages-grid" id="packagesGrid">
@@ -979,7 +970,7 @@ class SpatialResourceManager {
 
     // Pagination
     this.currentPage = 1;
-    this.itemsPerPage = 20;
+    this.itemsPerPage = 10;
 
     this.init();
   }
@@ -1006,6 +997,9 @@ class SpatialResourceManager {
       if (!data.success) throw new Error(data.error || 'API hatası');
 
       this.allResources = data.resources || [];
+
+      // Load themes first
+      await this.loadThemes();
 
       // Get unique package IDs
       const packageIds = [...new Set(this.allResources.map(r => r.package_id))];
@@ -1043,14 +1037,8 @@ class SpatialResourceManager {
           // Extract group titles properly
           const groupTitles = pkg?.groups?.map(g => g.display_name || g.title || g.name) || [];
 
-          // Extract theme from extras
-          let themeTitle = 'Tema Yok';
-          if (pkg?.extras) {
-            const themeExtra = pkg.extras.find(e => e.key === 'theme');
-            if (themeExtra?.value) {
-              themeTitle = themeExtra.value;
-            }
-          }
+          // Get theme from theme map
+          const themeTitle = this.packageThemeMap[resource.package_id] || 'Tema Yok';
 
           this.allPackages[resource.package_id] = {
             id: resource.package_id,
@@ -1084,6 +1072,54 @@ class SpatialResourceManager {
     } catch (error) {
       console.error('❌ Load error:', error);
       throw error;
+    }
+  }
+
+  async loadThemes() {
+    const ckan_api_base = "/api/3/action/";
+
+    try {
+      // Tüm temaları çek
+      const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
+      const themeListData = await themeListResponse.json();
+
+      if (!themeListData.success || !themeListData.result) {
+        console.warn('⚠️ Theme list API returned no data');
+        this.packageThemeMap = {};
+        return;
+      }
+
+      // Tema-dataset ilişkilerini paralel yükle
+      const themePromises = themeListData.result.map(theme =>
+        fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.result && data.result.datasets) {
+              return { theme: theme.name || theme.slug, datasets: data.result.datasets };
+            }
+            return null;
+          })
+          .catch(err => {
+            console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
+            return null;
+          })
+      );
+
+      const themeResults = await Promise.all(themePromises);
+      this.packageThemeMap = {};
+
+      themeResults.forEach(result => {
+        if (result) {
+          result.datasets.forEach(dataset => {
+            this.packageThemeMap[dataset.id] = result.theme;
+          });
+        }
+      });
+
+      console.log('✅ Themes loaded for', Object.keys(this.packageThemeMap).length, 'packages');
+    } catch (error) {
+      console.error('❌ Theme load error:', error);
+      this.packageThemeMap = {};
     }
   }
 

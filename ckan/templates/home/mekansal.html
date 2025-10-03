@@ -1651,6 +1651,22 @@
           if (!hasCategory) shouldShow = false;
         }
 
+        // Organization filter
+        if (this.selectedOrganization) {
+          const hasOrg = group.resources.some(r =>
+            r.organization_title === this.selectedOrganization
+          );
+          if (!hasOrg) shouldShow = false;
+        }
+
+        // Format filter
+        if (this.selectedFormat) {
+          const hasFormat = group.resources.some(r =>
+            (r.format || '').toUpperCase() === this.selectedFormat
+          );
+          if (!hasFormat) shouldShow = false;
+        }
+
         // Search filter
         if (this.searchTerm) {
           const matchesSearch = group.resources.some(r =>
@@ -2792,6 +2808,18 @@
           this.searchTerm = searchInput.value.toLowerCase();
           this.renderLayers();
         }, 250);
+      });
+
+      // Organization filter
+      document.getElementById('organizationFilter').addEventListener('change', (e) => {
+        this.selectedOrganization = e.target.value;
+        this.renderLayers();
+      });
+
+      // Format filter
+      document.getElementById('formatFilter').addEventListener('change', (e) => {
+        this.selectedFormat = e.target.value;
+        this.renderLayers();
       });
 
       // Theme filter

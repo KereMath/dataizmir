@@ -13,110 +13,354 @@
   .page-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 25px;
-    border-radius: 12px;
+    padding: 30px;
+    border-radius: 16px;
     margin-bottom: 25px;
     text-align: center;
-    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25);
   }
 
   .page-title {
-    font-size: 2rem;
+    font-size: 2.2rem;
     font-weight: 700;
-    margin: 0;
+    margin: 0 0 20px 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
   .stats-bar {
     display: flex;
     justify-content: center;
-    gap: 20px;
-    margin-top: 15px;
+    gap: 25px;
     flex-wrap: wrap;
   }
 
   .stat-item {
-    background: rgba(255,255,255,0.15);
-    padding: 10px 20px;
-    border-radius: 8px;
+    background: rgba(255,255,255,0.2);
+    padding: 15px 25px;
+    border-radius: 12px;
     backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
     text-align: center;
+    transition: all 0.3s ease;
+  }
+
+  .stat-item:hover {
+    background: rgba(255,255,255,0.3);
+    transform: translateY(-2px);
   }
 
   .stat-number {
-    font-size: 1.4rem;
+    font-size: 1.8rem;
     font-weight: 700;
     display: block;
   }
 
   .stat-label {
-    font-size: 0.8rem;
-    opacity: 0.9;
-    margin-top: 3px;
+    font-size: 0.85rem;
+    opacity: 0.95;
+    margin-top: 5px;
   }
 
-  .controls-section {
+  /* Modern Layout with Sidebar */
+  .content-wrapper {
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    gap: 25px;
+    margin-bottom: 20px;
+  }
+
+  /* Sidebar Filters */
+  .sidebar-filters {
     background: white;
-    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 0;
+    height: fit-content;
+    position: sticky;
+    top: 20px;
+  }
+
+  .sidebar-header {
+    padding: 20px;
+    border-bottom: 2px solid #e9ecef;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 12px 12px 0 0;
+  }
+
+  .sidebar-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .search-box {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s ease;
+  }
+
+  .search-box:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  }
+
+  .filter-panel {
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .filter-panel:last-child {
+    border-bottom: none;
+  }
+
+  .filter-panel-header {
+    padding: 15px 20px;
+    background: white;
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.2s ease;
+  }
+
+  .filter-panel-header:hover {
+    background: #f8f9fa;
+  }
+
+  .filter-panel-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #495057;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .filter-badge {
+    background: #667eea;
+    color: white;
+    padding: 2px 8px;
     border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .filter-toggle {
+    transition: transform 0.3s ease;
+    font-size: 14px;
+    color: #6c757d;
+  }
+
+  .filter-toggle.collapsed {
+    transform: rotate(-90deg);
+  }
+
+  .filter-panel-content {
+    max-height: 350px;
+    overflow-y: auto;
+    display: block;
+    background: #fafbfc;
+  }
+
+  .filter-panel-content.collapsed {
+    display: none;
+  }
+
+  .filter-panel-content::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .filter-panel-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .filter-panel-content::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+  }
+
+  .filter-panel-content::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+  }
+
+  .filter-section {
+    border-bottom: 2px solid #e9ecef;
+    padding: 15px 20px;
+  }
+
+  .filter-section:last-child {
+    border-bottom: none;
+  }
+
+  .filter-section-header {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(180deg, #fafbfc 0%, #f0f2f5 100%);
+    padding: 10px 0 8px 0;
+    margin-bottom: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #2c3e50;
+    border-bottom: 2px solid #667eea;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .filter-section-icon {
+    font-size: 14px;
+  }
+
+  .filter-checkbox-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 10px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    margin-bottom: 6px;
+  }
+
+  .filter-checkbox-item:hover {
+    background: #f8f9fa;
+  }
+
+  .filter-checkbox-item input[type="checkbox"] {
+    margin-right: 10px;
+    cursor: pointer;
+    width: 16px;
+    height: 16px;
+  }
+
+  .filter-checkbox-item label {
+    cursor: pointer;
+    font-size: 13px;
+    color: #495057;
+    flex: 1;
+    margin: 0;
+  }
+
+  .filter-count {
+    font-size: 11px;
+    color: #6c757d;
+    background: #e9ecef;
+    padding: 2px 7px;
+    border-radius: 10px;
+    margin-left: 8px;
+    font-weight: 600;
+  }
+
+  .clear-filters-btn {
+    width: 100%;
+    padding: 12px;
+    margin: 15px 20px 20px 20px;
+    width: calc(100% - 40px);
+    border: 2px solid #dc3545;
+    background: white;
+    color: #dc3545;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .clear-filters-btn:hover {
+    background: #dc3545;
+    color: white;
+  }
+
+  /* Main Content Area */
+  .main-content-area {
+    min-width: 0;
+  }
+
+  .results-header {
+    background: white;
+    padding: 15px 20px;
+    border-radius: 12px;
     margin-bottom: 20px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     display: flex;
-    gap: 12px;
+    justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+    gap: 12px;
   }
 
-  .search-input {
-    flex: 1;
-    min-width: 200px;
-    padding: 10px 14px;
-    border: 2px solid #e9ecef;
+  .results-count {
+    font-size: 15px;
+    font-weight: 600;
+    color: #495057;
+  }
+
+  .results-count .number {
+    color: #667eea;
+    font-size: 18px;
+  }
+
+  .view-toggle {
+    display: flex;
+    gap: 8px;
+    background: #f8f9fa;
+    padding: 4px;
+    border-radius: 8px;
+  }
+
+  .view-btn {
+    padding: 6px 12px;
+    border: none;
+    background: transparent;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #6c757d;
   }
 
-  .search-input:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
-  }
-
-  .filter-select {
-    padding: 10px 14px;
-    border: 2px solid #e9ecef;
-    border-radius: 6px;
+  .view-btn.active {
     background: white;
-    font-size: 14px;
-    min-width: 140px;
+    color: #667eea;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
   .packages-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
     gap: 20px;
   }
 
   .package-card {
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.08);
     overflow: hidden;
     transition: all 0.3s ease;
-    border: 1px solid #e9ecef;
+    border: 2px solid transparent;
   }
 
   .package-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border-color: #667eea;
   }
 
   .package-header {
-    padding: 16px;
+    padding: 18px 20px;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-bottom: 1px solid #dee2e6;
+    border-bottom: 2px solid #dee2e6;
     cursor: pointer;
     user-select: none;
+    transition: all 0.2s ease;
   }
 
   .package-header:hover {
@@ -126,16 +370,17 @@
   .package-title-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+    gap: 12px;
   }
 
   .package-title {
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 600;
     color: #2c3e50;
     text-decoration: none;
-    line-height: 1.3;
+    line-height: 1.4;
     flex: 1;
   }
 
@@ -145,17 +390,19 @@
   }
 
   .collapse-toggle {
-    background: none;
-    border: none;
-    font-size: 18px;
+    background: white;
+    border: 2px solid #dee2e6;
+    font-size: 16px;
     color: #6c757d;
     cursor: pointer;
-    padding: 0 5px;
-    transition: transform 0.3s ease;
+    padding: 4px 8px;
+    transition: all 0.3s ease;
+    border-radius: 6px;
   }
 
   .collapse-toggle:hover {
-    color: #495057;
+    border-color: #667eea;
+    color: #667eea;
   }
 
   .collapse-toggle.collapsed {
@@ -167,47 +414,78 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 10px;
   }
 
-  .org-badge {
+  .package-attributes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #dee2e6;
+  }
+
+  .attribute-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .attr-org {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
-    padding: 3px 8px;
-    border-radius: 10px;
-    font-size: 11px;
-    font-weight: 600;
   }
 
-  .package-date {
-    color: #6c757d;
-    font-size: 12px;
+  .attr-theme {
+    background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color: white;
+  }
+
+  .attr-private {
+    background: #dc3545;
+    color: white;
+  }
+
+  .attr-public {
+    background: #28a745;
+    color: white;
+  }
+
+  .attr-group {
+    background: #6f42c1;
+    color: white;
   }
 
   .resource-count-badge {
     background: #28a745;
     color: white;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
   }
 
   .spatial-count-badge {
     background: #007bff;
     color: white;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border-radius: 12px;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    margin-left: 5px;
+    margin-left: 6px;
   }
 
   .resources-list {
-    padding: 12px;
-    max-height: 400px;
+    padding: 16px;
+    max-height: 450px;
     overflow-y: auto;
     display: block;
+    background: #fafbfc;
   }
 
   .resources-list.collapsed {
@@ -218,17 +496,19 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border-left: 3px solid transparent;
-    transition: all 0.2s ease;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: white;
+    border-radius: 10px;
+    border-left: 4px solid transparent;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
   }
 
   .resource-item:hover {
-    background: #e9ecef;
+    background: #f8f9fa;
     border-left-color: #667eea;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.08);
   }
 
   .resource-item:last-child {
@@ -237,7 +517,7 @@
 
   .resource-item.spatial-active {
     border-left-color: #28a745;
-    background: #f8fff9;
+    background: linear-gradient(90deg, #f8fff9 0%, white 100%);
   }
 
   .resource-info {
@@ -246,10 +526,10 @@
   }
 
   .resource-name {
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 14px;
+    font-weight: 600;
     color: #495057;
-    margin: 0 0 4px 0;
+    margin: 0 0 6px 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -259,7 +539,23 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .resource-attributes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .resource-attr-badge {
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    background: #e9ecef;
+    color: #495057;
   }
 
   .resource-size {
@@ -269,72 +565,44 @@
 
   .resource-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
     flex-shrink: 0;
   }
 
   .format-badge {
     display: inline-block;
-    padding: 3px 6px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 700;
     text-transform: uppercase;
-    min-width: 35px;
+    min-width: 40px;
     text-align: center;
   }
 
-  /* Format renkleri */
+  /* Format colors */
   .format-csv { background: #d4edda; color: #155724; }
   .format-json { background: #fff3cd; color: #856404; }
   .format-geojson { background: #d1ecf1; color: #0c5460; }
   .format-xml { background: #f8d7da; color: #721c24; }
   .format-pdf { background: #cce5ff; color: #004085; }
   .format-xls, .format-xlsx { background: #e2e3e5; color: #383d41; }
-  .format-doc, .format-docx { background: #cfe2ff; color: #052c65; }
-  .format-txt { background: #f1f3f5; color: #495057; }
-  .format-rtf { background: #fff0f6; color: #7c2d12; }
-  .format-zip, .format-rar, .format-7z { background: #fef3c7; color: #92400e; }
   .format-shp { background: #dcfce7; color: #166534; }
   .format-kml { background: #ddd6fe; color: #5b21b6; }
-  .format-gml { background: #fed7d7; color: #c53030; }
-  .format-wkt { background: #bee3f8; color: #2c5282; }
-  .format-gpx { background: #f0fff4; color: #22543d; }
-  .format-kmz { background: #e9d5ff; color: #6b46c1; }
-  .format-sql { background: #ede9fe; color: #5b21b6; }
-  .format-db, .format-sqlite { background: #f3e8ff; color: #6b21a8; }
-  .format-html, .format-htm { background: #fef2f2; color: #991b1b; }
-  .format-css { background: #dbeafe; color: #1e40af; }
-  .format-js { background: #fef3c7; color: #d97706; }
-  .format-php { background: #e0e7ff; color: #3730a3; }
-  .format-py { background: #fef3c7; color: #b45309; }
-  .format-java { background: #fed7d7; color: #c53030; }
-  .format-cpp, .format-c { background: #e2e8f0; color: #2d3748; }
-  .format-img, .format-jpg, .format-jpeg, .format-png, .format-gif, .format-bmp, .format-tiff { background: #fef5e7; color: #c05621; }
-  .format-svg { background: #f0fff4; color: #276749; }
-  .format-ico { background: #e6fffa; color: #234e52; }
-  .format-mp3, .format-wav, .format-ogg, .format-flac { background: #fed7e2; color: #97266d; }
-  .format-mp4, .format-avi, .format-mov, .format-wmv, .format-flv { background: #e0e7ff; color: #3730a3; }
-  .format-rss, .format-atom { background: #fef3c7; color: #92400e; }
-  .format-wms, .format-wfs, .format-wcs { background: #dcfce7; color: #166534; }
-  .format-api { background: #f0f9ff; color: #0c4a6e; }
-  .format-rest { background: #ecfdf5; color: #065f46; }
-  .format-soap { background: #fffbeb; color: #92400e; }
   .format-other { background: #f1f5f9; color: #475569; }
 
   .spatial-indicator {
     color: #059669;
-    font-size: 12px;
-    margin-left: 4px;
+    font-size: 14px;
+    margin-left: 6px;
   }
 
   .spatial-toggle {
     position: relative;
     display: inline-block;
-    width: 44px;
-    height: 24px;
-    margin-left: 8px;
+    width: 48px;
+    height: 26px;
   }
 
   .spatial-toggle input {
@@ -351,19 +619,19 @@
     right: 0;
     bottom: 0;
     background-color: #ccc;
-    transition: .4s;
-    border-radius: 24px;
+    transition: .3s;
+    border-radius: 26px;
   }
 
   .toggle-slider:before {
     position: absolute;
     content: "";
-    height: 18px;
-    width: 18px;
+    height: 20px;
+    width: 20px;
     left: 3px;
     bottom: 3px;
     background-color: white;
-    transition: .4s;
+    transition: .3s;
     border-radius: 50%;
   }
 
@@ -372,14 +640,14 @@
   }
 
   input:checked + .toggle-slider:before {
-    transform: translateX(20px);
+    transform: translateX(22px);
   }
 
   .action-btn {
-    padding: 4px 8px;
+    padding: 6px 10px;
     border: none;
-    border-radius: 4px;
-    font-size: 10px;
+    border-radius: 6px;
+    font-size: 11px;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.2s ease;
@@ -408,76 +676,20 @@
     text-decoration: none;
   }
 
-  .no-resources {
-    text-align: center;
-    padding: 20px;
-    color: #6c757d;
-    font-style: italic;
-    font-size: 13px;
-  }
-
-  .loading {
-    text-align: center;
-    padding: 40px;
-    color: #6c757d;
-    grid-column: 1 / -1;
-  }
-
-  .error {
-    background: #f8d7da;
-    color: #721c24;
-    padding: 20px;
-    border-radius: 8px;
-    text-align: center;
-    grid-column: 1 / -1;
-  }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
-    color: #6c757d;
-    grid-column: 1 / -1;
-  }
-
-  .empty-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    opacity: 0.5;
-  }
-
-  .spatial-filter {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #e3f2fd;
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-  }
-
-  .spatial-count {
-    background: #28a745;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
   .bulk-actions {
     display: flex;
-    gap: 8px;
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid #dee2e6;
+    gap: 10px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 2px solid #dee2e6;
   }
 
   .bulk-btn {
-    padding: 6px 12px;
-    border: 1px solid #dee2e6;
-    border-radius: 4px;
-    font-size: 11px;
+    flex: 1;
+    padding: 8px 12px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    font-size: 12px;
     font-weight: 600;
     text-decoration: none;
     transition: all 0.2s ease;
@@ -488,51 +700,55 @@
 
   .bulk-btn:hover {
     background: #f8f9fa;
+    border-color: #667eea;
+    color: #667eea;
     text-decoration: none;
-    color: #495057;
   }
 
-  .bulk-btn.active {
-    background: #007bff;
-    color: white;
-    border-color: #007bff;
+  .loading, .error, .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6c757d;
+    grid-column: 1 / -1;
+    background: white;
+    border-radius: 12px;
   }
 
-  @media (max-width: 768px) {
+  .empty-icon {
+    font-size: 4rem;
+    margin-bottom: 20px;
+    opacity: 0.4;
+  }
+
+  @media (max-width: 1200px) {
+    .content-wrapper {
+      grid-template-columns: 280px 1fr;
+    }
+
     .packages-grid {
       grid-template-columns: 1fr;
     }
-    
-    .controls-section {
+  }
+
+  @media (max-width: 768px) {
+    .content-wrapper {
+      grid-template-columns: 1fr;
+    }
+
+    .sidebar-filters {
+      position: static;
+    }
+
+    .results-header {
       flex-direction: column;
       align-items: stretch;
-    }
-    
-    .search-input,
-    .filter-select {
-      min-width: 100%;
-    }
-    
-    .package-meta {
-      flex-direction: column;
-      align-items: flex-start;
-    }
-    
-    .resource-item {
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 6px;
-    }
-    
-    .resource-actions {
-      align-self: flex-end;
     }
   }
 </style>
 
 <div class="mekansal-container">
   <div class="page-header">
-    <h1 class="page-title">Mekansal Resource Yönetimi</h1>
+    <h1 class="page-title">🗺️ Mekansal Gösterim Yönetimi</h1>
     <div class="stats-bar">
       <div class="stat-item">
         <span class="stat-number" id="totalPackages">-</span>
@@ -553,367 +769,506 @@
     </div>
   </div>
 
-  <div class="controls-section">
-    <input type="text" class="search-input" id="searchInput" placeholder="Paket veya kaynak ara...">
-    <select class="filter-select" id="formatFilter">
-      <option value="">Tüm Formatlar</option>
-    </select>
-    <select class="filter-select" id="orgFilter">
-      <option value="">Tüm Organizasyonlar</option>
-    </select>
-    <div class="spatial-filter">
-      🗺️ Mekansal: <span class="spatial-count" id="spatialCount">0</span>
-    </div>
-  </div>
+  <div class="content-wrapper">
+    <!-- Sidebar Filters -->
+    <aside class="sidebar-filters">
+      <div class="sidebar-header">
+        <h2 class="sidebar-title">🔍 Filtreler</h2>
+        <input type="text" class="search-box" id="searchInput" placeholder="Paket veya kaynak ara...">
+      </div>
 
-  <div class="packages-grid" id="packagesGrid">
-    <div class="loading">Veriler yükleniyor...</div>
+      <!-- Package Attributes -->
+      <div class="filter-panel">
+        <div class="filter-panel-header" onclick="spatialManager.toggleFilterPanel('packageAttrs')">
+          <span class="filter-panel-title">
+            📦 Paket Öznitelikleri
+            <span class="filter-badge" id="packageAttrCount">0</span>
+          </span>
+          <span class="filter-toggle collapsed" id="toggle-packageAttrs">▼</span>
+        </div>
+        <div class="filter-panel-content collapsed" id="content-packageAttrs">
+          <!-- Organization Filter -->
+          <div class="filter-section">
+            <div class="filter-section-header">
+              <span class="filter-section-icon">🏢</span> Organizasyon
+            </div>
+            <div id="orgFilterContainer"></div>
+          </div>
+          <!-- Theme Filter -->
+          <div class="filter-section">
+            <div class="filter-section-header">
+              <span class="filter-section-icon">🎨</span> Tema
+            </div>
+            <div id="themeFilterContainer"></div>
+          </div>
+          <!-- Categories Filter -->
+          <div class="filter-section">
+            <div class="filter-section-header">
+              <span class="filter-section-icon">📁</span> Kategoriler
+            </div>
+            <div id="categoriesFilterContainer"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Attributes -->
+      <div class="filter-panel">
+        <div class="filter-panel-header" onclick="spatialManager.toggleFilterPanel('resourceAttrs')">
+          <span class="filter-panel-title">
+            📄 Kaynak Öznitelikleri
+            <span class="filter-badge" id="resourceAttrCount">0</span>
+          </span>
+          <span class="filter-toggle collapsed" id="toggle-resourceAttrs">▼</span>
+        </div>
+        <div class="filter-panel-content collapsed" id="content-resourceAttrs">
+          <!-- Spatial Status Filter -->
+          <div class="filter-section">
+            <div class="filter-section-header">
+              <span class="filter-section-icon">🗺️</span> Mekansal Mı?
+            </div>
+            <div id="spatialStatusFilterContainer"></div>
+          </div>
+          <!-- Format Filter -->
+          <div class="filter-section">
+            <div class="filter-section-header">
+              <span class="filter-section-icon">📋</span> Dosya Formatı
+            </div>
+            <div id="formatFilterContainer"></div>
+          </div>
+        </div>
+      </div>
+
+      <button class="clear-filters-btn" onclick="spatialManager.clearAllFilters()">
+        🗑️ Tüm Filtreleri Temizle
+      </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content-area">
+      <div class="results-header">
+        <div class="results-count">
+          <span class="number" id="filteredCount">0</span> sonuç gösteriliyor
+        </div>
+      </div>
+
+      <div class="packages-grid" id="packagesGrid">
+        <div class="loading">⏳ Veriler yükleniyor...</div>
+      </div>
+    </main>
   </div>
 </div>
 
 <script>
-console.log('🚀 Mekansal Resource Yönetimi Başlıyor');
+console.log('🚀 Modern Mekansal Resource Yönetimi');
 
 class SpatialResourceManager {
   constructor() {
     this.allResources = [];
+    this.allPackages = {};
     this.filteredResources = [];
+
+    // Attribute collections
     this.organizations = new Set();
-    this.allFormats = [];
+    this.themes = new Set();
+    this.categories = new Set();
+    this.formats = new Set();
+
+    // Selected filters
+    this.selectedOrgs = new Set();
+    this.selectedThemes = new Set();
+    this.selectedCategories = new Set();
+    this.selectedFormats = new Set();
+    this.selectedSpatialStatus = new Set();
+
     this.spatialFormats = ['geojson', 'shp', 'kml', 'gml', 'wkt', 'wfs', 'wms', 'wcs', 'gpx', 'kmz', 'api', 'json'];
     this.spatialResourceIds = new Set();
     this.collapsedPackages = new Set();
+    this.collapsedPanels = new Set();
+
     this.init();
   }
 
   async init() {
-    console.log('🎯 Initialization başlıyor...');
     try {
-      console.log('📦 1. Resource verileri yükleniyor...');
       await this.loadSpatialResources();
-      
-      console.log('🎛️ 2. Event listener kurulumu...');
       this.setupEventListeners();
-      
-      console.log('📋 3. Filtreler dolduruluyor...');
       this.populateFilters();
-      
-      console.log('🎨 4. İlk render...');
       this.filterAndRender();
-      
-      console.log('📊 5. İstatistikler...');
       this.updateStats();
-      
-      console.log('✅ Initialization tamamlandı!');
+      console.log('✅ Initialization complete');
     } catch (error) {
-      console.error('❌ Initialization hatası:', error);
-      this.showError('Veri yüklenirken hata oluştu: ' + error.message);
+      console.error('❌ Error:', error);
+      this.showError('Veri yüklenirken hata: ' + error.message);
     }
   }
 
   async loadSpatialResources() {
     try {
-      console.log('🌐 Spatial resources API çağrısı...');
-      const response = await fetch('/api/spatial-resources', {
-        credentials: 'include'
-      });
-      
+      const response = await fetch('/api/spatial-resources', { credentials: 'include' });
       const data = await response.json();
-      console.log('📡 Spatial API yanıtı:', data.success, data.count);
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Spatial resources API hatası');
-      }
+
+      if (!data.success) throw new Error(data.error || 'API hatası');
 
       this.allResources = data.resources || [];
-      console.log('📦 Resource sayısı:', this.allResources.length);
-      
-      // Spatial resource ID'lerini topla
-      this.allResources.forEach(resource => {
-        if (resource.organization_title) {
-          this.organizations.add(resource.organization_title);
-        }
-        
-        if (resource.format && resource.format.trim()) {
-          const format = resource.format.toLowerCase().trim();
-          if (!this.allFormats.includes(format)) {
-            this.allFormats.push(format);
+
+      // Load themes first
+      await this.loadThemes();
+
+      // Load package details to get groups properly
+      const packageIds = [...new Set(this.allResources.map(r => r.package_id))];
+
+      // Fetch package details in parallel
+      const packagePromises = packageIds.map(async pkgId => {
+        try {
+          const pkgResponse = await fetch(`/api/3/action/package_show?id=${pkgId}`, { credentials: 'include' });
+          const pkgData = await pkgResponse.json();
+          if (pkgData.success && pkgData.result) {
+            return pkgData.result;
           }
+        } catch (error) {
+          console.warn('Package load error:', pkgId, error);
         }
-        
-        if (resource.is_spatial) {
-          this.spatialResourceIds.add(resource.resource_id);
-        }
+        return null;
       });
 
-      this.allFormats.sort();
-      console.log('🏢 Organizasyon sayısı:', this.organizations.size);
-      console.log('📄 Format sayısı:', this.allFormats.length);
-      console.log('🗺️ Spatial resource sayısı:', this.spatialResourceIds.size);
-      
+      const packages = await Promise.all(packagePromises);
+      const packageMap = {};
+      packages.forEach(pkg => {
+        if (pkg) packageMap[pkg.id] = pkg;
+      });
+
+      // Collect package data and attributes
+      this.allResources.forEach(resource => {
+        if (!this.allPackages[resource.package_id]) {
+          const pkg = packageMap[resource.package_id];
+          const themeTitle = this.packageThemeMap[resource.package_id] || 'Tema Yok';
+
+          // Extract group titles properly
+          const groupTitles = pkg?.groups?.map(g => g.display_name || g.title || g.name) || [];
+
+          this.allPackages[resource.package_id] = {
+            id: resource.package_id,
+            name: resource.package_name,
+            title: resource.package_title,
+            organization: resource.organization_title,
+            theme: themeTitle,
+            private: resource.package_private || false,
+            groups: groupTitles,
+            metadata_created: resource.package_metadata_created,
+            metadata_modified: resource.package_metadata_modified
+          };
+        }
+
+        // Collect attributes
+        if (resource.organization_title) this.organizations.add(resource.organization_title);
+        if (this.allPackages[resource.package_id].theme) this.themes.add(this.allPackages[resource.package_id].theme);
+        if (resource.format) this.formats.add(resource.format.toLowerCase());
+
+        // Categories from groups
+        this.allPackages[resource.package_id].groups.forEach(g => this.categories.add(g));
+
+        if (resource.is_spatial) this.spatialResourceIds.add(resource.resource_id);
+      });
+
+      console.log('✅ Loaded:', this.allResources.length, 'resources from', Object.keys(this.allPackages).length, 'packages');
+      console.log('📊 Organizations:', this.organizations.size);
+      console.log('📊 Themes:', this.themes.size);
+      console.log('📊 Categories:', this.categories.size);
+      console.log('📊 Formats:', this.formats.size);
     } catch (error) {
-      console.error('❌ Spatial resources yükleme hatası:', error);
+      console.error('❌ Load error:', error);
       throw error;
     }
   }
 
-  async toggleSpatialResource(resourceId, isSpatial) {
+  async loadThemes() {
+    const ckan_api_base = "/api/3/action/";
+
     try {
-      console.log(`🔄 Spatial toggle: ${resourceId} -> ${isSpatial}`);
-      
-      const response = await fetch('/api/spatial-resources/toggle', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          resource_id: resourceId,
-          is_spatial: isSpatial
-        })
+      // Tüm temaları çek
+      const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
+      const themeListData = await themeListResponse.json();
+
+      if (!themeListData.success || !themeListData.result) {
+        console.warn('⚠️ Theme list API returned no data');
+        this.packageThemeMap = {};
+        return;
+      }
+
+      // Tema-dataset ilişkilerini paralel yükle
+      const themePromises = themeListData.result.map(theme =>
+        fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.result && data.result.datasets) {
+              return { theme: theme.name || theme.slug, datasets: data.result.datasets };
+            }
+            return null;
+          })
+          .catch(err => {
+            console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
+            return null;
+          })
+      );
+
+      const themeResults = await Promise.all(themePromises);
+      this.packageThemeMap = {};
+
+      themeResults.forEach(result => {
+        if (result) {
+          result.datasets.forEach(dataset => {
+            this.packageThemeMap[dataset.id] = result.theme;
+          });
+        }
       });
-      
-      const data = await response.json();
-      
-      if (!data.success) {
-        throw new Error(data.error || 'Toggle işlemi başarısız');
-      }
-      
-      // Local state'i güncelle
-      if (isSpatial) {
-        this.spatialResourceIds.add(resourceId);
-      } else {
-        this.spatialResourceIds.delete(resourceId);
-      }
-      
-      // Resource'un is_spatial değerini güncelle
-      const resource = this.allResources.find(r => r.resource_id === resourceId);
-      if (resource) {
-        resource.is_spatial = isSpatial;
-      }
-      
-      this.updateStats();
-      this.updatePackageCounters();
-      console.log('✅ Spatial toggle başarılı');
-      
-      return true;
+
+      console.log('✅ Themes loaded for', Object.keys(this.packageThemeMap).length, 'packages');
     } catch (error) {
-      console.error('❌ Spatial toggle hatası:', error);
-      alert('Spatial durumu değiştirilemedi: ' + error.message);
-      return false;
+      console.error('❌ Theme load error:', error);
+      this.packageThemeMap = {};
     }
-  }
-
-  togglePackageCollapse(packageId) {
-    if (this.collapsedPackages.has(packageId)) {
-      this.collapsedPackages.delete(packageId);
-    } else {
-      this.collapsedPackages.add(packageId);
-    }
-    
-    // Görsel güncelleme
-    const resourcesList = document.getElementById(`resources-${packageId}`);
-    const toggleBtn = document.getElementById(`toggle-${packageId}`);
-    
-    if (resourcesList && toggleBtn) {
-      if (this.collapsedPackages.has(packageId)) {
-        resourcesList.classList.add('collapsed');
-        toggleBtn.classList.add('collapsed');
-      } else {
-        resourcesList.classList.remove('collapsed');
-        toggleBtn.classList.remove('collapsed');
-      }
-    }
-  }
-
-  bulkTogglePackage(packageId, enable) {
-    const packageResources = this.allResources.filter(r => r.package_id === packageId);
-    
-    packageResources.forEach(async (resource) => {
-      const shouldToggle = enable ? !resource.is_spatial : resource.is_spatial;
-      if (shouldToggle) {
-        await this.toggleSpatialResource(resource.resource_id, enable);
-        
-        // Checkbox'ı güncelle
-        const checkbox = document.querySelector(`input[onchange*="${resource.resource_id}"]`);
-        if (checkbox) {
-          checkbox.checked = enable;
-        }
-        
-        // Resource item'ı güncelle
-        const resourceItem = checkbox?.closest('.resource-item');
-        if (resourceItem) {
-          if (enable) {
-            resourceItem.classList.add('spatial-active');
-          } else {
-            resourceItem.classList.remove('spatial-active');
-          }
-        }
-      }
-    });
-    
-    setTimeout(() => this.updatePackageCounters(), 100);
-  }
-
-  updatePackageCounters() {
-    const packageGroups = {};
-    this.allResources.forEach(resource => {
-      if (!packageGroups[resource.package_id]) {
-        packageGroups[resource.package_id] = {
-          total: 0,
-          spatial: 0
-        };
-      }
-      packageGroups[resource.package_id].total++;
-      if (resource.is_spatial) {
-        packageGroups[resource.package_id].spatial++;
-      }
-    });
-
-    Object.keys(packageGroups).forEach(packageId => {
-      const counter = document.getElementById(`spatial-counter-${packageId}`);
-      if (counter) {
-        counter.textContent = packageGroups[packageId].spatial;
-      }
-    });
   }
 
   setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
-    const formatFilter = document.getElementById('formatFilter');
-    const orgFilter = document.getElementById('orgFilter');
-
-    if (!searchInput || !formatFilter || !orgFilter) {
-      console.error('❌ Filter elementleri bulunamadı!');
-      return;
-    }
-
-    // Debounce arama
     let searchTimeout;
     searchInput.addEventListener('input', () => {
       clearTimeout(searchTimeout);
-      searchTimeout = setTimeout(() => {
-        this.filterAndRender();
-      }, 300);
+      searchTimeout = setTimeout(() => this.filterAndRender(), 300);
     });
-
-    formatFilter.addEventListener('change', () => this.filterAndRender());
-    orgFilter.addEventListener('change', () => this.filterAndRender());
   }
 
   populateFilters() {
-    const orgFilter = document.getElementById('orgFilter');
-    const formatFilter = document.getElementById('formatFilter');
-    
-    // Organizasyon filtresini doldur
-    [...this.organizations].sort().forEach(org => {
-      const option = document.createElement('option');
-      option.value = org;
-      option.textContent = org;
-      orgFilter.appendChild(option);
+    // Organizations
+    this.populateCheckboxFilter('orgFilterContainer', [...this.organizations].sort());
+
+    // Themes
+    this.populateCheckboxFilter('themeFilterContainer', [...this.themes].sort());
+
+    // Categories
+    this.populateCheckboxFilter('categoriesFilterContainer', [...this.categories].sort());
+
+    // Formats
+    this.populateCheckboxFilter('formatFilterContainer', [...this.formats].sort());
+
+    // Spatial Status
+    this.populateCheckboxFilter('spatialStatusFilterContainer', ['Evet', 'Hayır']);
+
+    // Update counts initially
+    this.updateFilterCounts();
+  }
+
+  populateCheckboxFilter(containerId, items) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    container.innerHTML = items.map(item => {
+      const sanitized = this.sanitizeId(item);
+      return `
+        <div class="filter-checkbox-item">
+          <input type="checkbox" id="filter-${containerId}-${sanitized}"
+                 onchange="spatialManager.onFilterChange('${containerId}', '${this.escapeQuotes(item)}', this.checked)">
+          <label for="filter-${containerId}-${sanitized}">${item}</label>
+          <span class="filter-count" id="count-${containerId}-${sanitized}">0</span>
+        </div>
+      `;
+    }).join('');
+  }
+
+  escapeQuotes(str) {
+    return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+  }
+
+  sanitizeId(str) {
+    return str.replace(/[^a-zA-Z0-9]/g, '_');
+  }
+
+  onFilterChange(containerId, value, checked) {
+    let selectedSet;
+
+    if (containerId === 'orgFilterContainer') selectedSet = this.selectedOrgs;
+    else if (containerId === 'themeFilterContainer') selectedSet = this.selectedThemes;
+    else if (containerId === 'categoriesFilterContainer') selectedSet = this.selectedCategories;
+    else if (containerId === 'formatFilterContainer') selectedSet = this.selectedFormats;
+    else if (containerId === 'spatialStatusFilterContainer') selectedSet = this.selectedSpatialStatus;
+
+    if (checked) selectedSet.add(value);
+    else selectedSet.delete(value);
+
+    this.filterAndRender();
+    this.updateFilterBadges();
+  }
+
+  updateFilterBadges() {
+    const packageCount = this.selectedOrgs.size + this.selectedThemes.size + this.selectedCategories.size;
+    const resourceCount = this.selectedFormats.size + this.selectedSpatialStatus.size;
+
+    document.getElementById('packageAttrCount').textContent = packageCount;
+    document.getElementById('resourceAttrCount').textContent = resourceCount;
+  }
+
+  updateFilterCounts() {
+    // Count occurrences for each filter option
+    const counts = {
+      orgs: {},
+      themes: {},
+      categories: {},
+      formats: {},
+      spatial: { 'Evet': 0, 'Hayır': 0 }
+    };
+
+    // Count packages
+    Object.values(this.allPackages).forEach(pkg => {
+      if (pkg.organization) counts.orgs[pkg.organization] = (counts.orgs[pkg.organization] || 0) + 1;
+      if (pkg.theme) counts.themes[pkg.theme] = (counts.themes[pkg.theme] || 0) + 1;
+      pkg.groups.forEach(g => {
+        if (g) counts.categories[g] = (counts.categories[g] || 0) + 1;
+      });
     });
 
-    // Format filtresini doldur
-    this.allFormats.forEach(format => {
-      const option = document.createElement('option');
-      option.value = format.toLowerCase();
-      option.textContent = format.toUpperCase();
-      formatFilter.appendChild(option);
+    // Count resources
+    this.allResources.forEach(resource => {
+      const format = (resource.format || '').toLowerCase();
+      if (format) counts.formats[format] = (counts.formats[format] || 0) + 1;
+      counts.spatial[resource.is_spatial ? 'Evet' : 'Hayır']++;
     });
+
+    // Update DOM
+    this.updateCountDisplay('orgFilterContainer', counts.orgs);
+    this.updateCountDisplay('themeFilterContainer', counts.themes);
+    this.updateCountDisplay('categoriesFilterContainer', counts.categories);
+    this.updateCountDisplay('formatFilterContainer', counts.formats);
+    this.updateCountDisplay('spatialStatusFilterContainer', counts.spatial);
+  }
+
+  updateCountDisplay(containerId, counts) {
+    Object.keys(counts).forEach(key => {
+      const sanitized = this.sanitizeId(key);
+      const countEl = document.getElementById(`count-${containerId}-${sanitized}`);
+      if (countEl) countEl.textContent = counts[key];
+    });
+  }
+
+  clearAllFilters() {
+    this.selectedOrgs.clear();
+    this.selectedThemes.clear();
+    this.selectedCategories.clear();
+    this.selectedFormats.clear();
+    this.selectedSpatialStatus.clear();
+
+    document.querySelectorAll('.filter-checkbox-item input[type="checkbox"]').forEach(cb => cb.checked = false);
+    document.getElementById('searchInput').value = '';
+
+    this.filterAndRender();
+    this.updateFilterBadges();
   }
 
   filterAndRender() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    const formatFilter = document.getElementById('formatFilter').value.toLowerCase();
-    const orgFilter = document.getElementById('orgFilter').value;
 
     this.filteredResources = this.allResources.filter(resource => {
-      // Arama filtresi
+      const pkg = this.allPackages[resource.package_id];
+      if (!pkg) return false;
+
+      // Search
       if (searchTerm) {
-        const searchText = `${resource.package_title} ${resource.resource_name}`.toLowerCase();
-        if (!searchText.includes(searchTerm)) {
-          return false;
-        }
+        const text = `${pkg.title} ${resource.resource_name}`.toLowerCase();
+        if (!text.includes(searchTerm)) return false;
       }
 
-      // Format filtresi
-      if (formatFilter && (resource.format || '').toLowerCase() !== formatFilter) {
-        return false;
+      // Package filters
+      if (this.selectedOrgs.size && !this.selectedOrgs.has(pkg.organization)) return false;
+
+      if (this.selectedThemes.size && !this.selectedThemes.has(pkg.theme)) return false;
+
+      if (this.selectedCategories.size) {
+        const hasMatch = pkg.groups.some(g => this.selectedCategories.has(g));
+        if (!hasMatch) return false;
       }
 
-      // Organizasyon filtresi
-      if (orgFilter && resource.organization_title !== orgFilter) {
-        return false;
+      // Resource filters
+      if (this.selectedFormats.size && !this.selectedFormats.has((resource.format || '').toLowerCase())) return false;
+
+      if (this.selectedSpatialStatus.size) {
+        const isSpatial = resource.is_spatial;
+        const hasEvet = this.selectedSpatialStatus.has('Evet');
+        const hasHayir = this.selectedSpatialStatus.has('Hayır');
+        if (!((hasEvet && isSpatial) || (hasHayir && !isSpatial))) return false;
       }
 
       return true;
     });
 
     this.renderResources();
+    this.updateCounts();
   }
 
   renderResources() {
     const grid = document.getElementById('packagesGrid');
-    
+
     if (this.filteredResources.length === 0) {
       grid.innerHTML = `
         <div class="empty-state">
-          <div class="empty-icon">📦</div>
-          <div>Filtre kriterlerine uygun resource bulunamadı</div>
+          <div class="empty-icon">🔍</div>
+          <h3>Sonuç bulunamadı</h3>
+          <p>Filtreleri değiştirmeyi deneyin</p>
         </div>
       `;
       return;
     }
 
-    // Paketlere göre grupla
+    // Group by package
     const packageGroups = {};
     this.filteredResources.forEach(resource => {
       if (!packageGroups[resource.package_id]) {
         packageGroups[resource.package_id] = {
-          package: resource,
+          package: this.allPackages[resource.package_id],
           resources: []
         };
       }
       packageGroups[resource.package_id].resources.push(resource);
     });
 
-    const html = Object.values(packageGroups).map(group => this.renderPackageCard(group)).join('');
-    grid.innerHTML = html;
+    grid.innerHTML = Object.values(packageGroups).map(group => this.renderPackageCard(group)).join('');
   }
 
   renderPackageCard(group) {
     const pkg = group.package;
     const resources = group.resources;
     const spatialCount = resources.filter(r => r.is_spatial).length;
-    const isCollapsed = this.collapsedPackages.has(pkg.package_id);
-    
+    const isCollapsed = this.collapsedPackages.has(pkg.id);
+
     return `
       <div class="package-card">
-        <div class="package-header" onclick="spatialManager.togglePackageCollapse('${pkg.package_id}')">
+        <div class="package-header" onclick="spatialManager.togglePackageCollapse('${pkg.id}')">
           <div class="package-title-row">
-            <a href="/dataset/${pkg.package_name}" class="package-title" onclick="event.stopPropagation()">
-              ${pkg.package_title}
+            <a href="/dataset/${pkg.name}" class="package-title" onclick="event.stopPropagation()">
+              ${pkg.title}
             </a>
-            <button class="collapse-toggle ${isCollapsed ? 'collapsed' : ''}" id="toggle-${pkg.package_id}">
+            <button class="collapse-toggle ${isCollapsed ? 'collapsed' : ''}" id="toggle-${pkg.id}">
               ▼
             </button>
           </div>
           <div class="package-meta">
-            <span class="org-badge">${pkg.organization_title || 'Bilinmiyor'}</span>
             <div>
               <span class="resource-count-badge">${resources.length} kaynak</span>
-              <span class="spatial-count-badge" id="spatial-counter-${pkg.package_id}">${spatialCount} mekansal</span>
+              <span class="spatial-count-badge" id="spatial-counter-${pkg.id}">${spatialCount} mekansal</span>
             </div>
           </div>
+          <div class="package-attributes">
+            <span class="attribute-badge attr-org">🏢 ${pkg.organization || 'Bilinmiyor'}</span>
+            <span class="attribute-badge attr-theme">🎨 ${pkg.theme}</span>
+            ${pkg.groups.slice(0, 3).map(g => `<span class="attribute-badge attr-group">📁 ${g}</span>`).join('')}
+          </div>
         </div>
-        <div class="resources-list ${isCollapsed ? 'collapsed' : ''}" id="resources-${pkg.package_id}">
+        <div class="resources-list ${isCollapsed ? 'collapsed' : ''}" id="resources-${pkg.id}">
           ${resources.map(resource => this.renderResourceItem(resource)).join('')}
           <div class="bulk-actions">
-            <button class="bulk-btn" onclick="spatialManager.bulkTogglePackage('${pkg.package_id}', true)">
-              Tümünü Mekansal Yap
+            <button class="bulk-btn" onclick="spatialManager.bulkTogglePackage('${pkg.id}', true)">
+              ✅ Tümünü Mekansal Yap
             </button>
-            <button class="bulk-btn" onclick="spatialManager.bulkTogglePackage('${pkg.package_id}', false)">
-              Tümünü İptal Et
+            <button class="bulk-btn" onclick="spatialManager.bulkTogglePackage('${pkg.id}', false)">
+              ❌ Tümünü İptal Et
             </button>
           </div>
         </div>
@@ -927,6 +1282,7 @@ class SpatialResourceManager {
     const isSpatial = resource.is_spatial;
     const resourceName = resource.resource_name || 'İsimsiz kaynak';
     const resourceSize = resource.size ? this.formatFileSize(resource.size) : '';
+    const resourceType = resource.resource_type || 'Bilinmiyor';
 
     return `
       <div class="resource-item ${isSpatial ? 'spatial-active' : ''}">
@@ -937,37 +1293,143 @@ class SpatialResourceManager {
           </div>
           <div class="resource-meta">
             <span class="format-badge ${formatClass}">${format.toUpperCase()}</span>
-            ${resourceSize ? `<span class="resource-size">${resourceSize}</span>` : ''}
+            ${resourceSize ? `<span class="resource-size">📦 ${resourceSize}</span>` : ''}
+          </div>
+          <div class="resource-attributes">
+            <span class="resource-attr-badge">📋 ${resourceType}</span>
+            ${resource.description ? '<span class="resource-attr-badge">📝 Açıklama var</span>' : ''}
           </div>
         </div>
         <div class="resource-actions">
-          <label class="spatial-toggle" title="Mekansal katmana ekle/çıkar">
-            <input type="checkbox" 
-                   ${isSpatial ? 'checked' : ''} 
+          <label class="spatial-toggle" title="Mekansal durumu değiştir">
+            <input type="checkbox"
+                   ${isSpatial ? 'checked' : ''}
                    onchange="spatialManager.toggleSpatialResource('${resource.resource_id}', this.checked)">
             <span class="toggle-slider"></span>
           </label>
-          <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" class="action-btn btn-view">Görüntüle</a>
-          ${resource.url ? `<a href="${resource.url}" class="action-btn btn-download" target="_blank">İndir</a>` : ''}
+          <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" class="action-btn btn-view">👁️ Görüntüle</a>
+          ${resource.url ? `<a href="${resource.url}" class="action-btn btn-download" target="_blank">⬇️ İndir</a>` : ''}
         </div>
       </div>
     `;
   }
 
+  async toggleSpatialResource(resourceId, isSpatial) {
+    try {
+      const response = await fetch('/api/spatial-resources/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ resource_id: resourceId, is_spatial: isSpatial })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Toggle failed');
+
+      if (isSpatial) this.spatialResourceIds.add(resourceId);
+      else this.spatialResourceIds.delete(resourceId);
+
+      const resource = this.allResources.find(r => r.resource_id === resourceId);
+      if (resource) resource.is_spatial = isSpatial;
+
+      this.updateStats();
+      this.updatePackageCounters();
+      return true;
+    } catch (error) {
+      console.error('❌ Toggle error:', error);
+      alert('Hata: ' + error.message);
+      return false;
+    }
+  }
+
+  bulkTogglePackage(packageId, enable) {
+    const resources = this.allResources.filter(r => r.package_id === packageId);
+    resources.forEach(async (resource) => {
+      if (enable !== resource.is_spatial) {
+        await this.toggleSpatialResource(resource.resource_id, enable);
+        const checkbox = document.querySelector(`input[onchange*="${resource.resource_id}"]`);
+        if (checkbox) checkbox.checked = enable;
+      }
+    });
+    setTimeout(() => this.updatePackageCounters(), 200);
+  }
+
+  togglePackageCollapse(packageId) {
+    if (this.collapsedPackages.has(packageId)) {
+      this.collapsedPackages.delete(packageId);
+    } else {
+      this.collapsedPackages.add(packageId);
+    }
+
+    const list = document.getElementById(`resources-${packageId}`);
+    const toggle = document.getElementById(`toggle-${packageId}`);
+
+    if (list && toggle) {
+      if (this.collapsedPackages.has(packageId)) {
+        list.classList.add('collapsed');
+        toggle.classList.add('collapsed');
+      } else {
+        list.classList.remove('collapsed');
+        toggle.classList.remove('collapsed');
+      }
+    }
+  }
+
+  toggleFilterPanel(panelId) {
+    const content = document.getElementById(`content-${panelId}`);
+    const toggle = document.getElementById(`toggle-${panelId}`);
+
+    if (content && toggle) {
+      if (this.collapsedPanels.has(panelId)) {
+        this.collapsedPanels.delete(panelId);
+        content.classList.remove('collapsed');
+        toggle.classList.remove('collapsed');
+      } else {
+        this.collapsedPanels.add(panelId);
+        content.classList.add('collapsed');
+        toggle.classList.add('collapsed');
+      }
+    }
+  }
+
+  updatePackageCounters() {
+    const counts = {};
+    this.allResources.forEach(r => {
+      if (!counts[r.package_id]) counts[r.package_id] = { total: 0, spatial: 0 };
+      counts[r.package_id].total++;
+      if (r.is_spatial) counts[r.package_id].spatial++;
+    });
+
+    Object.keys(counts).forEach(id => {
+      const counter = document.getElementById(`spatial-counter-${id}`);
+      if (counter) counter.textContent = `${counts[id].spatial} mekansal`;
+    });
+  }
+
+  updateCounts() {
+    document.getElementById('filteredCount').textContent =
+      Object.keys(this.filteredResources.reduce((acc, r) => { acc[r.package_id] = true; return acc; }, {})).length;
+  }
+
+  updateStats() {
+    const totalPackages = Object.keys(this.allPackages).length;
+    const totalResources = this.allResources.length;
+    const spatialResources = this.spatialResourceIds.size;
+    const totalFormats = this.formats.size;
+
+    document.getElementById('totalPackages').textContent = totalPackages.toLocaleString('tr-TR');
+    document.getElementById('totalResources').textContent = totalResources.toLocaleString('tr-TR');
+    document.getElementById('spatialResources').textContent = spatialResources.toLocaleString('tr-TR');
+    document.getElementById('totalFormats').textContent = totalFormats.toLocaleString('tr-TR');
+  }
+
   getFormatClass(format) {
-    const formats = {
+    const map = {
       'csv': 'format-csv', 'json': 'format-json', 'geojson': 'format-geojson',
       'xml': 'format-xml', 'pdf': 'format-pdf', 'xls': 'format-xls',
-      'xlsx': 'format-xlsx', 'doc': 'format-doc', 'docx': 'format-docx',
-      'txt': 'format-txt', 'rtf': 'format-rtf', 'zip': 'format-zip',
-      'rar': 'format-rar', '7z': 'format-7z', 'shp': 'format-shp',
-      'kml': 'format-kml', 'gml': 'format-gml', 'wkt': 'format-wkt',
-      'gpx': 'format-gpx', 'kmz': 'format-kmz', 'sql': 'format-sql',
-      'db': 'format-db', 'sqlite': 'format-sqlite', 'html': 'format-html',
-      'htm': 'format-html', 'css': 'format-css', 'js': 'format-js',
-      'api': 'format-api', 'rest': 'format-rest', 'soap': 'format-soap'
+      'xlsx': 'format-xlsx', 'shp': 'format-shp', 'kml': 'format-kml'
     };
-    return formats[format] || 'format-other';
+    return map[format] || 'format-other';
   }
 
   isSpatialFormat(format) {
@@ -981,33 +1443,18 @@ class SpatialResourceManager {
     return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
   }
 
-  updateStats() {
-    const totalPackages = new Set(this.allResources.map(r => r.package_id)).size;
-    const totalResources = this.allResources.length;
-    const spatialResources = this.spatialResourceIds.size;
-    const totalFormats = this.allFormats.length;
-
-    document.getElementById('totalPackages').textContent = totalPackages.toLocaleString('tr-TR');
-    document.getElementById('totalResources').textContent = totalResources.toLocaleString('tr-TR');
-    document.getElementById('spatialResources').textContent = spatialResources.toLocaleString('tr-TR');
-    document.getElementById('totalFormats').textContent = totalFormats.toLocaleString('tr-TR');
-    document.getElementById('spatialCount').textContent = spatialResources.toLocaleString('tr-TR');
-  }
-
   showError(message) {
-    const grid = document.getElementById('packagesGrid');
-    grid.innerHTML = `
+    document.getElementById('packagesGrid').innerHTML = `
       <div class="error">
-        ❌ ${message}
+        <div class="empty-icon">❌</div>
+        <h3>Hata oluştu</h3>
+        <p>${message}</p>
       </div>
     `;
   }
 }
 
-// Global değişken
 let spatialManager;
-
-// Sayfa yüklendiğinde başlat
 document.addEventListener('DOMContentLoaded', () => {
   spatialManager = new SpatialResourceManager();
 });

@@ -451,8 +451,9 @@
     .t-groups { width: 140px; min-width: 120px; }
     .t-tags { width: 140px; min-width: 120px; }
     .t-theme { width: 130px; min-width: 110px; }
-    .t-validity {width: 140px; min-width: 140px;}
     .t-upd { width: 140px; min-width: 140px; }
+    .t-validity {width: 140px; min-width: 140px;}
+    .t-spatial { width: 130px; min-width: 110px; }
     .t-formats { width: 120px; min-width: 100px; }
     .t-actions { width: 150px; min-width: 130px; }
 
@@ -462,7 +463,7 @@
     }
 
     /* Etiket Stilleri */
-    .format-tag, .user-tag, .group-tag, .tag-tag, .theme-tag {
+    .format-tag, .user-tag, .group-tag, .tag-tag, .theme-tag, .spatial-tag {
       display: inline-block;
       padding: 2px 6px;
       border-radius: 3px;
@@ -476,6 +477,9 @@
     .group-tag { background-color: #e8f5e8; color: #2e7d32; }
     .tag-tag { background-color: #fbe9e7; color: #d84315; }
     .theme-tag { background-color: #e0f7fa; color: #00838f; }
+    .spatial-tag { background-color: #f3e5f5; color: #7b1fa2; }
+    .spatial-tag.var { background-color: #e8f5e9; color: #2e7d32; }
+    .spatial-tag.yok { background-color: #fafafa; color: #757575; }
 
     /* Format Etiket Stilleri */
     .fmt-csv { background-color: #e8f5e8; color: #2e7d32; }
@@ -610,6 +614,11 @@
         <div class="multi-select" id="fmtSelect"></div>
       </div>
 
+      <div class="filter-section">
+        <label>Mekansal gösterim</label>
+        <div class="multi-select" id="spatialSelect"></div>
+      </div>
+
       <!-- YENİ: Açık/Gizli veri filtresi -->
       <div class="filter-section" id="dark">
         <label>Veri Görünürlüğü</label>
@@ -655,6 +664,7 @@
                 <th class="t-theme">Tema<div class="column-resizer"></div></th>
                 <th class="t-upd">Güncellenme<div class="column-resizer"></div></th>
                 <th class="t-validity">Veri Geçerlilik Yılı<div class="column-resizer"></div></th>
+                <th class="t-spatial">Mekansal gösterim<div class="column-resizer"></div></th>
                 <th class="t-formats">Formatlar<div class="column-resizer"></div></th>
                 <th class="t-actions">İşlemler</th>
               </tr>
@@ -671,9 +681,10 @@
     // --- Değişkenler ---
     var allDatasets = [];
     var filteredDatasets = [];
-    var allOrgs = [], allFormats = [], allUsers = [], allGroups = [], allTags = [], allThemes = [];
+    var allOrgs = [], allFormats = [], allUsers = [], allGroups = [], allTags = [], allThemes = [], allSpatialOptions = [];
     var userCache = {}; // User ID -> Username cache
-    var selectedOrgs = new Set(), selectedFormats = new Set(), selectedUsers = new Set(), selectedGroups = new Set(), selectedTags = new Set(), selectedThemes = new Set();
+    var spatialResourcesMap = {}; // Package ID -> has spatial resources (true/false)
+    var selectedOrgs = new Set(), selectedFormats = new Set(), selectedUsers = new Set(), selectedGroups = new Set(), selectedTags = new Set(), selectedThemes = new Set(), selectedSpatialOptions = new Set();
     var currentPage = 1;
     var itemsPerPage = 20;
     var usersLoaded = false;
@@ -874,6 +885,28 @@
         privateOption.classList.add('selected');
       } else {
         privateOption.classList.remove('selected');
+      }
+    }
+
+    // Load spatial resources and create map
+    async function loadSpatialResources() {
+      try {
+        const response = await fetch('/api/spatial-resources/list', { credentials: 'include' });
+        const data = await response.json();
+
+        if (data.success && data.spatial_resources) {
+          // Create a map of package_id -> has spatial resources
+          spatialResourcesMap = {};
+          data.spatial_resources.forEach(resource => {
+            spatialResourcesMap[resource.package_id] = true;
+          });
+
+          console.log('✅ Spatial resources loaded:', Object.keys(spatialResourcesMap).length, 'packages with spatial data');
+        } else {
+          console.warn('⚠️ Spatial resources API returned no data');
+        }
+      } catch (error) {
+        console.error('❌ Error loading spatial resources:', error);
       }
     }
 
@@ -1172,10 +1205,10 @@
         // Görünürlük filtresi
         if (pkg.private === true && !showPrivate) return false;
         if (pkg.private !== true && !showPublic) return false;
-        
+
         // YENİ: Gelişmiş Türkçe karakter destekli arama
         if (searchVal && !searchInText(searchVal, pkg.title || pkg.name || '')) return false;
-        
+
         if (selectedOrgs.size && !selectedOrgs.has(pkg.orgTitle)) return false;
         if (selectedUsers.size && !selectedUsers.has(pkg.creatorUsername)) return false;
 
@@ -1194,9 +1227,20 @@
           }
         }
 
+        // Mekansal gösterim filtreleme
+        if (selectedSpatialOptions.size) {
+          if (pkg.hasSpatial && selectedSpatialOptions.has('Var')) {
+            // OK
+          } else if (!pkg.hasSpatial && selectedSpatialOptions.has('Yok')) {
+            // OK
+          } else {
+            return false;
+          }
+        }
+
         var fmts = Object.keys(pkg.fmts);
         if (selectedFormats.size && ![...selectedFormats].every(fmt => fmts.includes(fmt))) return false;
-        
+
         return true;
       });
 
@@ -1295,7 +1339,7 @@
       
       if (pageDatasets.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="10" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td>`;
+        tr.innerHTML = `<td colspan="11" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td>`;
         fragment.appendChild(tr);
       } else {
         pageDatasets.forEach(pkg => {
@@ -1311,8 +1355,9 @@
           var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>';
           var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
           var validity = pkg.metadata_created ? new Date(pkg.metadata_created).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
+          var spatial = pkg.hasSpatial ? '<span class="spatial-tag var">Var</span>' : '<span class="spatial-tag yok">Yok</span>';
           var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
-          
+
           var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
           var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
           
@@ -1325,6 +1370,7 @@
             <td class="t-theme">${theme}</td>
             <td class="t-upd">${upd}</td>
             <td class="t-validity">${validity}</td>
+            <td class="t-spatial">${spatial}</td>
             <td class="t-formats">${formats}</td>
             <td class="t-actions">
               <div class="action-buttons">
@@ -1379,19 +1425,21 @@
       const ckan_api_base = "/api/3/action/";
       const pathInfo = getPathInfo();
 
-      // 1. Profil verisi ve temalar paralel yükle
+      // 1. Profil verisi, temalar ve spatial resources paralel yükle
       const profilePromise = loadProfileData();
       const themePromise = loadThemes();
-      
+      const spatialPromise = loadSpatialResources();
+
       // 2. Ana veri setini yükle
       const packagePromise = fetch('/api/3/action/package_search?' + buildApiQuery(), { credentials: 'include' })
         .then(r => r.json());
-      
+
       try {
         // Paralel yükleme
-        const [_, themeData, packageSearchData] = await Promise.all([
+        const [_, themeData, __, packageSearchData] = await Promise.all([
           profilePromise,
           themePromise,
+          spatialPromise,
           packagePromise
         ]);
         
@@ -1427,7 +1475,8 @@
           tagNames.forEach(t => tagSet.add(t));
 
           const themeName = datasetThemeMap[pkg.id] || null;
-          
+          const hasSpatial = spatialResourcesMap[pkg.id] || false;
+
           return {
             ...pkg,
             orgTitle: orgTitle,
@@ -1435,7 +1484,8 @@
             creatorUsername: userCache[pkg.creator_user_id] || 'Yükleniyor...',
             groupTitles: groupTitles,
             tagNames: tagNames,
-            themeName: themeName
+            themeName: themeName,
+            hasSpatial: hasSpatial
           };
         });
         
@@ -1447,6 +1497,7 @@
         allFormats = [...fmtSet].filter(Boolean).sort();
         allGroups = [...groupSet].filter(Boolean).sort();
         allTags = [...tagSet].filter(Boolean).sort();
+        allSpatialOptions = ['Var', 'Yok'];
 
         // Filtreleri render et
         renderMultiSelect("orgSelect", allOrgs, selectedOrgs, debouncedRenderTable);
@@ -1454,6 +1505,7 @@
         renderMultiSelect("groupSelect", allGroups, selectedGroups, debouncedRenderTable);
         renderMultiSelect("tagSelect", allTags, selectedTags, debouncedRenderTable);
         renderMultiSelect("themeSelect", allThemes, selectedThemes, debouncedRenderTable);
+        renderMultiSelect("spatialSelect", allSpatialOptions, selectedSpatialOptions, debouncedRenderTable);
 
         // Event listener'ları ekle
         document.getElementById("searchTitle").addEventListener('input', debouncedRenderTable);
@@ -1493,7 +1545,7 @@
 
       } catch (error) {
         console.error('Veri yüklenirken hata:', error);
-        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="10" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="11" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
       }
     }
 

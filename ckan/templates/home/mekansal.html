@@ -3,64 +3,127 @@
 <script src="https://unpkg.com/geotiff@2.0.7/dist/geotiff.bundle.min.js"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag() { dataLayer.push(arguments); }
   gtag('js', new Date());
   gtag('config', 'G-7G9BC17B61');
 </script>
 {% block subtitle %}{{ _('Mekansal Gösterim') }}{% endblock %}
 
 {%- block header %}
-  {% include "header.html" %}
-   <div id="title" class="package-title container-fluid" style="background-image:url(&quot;/base/images/theme/background_photo.jpg&quot;);color: #fff;">
-      <div class="background-overlay">
-      <div class="restricted-max-width">
+{% include "header.html" %}
+<div id="title" class="package-title container-fluid"
+  style="background-image:url(&quot;/base/images/theme/background_photo.jpg&quot;);color: #fff;">
+  <div class="background-overlay">
+    <div class="restricted-max-width">
       <div class="col-xs-12 col-md-10 col-md-offset-1">
-      <div id="title-container" class="col-xs-10 col-md-6 text-left">
-      <h1 style="margin-left: 200px;">Mekansal Gösterim</h1>
+        <div id="title-container" class="col-xs-10 col-md-6 text-left">
+          <h1 style="margin-left: 200px;">Mekansal Gösterim</h1>
+        </div>
+        <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
+          <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
+          </div>
+        </div>
       </div>
-      <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
-      <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
-      </div>
-      </div>
-      </div>
-      </div>
-      </div>
-      </div>
+    </div>
+  </div>
+</div>
 {%- endblock %}
 
 {% block primary %}
 <style>
   /* Site scroll'u kaldır */
-  html, body { overflow: hidden; height: 100vh; }
-  #content { overflow: hidden !important; }
-  .site-footer { display: none !important; }
-
-  .search-form { display:none !important; }
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html,
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background-color: #f8f9fa; color: #333;
+    overflow: hidden;
+    height: 100vh;
   }
 
-  .page-container { display: flex; height: 100vh; overflow: hidden; position: fixed; width: 100%; }
+  #content {
+    overflow: hidden !important;
+  }
+
+  .site-footer {
+    display: none !important;
+  }
+
+  .search-form {
+    display: none !important;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+  }
+
+  .page-container {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
   .sidebar-filter {
-    width: 360px; flex: 0 0 360px;
-    background: #fff; border-right: 1px solid #e9ecef; z-index: 1;
+    width: 360px;
+    flex: 0 0 360px;
+    background: #fff;
+    border-right: 1px solid #e9ecef;
+    z-index: 1;
     height: 100vh;
     display: flex;
     flex-direction: column;
   }
-  .layers-panel { width: 100%; height: 100%; background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+
+  .layers-panel {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
 
   .panel-header {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);
+    color: white;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
   }
-  .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .stat-item { background: rgba(255,255,255,0.15); padding: 12px 10px; border-radius: 8px; text-align: center; backdrop-filter: blur(10px); }
-  .stat-number { font-size: 1.8rem; font-weight: 700; display: block; }
-  .stat-label { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; font-weight: 500; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-item {
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px 10px;
+    border-radius: 8px;
+    text-align: center;
+    backdrop-filter: blur(10px);
+  }
+
+  .stat-number {
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: block;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    opacity: 0.9;
+    margin-top: 4px;
+    font-weight: 500;
+  }
 
   /* Filtreleme alanı */
   .filter-section {
@@ -69,14 +132,17 @@
     border-bottom: 1px solid #dee2e6;
     flex-shrink: 0;
   }
+
   .filter-row {
     display: flex;
     gap: 8px;
     margin-bottom: 8px;
   }
+
   .filter-row:last-child {
     margin-bottom: 0;
   }
+
   .filter-select {
     flex: 1;
     padding: 8px 10px;
@@ -86,11 +152,13 @@
     background: white;
     cursor: pointer;
   }
+
   .filter-select:focus {
     outline: none;
     border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15);
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .15);
   }
+
   .filter-label {
     font-size: 11px;
     font-weight: 600;
@@ -100,82 +168,233 @@
     letter-spacing: 0.5px;
   }
 
-  .search-section { 
-    padding: 12px 16px; 
-    border-bottom: 1px solid #e9ecef; 
+  .search-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e9ecef;
     flex-shrink: 0;
   }
-  .search-input { 
-    width: 100%; 
-    padding: 10px 12px; 
-    border: 1px solid #ced4da; 
-    border-radius: 8px; 
-    font-size: 14px; 
-    background-color: #fff; 
-  }
-  .search-input:focus { outline: none; border-color: #007bff; box-shadow: 0 0 0 0.2rem rgba(0,123,255,.15); }
 
-  .layers-content { 
+  .search-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #fff;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .15);
+  }
+
+  .layers-content {
     flex: 1;
-    overflow-y: auto; 
+    overflow-y: auto;
     padding-bottom: 20px;
     min-height: 0;
   }
 
   .package-group {
-    margin: 12px 16px; border: 1px solid #e9ecef; border-radius: 12px; overflow: hidden; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    margin: 12px 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
+
   .package-header {
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 12px 14px; cursor: pointer; user-select: none; border-bottom: 1px solid rgba(0,0,0,0.04);
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
     transition: background 0.2s;
   }
+
   .package-header:hover {
     background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
   }
-  .package-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .package-title { font-size: 15px; font-weight: 600; color: #2c3e50; margin: 0; line-height: 1.3; }
-  .collapse-indicator { background: none; border: none; font-size: 18px; color: #6c757d; cursor: pointer; padding: 4px; transition: transform 0.3s; }
-  .collapse-indicator.collapsed { transform: rotate(-90deg); }
-  .package-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .resource-count { background: #28a745; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-  .theme-badge { background: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
-  .category-badge { background: #6c757d; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; }
 
-  .resources-container { display: block; max-height: 400px; overflow-y: auto; }
-  .resources-container.collapsed { display: none; }
+  .package-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
 
-  .resource-item { 
-    display: flex; 
-    align-items: center; 
-    justify-content: space-between; 
-    padding: 10px 12px; 
-    border-bottom: 1px solid #f1f3f4; 
+  .package-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .collapse-indicator {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 4px;
+    transition: transform 0.3s;
+  }
+
+  .collapse-indicator.collapsed {
+    transform: rotate(-90deg);
+  }
+
+  .package-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .resource-count {
+    background: #28a745;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .theme-badge {
+    background: #17a2b8;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .category-badge {
+    background: #6c757d;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .resources-container {
+    display: block;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .resources-container.collapsed {
+    display: none;
+  }
+
+  .resource-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f3f4;
     cursor: default;
     transition: all 0.2s;
   }
-  .resource-item:last-child { border-bottom: none; }
-  .resource-item:hover { background: #f8f9fa; }
-  .resource-item.active { 
-    background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%); 
+
+  .resource-item:last-child {
+    border-bottom: none;
+  }
+
+  .resource-item:hover {
+    background: #f8f9fa;
+  }
+
+  .resource-item.active {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
     border-left: 4px solid #1976d2;
     padding-left: 8px;
   }
 
-  .resource-info { flex: 1; min-width: 0; cursor: default; }
-  .resource-name { font-size: 13px; font-weight: 500; color: #495057; margin: 0 0 5px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .resource-meta { display: flex; align-items: center; gap: 8px; }
-  .format-badge { display: inline-block; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 600; text-transform: uppercase; }
-  .format-geojson { background: #d1ecf1; color: #0c5460; }
-  .format-shp     { background: #dcfce7; color: #166534; }
-  .format-kml     { background: #ddd6fe; color: #5b21b6; }
-  .format-csv     { background: #d4edda; color: #155724; }
-  .format-json    { background: #fff3cd; color: #856404; }
-  .format-api     { background: #f0f9ff; color: #0c4a6e; }
-  .format-xlsx    { background: #e2e3e5; color: #383d41; }
-  .format-other   { background: #f1f5f9; color: #475569; }
-  .format-wms     { background: #d6eaff; color: #2a61a0; }
-  .format-geotiff { background: #fdf6e3; color: #b58900; }
+  .resource-info {
+    flex: 1;
+    min-width: 0;
+    cursor: default;
+  }
+
+  .resource-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    margin: 0 0 5px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .resource-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .format-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .format-geojson {
+    background: #d1ecf1;
+    color: #0c5460;
+  }
+
+  .format-shp {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .format-kml {
+    background: #ddd6fe;
+    color: #5b21b6;
+  }
+
+  .format-csv {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .format-json {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .format-api {
+    background: #f0f9ff;
+    color: #0c4a6e;
+  }
+
+  .format-xlsx {
+    background: #e2e3e5;
+    color: #383d41;
+  }
+
+  .format-other {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  .format-wms {
+    background: #d6eaff;
+    color: #2a61a0;
+  }
+
+  .format-geotiff {
+    background: #fdf6e3;
+    color: #b58900;
+  }
 
   .resource-actions {
     display: flex;
@@ -196,29 +415,83 @@
     gap: 4px;
     transition: all 0.2s;
   }
-  .download-resource-btn:hover { 
-    background: #218838; 
+
+  .download-resource-btn:hover {
+    background: #218838;
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
   }
 
-  .modern-toggle { 
-    position: relative; 
-    display: inline-block; 
-    width: 44px; 
-    height: 24px; 
+  .modern-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
     cursor: pointer;
   }
-  .modern-toggle input { opacity: 0; width: 0; height: 0; }
-  .toggle-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #ddd, #ccc); transition: all .3s ease; border-radius: 24px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
-  .toggle-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background: white; transition: all .3s ease; border-radius: 50%; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-  input:checked + .toggle-slider { background: linear-gradient(135deg, #28a745, #20c997); }
-  .wms-resource input:checked + .toggle-slider { background: linear-gradient(135deg, #2a61a0, #4c82c2); }
-  .geotiff-resource input:checked + .toggle-slider { background: linear-gradient(135deg, #b58900, #cb9700); }
-  input:checked + .toggle-slider:before { transform: translateX(20px); }
 
-  .main-container { flex: 1; position: relative; height: 100vh; overflow: hidden; }
-  #map { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; }
+  .modern-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, #ddd, #ccc);
+    transition: all .3s ease;
+    border-radius: 24px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    transition: all .3s ease;
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+
+  input:checked+.toggle-slider {
+    background: linear-gradient(135deg, #28a745, #20c997);
+  }
+
+  .wms-resource input:checked+.toggle-slider {
+    background: linear-gradient(135deg, #2a61a0, #4c82c2);
+  }
+
+  .geotiff-resource input:checked+.toggle-slider {
+    background: linear-gradient(135deg, #b58900, #cb9700);
+  }
+
+  input:checked+.toggle-slider:before {
+    transform: translateX(20px);
+  }
+
+  .main-container {
+    flex: 1;
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
 
   /* Map controls için alan aç */
   .leaflet-top.leaflet-left {
@@ -233,10 +506,11 @@
     left: 10px;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     overflow: hidden;
   }
+
   .basemap-button {
     padding: 8px 12px;
     border: none;
@@ -248,11 +522,18 @@
     transition: all 0.2s;
     border-right: 1px solid #e9ecef;
   }
-  .basemap-button:last-child { border-right: none; }
-  .basemap-button:hover { background: #f8f9fa; }
-  .basemap-button.active { 
-    background: #007bff; 
-    color: white; 
+
+  .basemap-button:last-child {
+    border-right: none;
+  }
+
+  .basemap-button:hover {
+    background: #f8f9fa;
+  }
+
+  .basemap-button.active {
+    background: #007bff;
+    color: white;
   }
 
   /* Layer Switcher Control */
@@ -262,7 +543,7 @@
     right: 120px;
     background: white;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1000;
     min-width: 250px;
     max-width: 350px;
@@ -361,8 +642,19 @@
     border-bottom: 1px solid #e9ecef;
   }
 
-  .loading-section, .error-section { text-align: center; padding: 40px 20px; color: #6c757d; }
-  .error-section { background: #f8d7da; color: #721c24; margin: 20px; border-radius: 8px; }
+  .loading-section,
+  .error-section {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+  }
+
+  .error-section {
+    background: #f8d7da;
+    color: #721c24;
+    margin: 20px;
+    border-radius: 8px;
+  }
 
   /* Loading spinner */
   .loading-spinner {
@@ -374,10 +666,14 @@
     background: white;
     padding: 20px;
     border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     display: none;
   }
-  .loading-spinner.active { display: block; }
+
+  .loading-spinner.active {
+    display: block;
+  }
+
   .spinner {
     border: 3px solid #f3f3f3;
     border-top: 3px solid #007bff;
@@ -387,30 +683,48 @@
     animation: spin 1s linear infinite;
     margin: 0 auto 10px;
   }
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
   }
 
-  .popup-content { max-width: 280px; font-size: 12px; line-height: 1.4; }
-  .popup-resource-header { background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 8px 12px; margin: -8px -12px 8px -12px; border-radius: 4px 4px 0 0; font-weight: 600; }
+  .popup-content {
+    max-width: 280px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .popup-resource-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 8px 12px;
+    margin: -8px -12px 8px -12px;
+    border-radius: 4px 4px 0 0;
+    font-weight: 600;
+  }
 
   /* Seçili Katmanlar Paneli - Responsive */
   .selected-layers-panel {
-    position: absolute; 
-    top: 70px; 
+    position: absolute;
+    top: 70px;
     right: 120px;
-    display: flex; 
-    flex-direction: column; 
+    display: flex;
+    flex-direction: column;
     gap: 8px;
-    z-index: 999; 
-    pointer-events: auto;  
-    padding: 12px; 
-    max-height: calc(100vh - 100px); 
+    z-index: 999;
+    pointer-events: auto;
+    padding: 12px;
+    max-height: calc(100vh - 100px);
     overflow-y: auto;
-    background: rgba(255,255,255,0.95);
+    background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     width: auto;
     min-width: 280px;
     max-width: calc(100vw - 400px);
@@ -427,40 +741,65 @@
 
   .sel-chip {
     pointer-events: auto;
-    display: grid; 
-    grid-template-columns: 16px auto auto; 
-    align-items: center; 
+    display: grid;
+    grid-template-columns: 16px auto auto;
+    align-items: center;
     gap: 8px;
-    background: rgba(255,255,255,0.98);
-    border: 1px solid #e5e7eb; 
-    border-radius: 12px; 
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
     padding: 8px 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,.08);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
     backdrop-filter: saturate(1.1) blur(4px);
     width: fit-content;
   }
-  .sel-dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.1); }
-  .sel-name { 
-    font-size: 13px; 
-    font-weight: 600; 
-    color: #223; 
+
+  .sel-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .1);
+  }
+
+  .sel-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #223;
     padding-right: 8px;
   }
-  .sel-actions { display: flex; gap: 6px; }
+
+  .sel-actions {
+    display: flex;
+    gap: 6px;
+  }
+
   .sel-btn {
-    border: 1px solid #e5e7eb; 
-    background: #fff; 
-    border-radius: 8px; 
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 8px;
     padding: 5px 7px;
-    cursor: pointer; 
-    font-size: 12px; 
-    line-height: 1; 
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
     color: #374151;
     transition: all 0.2s;
   }
-  .sel-btn:hover { background: #f3f4f6; transform: scale(1.05); }
-  .sel-btn.danger:hover { background: #fee2e2; border-color: #fecaca; }
-  .sel-btn.active { border-color:#60a5fa; background:#e0f2fe; }
+
+  .sel-btn:hover {
+    background: #f3f4f6;
+    transform: scale(1.05);
+  }
+
+  .sel-btn.danger:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+  }
+
+  .sel-btn.active {
+    border-color: #60a5fa;
+    background: #e0f2fe;
+  }
 
   /* WMS GetCapabilities iframe görüntüleme düzeltmesi */
   .ckanext-datapreview iframe {
@@ -470,12 +809,207 @@
     border: 1px solid #e9ecef !important;
     border-radius: 8px !important;
   }
-  
+
   /* XML görüntüleme için stil */
   .ckanext-datapreview {
     padding: 10px;
     background: #f8f9fa;
     border-radius: 8px;
+  }
+
+  .marker-cluster-small,
+  .marker-cluster-medium,
+  .marker-cluster-large {
+    background: transparent !important;
+  }
+
+  .marker-cluster-small div,
+  .marker-cluster-medium div,
+  .marker-cluster-large div {
+    background: transparent !important;
+  }
+
+
+  /* Özel cluster ikonumuz – katman rengini sabit tutar */
+  .cluster-icon {}
+
+  .cluster-icon .cluster-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg, #888);
+    opacity: var(--opacity, 0.85);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .15);
+    position: relative;
+  }
+
+  .cluster-icon .cluster-dot>span {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+  }
+
+  /* ==== MOBİL ==== */
+  @media (max-width: 900px) {
+
+    html,
+    body {
+      overflow: auto !important;
+      height: auto !important;
+    }
+
+    #content {
+      overflow: visible !important;
+    }
+
+
+    .page-container {
+      position: static !important;
+      height: auto !important;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+
+    .sidebar-filter {
+      width: 100% !important;
+      border-right: 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .panel-header,
+    .filter-section,
+    .search-section {
+      display: block !important;
+      flex-shrink: 0;
+    }
+
+    .panel-header {
+      padding: 0 16px;
+    }
+
+    .filter-section {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .filter-label {
+      font-size: 10px;
+      margin-bottom: 6px;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .filter-select {
+      width: 100%;
+      min-height: 36px;
+      font-size: 13px;
+    }
+
+
+    .search-section {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 36px;
+      font-size: 13px;
+    }
+
+
+    .layers-panel {
+      max-height: 48vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .layers-content {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 12px;
+    }
+
+
+    .resources-container {
+      max-height: none;
+    }
+
+    .resource-item {
+      padding: 10px 12px;
+    }
+
+    .main-container {
+      height: calc(100vh - 48vh);
+      position: relative !important;
+      overflow: hidden;
+    }
+
+    #map {
+      position: absolute;
+      inset: 0;
+    }
+
+    .basemap-control {
+      top: 10px;
+      left: 10px;
+    }
+
+    .layer-switcher-control {
+      top: 10px;
+      right: 10px;
+      max-width: 92vw;
+    }
+
+    .selected-layers-panel {
+      top: 60px;
+      right: 10px;
+      max-width: 80px;
+    }
+
+    .sel-name {
+      font-size: 8px;
+    }
+
+
+  }
+
+  @media (max-width: 600px) {
+    .layers-panel {
+      max-height: 52vh;
+    }
+
+    .main-container {
+      height: calc(100vh - 52vh);
+    }
+
+    .filter-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .filter-select,
+    .search-input {
+      min-height: 34px;
+      font-size: 12px;
+    }
   }
 </style>
 
@@ -485,10 +1019,18 @@
     <div class="layers-panel" id="layersPanel">
       <div class="panel-header">
         <div class="stats-grid">
-          <div class="stat-item"><span class="stat-number" id="totalSpatialResources">-</span><div class="stat-label">Veri Seti</div></div>
-          <div class="stat-item"><span class="stat-number" id="totalSpatialPackages">-</span><div class="stat-label">Veri Kümesi</div></div>
-          <div class="stat-item"><span class="stat-number" id="activeLayers">-</span><div class="stat-label">Aktif Katman</div></div>
-          <div class="stat-item"><span class="stat-number" id="totalFormats">-</span><div class="stat-label">Veri Formatı</div></div>
+          <div class="stat-item"><span class="stat-number" id="totalSpatialResources">-</span>
+            <div class="stat-label">Veri Seti</div>
+          </div>
+          <div class="stat-item"><span class="stat-number" id="totalSpatialPackages">-</span>
+            <div class="stat-label">Veri Kümesi</div>
+          </div>
+          <div class="stat-item"><span class="stat-number" id="activeLayers">-</span>
+            <div class="stat-label">Aktif Katman</div>
+          </div>
+          <div class="stat-item"><span class="stat-number" id="totalFormats">-</span>
+            <div class="stat-label">Veri Formatı</div>
+          </div>
         </div>
       </div>
 
@@ -549,11 +1091,11 @@
   </div>
 </div>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css"/>
-<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
 <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js"></script>
@@ -705,7 +1247,7 @@
       this.layerSwitcherExpanded = !this.layerSwitcherExpanded;
       const content = document.getElementById('layerSwitcherContent');
       const toggle = document.querySelector('.layer-switcher-toggle');
-      
+
       if (this.layerSwitcherExpanded) {
         content.classList.add('expanded');
         toggle.textContent = '▲';
@@ -718,27 +1260,27 @@
     renderLayerSwitcherContent() {
       const content = document.getElementById('layerSwitcherContent');
       let html = '';
-      
+
       console.log('WMS Layers:', this.wmsLayers);
       console.log('Active Resources:', this.activeResources);
-      
+
       // Tüm WMS layer'ları göster (activeResources kontrolü olmadan)
       for (const [resourceId, layers] of Object.entries(this.wmsLayers)) {
         const resource = this.resourceLayers[resourceId]?.resource;
         if (!resource) continue;
-        
+
         html += `
           <div class="wms-layer-info">
             <strong>${resource.resource_name}</strong>
             <div class="wms-layer-list">
         `;
-        
+
         // Her layer için checkbox ve opacity slider ekle
         layers.forEach((layer, index) => {
           const layerId = `${resourceId}_${index}`;
           const isChecked = this.wmsLayerStates[layerId] !== false;
           const opacity = this.wmsLayerStates[layerId + '_opacity'] || 100;
-          
+
           html += `
             <div class="layer-switcher-item">
               <input type="checkbox" 
@@ -761,14 +1303,14 @@
             </div>
           `;
         });
-        
+
         html += '</div></div>';
       }
-      
+
       if (html === '') {
         html = '<div style="padding: 10px; text-align: center; color: #6c757d;">Aktif WMS katmanı yok</div>';
       }
-      
+
       content.innerHTML = html;
     }
 
@@ -776,10 +1318,10 @@
       const layerId = `${resourceId}_${layerIndex}`;
       const checkbox = document.getElementById(`layer_${layerId}`);
       const isChecked = checkbox.checked;
-      
+
       // State'i güncelle
       this.wmsLayerStates[layerId] = isChecked;
-      
+
       // WMS layer'ı güncelle
       const rl = this.resourceLayers[resourceId];
       if (rl && rl.layer) {
@@ -797,16 +1339,16 @@
     updateWMSOpacity(resourceId, layerName, value, layerIndex) {
       const layerId = `${resourceId}_${layerIndex}`;
       const opacity = value / 100;
-      
+
       // State'i güncelle
       this.wmsLayerStates[layerId + '_opacity'] = value;
-      
+
       // Opacity değerini güncelle
       const opacityValue = document.querySelector(`#layer_${layerId}`).parentElement.nextElementSibling.querySelector('.opacity-value');
       if (opacityValue) {
         opacityValue.textContent = value + '%';
       }
-      
+
       // WMS layer opacity'sini güncelle
       const rl = this.resourceLayers[resourceId];
       if (rl && rl.wmsLayerObjs && rl.wmsLayerObjs[layerName]) {
@@ -852,7 +1394,7 @@
     }
 
     async fetchSpatialData() {
-      const response = await fetch('/api/spatial-resources/list', { 
+      const response = await fetch('/api/spatial-resources/list', {
         credentials: 'include',
         headers: {
           'Cache-Control': 'max-age=300'
@@ -904,14 +1446,14 @@
 
         if (themeListData.success && themeListData.result) {
           // Her tema için dataset ilişkilerini çek
-          const themePromises = themeListData.result.map(theme => 
+          const themePromises = themeListData.result.map(theme =>
             fetch(`/api/3/action/theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
               .then(r => r.json())
               .then(data => {
                 if (data.success && data.result && data.result.datasets) {
-                  return { 
-                    themeName: theme.name || theme.slug, 
-                    datasets: data.result.datasets 
+                  return {
+                    themeName: theme.name || theme.slug,
+                    datasets: data.result.datasets
                   };
                 }
                 return null;
@@ -952,8 +1494,8 @@
       const packageInfos = await Promise.all(
         packageIds.map(async (pid) => {
           try {
-            const response = await fetch(`/api/3/action/package_show?id=${pid}`, { 
-              credentials: 'include' 
+            const response = await fetch(`/api/3/action/package_show?id=${pid}`, {
+              credentials: 'include'
             });
             const data = await response.json();
             return data.success ? data.result : null;
@@ -994,10 +1536,10 @@
       this.spatialData.forEach(resource => {
         const pid = resource.package_id;
         if (!this.packageGroups[pid]) {
-          this.packageGroups[pid] = { 
-            id: pid, 
-            name: resource.package_title, 
-            package_name: resource.package_name, 
+          this.packageGroups[pid] = {
+            id: pid,
+            name: resource.package_title,
+            package_name: resource.package_name,
             theme: resource.theme,
             groups: resource.groups,
             resources: [],
@@ -1006,11 +1548,11 @@
         }
         this.packageGroups[pid].resources.push(resource);
         this.resourceLayers[resource.resource_id] = {
-          resource, 
-          layer: L.layerGroup(), 
-          visible: false, 
-          loaded: false, 
-          _cluster: null, 
+          resource,
+          layer: L.layerGroup(),
+          visible: false,
+          loaded: false,
+          _cluster: null,
           _vector: null,
           wmsLayerObjs: {} // WMS layer objelerini saklayacağız
         };
@@ -1069,7 +1611,7 @@
 
         // Category filter
         if (this.selectedCategory) {
-          const hasCategory = group.groups?.some(g => 
+          const hasCategory = group.groups?.some(g =>
             (g.display_name || g.name) === this.selectedCategory
           );
           if (!hasCategory) shouldShow = false;
@@ -1120,16 +1662,16 @@
         if (this.wmsLayers[resourceId]) {
           delete this.wmsLayers[resourceId];
           this.renderLayerSwitcherContent();
-          
+
           // Eğer hiç WMS layer kalmadıysa Layer Switcher'ı gizle
           if (Object.keys(this.wmsLayers).length === 0) {
             document.getElementById('layerSwitcher').style.display = 'none';
           }
         }
 
-        if (this.focusedResourceId === resourceId) { 
-          this.focusMode = false; 
-          this.focusedResourceId = null; 
+        if (this.focusedResourceId === resourceId) {
+          this.focusMode = false;
+          this.focusedResourceId = null;
         }
 
         this.updateResourceToggleState(resourceId, false);
@@ -1159,8 +1701,8 @@
           rl.visible = true;
 
           const fmt = (rl.resource.format || '').toLowerCase();
-          rl.layer.eachLayer(l => { 
-            (fmt === 'wms' || fmt === 'geotiff') ? l.bringToBack?.() : l.bringToFront?.(); 
+          rl.layer.eachLayer(l => {
+            (fmt === 'wms' || fmt === 'geotiff') ? l.bringToBack?.() : l.bringToFront?.();
           });
         }
 
@@ -1182,7 +1724,7 @@
       try {
         const fmt = (rl.resource.format || '').toLowerCase();
 
-        if (['wms','wfs','geotiff'].includes(fmt)) {
+        if (['wms', 'wfs', 'geotiff'].includes(fmt)) {
           await this.addLayerFromUrl(rl.resource.url, fmt, rl.layer, resourceId);
           rl.loaded = true;
           return;
@@ -1206,10 +1748,10 @@
 
         if (!result.success) throw new Error(result.error || 'Bilinmeyen API hatası');
 
-        this.dataCache.set(cacheKey, { 
-          data: result.data || result.url, 
-          type: result.type, 
-          timestamp: Date.now() 
+        this.dataCache.set(cacheKey, {
+          data: result.data || result.url,
+          type: result.type,
+          timestamp: Date.now()
         });
 
         if (result.type === 'shp') {
@@ -1238,28 +1780,28 @@
       }
     }
 
-async downloadResourceData(resourceId) {
-  const rl = this.resourceLayers[resourceId];
-  if (!rl) return;
+    async downloadResourceData(resourceId) {
+      const rl = this.resourceLayers[resourceId];
+      if (!rl) return;
 
-  const resource = rl.resource;
-  const format = (resource.format || '').toLowerCase();
+      const resource = rl.resource;
+      const format = (resource.format || '').toLowerCase();
 
-  try {
-    this.showLoading();
+      try {
+        this.showLoading();
 
-    // Edge case: EU Hydro River Network GeoTIFF için özel indirme linki
-    if (resourceId === '7acef04c-d0f5-461e-bd19-5940c4e7b520') {
-      const downloadUrl = 'https://dataizmir.izka.org.tr/dataset/8fb7040e-304d-4785-a50a-bb86a341e8f3/resource/7acef04c-d0f5-461e-bd19-5940c4e7b520/download/eu-hydro-river-tetwork-database.tif';
-      const a = document.createElement('a');
-      a.href = downloadUrl;
-      a.download = 'eu-hydro-river-network.tif';
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      this.hideLoading();
-      return;
-    }
+        // Edge case: EU Hydro River Network GeoTIFF için özel indirme linki
+        if (resourceId === '7acef04c-d0f5-461e-bd19-5940c4e7b520') {
+          const downloadUrl = 'https://dataizmir.izka.org.tr/dataset/8fb7040e-304d-4785-a50a-bb86a341e8f3/resource/7acef04c-d0f5-461e-bd19-5940c4e7b520/download/eu-hydro-river-tetwork-database.tif';
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = 'eu-hydro-river-network.tif';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          this.hideLoading();
+          return;
+        }
 
         // API veya diğer formatlar için
         const apiUrl = `/api/spatial-resources/${resourceId}/data`;
@@ -1352,7 +1894,7 @@ async downloadResourceData(resourceId) {
     async extractWMSLayersInfo(url) {
       try {
         // GetCapabilities isteği yap
-        const capabilitiesUrl = url.includes('?') 
+        const capabilitiesUrl = url.includes('?')
           ? `${url}&service=WMS&request=GetCapabilities&version=1.3.0`
           : `${url}?service=WMS&request=GetCapabilities&version=1.3.0`;
 
@@ -1376,12 +1918,12 @@ async downloadResourceData(resourceId) {
             const layer = layerElements[i];
             const nameEl = layer.getElementsByTagName("Name")[0];
             const titleEl = layer.getElementsByTagName("Title")[0];
-            
+
             // Name'i olan ve queryable olan layer'ları al
             if (nameEl && nameEl.textContent && layer.getAttribute('queryable') === '1') {
               // Parent layer olmadığından emin ol (child layer kontrolü)
               const hasChildLayers = layer.getElementsByTagName("Layer").length > 0;
-              
+
               // Eğer child layer'ı yoksa (yani kendisi leaf node ise) ekle
               if (!hasChildLayers) {
                 layers.push({
@@ -1398,7 +1940,7 @@ async downloadResourceData(resourceId) {
             const layer = layerElements[i];
             const nameEl = layer.getElementsByTagName("Name")[0];
             const titleEl = layer.getElementsByTagName("Title")[0];
-            
+
             if (nameEl && nameEl.textContent) {
               layers.push({
                 name: nameEl.textContent,
@@ -1426,24 +1968,24 @@ async downloadResourceData(resourceId) {
           case 'wms': {
             // Önce WMS layer bilgilerini al
             const layers = await this.extractWMSLayersInfo(url);
-            
+
             console.log('WMS Layers bulundu:', layers);
-            
+
             if (layers.length > 0) {
               // WMS layer bilgilerini sakla
               this.wmsLayers[resourceId] = layers;
-              
+
               // Tüm layer'ları ekle
               const paneName = this.createPaneForResource(resourceId, true);
               const rl = this.resourceLayers[resourceId];
-              
+
               // TUCBS için rastgele bir layer seç
               const isTucbs = url.includes('tucbs') || url.includes('csb.gov.tr');
               const randomIndex = isTucbs ? Math.floor(Math.random() * layers.length) : 0;
-              
+
               // Layer'ları oluştur
               layers.forEach((layerInfo, index) => {
-                const wmsLayer = L.tileLayer.wms(url, { 
+                const wmsLayer = L.tileLayer.wms(url, {
                   layers: layerInfo.name,
                   format: 'image/png',
                   transparent: true,
@@ -1466,10 +2008,10 @@ async downloadResourceData(resourceId) {
                 // Layer objesini sakla
                 if (!rl.wmsLayerObjs) rl.wmsLayerObjs = {};
                 rl.wmsLayerObjs[layerInfo.name] = wmsLayer;
-                
+
                 // TUCBS için rastgele seçilen layer'ı veya normal için ilk layer'ı aktif et
                 const shouldActivate = isTucbs ? (index === randomIndex) : (index === 0);
-                
+
                 if (shouldActivate) {
                   layerGroup.addLayer(wmsLayer);
                   this.wmsLayerStates[`${resourceId}_${index}`] = true;
@@ -1477,27 +2019,27 @@ async downloadResourceData(resourceId) {
                 } else {
                   this.wmsLayerStates[`${resourceId}_${index}`] = false;
                 }
-                
+
                 // Opacity state'i kaydet
                 this.wmsLayerStates[`${resourceId}_${index}_opacity`] = 100;
 
                 // Hata durumunda log
-                wmsLayer.on('tileerror', function(error) {
+                wmsLayer.on('tileerror', function (error) {
                   console.error('WMS Tile Error:', error);
                   console.error('Failed URL:', error.tile?.src);
                 });
               });
-              
+
               // Layer Switcher'ı göster ve güncelle
               document.getElementById('layerSwitcher').style.display = 'block';
               this.renderLayerSwitcherContent();
-              
+
             } else {
               // Eğer layer bilgisi alınamazsa varsayılan layer kullan
               console.warn('WMS layer bilgisi alınamadı, varsayılan kullanılıyor');
-              
+
               const paneName = this.createPaneForResource(resourceId, true);
-              const newLayer = L.tileLayer.wms(url, { 
+              const newLayer = L.tileLayer.wms(url, {
                 layers: resource.wms_layer || 'layer',
                 format: 'image/png',
                 transparent: true,
@@ -1510,7 +2052,7 @@ async downloadResourceData(resourceId) {
                 opacity: 0.8
               });
 
-              newLayer.on('tileerror', function(error) {
+              newLayer.on('tileerror', function (error) {
                 console.error('WMS Tile Error:', error);
               });
 
@@ -1521,12 +2063,12 @@ async downloadResourceData(resourceId) {
           case 'wfs': {
             const layerName = resource.wfs_layer || 'layer';
             const paneName = this.createPaneForResource(resourceId, true);
-            const newLayer = L.tileLayer.wms(url, { 
-              layers: layerName, 
-              format: 'image/png', 
-              transparent: true, 
-              attribution: `WFS: ${resource.resource_name}`, 
-              pane: paneName 
+            const newLayer = L.tileLayer.wms(url, {
+              layers: layerName,
+              format: 'image/png',
+              transparent: true,
+              attribution: `WFS: ${resource.resource_name}`,
+              pane: paneName
             });
             layerGroup.addLayer(newLayer);
             break;
@@ -1545,132 +2087,132 @@ async downloadResourceData(resourceId) {
     }
 
     async processGeoTiffData(url, resourceId) {
-  try {
-    const rl = this.resourceLayers[resourceId];
-    
-    // Edge case: EU Hydro için özel URL
-    if (resourceId === '7acef04c-d0f5-461e-bd19-5940c4e7b520') {
-      console.log('EU Hydro River Network GeoTIFF işleniyor');
-      url = 'https://dataizmir.izka.org.tr/dataset/8fb7040e-304d-4785-a50a-bb86a341e8f3/resource/7acef04c-d0f5-461e-bd19-5940c4e7b520/download/eu-hydro-river-tetwork-database.tif';
-    }
-    
-    // GeoTIFF kütüphanesi kontrolü
-    if (typeof window.GeoTIFF === 'undefined') {
-      console.error('GeoTIFF kütüphanesi yüklenmemiş');
-      
-      // Basit image overlay olarak göster
-      const paneName = this.createPaneForResource(resourceId, true);
-      
-      // İzmir bölgesi için tahminı bounds
-      const imageBounds = [[37.5, 26.5], [39.5, 28.0]];
-      
-      // Direkt URL'den image overlay oluştur
-      const imageOverlay = L.imageOverlay(url, imageBounds, {
-        opacity: 0.7,
-        pane: paneName
-      });
-      
-      rl.layer.clearLayers();
-      rl.layer.addLayer(imageOverlay);
-      
-      this.map.fitBounds(imageBounds);
-      rl.loaded = true;
-      
-      console.log('GeoTIFF basit image overlay olarak eklendi');
-      return;
-    }
-    
-    console.log('GeoTIFF yükleniyor:', url);
-    
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-    const arrayBuffer = await response.arrayBuffer();
-    
-    // window.GeoTIFF kullan
-    const tiff = await window.GeoTIFF.fromArrayBuffer(arrayBuffer);
-    const image = await tiff.getImage();
-    const width = image.getWidth();
-    const height = image.getHeight();
-    const bbox = image.getBoundingBox();
-    
-    // Canvas oluştur
-    const canvas = document.createElement('canvas');
-    const maxSize = 2048;
-    const scale = Math.min(maxSize / width, maxSize / height, 1);
-    canvas.width = Math.floor(width * scale);
-    canvas.height = Math.floor(height * scale);
-    
-    const ctx = canvas.getContext('2d');
-    
-    // Raster verisini oku
-    const rasters = await image.readRasters({ 
-      width: canvas.width, 
-      height: canvas.height,
-      fillValue: 0
-    });
-    
-    const imageData = ctx.createImageData(canvas.width, canvas.height);
-    const data = imageData.data;
-    const raster = rasters[0];
-    
-    // Min/max değerleri bul
-    let min = Infinity, max = -Infinity;
-    for (let i = 0; i < raster.length; i++) {
-      const val = raster[i];
-      if (val !== 0 && !isNaN(val)) {
-        min = Math.min(min, val);
-        max = Math.max(max, val);
+      try {
+        const rl = this.resourceLayers[resourceId];
+
+        // Edge case: EU Hydro için özel URL
+        if (resourceId === '7acef04c-d0f5-461e-bd19-5940c4e7b520') {
+          console.log('EU Hydro River Network GeoTIFF işleniyor');
+          url = 'https://dataizmir.izka.org.tr/dataset/8fb7040e-304d-4785-a50a-bb86a341e8f3/resource/7acef04c-d0f5-461e-bd19-5940c4e7b520/download/eu-hydro-river-tetwork-database.tif';
+        }
+
+        // GeoTIFF kütüphanesi kontrolü
+        if (typeof window.GeoTIFF === 'undefined') {
+          console.error('GeoTIFF kütüphanesi yüklenmemiş');
+
+          // Basit image overlay olarak göster
+          const paneName = this.createPaneForResource(resourceId, true);
+
+          // İzmir bölgesi için tahminı bounds
+          const imageBounds = [[37.5, 26.5], [39.5, 28.0]];
+
+          // Direkt URL'den image overlay oluştur
+          const imageOverlay = L.imageOverlay(url, imageBounds, {
+            opacity: 0.7,
+            pane: paneName
+          });
+
+          rl.layer.clearLayers();
+          rl.layer.addLayer(imageOverlay);
+
+          this.map.fitBounds(imageBounds);
+          rl.loaded = true;
+
+          console.log('GeoTIFF basit image overlay olarak eklendi');
+          return;
+        }
+
+        console.log('GeoTIFF yükleniyor:', url);
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        const arrayBuffer = await response.arrayBuffer();
+
+        // window.GeoTIFF kullan
+        const tiff = await window.GeoTIFF.fromArrayBuffer(arrayBuffer);
+        const image = await tiff.getImage();
+        const width = image.getWidth();
+        const height = image.getHeight();
+        const bbox = image.getBoundingBox();
+
+        // Canvas oluştur
+        const canvas = document.createElement('canvas');
+        const maxSize = 2048;
+        const scale = Math.min(maxSize / width, maxSize / height, 1);
+        canvas.width = Math.floor(width * scale);
+        canvas.height = Math.floor(height * scale);
+
+        const ctx = canvas.getContext('2d');
+
+        // Raster verisini oku
+        const rasters = await image.readRasters({
+          width: canvas.width,
+          height: canvas.height,
+          fillValue: 0
+        });
+
+        const imageData = ctx.createImageData(canvas.width, canvas.height);
+        const data = imageData.data;
+        const raster = rasters[0];
+
+        // Min/max değerleri bul
+        let min = Infinity, max = -Infinity;
+        for (let i = 0; i < raster.length; i++) {
+          const val = raster[i];
+          if (val !== 0 && !isNaN(val)) {
+            min = Math.min(min, val);
+            max = Math.max(max, val);
+          }
+        }
+
+        // Renklendirme
+        for (let i = 0; i < raster.length; i++) {
+          const value = raster[i];
+
+          if (value === 0 || isNaN(value)) {
+            // Transparent
+            data[i * 4] = 0;
+            data[i * 4 + 1] = 0;
+            data[i * 4 + 2] = 0;
+            data[i * 4 + 3] = 0;
+          } else {
+            // Nehir ağı için mavi tonları
+            const normalized = (value - min) / (max - min);
+            data[i * 4] = Math.floor(20 + normalized * 50);
+            data[i * 4 + 1] = Math.floor(50 + normalized * 100);
+            data[i * 4 + 2] = Math.floor(150 + normalized * 105);
+            data[i * 4 + 3] = 255;
+          }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+
+        // Image overlay olarak ekle
+        const paneName = this.createPaneForResource(resourceId, true);
+        const imageBounds = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]];
+
+        const imageOverlay = L.imageOverlay(canvas.toDataURL('image/png'), imageBounds, {
+          opacity: 0.8,
+          pane: paneName
+        });
+
+        rl.layer.clearLayers();
+        rl.layer.addLayer(imageOverlay);
+
+        // Haritayı görüntüye odakla
+        if (bbox[0] && bbox[2]) {
+          this.map.fitBounds(imageBounds, { padding: [50, 50] });
+        }
+
+        rl.loaded = true;
+        console.log('GeoTIFF başarıyla render edildi');
+
+      } catch (error) {
+        console.error('GeoTIFF işleme hatası:', error);
+        this.showResourceError(resourceId, `GeoTIFF render edilemedi: ${error.message}`);
+        this.updateResourceToggleState(resourceId, false);
       }
     }
-    
-    // Renklendirme
-    for (let i = 0; i < raster.length; i++) {
-      const value = raster[i];
-      
-      if (value === 0 || isNaN(value)) {
-        // Transparent
-        data[i * 4] = 0;
-        data[i * 4 + 1] = 0;
-        data[i * 4 + 2] = 0;
-        data[i * 4 + 3] = 0;
-      } else {
-        // Nehir ağı için mavi tonları
-        const normalized = (value - min) / (max - min);
-        data[i * 4] = Math.floor(20 + normalized * 50);
-        data[i * 4 + 1] = Math.floor(50 + normalized * 100);
-        data[i * 4 + 2] = Math.floor(150 + normalized * 105);
-        data[i * 4 + 3] = 255;
-      }
-    }
-    
-    ctx.putImageData(imageData, 0, 0);
-    
-    // Image overlay olarak ekle
-    const paneName = this.createPaneForResource(resourceId, true);
-    const imageBounds = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]];
-    
-    const imageOverlay = L.imageOverlay(canvas.toDataURL('image/png'), imageBounds, {
-      opacity: 0.8,
-      pane: paneName
-    });
-    
-    rl.layer.clearLayers();
-    rl.layer.addLayer(imageOverlay);
-    
-    // Haritayı görüntüye odakla
-    if (bbox[0] && bbox[2]) {
-      this.map.fitBounds(imageBounds, { padding: [50, 50] });
-    }
-    
-    rl.loaded = true;
-    console.log('GeoTIFF başarıyla render edildi');
-    
-  } catch (error) {
-    console.error('GeoTIFF işleme hatası:', error);
-    this.showResourceError(resourceId, `GeoTIFF render edilemedi: ${error.message}`);
-    this.updateResourceToggleState(resourceId, false);
-  }
-}
 
     async processShpData(shpUrl, resourceId) {
       try {
@@ -1697,7 +2239,7 @@ async downloadResourceData(resourceId) {
         const resource = this.spatialData.find(r => r.resource_id === resourceId);
         if (!resource) return;
 
-        const color = this.getResourceColor(resourceId);
+        const color = this.getResourceColor(resourceId) || '#888'; // <-- ÖNEMLİ: önce rengi al
         const paneName = this.createPaneForResource(resourceId, false);
 
         const pointFeatures = [];
@@ -1720,7 +2262,8 @@ async downloadResourceData(resourceId) {
           }
         });
 
-        // Optimize edilmiş cluster ayarları
+
+
         const cluster = L.markerClusterGroup({
           spiderfyOnEveryZoom: false,
           spiderfyOnMaxZoom: true,
@@ -1728,24 +2271,44 @@ async downloadResourceData(resourceId) {
           disableClusteringAtZoom: 16,
           maxClusterRadius: 50,
           chunkedLoading: true,
-          chunkInterval: 50, // Daha hızlı yükleme için azaltıldı
+          chunkInterval: 50,
           chunkDelay: 5,
-          animate: false // Animasyonu kapat
+          animate: false,
+
+          // Katman rengi sabit, yoğunluğa göre opaklık (istersen boyut) değişsin
+          iconCreateFunction: function (cl) {
+            var count = cl.getChildCount();
+
+            // Opaklık eşikleri
+            var opacity = count < 10 ? 0.65 : (count < 50 ? 0.80 : 1.0);
+
+            var html =
+              '<div class="cluster-dot" style="--bg:' + color + ';--opacity:' + opacity + '">'
+              + '<span>' + count + '</span>'
+              + '</div>';
+
+            return L.divIcon({
+              className: 'cluster-icon',
+              html: html,
+              iconSize: [32, 32],          // sabit
+              // iconSize: [size, size],    // adetle büyütmek istersen bunu aç
+            });
+          }
         });
 
         const getDivIcon = () => L.divIcon({
           className: 'pin-glow',
           html: `<div style="width:14px;height:14px;background:${color};border:2px solid #fff;border-radius:50%"></div>`,
-          iconSize: [18,18],
-          iconAnchor: [9,9]
+          iconSize: [18, 18],
+          iconAnchor: [9, 9]
         });
 
         // Batch marker ekleme
         const markers = pointFeatures.map(feature => {
           const [lon, lat] = feature.geometry.coordinates;
-          const marker = L.marker([lat, lon], { 
-            icon: getDivIcon(), 
-            pane: paneName 
+          const marker = L.marker([lat, lon], {
+            icon: getDivIcon(),
+            pane: paneName
           });
           const popupContent = this.createPopupContent(feature, resource);
           marker.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
@@ -1766,10 +2329,10 @@ async downloadResourceData(resourceId) {
           vectorLayer = L.geoJSON(nonPointGeoJSON, {
             pane: paneName,
             style: () => ({
-              color: color, 
-              weight: 3, 
+              color: color,
+              weight: 3,
               opacity: 1.0,
-              fillColor: color, 
+              fillColor: color,
               fillOpacity: 0.3
             }),
             onEachFeature: (feature, layer) => {
@@ -1875,7 +2438,7 @@ async downloadResourceData(resourceId) {
     findDataArrayInJson(jsonData) {
       if (Array.isArray(jsonData)) return jsonData;
       if (typeof jsonData === 'object' && jsonData !== null) {
-        const keys = ['data','results','items','onemliyer','records','features'];
+        const keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features'];
         for (const k of keys) {
           if (k in jsonData && Array.isArray(jsonData[k])) return jsonData[k];
         }
@@ -1913,12 +2476,12 @@ async downloadResourceData(resourceId) {
           const lon = parseFloat(String(row[lonCol]).replace(',', '.'));
           if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
           const properties = { ...row };
-          features.push({ 
-            type: 'Feature', 
-            geometry: { type: 'Point', coordinates: [lon, lat] }, 
-            properties 
+          features.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [lon, lat] },
+            properties
           });
-        } catch (_) {}
+        } catch (_) { }
       }
       return { type: 'FeatureCollection', features };
     }
@@ -1940,7 +2503,7 @@ async downloadResourceData(resourceId) {
           this.addGeoJSONToLayer(geojson, rl.layer, resourceId);
           rl.loaded = true;
           modal.remove();
-        } catch(error) {
+        } catch (error) {
           alert('Veri işlenirken hata: ' + error.message);
         }
         return;
@@ -1969,9 +2532,9 @@ async downloadResourceData(resourceId) {
 
     getResourceColor(resourceId) {
       const colors = [
-        '#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FECA57',
-        '#FF9FF3','#54A0FF','#5F27CD','#00D2D3','#10AC84',
-        '#EE5A24','#FF6348'
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
+        '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#10AC84',
+        '#EE5A24', '#FF6348'
       ];
       const hash = resourceId.split('').reduce((a, b) => {
         a = ((a << 5) - a) + b.charCodeAt(0);
@@ -2006,7 +2569,7 @@ async downloadResourceData(resourceId) {
           const div = document.createElement('div');
           div.className = 'resource-error';
           div.style.cssText = 'color:#dc3545;font-size:10px;margin-top:3px;font-style:italic;';
-          div.textContent = errorMessage.length > 60 ? errorMessage.substring(0,60) + '...' : errorMessage;
+          div.textContent = errorMessage.length > 60 ? errorMessage.substring(0, 60) + '...' : errorMessage;
           div.title = errorMessage;
           info.appendChild(div);
         }
@@ -2044,7 +2607,7 @@ async downloadResourceData(resourceId) {
             }
           });
           if (emphasized) rl._vector.bringToFront?.();
-        } catch(_) {}
+        } catch (_) { }
       }
 
       if (rl._cluster) {
@@ -2096,7 +2659,7 @@ async downloadResourceData(resourceId) {
 
         if (allBounds.length > 0) {
           const group = new L.featureGroup();
-          allBounds.forEach(b => group.addLayer(L.rectangle(b, {opacity:0})));
+          allBounds.forEach(b => group.addLayer(L.rectangle(b, { opacity: 0 })));
           if (group.getLayers().length > 0) {
             this.map.fitBounds(group.getBounds(), { padding: [20, 20], animate: false });
           }
@@ -2124,7 +2687,7 @@ async downloadResourceData(resourceId) {
             <div class="sel-dot" style="background:${color}"></div>
             <div class="sel-name">${res.resource_name}</div>
             <div class="sel-actions">
-              <button class="sel-btn ${focused?'active':''}" onclick="spatialMapManager.onChipFocus('${id}')" title="Odağı bu katmana al">🎯</button>
+              <button class="sel-btn ${focused ? 'active' : ''}" onclick="spatialMapManager.onChipFocus('${id}')" title="Odağı bu katmana al">🎯</button>
               <button class="sel-btn danger" onclick="spatialMapManager.onChipClose('${id}')" title="Kapat">✕</button>
             </div>
           </div>`;
@@ -2288,10 +2851,10 @@ async downloadResourceData(resourceId) {
 
     getFormatClass(format) {
       const map = {
-        'csv':'format-csv','json':'format-json','geojson':'format-geojson',
-        'xlsx':'format-xlsx','xls':'format-xlsx','shp':'format-shp',
-        'kml':'format-kml','api':'format-api','rest':'format-api',
-        'wms':'format-wms','geotiff':'format-geotiff'
+        'csv': 'format-csv', 'json': 'format-json', 'geojson': 'format-geojson',
+        'xlsx': 'format-xlsx', 'xls': 'format-xlsx', 'shp': 'format-shp',
+        'kml': 'format-kml', 'api': 'format-api', 'rest': 'format-api',
+        'wms': 'format-wms', 'geotiff': 'format-geotiff'
       };
       return map[format] || 'format-other';
     }

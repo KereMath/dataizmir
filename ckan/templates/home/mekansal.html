@@ -71,10 +71,10 @@
   }
 
   .sidebar-filter {
-    width: 500px;
-    min-width: 500px;
-    max-width: 500px;
-    flex: 0 0 500px;
+    width: 360px;
+    min-width: 360px;
+    max-width: 360px;
+    flex: 0 0 360px;
     background: #fff;
     border-right: 1px solid #e9ecef;
     z-index: 1;
@@ -663,49 +663,6 @@
     color: #721c24;
     margin: 20px;
     border-radius: 8px;
-  }
-
-  .pagination-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-    padding: 16px;
-    margin: 10px 16px;
-  }
-
-  .pagination-btn {
-    padding: 8px 12px;
-    border: 1px solid #dee2e6;
-    background: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #495057;
-    transition: all 0.2s;
-    min-width: 36px;
-  }
-
-  .pagination-btn:hover {
-    background: #e9ecef;
-    border-color: #adb5bd;
-  }
-
-  .pagination-btn.active {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-color: #667eea;
-  }
-
-  .pagination-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  .pagination-dots {
-    padding: 0 4px;
-    color: #6c757d;
-    font-size: 14px;
   }
 
   /* Loading spinner */
@@ -2864,7 +2821,6 @@
         clearTimeout(t);
         t = setTimeout(() => {
           this.searchTerm = searchInput.value.toLowerCase();
-          this.currentPage = 1;
           this.renderLayers();
         }, 250);
       });
@@ -2872,28 +2828,24 @@
       // Organization filter
       document.getElementById('organizationFilter').addEventListener('change', (e) => {
         this.selectedOrganization = e.target.value;
-        this.currentPage = 1;
         this.renderLayers();
       });
 
       // Format filter
       document.getElementById('formatFilter').addEventListener('change', (e) => {
         this.selectedFormat = e.target.value;
-        this.currentPage = 1;
         this.renderLayers();
       });
 
       // Theme filter
       document.getElementById('themeFilter').addEventListener('change', (e) => {
         this.selectedTheme = e.target.value;
-        this.currentPage = 1;
         this.renderLayers();
       });
 
       // Category filter
       document.getElementById('categoryFilter').addEventListener('change', (e) => {
         this.selectedCategory = e.target.value;
-        this.currentPage = 1;
         this.renderLayers();
       });
     }
@@ -2935,33 +2887,10 @@
         html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage - 1})">‹</button>`;
       }
 
-      // İlk sayfa
-      if (this.currentPage > 2) {
-        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(1)">1</button>`;
-        if (this.currentPage > 3) {
-          html += `<span class="pagination-dots">...</span>`;
-        }
-      }
-
-      // Önceki sayfa
-      if (this.currentPage > 1) {
-        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage - 1})">${this.currentPage - 1}</button>`;
-      }
-
-      // Şu anki sayfa
-      html += `<button class="pagination-btn active" onclick="spatialMapManager.goToPage(${this.currentPage})">${this.currentPage}</button>`;
-
-      // Sonraki sayfa
-      if (this.currentPage < totalPages) {
-        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage + 1})">${this.currentPage + 1}</button>`;
-      }
-
-      // Son sayfa
-      if (this.currentPage < totalPages - 1) {
-        if (this.currentPage < totalPages - 2) {
-          html += `<span class="pagination-dots">...</span>`;
-        }
-        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${totalPages})">${totalPages}</button>`;
+      // Sayfa numaraları
+      for (let i = 1; i <= totalPages; i++) {
+        const activeClass = i === this.currentPage ? 'active' : '';
+        html += `<button class="pagination-btn ${activeClass}" onclick="spatialMapManager.goToPage(${i})">${i}</button>`;
       }
 
       // Sonraki

@@ -72,8 +72,6 @@
 
   .sidebar-filter {
     width: 360px;
-    min-width: 360px;
-    max-width: 360px;
     flex: 0 0 360px;
     background: #fff;
     border-right: 1px solid #e9ecef;
@@ -81,12 +79,11 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
   }
 
   .layers-panel {
     width: 100%;
-    height: 100vh;
+    height: 100%;
     background: #fff;
     overflow: hidden;
     display: flex;
@@ -200,10 +197,8 @@
   .layers-content {
     flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
     padding-bottom: 20px;
     min-height: 0;
-    max-height: calc(100vh - 300px);
   }
 
   .package-group {

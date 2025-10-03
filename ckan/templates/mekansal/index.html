@@ -193,7 +193,6 @@
 
   .filter-section {
     border-bottom: 2px solid #e9ecef;
-    padding: 15px 20px;
   }
 
   .filter-section:last-child {
@@ -203,9 +202,9 @@
   .filter-section-header {
     position: sticky;
     top: 0;
-    background: linear-gradient(180deg, #fafbfc 0%, #f0f2f5 100%);
-    padding: 10px 0 8px 0;
-    margin-bottom: 12px;
+    background: linear-gradient(180deg, #fafbfc 0%, #e9ecef 100%);
+    padding: 12px 20px;
+    margin: 0;
     font-size: 13px;
     font-weight: 700;
     color: #2c3e50;
@@ -214,10 +213,34 @@
     display: flex;
     align-items: center;
     gap: 6px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
   }
 
   .filter-section-icon {
     font-size: 14px;
+  }
+
+  .filter-section-content {
+    padding: 12px 20px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .filter-section-content::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .filter-section-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  .filter-section-content::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+  }
+
+  .filter-section-content::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
   }
 
   .filter-checkbox-item {
@@ -307,30 +330,78 @@
     font-size: 18px;
   }
 
-  .view-toggle {
+  .items-per-page {
     display: flex;
+    align-items: center;
     gap: 8px;
-    background: #f8f9fa;
-    padding: 4px;
-    border-radius: 8px;
+    font-size: 13px;
+    color: #495057;
   }
 
-  .view-btn {
-    padding: 6px 12px;
-    border: none;
-    background: transparent;
+  .items-per-page select {
+    padding: 6px 10px;
+    border: 2px solid #e9ecef;
     border-radius: 6px;
-    font-size: 12px;
+    background: white;
+    font-size: 13px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+
+  .items-per-page select:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .pagination {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-top: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .pagination-btn {
+    padding: 8px 14px;
+    border: 2px solid #e9ecef;
+    background: white;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
-    color: #6c757d;
+    color: #495057;
+    min-width: 40px;
+    text-align: center;
   }
 
-  .view-btn.active {
-    background: white;
+  .pagination-btn:hover:not(:disabled) {
+    border-color: #667eea;
     color: #667eea;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background: #f8f9fa;
+  }
+
+  .pagination-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .pagination-btn.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: #667eea;
+  }
+
+  .pagination-info {
+    padding: 8px 16px;
+    font-size: 13px;
+    color: #6c757d;
+    font-weight: 500;
   }
 
   .packages-grid {
@@ -784,29 +855,35 @@
             📦 Paket Öznitelikleri
             <span class="filter-badge" id="packageAttrCount">0</span>
           </span>
-          <span class="filter-toggle collapsed" id="toggle-packageAttrs">▼</span>
+          <span class="filter-toggle" id="toggle-packageAttrs">▼</span>
         </div>
-        <div class="filter-panel-content collapsed" id="content-packageAttrs">
+        <div class="filter-panel-content" id="content-packageAttrs">
           <!-- Organization Filter -->
           <div class="filter-section">
             <div class="filter-section-header">
               <span class="filter-section-icon">🏢</span> Organizasyon
             </div>
-            <div id="orgFilterContainer"></div>
+            <div class="filter-section-content">
+              <div id="orgFilterContainer"></div>
+            </div>
           </div>
           <!-- Theme Filter -->
           <div class="filter-section">
             <div class="filter-section-header">
               <span class="filter-section-icon">🎨</span> Tema
             </div>
-            <div id="themeFilterContainer"></div>
+            <div class="filter-section-content">
+              <div id="themeFilterContainer"></div>
+            </div>
           </div>
           <!-- Categories Filter -->
           <div class="filter-section">
             <div class="filter-section-header">
               <span class="filter-section-icon">📁</span> Kategoriler
             </div>
-            <div id="categoriesFilterContainer"></div>
+            <div class="filter-section-content">
+              <div id="categoriesFilterContainer"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -818,22 +895,26 @@
             📄 Kaynak Öznitelikleri
             <span class="filter-badge" id="resourceAttrCount">0</span>
           </span>
-          <span class="filter-toggle collapsed" id="toggle-resourceAttrs">▼</span>
+          <span class="filter-toggle" id="toggle-resourceAttrs">▼</span>
         </div>
-        <div class="filter-panel-content collapsed" id="content-resourceAttrs">
+        <div class="filter-panel-content" id="content-resourceAttrs">
           <!-- Spatial Status Filter -->
           <div class="filter-section">
             <div class="filter-section-header">
               <span class="filter-section-icon">🗺️</span> Mekansal Mı?
             </div>
-            <div id="spatialStatusFilterContainer"></div>
+            <div class="filter-section-content">
+              <div id="spatialStatusFilterContainer"></div>
+            </div>
           </div>
           <!-- Format Filter -->
           <div class="filter-section">
             <div class="filter-section-header">
               <span class="filter-section-icon">📋</span> Dosya Formatı
             </div>
-            <div id="formatFilterContainer"></div>
+            <div class="filter-section-content">
+              <div id="formatFilterContainer"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -849,11 +930,22 @@
         <div class="results-count">
           <span class="number" id="filteredCount">0</span> sonuç gösteriliyor
         </div>
+        <div class="items-per-page">
+          Sayfa başına:
+          <select id="itemsPerPage" onchange="spatialManager.changeItemsPerPage(this.value)">
+            <option value="10">10</option>
+            <option value="20" selected>20</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
+        </div>
       </div>
 
       <div class="packages-grid" id="packagesGrid">
         <div class="loading">⏳ Veriler yükleniyor...</div>
       </div>
+
+      <div class="pagination" id="pagination" style="display: none;"></div>
     </main>
   </div>
 </div>
@@ -885,6 +977,10 @@ class SpatialResourceManager {
     this.collapsedPackages = new Set();
     this.collapsedPanels = new Set();
 
+    // Pagination
+    this.currentPage = 1;
+    this.itemsPerPage = 20;
+
     this.init();
   }
 
@@ -911,40 +1007,50 @@ class SpatialResourceManager {
 
       this.allResources = data.resources || [];
 
-      // Load themes first
-      await this.loadThemes();
-
-      // Load package details to get groups properly
+      // Get unique package IDs
       const packageIds = [...new Set(this.allResources.map(r => r.package_id))];
 
-      // Fetch package details in parallel
-      const packagePromises = packageIds.map(async pkgId => {
-        try {
-          const pkgResponse = await fetch(`/api/3/action/package_show?id=${pkgId}`, { credentials: 'include' });
-          const pkgData = await pkgResponse.json();
-          if (pkgData.success && pkgData.result) {
-            return pkgData.result;
-          }
-        } catch (error) {
-          console.warn('Package load error:', pkgId, error);
-        }
-        return null;
-      });
-
-      const packages = await Promise.all(packagePromises);
+      // Fetch package details in parallel (limit batch size for performance)
+      const batchSize = 20;
       const packageMap = {};
-      packages.forEach(pkg => {
-        if (pkg) packageMap[pkg.id] = pkg;
-      });
+
+      for (let i = 0; i < packageIds.length; i += batchSize) {
+        const batch = packageIds.slice(i, i + batchSize);
+        const packagePromises = batch.map(async pkgId => {
+          try {
+            const pkgResponse = await fetch(`/api/3/action/package_show?id=${pkgId}`, { credentials: 'include' });
+            const pkgData = await pkgResponse.json();
+            if (pkgData.success && pkgData.result) {
+              return pkgData.result;
+            }
+          } catch (error) {
+            console.warn('Package load error:', pkgId, error);
+          }
+          return null;
+        });
+
+        const packages = await Promise.all(packagePromises);
+        packages.forEach(pkg => {
+          if (pkg) packageMap[pkg.id] = pkg;
+        });
+      }
 
       // Collect package data and attributes
       this.allResources.forEach(resource => {
         if (!this.allPackages[resource.package_id]) {
           const pkg = packageMap[resource.package_id];
-          const themeTitle = this.packageThemeMap[resource.package_id] || 'Tema Yok';
 
           // Extract group titles properly
           const groupTitles = pkg?.groups?.map(g => g.display_name || g.title || g.name) || [];
+
+          // Extract theme from extras
+          let themeTitle = 'Tema Yok';
+          if (pkg?.extras) {
+            const themeExtra = pkg.extras.find(e => e.key === 'theme');
+            if (themeExtra?.value) {
+              themeTitle = themeExtra.value;
+            }
+          }
 
           this.allPackages[resource.package_id] = {
             id: resource.package_id,
@@ -981,53 +1087,6 @@ class SpatialResourceManager {
     }
   }
 
-  async loadThemes() {
-    const ckan_api_base = "/api/3/action/";
-
-    try {
-      // Tüm temaları çek
-      const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
-      const themeListData = await themeListResponse.json();
-
-      if (!themeListData.success || !themeListData.result) {
-        console.warn('⚠️ Theme list API returned no data');
-        this.packageThemeMap = {};
-        return;
-      }
-
-      // Tema-dataset ilişkilerini paralel yükle
-      const themePromises = themeListData.result.map(theme =>
-        fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
-          .then(r => r.json())
-          .then(data => {
-            if (data.success && data.result && data.result.datasets) {
-              return { theme: theme.name || theme.slug, datasets: data.result.datasets };
-            }
-            return null;
-          })
-          .catch(err => {
-            console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
-            return null;
-          })
-      );
-
-      const themeResults = await Promise.all(themePromises);
-      this.packageThemeMap = {};
-
-      themeResults.forEach(result => {
-        if (result) {
-          result.datasets.forEach(dataset => {
-            this.packageThemeMap[dataset.id] = result.theme;
-          });
-        }
-      });
-
-      console.log('✅ Themes loaded for', Object.keys(this.packageThemeMap).length, 'packages');
-    } catch (error) {
-      console.error('❌ Theme load error:', error);
-      this.packageThemeMap = {};
-    }
-  }
 
   setupEventListeners() {
     const searchInput = document.getElementById('searchInput');
@@ -1214,6 +1273,7 @@ class SpatialResourceManager {
           <p>Filtreleri değiştirmeyi deneyin</p>
         </div>
       `;
+      document.getElementById('pagination').style.display = 'none';
       return;
     }
 
@@ -1229,7 +1289,102 @@ class SpatialResourceManager {
       packageGroups[resource.package_id].resources.push(resource);
     });
 
-    grid.innerHTML = Object.values(packageGroups).map(group => this.renderPackageCard(group)).join('');
+    const allPackageGroups = Object.values(packageGroups);
+    const totalPages = Math.ceil(allPackageGroups.length / this.itemsPerPage);
+
+    // Ensure current page is valid
+    if (this.currentPage > totalPages) {
+      this.currentPage = Math.max(1, totalPages);
+    }
+
+    // Get packages for current page
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    const pagePackages = allPackageGroups.slice(startIndex, endIndex);
+
+    grid.innerHTML = pagePackages.map(group => this.renderPackageCard(group)).join('');
+
+    // Render pagination
+    this.renderPagination(totalPages, allPackageGroups.length);
+  }
+
+  renderPagination(totalPages, totalPackages) {
+    const paginationEl = document.getElementById('pagination');
+
+    if (totalPages <= 1) {
+      paginationEl.style.display = 'none';
+      return;
+    }
+
+    paginationEl.style.display = 'flex';
+
+    let paginationHTML = '';
+
+    // Previous button
+    paginationHTML += `
+      <button class="pagination-btn" onclick="spatialManager.goToPage(${this.currentPage - 1})" ${this.currentPage === 1 ? 'disabled' : ''}>
+        ◀ Önceki
+      </button>
+    `;
+
+    // Page numbers
+    const maxVisiblePages = 7;
+    let startPage = Math.max(1, this.currentPage - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    if (endPage - startPage < maxVisiblePages - 1) {
+      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    if (startPage > 1) {
+      paginationHTML += `<button class="pagination-btn" onclick="spatialManager.goToPage(1)">1</button>`;
+      if (startPage > 2) {
+        paginationHTML += `<span class="pagination-info">...</span>`;
+      }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+      paginationHTML += `
+        <button class="pagination-btn ${i === this.currentPage ? 'active' : ''}" onclick="spatialManager.goToPage(${i})">
+          ${i}
+        </button>
+      `;
+    }
+
+    if (endPage < totalPages) {
+      if (endPage < totalPages - 1) {
+        paginationHTML += `<span class="pagination-info">...</span>`;
+      }
+      paginationHTML += `<button class="pagination-btn" onclick="spatialManager.goToPage(${totalPages})">${totalPages}</button>`;
+    }
+
+    // Next button
+    paginationHTML += `
+      <button class="pagination-btn" onclick="spatialManager.goToPage(${this.currentPage + 1})" ${this.currentPage === totalPages ? 'disabled' : ''}>
+        Sonraki ▶
+      </button>
+    `;
+
+    // Page info
+    const startItem = (this.currentPage - 1) * this.itemsPerPage + 1;
+    const endItem = Math.min(this.currentPage * this.itemsPerPage, totalPackages);
+    paginationHTML += `
+      <span class="pagination-info">${startItem}-${endItem} / ${totalPackages}</span>
+    `;
+
+    paginationEl.innerHTML = paginationHTML;
+  }
+
+  goToPage(page) {
+    this.currentPage = page;
+    this.renderResources();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  changeItemsPerPage(value) {
+    this.itemsPerPage = parseInt(value);
+    this.currentPage = 1;
+    this.renderResources();
   }
 
   renderPackageCard(group) {

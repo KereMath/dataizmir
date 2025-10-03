@@ -1,21 +1,112 @@
-{% extends "base.html" %}
+{% extends "page.html" %}
 
 {% block subtitle %}{{ _('Mekansal Gösterim') }}{% endblock %}
 
-{% block page %}
-  {% block skip %}
-    <div class="sr-only sr-only-focusable"><a href="#content">{{ _('Skip to content') }}</a></div>
-  {% endblock %}
-
-  {% block header %}
-    {% include "header.html" %}
-  {% endblock %}
-
+{% block primary %}
 <style>
+  /* CKAN arama formunu gizle */
+  .search-form {
+    display: none !important;
+  }
+
+  /* Sayfa Kapsayıcısı */
+  .page-container {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* Kenar Çubuğu Filtre Stilleri */
+  .sidebar-filter {
+    width: 270px;
+    background-color: #fff;
+    border-right: 1px solid #e9ecef;
+    padding: 20px;
+    overflow-y: auto;
+    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    flex-shrink: 0;
+  }
+
+  .sidebar-filter h3 {
+    margin-bottom: 20px;
+    color: #495057;
+    font-size: 18px;
+    font-weight: 600;
+  }
+
+  .filter-section {
+    margin-bottom: 25px;
+  }
+
+  .filter-section label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #495057;
+    font-size: 14px;
+  }
+
+  .filter-section input[type="search"],
+  .filter-section select {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+  }
+
+  .filter-section input[type="search"]:focus,
+  .filter-section select:focus {
+    outline: none;
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+  }
+
+  .multi-select {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    background-color: #fff;
+  }
+
+  .multi-select-option {
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+    border-bottom: 1px solid #f8f9fa;
+    display: flex;
+    align-items: center;
+  }
+
+  .multi-select-option:last-child {
+    border-bottom: none;
+  }
+
+  .multi-select-option:hover {
+    background-color: #f8f9fa;
+  }
+
+  .multi-select-option.selected {
+    background-color: #e3f2fd;
+    color: #1976d2;
+  }
+
+  .multi-select-option input[type="checkbox"] {
+    margin-right: 8px;
+  }
+
+  /* Ana İçerik Kapsayıcısı */
+  .main-container {
+    flex-grow: 1;
+    padding: 20px;
+    width: calc(100% - 320px);
+  }
+
   .mekansal-container {
-    padding: 15px;
+    padding: 0;
     max-width: 100%;
-    min-height: calc(100vh - 200px);
     background-color: #f8f9fa;
   }
 
@@ -70,245 +161,6 @@
     margin-top: 2px;
   }
 
-  /* Modern Layout with Sidebar */
-  .content-wrapper {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 15px;
-    margin-bottom: 15px;
-  }
-
-  /* Sidebar Filters */
-  .sidebar-filters {
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-    padding: 0;
-    height: fit-content;
-    position: sticky;
-    top: 15px;
-  }
-
-  .sidebar-header {
-    padding: 10px 12px;
-    border-bottom: 2px solid #e9ecef;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 10px 10px 0 0;
-  }
-
-  .sidebar-title {
-    font-size: 0.95rem;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0 0 8px 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .search-box {
-    width: 100%;
-    padding: 6px 10px;
-    border: 2px solid #e9ecef;
-    border-radius: 6px;
-    font-size: 12px;
-    transition: all 0.2s ease;
-  }
-
-  .search-box:focus {
-    outline: none;
-    border-color: #667eea;
-    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  }
-
-  .filter-panel {
-    border-bottom: 1px solid #e9ecef;
-  }
-
-  .filter-panel:last-child {
-    border-bottom: none;
-  }
-
-  .filter-panel-header {
-    padding: 8px 12px;
-    background: white;
-    cursor: pointer;
-    user-select: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    transition: background 0.2s ease;
-  }
-
-  .filter-panel-header:hover {
-    background: #f8f9fa;
-  }
-
-  .filter-panel-title {
-    font-size: 12px;
-    font-weight: 600;
-    color: #495057;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .filter-badge {
-    background: #667eea;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 8px;
-    font-size: 10px;
-    font-weight: 600;
-  }
-
-  .filter-toggle {
-    transition: transform 0.3s ease;
-    font-size: 12px;
-    color: #6c757d;
-  }
-
-  .filter-toggle.collapsed {
-    transform: rotate(-90deg);
-  }
-
-  .filter-panel-content {
-    max-height: 350px;
-    overflow-y: auto;
-    display: block;
-    background: #fafbfc;
-  }
-
-  .filter-panel-content.collapsed {
-    display: none;
-  }
-
-  .filter-panel-content::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  .filter-panel-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-  }
-
-  .filter-panel-content::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 4px;
-  }
-
-  .filter-panel-content::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-  }
-
-  .filter-section {
-    border-bottom: 2px solid #e9ecef;
-  }
-
-  .filter-section:last-child {
-    border-bottom: none;
-  }
-
-  .filter-section-header {
-    position: sticky;
-    top: 0;
-    background: linear-gradient(180deg, #fafbfc 0%, #e9ecef 100%);
-    padding: 8px 14px;
-    margin: 0;
-    font-size: 11px;
-    font-weight: 700;
-    color: #2c3e50;
-    border-bottom: 2px solid #667eea;
-    z-index: 10;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  }
-
-  .filter-section-icon {
-    font-size: 12px;
-  }
-
-  .filter-section-content {
-    padding: 8px 14px;
-    max-height: 200px;
-    overflow-y: auto;
-  }
-
-  .filter-section-content::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .filter-section-content::-webkit-scrollbar-track {
-    background: #f1f1f1;
-  }
-
-  .filter-section-content::-webkit-scrollbar-thumb {
-    background: #cbd5e0;
-    border-radius: 3px;
-  }
-
-  .filter-section-content::-webkit-scrollbar-thumb:hover {
-    background: #a0aec0;
-  }
-
-  .filter-checkbox-item {
-    display: flex;
-    align-items: center;
-    padding: 5px 8px;
-    border-radius: 5px;
-    transition: all 0.2s ease;
-    margin-bottom: 4px;
-  }
-
-  .filter-checkbox-item:hover {
-    background: #f8f9fa;
-  }
-
-  .filter-checkbox-item input[type="checkbox"] {
-    margin-right: 8px;
-    cursor: pointer;
-    width: 14px;
-    height: 14px;
-  }
-
-  .filter-checkbox-item label {
-    cursor: pointer;
-    font-size: 11px;
-    color: #495057;
-    flex: 1;
-    margin: 0;
-  }
-
-  .filter-count {
-    font-size: 10px;
-    color: #6c757d;
-    background: #e9ecef;
-    padding: 1px 5px;
-    border-radius: 8px;
-    margin-left: 6px;
-    font-weight: 600;
-  }
-
-  .clear-filters-btn {
-    width: 100%;
-    padding: 8px;
-    margin: 10px 14px 14px 14px;
-    width: calc(100% - 28px);
-    border: 2px solid #dc3545;
-    background: white;
-    color: #dc3545;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .clear-filters-btn:hover {
-    background: #dc3545;
-    color: white;
-  }
 
   /* Main Content Area */
   .main-content-area {
@@ -415,7 +267,7 @@
 
   .packages-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+    grid-template-columns: 1fr;
     gap: 15px;
   }
 
@@ -800,23 +652,20 @@
     opacity: 0.4;
   }
 
-  @media (max-width: 1200px) {
-    .content-wrapper {
-      grid-template-columns: 280px 1fr;
-    }
-
-    .packages-grid {
-      grid-template-columns: 1fr;
-    }
-  }
-
   @media (max-width: 768px) {
-    .content-wrapper {
-      grid-template-columns: 1fr;
+    .page-container {
+      flex-direction: column;
     }
 
-    .sidebar-filters {
-      position: static;
+    .sidebar-filter {
+      width: 100%;
+      border-right: none;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .main-container {
+      width: 100%;
+      padding: 15px;
     }
 
     .results-header {
@@ -825,118 +674,66 @@
     }
   }
 </style>
-</head>
-<body>
 
-<div class="mekansal-container">
-  <div class="page-header">
-    <h1 class="page-title">🗺️ Mekansal Gösterim Yönetimi</h1>
-    <div class="stats-bar">
-      <div class="stat-item">
-        <span class="stat-number" id="totalPackages">-</span>
-        <div class="stat-label">Toplam Paket</div>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number" id="totalResources">-</span>
-        <div class="stat-label">Toplam Kaynak</div>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number" id="spatialResources">-</span>
-        <div class="stat-label">Mekansal Seçili</div>
-      </div>
-      <div class="stat-item">
-        <span class="stat-number" id="totalFormats">-</span>
-        <div class="stat-label">Farklı Format</div>
-      </div>
+<div class="page-container">
+  <!-- Sidebar Filters -->
+  <div class="sidebar-filter">
+    <h3>Filtreler</h3>
+
+    <div class="filter-section">
+      <label for="searchInput">Arama</label>
+      <input type="search" id="searchInput" placeholder="Paket veya kaynak ara...">
+    </div>
+
+    <div class="filter-section">
+      <label>Organizasyon</label>
+      <div class="multi-select" id="orgFilterContainer"></div>
+    </div>
+
+    <div class="filter-section">
+      <label>Tema</label>
+      <div class="multi-select" id="themeFilterContainer"></div>
+    </div>
+
+    <div class="filter-section">
+      <label>Kategoriler</label>
+      <div class="multi-select" id="categoriesFilterContainer"></div>
+    </div>
+
+    <div class="filter-section">
+      <label>Mekansal Durum</label>
+      <div class="multi-select" id="spatialStatusFilterContainer"></div>
+    </div>
+
+    <div class="filter-section">
+      <label>Dosya Formatı</label>
+      <div class="multi-select" id="formatFilterContainer"></div>
     </div>
   </div>
 
-  <div class="content-wrapper">
-    <!-- Sidebar Filters -->
-    <aside class="sidebar-filters">
-      <div class="sidebar-header">
-        <h2 class="sidebar-title">🔍 Filtreler</h2>
-        <input type="text" class="search-box" id="searchInput" placeholder="Paket veya kaynak ara...">
-      </div>
-
-      <!-- Package Attributes -->
-      <div class="filter-panel">
-        <div class="filter-panel-header" onclick="spatialManager.toggleFilterPanel('packageAttrs')">
-          <span class="filter-panel-title">
-            📦 Paket Öznitelikleri
-            <span class="filter-badge" id="packageAttrCount">0</span>
-          </span>
-          <span class="filter-toggle" id="toggle-packageAttrs">▼</span>
+  <!-- Main Content -->
+  <div class="main-container">
+    <div class="page-header">
+      <h1 class="page-title">🗺️ Mekansal Gösterim Yönetimi</h1>
+      <div class="stats-bar">
+        <div class="stat-item">
+          <span class="stat-number" id="totalPackages">-</span>
+          <div class="stat-label">Toplam Paket</div>
         </div>
-        <div class="filter-panel-content" id="content-packageAttrs">
-          <!-- Organization Filter -->
-          <div class="filter-section">
-            <div class="filter-section-header">
-              <span class="filter-section-icon">🏢</span> Organizasyon
-            </div>
-            <div class="filter-section-content">
-              <div id="orgFilterContainer"></div>
-            </div>
-          </div>
-          <!-- Theme Filter -->
-          <div class="filter-section">
-            <div class="filter-section-header">
-              <span class="filter-section-icon">🎨</span> Tema
-            </div>
-            <div class="filter-section-content">
-              <div id="themeFilterContainer"></div>
-            </div>
-          </div>
-          <!-- Categories Filter -->
-          <div class="filter-section">
-            <div class="filter-section-header">
-              <span class="filter-section-icon">📁</span> Kategoriler
-            </div>
-            <div class="filter-section-content">
-              <div id="categoriesFilterContainer"></div>
-            </div>
-          </div>
+        <div class="stat-item">
+          <span class="stat-number" id="totalResources">-</span>
+          <div class="stat-label">Toplam Kaynak</div>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="spatialResources">-</span>
+          <div class="stat-label">Mekansal Seçili</div>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number" id="totalFormats">-</span>
+          <div class="stat-label">Farklı Format</div>
         </div>
       </div>
-
-      <!-- Resource Attributes -->
-      <div class="filter-panel">
-        <div class="filter-panel-header" onclick="spatialManager.toggleFilterPanel('resourceAttrs')">
-          <span class="filter-panel-title">
-            📄 Kaynak Öznitelikleri
-            <span class="filter-badge" id="resourceAttrCount">0</span>
-          </span>
-          <span class="filter-toggle" id="toggle-resourceAttrs">▼</span>
-        </div>
-        <div class="filter-panel-content" id="content-resourceAttrs">
-          <!-- Spatial Status Filter -->
-          <div class="filter-section">
-            <div class="filter-section-header">
-              <span class="filter-section-icon">🗺️</span> Mekansal Mı?
-            </div>
-            <div class="filter-section-content">
-              <div id="spatialStatusFilterContainer"></div>
-            </div>
-          </div>
-          <!-- Format Filter -->
-          <div class="filter-section">
-            <div class="filter-section-header">
-              <span class="filter-section-icon">📋</span> Dosya Formatı
-            </div>
-            <div class="filter-section-content">
-              <div id="formatFilterContainer"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <button class="clear-filters-btn" onclick="spatialManager.clearAllFilters()">
-        🗑️ Tüm Filtreleri Temizle
-      </button>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content-area">
+    </div>
       <div class="results-header">
         <div class="results-count">
           <span class="number" id="filteredCount">0</span> sonuç gösteriliyor
@@ -948,7 +745,6 @@
       </div>
 
       <div class="pagination" id="pagination" style="display: none;"></div>
-    </main>
   </div>
 </div>
 
@@ -1168,17 +964,41 @@ class SpatialResourceManager {
     const container = document.getElementById(containerId);
     if (!container) return;
 
+    if (items.length === 0) {
+      container.innerHTML = '<div style="padding:10px; color:#999;">Seçenek yok</div>';
+      return;
+    }
+
     container.innerHTML = items.map(item => {
       const sanitized = this.sanitizeId(item);
+      const isChecked = this.getSelectedSet(containerId).has(item);
       return `
-        <div class="filter-checkbox-item">
-          <input type="checkbox" id="filter-${containerId}-${sanitized}"
-                 onchange="spatialManager.onFilterChange('${containerId}', '${this.escapeQuotes(item)}', this.checked)">
-          <label for="filter-${containerId}-${sanitized}">${item}</label>
-          <span class="filter-count" id="count-${containerId}-${sanitized}">0</span>
+        <div class="multi-select-option ${isChecked ? 'selected' : ''}" onclick="spatialManager.toggleFilter('${containerId}', '${this.escapeQuotes(item)}')">
+          <input type="checkbox" ${isChecked ? 'checked' : ''}>
+          <span>${item}</span>
         </div>
       `;
     }).join('');
+  }
+
+  getSelectedSet(containerId) {
+    if (containerId === 'orgFilterContainer') return this.selectedOrgs;
+    if (containerId === 'themeFilterContainer') return this.selectedThemes;
+    if (containerId === 'categoriesFilterContainer') return this.selectedCategories;
+    if (containerId === 'formatFilterContainer') return this.selectedFormats;
+    if (containerId === 'spatialStatusFilterContainer') return this.selectedSpatialStatus;
+    return new Set();
+  }
+
+  toggleFilter(containerId, value) {
+    const selectedSet = this.getSelectedSet(containerId);
+    if (selectedSet.has(value)) {
+      selectedSet.delete(value);
+    } else {
+      selectedSet.add(value);
+    }
+    this.populateFilters();
+    this.filterAndRender();
   }
 
   escapeQuotes(str) {
@@ -1661,9 +1481,5 @@ document.addEventListener('DOMContentLoaded', () => {
   spatialManager = new SpatialResourceManager();
 });
 </script>
-
-{% block footer %}
-  {% include "footer.html" %}
-{% endblock %}
 
 {% endblock %}

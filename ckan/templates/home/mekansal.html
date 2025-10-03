@@ -702,6 +702,12 @@
     cursor: not-allowed;
   }
 
+  .pagination-dots {
+    padding: 0 4px;
+    color: #6c757d;
+    font-size: 14px;
+  }
+
   /* Loading spinner */
   .loading-spinner {
     position: absolute;
@@ -2929,10 +2935,33 @@
         html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage - 1})">‹</button>`;
       }
 
-      // Sayfa numaraları
-      for (let i = 1; i <= totalPages; i++) {
-        const activeClass = i === this.currentPage ? 'active' : '';
-        html += `<button class="pagination-btn ${activeClass}" onclick="spatialMapManager.goToPage(${i})">${i}</button>`;
+      // İlk sayfa
+      if (this.currentPage > 2) {
+        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(1)">1</button>`;
+        if (this.currentPage > 3) {
+          html += `<span class="pagination-dots">...</span>`;
+        }
+      }
+
+      // Önceki sayfa
+      if (this.currentPage > 1) {
+        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage - 1})">${this.currentPage - 1}</button>`;
+      }
+
+      // Şu anki sayfa
+      html += `<button class="pagination-btn active" onclick="spatialMapManager.goToPage(${this.currentPage})">${this.currentPage}</button>`;
+
+      // Sonraki sayfa
+      if (this.currentPage < totalPages) {
+        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage + 1})">${this.currentPage + 1}</button>`;
+      }
+
+      // Son sayfa
+      if (this.currentPage < totalPages - 1) {
+        if (this.currentPage < totalPages - 2) {
+          html += `<span class="pagination-dots">...</span>`;
+        }
+        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${totalPages})">${totalPages}</button>`;
       }
 
       // Sonraki

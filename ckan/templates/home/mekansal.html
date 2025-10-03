@@ -1156,10 +1156,6 @@
       this.selectedFormat = '';
       this.searchTerm = '';
 
-      // Pagination
-      this.currentPage = 1;
-      this.itemsPerPage = 3;
-
       // Kullanıcı durumu
       this.isLoggedIn = false;
 
@@ -2858,53 +2854,13 @@
       }
 
       const filteredGroups = this.filterPackages();
-      const allGroups = Object.values(filteredGroups);
+      const html = Object.values(filteredGroups).map(pg => this.renderPackageGroup(pg)).join('');
 
-      if (allGroups.length === 0) {
+      if (Object.keys(filteredGroups).length === 0) {
         container.innerHTML = `<div class="error-section">Filtrelere uygun kaynak bulunamadı.</div>`;
-        return;
+      } else {
+        container.innerHTML = html;
       }
-
-      // Pagination
-      const totalPages = Math.ceil(allGroups.length / this.itemsPerPage);
-      const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-      const endIndex = startIndex + this.itemsPerPage;
-      const paginatedGroups = allGroups.slice(startIndex, endIndex);
-
-      const html = paginatedGroups.map(pg => this.renderPackageGroup(pg)).join('');
-      const paginationHtml = this.renderPagination(totalPages);
-
-      container.innerHTML = html + paginationHtml;
-    }
-
-    renderPagination(totalPages) {
-      if (totalPages <= 1) return '';
-
-      let html = '<div class="pagination-container">';
-
-      // Önceki
-      if (this.currentPage > 1) {
-        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage - 1})">‹</button>`;
-      }
-
-      // Sayfa numaraları
-      for (let i = 1; i <= totalPages; i++) {
-        const activeClass = i === this.currentPage ? 'active' : '';
-        html += `<button class="pagination-btn ${activeClass}" onclick="spatialMapManager.goToPage(${i})">${i}</button>`;
-      }
-
-      // Sonraki
-      if (this.currentPage < totalPages) {
-        html += `<button class="pagination-btn" onclick="spatialMapManager.goToPage(${this.currentPage + 1})">›</button>`;
-      }
-
-      html += '</div>';
-      return html;
-    }
-
-    goToPage(page) {
-      this.currentPage = page;
-      this.renderLayers();
     }
 
     renderPackageGroup(group) {

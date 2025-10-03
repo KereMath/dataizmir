@@ -137,7 +137,6 @@
     display: flex;
     gap: 8px;
     margin-bottom: 8px;
-    max-width: 100%;
   }
 
   .filter-row:last-child {
@@ -152,10 +151,6 @@
     font-size: 13px;
     background: white;
     cursor: pointer;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    max-width: 100%;
   }
 
   .filter-select:focus {
@@ -1148,8 +1143,6 @@
       // Filtreler
       this.selectedTheme = '';
       this.selectedCategory = '';
-      this.selectedOrganization = '';
-      this.selectedFormat = '';
       this.searchTerm = '';
 
       // Kullanıcı durumu
@@ -1529,8 +1522,7 @@
             theme: this.themeMap[packageId] || null,
             groups: pkg.groups || [],
             tags: pkg.tags || [],
-            private: pkg.private || false,
-            organization_title: pkg.organization?.title || pkg.organization?.display_name || null
+            private: pkg.private || false
           });
         }
       });
@@ -1542,8 +1534,7 @@
           theme: pkgInfo.theme,
           groups: pkgInfo.groups,
           tags: pkgInfo.tags,
-          private: pkgInfo.private,
-          organization_title: pkgInfo.organization_title
+          private: pkgInfo.private
         };
       });
     }
@@ -1582,40 +1573,16 @@
     }
 
     setupFilters() {
-      // Tema, kategori, organizasyon ve format listelerini oluştur
+      // Tema ve kategori listelerini oluştur
       const themes = new Set(['']);
       const categories = new Set(['']);
-      const organizations = new Set(['']);
-      const formats = new Set(['']);
 
       this.spatialData.forEach(resource => {
         if (resource.theme) themes.add(resource.theme);
-        if (resource.organization_title) organizations.add(resource.organization_title);
-        if (resource.format) formats.add(resource.format.toUpperCase());
         resource.groups?.forEach(g => {
           const categoryName = g.display_name || g.name;
           if (categoryName) categories.add(categoryName);
         });
-      });
-
-      // Organization filter
-      const orgSelect = document.getElementById('organizationFilter');
-      orgSelect.innerHTML = '<option value="">Tüm Organizasyonlar</option>';
-      [...organizations].filter(o => o).sort().forEach(org => {
-        const option = document.createElement('option');
-        option.value = org;
-        option.textContent = org;
-        orgSelect.appendChild(option);
-      });
-
-      // Format filter
-      const formatSelect = document.getElementById('formatFilter');
-      formatSelect.innerHTML = '<option value="">Tüm Formatlar</option>';
-      [...formats].filter(f => f).sort().forEach(format => {
-        const option = document.createElement('option');
-        option.value = format;
-        option.textContent = format;
-        formatSelect.appendChild(option);
       });
 
       // Theme filter
@@ -1656,22 +1623,6 @@
             (g.display_name || g.name) === this.selectedCategory
           );
           if (!hasCategory) shouldShow = false;
-        }
-
-        // Organization filter
-        if (this.selectedOrganization) {
-          const hasOrg = group.resources.some(r =>
-            r.organization_title === this.selectedOrganization
-          );
-          if (!hasOrg) shouldShow = false;
-        }
-
-        // Format filter
-        if (this.selectedFormat) {
-          const hasFormat = group.resources.some(r =>
-            (r.format || '').toUpperCase() === this.selectedFormat
-          );
-          if (!hasFormat) shouldShow = false;
         }
 
         // Search filter
@@ -2815,18 +2766,6 @@
           this.searchTerm = searchInput.value.toLowerCase();
           this.renderLayers();
         }, 250);
-      });
-
-      // Organization filter
-      document.getElementById('organizationFilter').addEventListener('change', (e) => {
-        this.selectedOrganization = e.target.value;
-        this.renderLayers();
-      });
-
-      // Format filter
-      document.getElementById('formatFilter').addEventListener('change', (e) => {
-        this.selectedFormat = e.target.value;
-        this.renderLayers();
       });
 
       // Theme filter

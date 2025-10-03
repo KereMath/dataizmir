@@ -151,6 +151,10 @@
     font-size: 13px;
     background: white;
     cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
 
   .filter-select:focus {
@@ -1524,7 +1528,8 @@
             theme: this.themeMap[packageId] || null,
             groups: pkg.groups || [],
             tags: pkg.tags || [],
-            private: pkg.private || false
+            private: pkg.private || false,
+            organization_title: pkg.organization?.title || pkg.organization?.display_name || null
           });
         }
       });
@@ -1536,7 +1541,8 @@
           theme: pkgInfo.theme,
           groups: pkgInfo.groups,
           tags: pkgInfo.tags,
-          private: pkgInfo.private
+          private: pkgInfo.private,
+          organization_title: pkgInfo.organization_title
         };
       });
     }

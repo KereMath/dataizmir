@@ -495,9 +495,9 @@ def get_spatial_data(resource_id):
             if SPATIAL_SUPPORT:
                 return process_spatial_files(url, 'shp')
             else:
-                # Fallback: Frontend'e URL gönder (shp.js ile işlesin)
-                proxy_url = f"{site_url}/dataset/{result.package_name}/resource/{resource_id}/download"
-                return jsonify({'success': True, 'type': 'shp', 'url': proxy_url})
+                # Fallback: Frontend'e gerçek URL'i gönder (shp.js ile işlesin)
+                # URL zaten get_absolute_url ile mutlak hale getirilmiş durumda
+                return jsonify({'success': True, 'type': 'shp', 'url': url})
 
         elif format_type in ['csv', 'xls', 'xlsx']:
             return process_tabular_data(url, format_type, resource_id)

@@ -1545,7 +1545,23 @@ def get_resource_metadata_fields(resource_id):
             df = df.where(pd.notna(df), None)
 
             fields = list(df.columns)
-            sample_data = df.iloc[0].to_dict() if len(df) > 0 else {}
+            # CSV/Excel için her column'u ayrı ayrı listelemek için
+            # sample_data yerine column bazlı data structure kullan
+            sample_data = {}
+            if len(df) > 0:
+                for col in df.columns:
+                    value = df.iloc[0][col]
+                    # NaN, None veya inf değerlerini string'e çevir
+                    if pd.isna(value):
+                        sample_data[col] = None
+                    elif isinstance(value, (int, float)):
+                        import math
+                        if math.isinf(value) or math.isnan(value):
+                            sample_data[col] = None
+                        else:
+                            sample_data[col] = value
+                    else:
+                        sample_data[col] = value
 
         elif format_type in ['json', 'api', 'rest']:
             response = requests.get(url, timeout=30, verify=False)

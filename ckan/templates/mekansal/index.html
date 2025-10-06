@@ -1168,29 +1168,55 @@
 
       <!-- Search and Filter Section -->
       <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-        <input type="search" id="relationshipSearch" placeholder="🔍 Mekansal kaynak veya veri seti ara..."
+        <input type="search" id="relationshipSearch" placeholder="🔍 Mekansal kaynak ara..."
                style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; margin-bottom: 12px;">
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
-          <select id="relSpatialFilter" onchange="spatialManager.filterRelationships()"
-                  style="padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
-            <option value="">Tüm Mekansal Veriler</option>
-          </select>
-          <select id="relFormatFilter" onchange="spatialManager.filterRelationships()"
-                  style="padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
-            <option value="">Tüm Formatlar (Non-Spatial)</option>
-          </select>
-          <select id="relOrgFilter" onchange="spatialManager.filterRelationships()"
-                  style="padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
-            <option value="">Tüm Kuruluşlar</option>
-          </select>
-        </div>
+        <select id="relSpatialFilter" onchange="spatialManager.filterRelationships()"
+                style="width: 100%; padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
+          <option value="">Tüm Mekansal Veriler</option>
+        </select>
       </div>
 
       <!-- Relationship List -->
       <div id="relationshipList">
         <div class="map-modal-empty">
           <div class="map-modal-empty-icon">⏳</div>
+          <p>Yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Resource Picker Modal (Veri Seçici) -->
+<div class="map-modal-overlay" id="resourcePickerOverlay" onclick="spatialManager.closeResourcePicker(event)">
+  <div class="map-modal" onclick="event.stopPropagation()" style="max-width: 700px;">
+    <div class="map-modal-header">
+      <h2 class="map-modal-title">📊 Bağlanacak Veri Setini Seç</h2>
+      <button class="map-modal-close" onclick="spatialManager.closeResourcePicker()">&times;</button>
+    </div>
+    <div class="map-modal-body" style="max-height: calc(70vh - 80px);">
+      <!-- Search and Filter -->
+      <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+        <input type="search" id="pickerSearch" placeholder="🔍 Veri seti ara..."
+               style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; margin-bottom: 10px;">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <select id="pickerFormatFilter" onchange="spatialManager.filterPickerResources()"
+                  style="padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
+            <option value="">Tüm Formatlar</option>
+          </select>
+          <select id="pickerOrgFilter" onchange="spatialManager.filterPickerResources()"
+                  style="padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
+            <option value="">Tüm Kuruluşlar</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Resource List -->
+      <div id="resourcePickerList">
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+          <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
           <p>Yükleniyor...</p>
         </div>
       </div>
@@ -1235,6 +1261,11 @@ class SpatialResourceManager {
     // Relationship management
     this.relationshipData = {};
     this.filteredRelResources = [];
+
+    // Resource picker
+    this.pickerSpatialResourceId = null;
+    this.pickerResources = [];
+    this.filteredPickerResources = [];
 
     this.init();
   }
@@ -2162,26 +2193,11 @@ class SpatialResourceManager {
 
     spatialFilter.innerHTML = '<option value="">Tüm Mekansal Veriler</option>' +
       spatialOptions.map(opt => `<option value="${opt.id}">${opt.name}</option>`).join('');
-
-    // Format filter - ONLY non-spatial formats
-    const formatFilter = document.getElementById('relFormatFilter');
-    const nonSpatialResources = this.allResources.filter(r => !this.spatialResourceIds.has(r.resource_id));
-    const formats = new Set(nonSpatialResources.map(r => r.format).filter(f => f));
-    formatFilter.innerHTML = '<option value="">Tüm Formatlar (Non-Spatial)</option>' +
-      [...formats].sort().map(f => `<option value="${f}">${f.toUpperCase()}</option>`).join('');
-
-    // Organization filter
-    const orgFilter = document.getElementById('relOrgFilter');
-    const orgs = new Set(this.allResources.map(r => r.organization_title).filter(o => o));
-    orgFilter.innerHTML = '<option value="">Tüm Kuruluşlar</option>' +
-      [...orgs].sort().map(o => `<option value="${o}">${o}</option>`).join('');
   }
 
   filterRelationships() {
     const searchTerm = document.getElementById('relationshipSearch')?.value.toLowerCase() || '';
     const spatialFilter = document.getElementById('relSpatialFilter')?.value || '';
-    const formatFilter = document.getElementById('relFormatFilter')?.value || '';
-    const orgFilter = document.getElementById('relOrgFilter')?.value || '';
 
     let filteredData = Object.values(this.relationshipData);
 
@@ -2196,20 +2212,6 @@ class SpatialResourceManager {
         rd.resource.resource_name.toLowerCase().includes(searchTerm)
       );
     }
-
-    // Filter available resources by format and org - ONLY non-spatial resources
-    this.filteredRelResources = this.allResources.filter(r => {
-      // Only show NON-spatial resources (exclude those marked as spatial)
-      if (this.spatialResourceIds.has(r.resource_id)) return false;
-
-      if (formatFilter && r.format !== formatFilter) return false;
-      if (orgFilter && r.organization_title !== orgFilter) return false;
-      if (searchTerm) {
-        const text = `${r.resource_name} ${this.allPackages[r.package_id]?.title}`.toLowerCase();
-        if (!text.includes(searchTerm)) return false;
-      }
-      return true;
-    });
 
     this.renderRelationships(filteredData);
   }
@@ -2243,110 +2245,38 @@ class SpatialResourceManager {
             </div>
           </div>
 
-          ${relationships.length > 0 ? `
-            <div class="rel-existing-list" style="margin: 12px;">
-              <div style="font-size: 11px; font-weight: 600; color: #28a745; margin-bottom: 8px;">
-                ✅ Bağlı Veri Setleri (${relationships.length}):
-              </div>
-              ${relationships.map(rel => `
-                <div class="rel-existing-item">
-                  <div class="rel-existing-name">
-                    📄 ${rel.related_resource_name}
-                    <span class="format-badge ${this.getFormatClass(rel.related_resource_format.toLowerCase())}">${rel.related_resource_format}</span>
-                  </div>
-                  <button class="rel-remove-btn" onclick="spatialManager.removeRelationship('${spatialResource.resource_id}', '${rel.related_resource_id}')">
-                    🗑️ Kaldır
-                  </button>
+          <div style="padding: 12px;">
+            ${relationships.length > 0 ? `
+              <div style="background: #e8f5e9; padding: 10px; border-radius: 6px; margin-bottom: 12px;">
+                <div style="font-size: 11px; font-weight: 600; color: #28a745; margin-bottom: 8px;">
+                  ✅ Bağlı Veri Setleri (${relationships.length}):
                 </div>
-              `).join('')}
-            </div>
-          ` : ''}
-
-          <div style="margin: 12px 12px 8px 12px;">
-            <div style="font-size: 11px; font-weight: 600; color: #667eea; margin-bottom: 8px;">
-              📊 Bağlanabilir Veri Setleri (Mekansal Olmayan):
-            </div>
-          </div>
-
-          ${this.filteredRelResources.length === 0 ? `
-            <div style="padding: 24px; text-align: center; color: #6c757d; background: #f8f9fa; margin: 0 12px 12px 12px; border-radius: 8px;">
-              <div style="font-size: 32px; margin-bottom: 8px;">📭</div>
-              <div style="font-size: 12px;">Mekansal olmayan veri bulunamadı veya hepsi zaten bağlı.</div>
-            </div>
-          ` : `
-          <div class="rel-resource-grid">
-            ${this.filteredRelResources.slice(0, 20).map(resource => {
-              const isRelated = relationships.some(rel => rel.related_resource_id === resource.resource_id);
-              const pkg = this.allPackages[resource.package_id];
-
-              return `
-                <div class="rel-resource-card ${isRelated ? 'selected' : ''}" id="rel-card-${spatialResource.resource_id}-${resource.resource_id}">
-                  <div class="rel-resource-name" title="${resource.resource_name}">
-                    ${resource.resource_name}
-                  </div>
-                  <div class="rel-resource-meta">
-                    <span class="format-badge ${this.getFormatClass(resource.format.toLowerCase())}">
-                      ${resource.format}
-                    </span>
-                    ${resource.size ? `<span style="font-size: 10px; color: #6c757d;">📦 ${this.formatFileSize(resource.size)}</span>` : ''}
-                  </div>
-                  <div style="font-size: 10px; color: #6c757d; margin-top: 4px;">
-                    📁 ${pkg?.title || 'Bilinmiyor'}
-                  </div>
-                  ${!isRelated ? `
-                    <button class="rel-add-btn" style="width: 100%; margin-top: 8px;"
-                            onclick="spatialManager.addRelationship('${spatialResource.resource_id}', '${resource.resource_id}')">
-                      ➕ İlişkilendir
-                    </button>
-                  ` : `
-                    <div style="text-align: center; margin-top: 8px; color: #28a745; font-size: 11px; font-weight: 600;">
-                      ✅ İlişkilendirilmiş
+                ${relationships.map(rel => `
+                  <div class="rel-existing-item">
+                    <div class="rel-existing-name">
+                      📄 ${rel.related_resource_name}
+                      <span class="format-badge ${this.getFormatClass(rel.related_resource_format.toLowerCase())}">${rel.related_resource_format}</span>
                     </div>
-                  `}
-                </div>
-              `;
-            }).join('')}
-          </div>
+                    <button class="rel-remove-btn" onclick="spatialManager.removeRelationship('${spatialResource.resource_id}', '${rel.related_resource_id}')">
+                      🗑️ Kaldır
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            ` : ''}
 
-          ${this.filteredRelResources.length > 20 ? `
-            <div style="padding: 12px; text-align: center; color: #6c757d; font-size: 12px;">
-              ${this.filteredRelResources.length - 20} veri daha var. Filtreleri kullanarak daraltın.
-            </div>
-          ` : ''}
-          `}
+            <button onclick="spatialManager.openResourcePicker('${spatialResource.resource_id}')"
+                    style="width: 100%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                           color: white; border: none; padding: 12px; border-radius: 8px;
+                           font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(102,126,234,0.4)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+              ➕ Yeni Veri Seti Bağla
+            </button>
+          </div>
         </div>
       `;
     }).join('');
-  }
-
-  async addRelationship(spatialResourceId, relatedResourceId) {
-    try {
-      console.log(`🔄 Adding relationship: ${spatialResourceId} -> ${relatedResourceId}`);
-
-      const response = await fetch(`/api/spatial-resources/${spatialResourceId}/relationships`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          related_resource_id: relatedResourceId
-        })
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'İlişkilendirme başarısız');
-      }
-
-      console.log('✅ Relationship added successfully');
-
-      // Reload relationships
-      await this.loadRelationships();
-
-    } catch (error) {
-      console.error('❌ Error adding relationship:', error);
-      alert('Hata: ' + error.message);
-    }
   }
 
   async removeRelationship(spatialResourceId, relatedResourceId) {
@@ -2375,6 +2305,185 @@ class SpatialResourceManager {
 
     } catch (error) {
       console.error('❌ Error removing relationship:', error);
+      alert('Hata: ' + error.message);
+    }
+  }
+
+  // ===== RESOURCE PICKER (Veri Seçici) =====
+
+  openResourcePicker(spatialResourceId) {
+    this.pickerSpatialResourceId = spatialResourceId;
+
+    // Get all non-spatial resources
+    this.pickerResources = this.allResources.filter(r => !this.spatialResourceIds.has(r.resource_id));
+
+    // Get existing relationships for this spatial resource
+    const existingRelationships = this.relationshipData[spatialResourceId]?.relationships || [];
+    const existingIds = new Set(existingRelationships.map(rel => rel.related_resource_id));
+
+    // Filter out already related resources
+    this.pickerResources = this.pickerResources.filter(r => !existingIds.has(r.resource_id));
+
+    console.log('📊 Picker opened for:', spatialResourceId);
+    console.log('Available resources:', this.pickerResources.length);
+
+    // Show modal
+    document.getElementById('resourcePickerOverlay').classList.add('active');
+
+    // Populate filters
+    this.populatePickerFilters();
+
+    // Setup search
+    this.setupPickerSearch();
+
+    // Render
+    this.filterPickerResources();
+  }
+
+  closeResourcePicker(event) {
+    if (event && event.target !== document.getElementById('resourcePickerOverlay') && !event.target.classList.contains('map-modal-close')) {
+      return;
+    }
+    document.getElementById('resourcePickerOverlay').classList.remove('active');
+    this.pickerSpatialResourceId = null;
+  }
+
+  setupPickerSearch() {
+    const searchInput = document.getElementById('pickerSearch');
+    searchInput.value = '';
+    let searchTimeout;
+    searchInput.removeEventListener('input', this.pickerSearchHandler);
+    this.pickerSearchHandler = () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => this.filterPickerResources(), 300);
+    };
+    searchInput.addEventListener('input', this.pickerSearchHandler);
+  }
+
+  populatePickerFilters() {
+    // Format filter
+    const formatFilter = document.getElementById('pickerFormatFilter');
+    const formats = new Set(this.pickerResources.map(r => r.format).filter(f => f));
+    formatFilter.innerHTML = '<option value="">Tüm Formatlar</option>' +
+      [...formats].sort().map(f => `<option value="${f}">${f.toUpperCase()}</option>`).join('');
+
+    // Organization filter
+    const orgFilter = document.getElementById('pickerOrgFilter');
+    const orgs = new Set(this.pickerResources.map(r => r.organization_title).filter(o => o));
+    orgFilter.innerHTML = '<option value="">Tüm Kuruluşlar</option>' +
+      [...orgs].sort().map(o => `<option value="${o}">${o}</option>`).join('');
+  }
+
+  filterPickerResources() {
+    const searchTerm = document.getElementById('pickerSearch')?.value.toLowerCase() || '';
+    const formatFilter = document.getElementById('pickerFormatFilter')?.value || '';
+    const orgFilter = document.getElementById('pickerOrgFilter')?.value || '';
+
+    this.filteredPickerResources = this.pickerResources.filter(r => {
+      if (formatFilter && r.format !== formatFilter) return false;
+      if (orgFilter && r.organization_title !== orgFilter) return false;
+      if (searchTerm) {
+        const pkg = this.allPackages[r.package_id];
+        const text = `${r.resource_name} ${pkg?.title || ''}`.toLowerCase();
+        if (!text.includes(searchTerm)) return false;
+      }
+      return true;
+    });
+
+    this.renderPickerResources();
+  }
+
+  renderPickerResources() {
+    const container = document.getElementById('resourcePickerList');
+
+    if (this.filteredPickerResources.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+          <h3>Veri bulunamadı</h3>
+          <p>Tüm mekansal olmayan veriler zaten bağlı veya filtrelerinize uygun veri yok.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        ${this.filteredPickerResources.map(resource => {
+          const pkg = this.allPackages[resource.package_id];
+          return `
+            <div style="background: white; border: 2px solid #e9ecef; border-radius: 8px; padding: 12px;
+                        display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;"
+                 onmouseover="this.style.borderColor='#667eea'; this.style.background='#f8f9fa'"
+                 onmouseout="this.style.borderColor='#e9ecef'; this.style.background='white'">
+              <div style="flex: 1;">
+                <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px;">
+                  📄 ${resource.resource_name}
+                </div>
+                <div style="font-size: 11px; color: #6c757d;">
+                  📁 ${pkg?.title || 'Bilinmiyor'}
+                  ${resource.size ? `• 📦 ${this.formatFileSize(resource.size)}` : ''}
+                </div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="format-badge ${this.getFormatClass(resource.format.toLowerCase())}">
+                  ${resource.format}
+                </span>
+                <button onclick="spatialManager.selectResourceFromPicker('${resource.resource_id}')"
+                        style="background: #28a745; color: white; border: none; padding: 8px 16px;
+                               border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                        onmouseover="this.style.background='#218838'"
+                        onmouseout="this.style.background='#28a745'">
+                  ✓ Seç
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+
+      ${this.filteredPickerResources.length > 0 ? `
+        <div style="margin-top: 12px; padding: 10px; background: #e3f2fd; border-radius: 6px; text-align: center; font-size: 12px; color: #495057;">
+          Toplam ${this.filteredPickerResources.length} veri seti bulundu
+        </div>
+      ` : ''}
+    `;
+  }
+
+  async selectResourceFromPicker(resourceId) {
+    if (!this.pickerSpatialResourceId) {
+      alert('Hata: Mekansal kaynak seçilmedi');
+      return;
+    }
+
+    try {
+      console.log(`🔄 Adding relationship: ${this.pickerSpatialResourceId} -> ${resourceId}`);
+
+      const response = await fetch(`/api/spatial-resources/${this.pickerSpatialResourceId}/relationships`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          related_resource_id: resourceId
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'İlişkilendirme başarısız');
+      }
+
+      console.log('✅ Relationship added successfully');
+
+      // Close picker
+      this.closeResourcePicker();
+
+      // Reload relationships
+      await this.loadRelationships();
+
+    } catch (error) {
+      console.error('❌ Error adding relationship:', error);
       alert('Hata: ' + error.message);
     }
   }

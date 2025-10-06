@@ -17,6 +17,8 @@ import json
 from urllib.parse import urljoin, urlparse
 import subprocess
 import xml.etree.ElementTree as ET
+import numpy as np
+import math
 
 # SHP ve diğer formatlar için yeni kütüphaneler
 try:
@@ -29,6 +31,22 @@ except ImportError:
     SPATIAL_SUPPORT = False
 
 spatial_api = Blueprint('spatial_api', __name__)
+
+def convert_numpy_types(obj):
+    """NumPy tiplerini Python native tiplerine çevir (JSON serialization için)"""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    return obj
 
 def get_absolute_url(base_url, resource_url):
     """Resource URL'ini mutlak URL'ye çevirir. URL zaten tam ise olduğu gibi döndürür."""
@@ -1546,16 +1564,14 @@ def get_resource_metadata_fields(resource_id):
 
             fields = list(df.columns)
             # CSV/Excel için her column'u ayrı ayrı listelemek için
-            # sample_data yerine column bazlı data structure kullan
             sample_data = {}
             if len(df) > 0:
                 for col in df.columns:
                     value = df.iloc[0][col]
-                    # NaN, None veya inf değerlerini string'e çevir
+                    # NaN, None veya inf değerlerini kontrol et
                     if pd.isna(value):
                         sample_data[col] = None
                     elif isinstance(value, (int, float)):
-                        import math
                         if math.isinf(value) or math.isnan(value):
                             sample_data[col] = None
                         else:
@@ -1581,12 +1597,13 @@ def get_resource_metadata_fields(resource_id):
                     fields = list(first_item.keys())
                     sample_data = first_item
 
+        # Tüm format tiplerinde NumPy tiplerini Python native tiplerine çevir
         return jsonify({
             'success': True,
             'resource_id': resource_id,
             'format': format_type,
-            'fields': fields,
-            'sample_data': sample_data,
+            'fields': convert_numpy_types(fields),
+            'sample_data': convert_numpy_types(sample_data),
             'total_fields': len(fields)
         })
 

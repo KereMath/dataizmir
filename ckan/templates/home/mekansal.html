@@ -34,8 +34,9 @@
   /* Site scroll'u kaldır */
   html,
   body {
-    overflow: hidden;
-    height: 100vh;
+    overflow: auto !important;
+    height: auto !important;
+    min-height: 100%;
   }
 
   #content {
@@ -64,10 +65,10 @@
 
   .page-container {
     display: flex;
-    height: 100vh;
-    overflow: hidden;
-    position: fixed;
-    width: 100%;
+    height: auto !important;
+    overflow: visible !important;
+    position: relative !important;
+    min-height: 100dvh;
   }
 
   .sidebar-filter {
@@ -79,6 +80,7 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
+    position: sticky;
   }
 
   .layers-panel {
@@ -88,6 +90,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    min-height: 0;
   }
 
   .panel-header {
@@ -198,6 +201,7 @@
     overflow-y: auto;
     padding-bottom: 20px;
     min-height: 0;
+    -webkit-overflow-scrolling: touch;
   }
 
   .package-group {
@@ -490,7 +494,7 @@
   }
 
   #map {
-    position: absolute;
+    position: sticky;
     inset: 0;
     width: 100%;
     height: 100%;
@@ -551,7 +555,7 @@
     z-index: 1000;
     min-width: 250px;
     max-width: 350px;
-    max-height: 70vh;
+    max-height: 70svh;
     overflow-y: auto;
   }
 
@@ -724,7 +728,7 @@
     z-index: 999;
     pointer-events: auto;
     padding: 12px;
-    max-height: calc(100vh - 100px);
+    max-height: calc(100svh - 100px);
     overflow-y: auto;
     background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;

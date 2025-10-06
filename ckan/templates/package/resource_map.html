@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Harita</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; }
+    html, body { height: 100%; width: 100%; overflow: hidden; }
+    #map { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    const resourceId = '{{ resource_id }}';
+    const map = L.map('map').setView([38.4237, 27.1428], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+    // Load data
+    fetch(`/api/spatial-resources/${resourceId}/data`)
+      .then(r => r.json())
+      .then(result => {
+        console.log('Type:', result.type);
+
+        if (result.type === 'api' && result.url) {
+          return fetch(result.url);
+        } else if (result.type === 'geojson' && result.data) {
+          L.geoJSON(result.data).addTo(map);
+        }
+      })
+      .then(r => r ? r.json() : null)
+      .then(json => {
+        if (!json) return;
+
+        const data = json.onemliyer || json.data || json;
+        if (Array.isArray(data)) {
+          data.forEach(item => {
+            if (item.ENLEM && item.BOYLAM) {
+              L.circleMarker([item.ENLEM, item.BOYLAM], {
+                radius: 6,
+                fillColor: "#667eea",
+                color: "#fff",
+                weight: 2,
+                fillOpacity: 0.8
+              }).addTo(map).bindPopup(item.ADI || item.ISIM || 'Nokta');
+            }
+          });
+          console.log('✓ Markers added');
+        }
+      })
+      .catch(e => console.error(e));
+  </script>
+</body>
+</html>

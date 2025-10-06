@@ -972,6 +972,13 @@ def register_dataset_plugin_rules(blueprint):
     blueprint.add_url_rule(u'/<resource_id>/preview', view_func=datapreview)
 
 
+def map_view(package_type, id, resource_id):
+    """Full-screen map view for spatial resources"""
+    return base.render('package/resource_map.html', extra_vars={'resource_id': resource_id})
+
+resource.add_url_rule(u'/<resource_id>/map', view_func=map_view)
+prefixed_resource.add_url_rule(u'/<resource_id>/map', view_func=map_view)
+
 register_dataset_plugin_rules(resource)
 register_dataset_plugin_rules(prefixed_resource)
 # remove this when we improve blueprint registration to be explicit:

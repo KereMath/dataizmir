@@ -12,6 +12,14 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
+  <!-- Leaflet MarkerCluster -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+  <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+  <!-- SHP.js for Shapefile support -->
+  <script src="https://unpkg.com/shpjs@3.6.0/dist/shp.min.js"></script>
+
   <style>
 .nav-tabs-plain {
 display:none !important;
@@ -1178,39 +1186,118 @@ display:none !important;
                     }
                   }, 250);
 
-                  // Add data
-                  if (result.type === 'geojson' && result.data) {
-                    const layer = L.geoJSON(result.data, {
-                      onEachFeature: (feature, layer) => {
-                        if (feature.properties) {
-                          let popup = '<div style="max-width:250px; font-size:12px;">';
-                          for (const [k, v] of Object.entries(feature.properties)) {
-                            if (v != null) popup += `<strong>${k}:</strong> ${v}<br>`;
-                          }
-                          popup += '</div>';
-                          layer.bindPopup(popup);
-                        }
-                      },
-                      pointToLayer: (feature, latlng) =>
-                        L.circleMarker(latlng, {radius:8, fillColor:"#667eea", color:"#fff", weight:2, opacity:1, fillOpacity:0.8}),
-                      style: () => ({color:"#667eea", weight:3, opacity:0.7, fillOpacity:0.4})
-                    }).addTo(spatialMap);
+                  // Add data based on type
+                  console.log('Data type:', result.type);
+                  console.log('Data:', result.data ? 'Available' : 'Not available');
 
-                    if (layer.getBounds && layer.getBounds().isValid()) {
-                      spatialMap.fitBounds(layer.getBounds(), {padding: [30, 30]});
+                  if (result.type === 'geojson' && result.data) {
+                    console.log('Loading GeoJSON data...');
+                    try {
+                      const geojsonData = result.data;
+                      const featureCount = geojsonData.features ? geojsonData.features.length : 0;
+                      console.log('Feature count:', featureCount);
+
+                      const layer = L.geoJSON(geojsonData, {
+                        onEachFeature: (feature, layer) => {
+                          if (feature.properties) {
+                            let popup = '<div style="max-width:280px; font-size:12px; line-height:1.4;">';
+                            popup += '<div style="background:#667eea; color:white; padding:8px; margin:-8px -12px 8px -12px; border-radius:4px 4px 0 0; font-weight:600;">Feature Info</div>';
+                            for (const [k, v] of Object.entries(feature.properties)) {
+                              if (v != null && v !== '') {
+                                popup += `<div style="padding:4px 0; border-bottom:1px solid #f0f0f0;"><strong style="color:#667eea;">${k}:</strong> ${v}</div>`;
+                              }
+                            }
+                            popup += '</div>';
+                            layer.bindPopup(popup);
+                          }
+                        },
+                        pointToLayer: (feature, latlng) =>
+                          L.circleMarker(latlng, {
+                            radius: 8,
+                            fillColor: "#667eea",
+                            color: "#fff",
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8
+                          }),
+                        style: (feature) => ({
+                          color: "#667eea",
+                          weight: 3,
+                          opacity: 0.7,
+                          fillOpacity: 0.4
+                        })
+                      }).addTo(spatialMap);
+
+                      if (layer.getBounds && layer.getBounds().isValid()) {
+                        spatialMap.fitBounds(layer.getBounds(), {padding: [30, 30]});
+                        console.log('✓ Map bounds set to data');
+                      } else {
+                        console.log('⚠️ Invalid bounds, keeping default view');
+                      }
+                    } catch (err) {
+                      console.error('GeoJSON parsing error:', err);
+                      alert('Harita verisi yüklenemedi: ' + err.message);
                     }
-                  } else if (result.type === 'wms' && result.data) {
-                    // WMS layer support
-                    L.tileLayer.wms(result.data.url, {
-                      layers: result.data.layers || '',
+                  } else if (result.type === 'shp' && result.url) {
+                    console.log('Loading Shapefile from:', result.url);
+                    // Use shp.js to load shapefile
+                    if (typeof shp !== 'undefined') {
+                      shp(result.url).then(geojson => {
+                        console.log('Shapefile loaded, features:', geojson.features?.length);
+                        const layer = L.geoJSON(geojson, {
+                          onEachFeature: (feature, layer) => {
+                            if (feature.properties) {
+                              let popup = '<div style="max-width:280px; font-size:12px;">';
+                              for (const [k, v] of Object.entries(feature.properties)) {
+                                if (v != null) popup += `<strong>${k}:</strong> ${v}<br>`;
+                              }
+                              popup += '</div>';
+                              layer.bindPopup(popup);
+                            }
+                          },
+                          pointToLayer: (feature, latlng) =>
+                            L.circleMarker(latlng, {radius:8, fillColor:"#667eea", color:"#fff", weight:2, opacity:1, fillOpacity:0.8}),
+                          style: () => ({color:"#667eea", weight:3, opacity:0.7, fillOpacity:0.4})
+                        }).addTo(spatialMap);
+
+                        if (layer.getBounds && layer.getBounds().isValid()) {
+                          spatialMap.fitBounds(layer.getBounds(), {padding: [30, 30]});
+                        }
+                      }).catch(err => {
+                        console.error('Shapefile load error:', err);
+                        alert('Shapefile yüklenemedi: ' + err.message);
+                      });
+                    } else {
+                      console.error('shp.js library not loaded');
+                      alert('Shapefile desteği yüklenmedi');
+                    }
+                  } else if (result.type === 'wms' && result.url) {
+                    console.log('Loading WMS layer from:', result.url);
+                    L.tileLayer.wms(result.url, {
+                      layers: result.data?.layers || '',
                       format: 'image/png',
                       transparent: true,
-                      attribution: result.data.attribution || ''
+                      attribution: result.data?.attribution || ''
                     }).addTo(spatialMap);
+                  } else if (result.type === 'api' && result.url) {
+                    console.log('API endpoint detected, fetching data from frontend:', result.url);
+                    fetch(result.url)
+                      .then(r => r.json())
+                      .then(apiData => {
+                        console.log('API data loaded:', apiData);
+                        // Try to convert API response to GeoJSON
+                        // This needs custom handling based on API structure
+                        alert('API verisi yüklendi. Haritaya dönüştürme işlemi yapılıyor...');
+                      })
+                      .catch(err => {
+                        console.error('API fetch error:', err);
+                        alert('API verisi yüklenemedi: ' + err.message);
+                      });
                   } else {
+                    console.log('Unsupported or unknown data type:', result.type);
                     const infoDiv = document.createElement('div');
                     infoDiv.style.cssText = 'position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:15px 25px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:1000;';
-                    infoDiv.innerHTML = '<i class="fa fa-info-circle" style="color:#667eea; margin-right:8px;"></i>Format: ' + result.type;
+                    infoDiv.innerHTML = '<i class="fa fa-info-circle" style="color:#667eea; margin-right:8px;"></i><strong>Format:</strong> ' + result.type + '<br><small>Bu format henüz haritada gösterilemiyor</small>';
                     document.getElementById('leaflet-map').parentElement.appendChild(infoDiv);
                   }
                 })

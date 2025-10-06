@@ -7,7 +7,11 @@
   {% set description = h.markdown_extract(h.get_translated(res, 'description'), extract_length=200) if res.description else h.markdown_extract(h.get_translated(package, 'notes'), extract_length=200) %}
   <meta property="og:title" content="{{ h.dataset_display_name(package) }} - {{ h.resource_display_name(res) }} - {{ g.site_title }}">
   <meta property="og:description" content="{{ description|forceescape }}">
-  
+
+  <!-- Leaflet for Spatial View -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
   <style>
 .nav-tabs-plain {
 display:none !important;
@@ -932,60 +936,177 @@ display:none !important;
       {% if not is_activity_archive %}
       {% block data_preview %}
       {% block resource_view %}
-        {% block resource_view_nav %}
-          {% set resource_preview = h.resource_preview(resource, package) %}
-          {% snippet "package/snippets/resource_views_list.html",
-             views=resource_views,
-             pkg=pkg,
-             is_edit=false,
-             view_id=current_resource_view['id'],
-             resource_preview=resource_preview,
-             resource=resource,
-             extra_class="nav-tabs nav-tabs-plain"
-           %}
-        {% endblock %}
-          {% block resource_view_content %}
-            <div class="resource-view">
+
+        {# Spatial/Preview Navigation Tabs #}
+        <ul class="nav nav-tabs" id="viewModeNav" role="tablist" style="margin-bottom: 1rem;">
+          <li class="active">
+            <a href="#preview-mode" data-toggle="tab" role="tab">
+              <i class="fa fa-table"></i> {{ _('Preview') }}
+            </a>
+          </li>
+          <li id="spatial-mode-tab" style="display: none;">
+            <a href="#spatial-mode" data-toggle="tab" role="tab">
+              <i class="fa fa-map-marker"></i> {{ _('Mekansal Görünüm') }}
+            </a>
+          </li>
+        </ul>
+
+        {# Tab Content #}
+        <div class="tab-content">
+          {# Standard Preview Tab #}
+          <div class="tab-pane active" id="preview-mode">
+            {% block resource_view_nav %}
               {% set resource_preview = h.resource_preview(resource, package) %}
-              {% set views_created = res.has_views or resource_preview %}
-              {% if views_created %}
-                {% if resource_preview and not current_resource_view %}
-                  {{ h.resource_preview(resource, package) }}
-                {% else %}
-                  {% for resource_view in resource_views %}
-                    {% if resource_view == current_resource_view %}
-                      {% snippet 'package/snippets/resource_view.html',
-                         resource_view=resource_view,
-                         resource=resource,
-                         package=package
-                       %}
-                    {% endif %}
-                  {% endfor %}
-                {% endif %}
-              {% else %}
-                {# Views not created #}
-                <div class="data-viewer-info">
-                  <p>{{ _("There are no views created for this resource yet.") }}</p>
-                  {% if h.check_access('resource_view_create', {'resource_id': resource.id}) %}
-                    <p class="text-muted">
-                      <i class="fa fa-info-circle"></i>
-                      {{ _("Not seeing the views you were expecting?")}}
-                      <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
-                        {{ _('Click here for more information.') }}</a>
-                    </p>
-                    <div id="data-view-info" class="collapse">
-                      <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
-                      <ul>
-                        <li>{{ _("No view has been created that is suitable for this resource")}}</li>
-                        <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
-                        <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
-                      </ul>
-                    </div>
+              {% snippet "package/snippets/resource_views_list.html",
+                 views=resource_views,
+                 pkg=pkg,
+                 is_edit=false,
+                 view_id=current_resource_view['id'],
+                 resource_preview=resource_preview,
+                 resource=resource,
+                 extra_class="nav-tabs nav-tabs-plain"
+               %}
+            {% endblock %}
+            {% block resource_view_content %}
+              <div class="resource-view">
+                {% set resource_preview = h.resource_preview(resource, package) %}
+                {% set views_created = res.has_views or resource_preview %}
+                {% if views_created %}
+                  {% if resource_preview and not current_resource_view %}
+                    {{ h.resource_preview(resource, package) }}
+                  {% else %}
+                    {% for resource_view in resource_views %}
+                      {% if resource_view == current_resource_view %}
+                        {% snippet 'package/snippets/resource_view.html',
+                           resource_view=resource_view,
+                           resource=resource,
+                           package=package
+                         %}
+                      {% endif %}
+                    {% endfor %}
                   {% endif %}
-                </div>
-              {% endif %}
+                {% else %}
+                  {# Views not created #}
+                  <div class="data-viewer-info">
+                    <p>{{ _("There are no views created for this resource yet.") }}</p>
+                    {% if h.check_access('resource_view_create', {'resource_id': resource.id}) %}
+                      <p class="text-muted">
+                        <i class="fa fa-info-circle"></i>
+                        {{ _("Not seeing the views you were expecting?")}}
+                        <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
+                          {{ _('Click here for more information.') }}</a>
+                      </p>
+                      <div id="data-view-info" class="collapse">
+                        <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
+                        <ul>
+                          <li>{{ _("No view has been created that is suitable for this resource")}}</li>
+                          <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
+                          <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
+                        </ul>
+                      </div>
+                    {% endif %}
+                  </div>
+                {% endif %}
+              </div>
+            {% endblock %}
+          </div>
+
+          {# Spatial View Tab #}
+          <div class="tab-pane" id="spatial-mode">
+            <div id="spatial-map-view" style="position: relative; height: 650px; background: white; border-radius: 12px; overflow: hidden;">
+              <div id="spatial-map-loading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; background: rgba(255,255,255,0.95); z-index: 1000;">
+                <div class="spinner-border" style="width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <p style="margin-top: 1rem; color: #6c757d;">{{ _('Loading spatial data...') }}</p>
+              </div>
             </div>
-          {% endblock %}
+          </div>
+        </div>
+
+        <script>
+          (function() {
+            const resourceId = '{{ res.id }}';
+            let spatialDataLoaded = false;
+            let spatialMap = null;
+
+            // Check if resource is spatial
+            fetch('/api/spatial-resources/list')
+              .then(r => r.json())
+              .then(data => {
+                if (data.success && data.spatial_resources) {
+                  const isSpatial = data.spatial_resources.some(r => r.resource_id === resourceId);
+                  if (isSpatial) {
+                    document.getElementById('spatial-mode-tab').style.display = 'block';
+                  }
+                }
+              })
+              .catch(e => console.warn('Spatial check failed:', e));
+
+            // Load spatial view when tab is activated
+            document.querySelector('a[href="#spatial-mode"]')?.addEventListener('shown.bs.tab', function() {
+              if (spatialDataLoaded) return;
+              spatialDataLoaded = true;
+
+              fetch(`/api/spatial-resources/${resourceId}/data`)
+                .then(r => r.json())
+                .then(result => {
+                  document.getElementById('spatial-map-loading').style.display = 'none';
+
+                  if (!result.success) {
+                    document.getElementById('spatial-map-view').innerHTML =
+                      '<div style="text-align:center; padding:3rem; color:#dc2626;"><i class="fa fa-exclamation-triangle fa-3x" style="margin-bottom:1rem;"></i><br><strong>Error:</strong> ' + (result.error || 'Failed to load') + '</div>';
+                    return;
+                  }
+
+                  // Create map container
+                  document.getElementById('spatial-map-view').innerHTML = '<div id="leaflet-map" style="width:100%; height:650px;"></div>';
+
+                  // Initialize map
+                  spatialMap = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
+                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    maxZoom: 19,
+                    attribution: '© OpenStreetMap'
+                  }).addTo(spatialMap);
+
+                  // Add data
+                  if (result.type === 'geojson' && result.data) {
+                    const layer = L.geoJSON(result.data, {
+                      onEachFeature: (feature, layer) => {
+                        if (feature.properties) {
+                          let popup = '<div style="max-width:250px; font-size:12px;">';
+                          for (const [k, v] of Object.entries(feature.properties)) {
+                            if (v != null) popup += `<strong>${k}:</strong> ${v}<br>`;
+                          }
+                          popup += '</div>';
+                          layer.bindPopup(popup);
+                        }
+                      },
+                      pointToLayer: (feature, latlng) =>
+                        L.circleMarker(latlng, {radius:8, fillColor:"#667eea", color:"#fff", weight:2, opacity:1, fillOpacity:0.8}),
+                      style: () => ({color:"#667eea", weight:3, opacity:0.7, fillOpacity:0.4})
+                    }).addTo(spatialMap);
+
+                    spatialMap.fitBounds(layer.getBounds());
+                  } else {
+                    document.getElementById('leaflet-map').innerHTML =
+                      '<div style="text-align:center; padding:3rem;"><i class="fa fa-info-circle fa-2x" style="color:#667eea; margin-bottom:1rem;"></i><br>Format not fully supported: ' + result.type + '</div>';
+                  }
+                })
+                .catch(err => {
+                  document.getElementById('spatial-map-loading').style.display = 'none';
+                  document.getElementById('spatial-map-view').innerHTML =
+                    '<div style="text-align:center; padding:3rem; color:#dc2626;"><i class="fa fa-times-circle fa-3x" style="margin-bottom:1rem;"></i><br><strong>Error:</strong> ' + err.message + '</div>';
+                });
+            });
+          })();
+        </script>
+
+        <style>
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        </style>
+
         </div>
       {% endblock %}
       {% endblock %}

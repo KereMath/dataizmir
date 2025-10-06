@@ -491,8 +491,13 @@ def get_spatial_data(resource_id):
             return jsonify({'success': True, 'type': 'geotiff', 'url': url})
         
         elif format_type in ['shp', 'zip']:
-            proxy_url = f"{site_url}/dataset/{result.package_name}/resource/{resource_id}/download"
-            return jsonify({'success': True, 'type': 'shp', 'url': proxy_url})
+            # SHP dosyalarını backend'de işleyip GeoJSON'a çevir
+            if SPATIAL_SUPPORT:
+                return process_spatial_files(url, 'shp')
+            else:
+                # Fallback: Frontend'e URL gönder (shp.js ile işlesin)
+                proxy_url = f"{site_url}/dataset/{result.package_name}/resource/{resource_id}/download"
+                return jsonify({'success': True, 'type': 'shp', 'url': proxy_url})
 
         elif format_type in ['csv', 'xls', 'xlsx']:
             return process_tabular_data(url, format_type, resource_id)
@@ -765,9 +770,11 @@ def process_spatial_files(url, format_type):
         print(f"File downloaded to: {temp_file_path}")
         
         geojson_data = None
-        
+
         if format_type in ['kml', 'gpx']:
             geojson_data = process_other_formats(temp_file_path, format_type)
+        elif format_type == 'shp':
+            geojson_data = process_shp_file(temp_file_path)
         else:
             return jsonify({
                 'error': f'Desteklenmeyen spatial format: {format_type}'
@@ -780,8 +787,9 @@ def process_spatial_files(url, format_type):
         
         return jsonify({
             'success': True,
-            'type': f'spatial_{format_type}',
+            'type': 'geojson',  # Frontend'de uniform handling için
             'data': geojson_data,
+            'source_format': format_type  # Debug için orijinal format
         })
         
     except Exception as e:
@@ -824,6 +832,77 @@ def process_other_formats(file_path, format_type):
         
     except Exception as e:
         print(f"{format_type.upper()} processing error: {str(e)}")
+        raise
+
+def process_shp_file(file_path):
+    """SHP/ZIP dosyasını işleyip GeoJSON'a çevir"""
+    try:
+        print(f"Processing SHP file: {file_path}")
+
+        # Eğer .zip ise, önce extract et
+        if file_path.endswith('.zip'):
+            temp_extract_dir = os.path.join(os.path.dirname(file_path), 'extracted')
+            os.makedirs(temp_extract_dir, exist_ok=True)
+
+            with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                zip_ref.extractall(temp_extract_dir)
+
+            # Extract edilen dosyalar arasından .shp dosyasını bul
+            shp_file = None
+            for root, dirs, files in os.walk(temp_extract_dir):
+                for file in files:
+                    if file.endswith('.shp'):
+                        shp_file = os.path.join(root, file)
+                        break
+                if shp_file:
+                    break
+
+            if not shp_file:
+                raise Exception("ZIP içinde .shp dosyası bulunamadı")
+
+            file_path = shp_file
+            print(f"Found SHP file in ZIP: {file_path}")
+
+        # SHP dosyasını oku ve GeoJSON'a çevir
+        geojson_features = []
+        with fiona.open(file_path, 'r') as source:
+            print(f"SHP CRS: {source.crs}")
+            print(f"Feature count: {len(source)}")
+            print(f"Schema: {source.schema}")
+
+            for feature in source:
+                # Properties'deki None değerleri temizle
+                clean_props = {}
+                if feature['properties']:
+                    for key, value in feature['properties'].items():
+                        # None, NaN, inf değerlerini filtrele
+                        if value is not None:
+                            try:
+                                if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                                    clean_props[key] = None
+                                else:
+                                    clean_props[key] = value
+                            except (TypeError, ValueError):
+                                clean_props[key] = value
+
+                geojson_features.append({
+                    "type": "Feature",
+                    "geometry": feature['geometry'],
+                    "properties": clean_props
+                })
+
+        geojson_data = {
+            "type": "FeatureCollection",
+            "features": geojson_features
+        }
+
+        print(f"✓ Converted {len(geojson_features)} features from SHP to GeoJSON")
+        return geojson_data
+
+    except Exception as e:
+        print(f"SHP processing error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise
 
 def process_api_data(url, format_type, resource_id):

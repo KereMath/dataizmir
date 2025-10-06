@@ -1023,28 +1023,64 @@ display:none !important;
         </div>
 
         <script>
+          console.log('=== RESOURCE SPATIAL VIEW SCRIPT LOADED ===');
+
           (function() {
             const resourceId = '{{ res.id }}';
+            console.log('Current resource ID:', resourceId);
+
             let spatialDataLoaded = false;
             let spatialMap = null;
 
             // Check if resource is spatial
+            console.log('Fetching spatial resources list...');
             fetch('/api/spatial-resources/list')
-              .then(r => r.json())
+              .then(r => {
+                console.log('Spatial list API response status:', r.status);
+                return r.json();
+              })
               .then(data => {
+                console.log('Spatial list data:', data);
+
                 if (data.success && data.spatial_resources) {
+                  console.log('Found', data.spatial_resources.length, 'spatial resources');
+
                   const isSpatial = data.spatial_resources.some(r => r.resource_id === resourceId);
+                  console.log('Is this resource spatial?', isSpatial);
+
                   if (isSpatial) {
-                    document.getElementById('spatial-mode-tab').style.display = 'block';
+                    const tab = document.getElementById('spatial-mode-tab');
+                    console.log('Spatial tab element:', tab);
+
+                    if (tab) {
+                      tab.style.display = 'block';
+                      console.log('✓ Spatial tab is now visible!');
+                    } else {
+                      console.error('✗ Spatial tab element not found!');
+                    }
+                  } else {
+                    console.log('This resource is NOT spatial');
                   }
                 }
               })
-              .catch(e => console.warn('Spatial check failed:', e));
+              .catch(e => {
+                console.error('Spatial check failed:', e);
+              });
 
             // Load spatial view when tab is activated
-            document.querySelector('a[href="#spatial-mode"]')?.addEventListener('shown.bs.tab', function() {
-              if (spatialDataLoaded) return;
-              spatialDataLoaded = true;
+            const spatialTabLink = document.querySelector('a[href="#spatial-mode"]');
+            if (spatialTabLink) {
+              spatialTabLink.addEventListener('click', function(e) {
+                console.log('Spatial tab clicked!');
+
+                // Wait for tab to be shown
+                setTimeout(() => {
+                  if (spatialDataLoaded) {
+                    console.log('Already loaded');
+                    return;
+                  }
+                  spatialDataLoaded = true;
+                  console.log('Loading spatial data...');
 
               fetch(`/api/spatial-resources/${resourceId}/data`)
                 .then(r => r.json())
@@ -1096,7 +1132,9 @@ display:none !important;
                   document.getElementById('spatial-map-view').innerHTML =
                     '<div style="text-align:center; padding:3rem; color:#dc2626;"><i class="fa fa-times-circle fa-3x" style="margin-bottom:1rem;"></i><br><strong>Error:</strong> ' + err.message + '</div>';
                 });
-            });
+                }, 100); // End setTimeout
+              }); // End click event
+            } // End if spatialTabLink
           })();
         </script>
 

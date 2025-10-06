@@ -392,7 +392,7 @@ body, html, * {
   </div>
 </div>
 
-<div role="main" style="background-color: #f8f9fa; padding: 60px 0;">
+<div role="main" style="background-color: white; padding: 60px 0;">
   <div class="container">
     <div class="row">
       <div class="col-md-12">
@@ -402,7 +402,7 @@ body, html, * {
           </h1>
         </div>
 
-        <div id="homepage-map-container" style="width: 100%; height: 600px; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+        <div id="homepage-map-container" style="width: 100%; height: 600px;">
           <div id="homepage-map" style="width: 100%; height: 100%;"></div>
         </div>
 
@@ -972,8 +972,8 @@ class HomepageMapManager {
     initMap() {
         // İzmir merkezli harita - tamamen statik, etkileşimsiz
         this.map = L.map('homepage-map', {
-            center: [38.4237, 27.1428],
-            zoom: 10,
+            center: [38.4192, 27.1287],
+            zoom: 9,
             zoomControl: false,
             dragging: false,
             scrollWheelZoom: false,
@@ -990,6 +990,30 @@ class HomepageMapManager {
             maxZoom: 19,
             attribution: ''
         }).addTo(this.map);
+
+        // İzmir il sınırlarını çiz (yaklaşık polygon)
+        const izmirBoundary = L.polygon([
+            [38.8000, 26.3000], // Kuzey-Batı
+            [38.8500, 26.7000], // Kuzey
+            [38.8000, 27.5000], // Kuzey-Doğu
+            [38.6500, 27.8000], // Doğu
+            [38.2000, 27.7000], // Güney-Doğu
+            [37.8500, 27.2000], // Güney
+            [37.9000, 26.5000], // Güney-Batı
+            [38.2000, 26.2500], // Batı
+            [38.5000, 26.2000]  // Kuzey-Batı
+        ], {
+            color: '#0066cc',
+            weight: 3,
+            opacity: 0.8,
+            fillColor: '#e3f2fd',
+            fillOpacity: 0.1
+        }).addTo(this.map);
+
+        // Haritayı İzmir sınırlarına göre otomatik ayarla
+        this.map.fitBounds(izmirBoundary.getBounds(), {
+            padding: [30, 30]
+        });
     }
 
     async loadHomepageResources() {

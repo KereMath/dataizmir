@@ -1800,7 +1800,8 @@
       if (this.layerPanes[resourceId]) return this.layerPanes[resourceId];
       const paneName = `pane_${resourceId}`;
       const pane = this.map.createPane(paneName);
-      pane.style.zIndex = isRaster ? 300 : 650;
+      // Base map: ~200, Raster: 300-400, Vector: 450-500
+      pane.style.zIndex = isRaster ? 350 : 450;
       this.layerPanes[resourceId] = paneName;
       return paneName;
     }

@@ -2635,19 +2635,24 @@
       return content;
     }
 
-    async getMetadataMappings(resourceId) {
+    async getMetadataMappings(resourceId, forceRefresh = false) {
       // Cache metadata mappings to avoid repeated API calls
       if (!this.metadataMappingsCache) {
         this.metadataMappingsCache = {};
       }
 
-      if (this.metadataMappingsCache[resourceId] !== undefined) {
+      // Force refresh bypasses cache
+      if (!forceRefresh && this.metadataMappingsCache[resourceId] !== undefined) {
         return this.metadataMappingsCache[resourceId];
       }
 
       try {
         const response = await fetch(`/api/spatial-resources/${resourceId}/metadata-mappings`, {
-          credentials: 'include'
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
         });
         const data = await response.json();
 
@@ -2659,6 +2664,7 @@
             hiddenFields: data.hidden_fields || []
           };
           this.metadataMappingsCache[resourceId] = result;
+          console.log('Metadata mappings loaded for', resourceId, result);
           return result;
         }
       } catch (error) {
@@ -2674,6 +2680,19 @@
       };
       this.metadataMappingsCache[resourceId] = emptyResult;
       return emptyResult;
+    }
+
+    // Metadata cache'ini temizle
+    clearMetadataCache(resourceId = null) {
+      if (resourceId) {
+        // Sadece belirli bir resource için cache'i temizle
+        delete this.metadataMappingsCache[resourceId];
+        console.log('Metadata cache cleared for', resourceId);
+      } else {
+        // Tüm cache'i temizle
+        this.metadataMappingsCache = {};
+        console.log('All metadata cache cleared');
+      }
     }
 
     findDataArrayInJson(jsonData) {

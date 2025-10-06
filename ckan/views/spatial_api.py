@@ -58,7 +58,7 @@ def get_spatial_resources():
         return jsonify({'error': 'Unauthorized'}), 403
     
     query = text("""
-        SELECT 
+        SELECT
             p.id as package_id,
             p.name as package_name,
             p.title as package_title,
@@ -69,6 +69,7 @@ def get_spatial_resources():
             r.url,
             r.size,
             COALESCE(sr.is_spatial, false) as is_spatial,
+            COALESCE(sr.show_on_homepage, false) as show_on_homepage,
             sr.added_by,
             sr.updated_date
         FROM package p
@@ -107,6 +108,7 @@ def get_spatial_resources():
             'size': row.size,
             'organization_title': org_title,
             'is_spatial': row.is_spatial,
+            'show_on_homepage': row.show_on_homepage,
             'added_by': row.added_by,
             'updated_date': row.updated_date.isoformat() if row.updated_date else None
         })
@@ -199,7 +201,7 @@ def get_spatial_resource_list():
     """Sadece spatial olarak işaretlenmiş resource'ları getir"""
     try:
         query = text("""
-            SELECT 
+            SELECT
                 p.id as package_id,
                 p.name as package_name,
                 p.title as package_title,
@@ -213,22 +215,22 @@ def get_spatial_resource_list():
             FROM package p
             JOIN resource r ON p.id = r.package_id
             JOIN spatial_resources sr ON r.id = sr.resource_id
-            WHERE p.state = 'active' 
-            AND r.state = 'active' 
+            WHERE p.state = 'active'
+            AND r.state = 'active'
             AND sr.is_spatial = true
             ORDER BY p.title, r.name
         """)
-        
+
         result = model.Session.execute(query).fetchall()
-        
+
         # Base URL
         site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
-        
+
         resources = []
         for row in result:
             # URL'yi mutlak hale getir
             absolute_url = get_absolute_url(site_url, row.url)
-            
+
             resources.append({
                 'package_id': row.package_id,
                 'package_name': row.package_name,
@@ -242,20 +244,133 @@ def get_spatial_resource_list():
                 'added_by': row.added_by,
                 'updated_date': row.updated_date.isoformat() if row.updated_date else None
             })
-        
+
         return jsonify({
             'success': True,
             'count': len(resources),
             'spatial_resources': resources
         })
-        
+
     except Exception as e:
         print(f"Spatial resource list error: {str(e)}")
         return jsonify({
-            'success': False, 
+            'success': False,
             'error': f'Spatial resource listesi alınırken hata: {str(e)}',
             'spatial_resources': []
         }), 500
+
+@spatial_api.route('/api/spatial-resources/homepage-map')
+def get_homepage_map_resources():
+    """Anasayfa haritasında gösterilecek spatial resource'ları getir"""
+    try:
+        query = text("""
+            SELECT
+                r.id as resource_id,
+                r.name as resource_name,
+                r.format,
+                r.url,
+                sr.show_on_homepage
+            FROM resource r
+            JOIN spatial_resources sr ON r.id = sr.resource_id
+            WHERE r.state = 'active'
+            AND sr.is_spatial = true
+            AND COALESCE(sr.show_on_homepage, false) = true
+            ORDER BY r.name
+        """)
+
+        result = model.Session.execute(query).fetchall()
+
+        resources = []
+        for row in result:
+            # URL'i mutlak hale getir
+            url = row.url
+            if url and not url.startswith(('http://', 'https://')):
+                url = request.host_url.rstrip('/') + url
+
+            resources.append({
+                'resource_id': row.resource_id,
+                'resource_name': row.resource_name or 'İsimsiz Kaynak',
+                'format': row.format,
+                'url': url,
+                'show_on_homepage': row.show_on_homepage
+            })
+
+        return jsonify({
+            'success': True,
+            'count': len(resources),
+            'resources': resources
+        })
+
+    except Exception as e:
+        print(f"Homepage map resources error: {str(e)}")
+        return jsonify({
+            'success': False,
+            'error': f'Anasayfa harita kaynakları alınırken hata: {str(e)}',
+            'resources': []
+        }), 500
+
+@spatial_api.route('/api/spatial-resources/homepage-map/toggle', methods=['POST'])
+def toggle_homepage_map_resource():
+    """Resource'un anasayfa haritasında gösterilme durumunu değiştir"""
+    try:
+        # Admin kontrolü
+        user = toolkit.c.userobj
+        if not user or not authz.is_sysadmin(user.name):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    resource_id = data.get('resource_id')
+    show_on_homepage = data.get('show_on_homepage', False)
+
+    if not resource_id:
+        return jsonify({'error': 'resource_id gerekli'}), 400
+
+    try:
+        # Resource'un spatial olup olmadığını kontrol et
+        check = model.Session.execute(
+            text("""
+                SELECT sr.id, sr.is_spatial
+                FROM spatial_resources sr
+                WHERE sr.resource_id = :resource_id
+            """),
+            {'resource_id': resource_id}
+        ).fetchone()
+
+        if not check:
+            return jsonify({'error': 'Resource spatial olarak işaretlenmemiş'}), 404
+
+        if not check.is_spatial:
+            return jsonify({'error': 'Resource önce spatial olarak işaretlenmelidir'}), 400
+
+        # show_on_homepage alanını güncelle
+        model.Session.execute(
+            text("""
+                UPDATE spatial_resources
+                SET show_on_homepage = :show_on_homepage,
+                    updated_date = CURRENT_TIMESTAMP
+                WHERE resource_id = :resource_id
+            """),
+            {
+                'resource_id': resource_id,
+                'show_on_homepage': show_on_homepage
+            }
+        )
+
+        model.Session.commit()
+
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'show_on_homepage': show_on_homepage,
+            'updated_by': user.name
+        })
+
+    except Exception as e:
+        model.Session.rollback()
+        print(f"Homepage map toggle error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 @spatial_api.route('/api/spatial-resources/<resource_id>/data')
 def get_spatial_data(resource_id):

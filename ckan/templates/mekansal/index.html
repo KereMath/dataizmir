@@ -684,6 +684,220 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* Floating Button */
+  .floating-map-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 28px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .floating-map-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+  }
+
+  .floating-map-btn:active {
+    transform: scale(0.95);
+  }
+
+  /* Modal Overlay */
+  .map-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+    animation: fadeIn 0.3s ease;
+  }
+
+  .map-modal-overlay.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  /* Modal Content */
+  .map-modal {
+    background: white;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .map-modal-header {
+    padding: 24px 28px;
+    border-bottom: 2px solid #e9ecef;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 16px 16px 0 0;
+  }
+
+  .map-modal-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+  }
+
+  .map-modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .map-modal-close:hover {
+    color: #dc3545;
+    transform: rotate(90deg);
+  }
+
+  .map-modal-body {
+    padding: 20px 28px;
+    overflow-y: auto;
+    max-height: calc(80vh - 140px);
+  }
+
+  .map-resource-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .map-resource-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+  }
+
+  .map-resource-item:hover {
+    background: #e9ecef;
+    border-color: #667eea;
+  }
+
+  .map-resource-item.active {
+    background: linear-gradient(90deg, #e8f5e9 0%, #f8f9fa 100%);
+    border-color: #28a745;
+  }
+
+  .map-resource-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+    flex: 1;
+    padding-right: 16px;
+  }
+
+  .map-toggle {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 26px;
+  }
+
+  .map-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .map-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: .3s;
+    border-radius: 26px;
+  }
+
+  .map-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .3s;
+    border-radius: 50%;
+  }
+
+  .map-toggle input:checked + .map-toggle-slider {
+    background-color: #28a745;
+  }
+
+  .map-toggle input:checked + .map-toggle-slider:before {
+    transform: translateX(24px);
+  }
+
+  .map-modal-empty {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+  }
+
+  .map-modal-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
 </style>
 
 <div class="page-container">
@@ -759,6 +973,29 @@
   </div>
 </div>
 
+<!-- Floating Map Button -->
+<button class="floating-map-btn" id="mapFloatingBtn" onclick="spatialManager.openMapModal()" title="Anasayfa Haritası Ayarları">
+  🗺️
+</button>
+
+<!-- Map Modal -->
+<div class="map-modal-overlay" id="mapModalOverlay" onclick="spatialManager.closeMapModal(event)">
+  <div class="map-modal" onclick="event.stopPropagation()">
+    <div class="map-modal-header">
+      <h2 class="map-modal-title">🗺️ Anasayfa Haritası Ayarları</h2>
+      <button class="map-modal-close" onclick="spatialManager.closeMapModal()">&times;</button>
+    </div>
+    <div class="map-modal-body">
+      <div class="map-resource-list" id="mapResourceList">
+        <div class="map-modal-empty">
+          <div class="map-modal-empty-icon">⏳</div>
+          <p>Yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 console.log('🚀 Modern Mekansal Resource Yönetimi');
 
@@ -789,6 +1026,9 @@ class SpatialResourceManager {
     // Pagination
     this.currentPage = 1;
     this.itemsPerPage = 8;
+
+    // Homepage map settings
+    this.homepageMapResources = new Set();
 
     this.init();
   }
@@ -1278,9 +1518,6 @@ class SpatialResourceManager {
             <a href="/dataset/${pkg.name}" class="package-title" onclick="event.stopPropagation()">
               ${pkg.title}
             </a>
-            <button class="collapse-toggle ${isCollapsed ? 'collapsed' : ''}" id="toggle-${pkg.id}">
-              ▼
-            </button>
           </div>
           <div class="package-meta">
             <div>
@@ -1296,14 +1533,6 @@ class SpatialResourceManager {
         </div>
         <div class="resources-list ${isCollapsed ? 'collapsed' : ''}" id="resources-${pkg.id}">
           ${resources.map(resource => this.renderResourceItem(resource)).join('')}
-          <div class="bulk-actions">
-            <button class="bulk-btn" onclick="spatialManager.bulkTogglePackage('${pkg.id}', true)">
-              ✅ Tümünü Mekansal Yap
-            </button>
-            <button class="bulk-btn" onclick="spatialManager.bulkTogglePackage('${pkg.id}', false)">
-              ❌ Tümünü İptal Et
-            </button>
-          </div>
         </div>
       </div>
     `;
@@ -1484,6 +1713,134 @@ class SpatialResourceManager {
         <p>${message}</p>
       </div>
     `;
+  }
+
+  // Map Modal Methods
+  async openMapModal() {
+    const overlay = document.getElementById('mapModalOverlay');
+    overlay.classList.add('active');
+    await this.loadHomepageMapSettings();
+  }
+
+  closeMapModal(event) {
+    if (event && event.target !== document.getElementById('mapModalOverlay') && !event.target.classList.contains('map-modal-close')) {
+      return;
+    }
+    const overlay = document.getElementById('mapModalOverlay');
+    overlay.classList.remove('active');
+  }
+
+  async loadHomepageMapSettings() {
+    try {
+      console.log('🔄 Loading homepage map settings...');
+      // Tüm spatial resource'ları yükle ve show_on_homepage bilgisini al
+      const response = await fetch('/api/spatial-resources', { credentials: 'include' });
+      const data = await response.json();
+
+      console.log('📥 API Response:', data);
+
+      if (data.success && data.resources) {
+        // is_spatial ve show_on_homepage true olanları seçili yap
+        this.homepageMapResources.clear();
+        data.resources.forEach(resource => {
+          console.log(`Resource: ${resource.resource_name}, is_spatial: ${resource.is_spatial}, show_on_homepage: ${resource.show_on_homepage}`);
+          if (resource.is_spatial && resource.show_on_homepage) {
+            this.homepageMapResources.add(resource.resource_id);
+            console.log(`  ✅ Added to homepage: ${resource.resource_id}`);
+          }
+          // Update local allResources array with latest show_on_homepage value
+          const localResource = this.allResources.find(r => r.resource_id === resource.resource_id);
+          if (localResource) {
+            localResource.show_on_homepage = resource.show_on_homepage;
+          }
+        });
+      }
+
+      console.log('✅ Loaded homepage map resources:', this.homepageMapResources.size, 'resources', Array.from(this.homepageMapResources));
+      this.renderMapResourceList();
+    } catch (error) {
+      console.error('❌ Error loading homepage map settings:', error);
+      this.renderMapResourceList();
+    }
+  }
+
+  renderMapResourceList() {
+    const container = document.getElementById('mapResourceList');
+
+    // Get only spatial resources
+    const spatialResources = this.allResources.filter(r => r.is_spatial);
+
+    if (spatialResources.length === 0) {
+      container.innerHTML = `
+        <div class="map-modal-empty">
+          <div class="map-modal-empty-icon">📭</div>
+          <h3>Mekansal kaynak bulunamadı</h3>
+          <p>Önce kaynaklarınızı mekansal olarak işaretleyin.</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="map-resource-list">
+        ${spatialResources.map(resource => {
+          const isActive = this.homepageMapResources.has(resource.resource_id);
+          return `
+            <div class="map-resource-item ${isActive ? 'active' : ''}" id="map-item-${resource.resource_id}">
+              <div class="map-resource-name">${resource.resource_name || 'İsimsiz kaynak'}</div>
+              <label class="map-toggle">
+                <input type="checkbox"
+                       ${isActive ? 'checked' : ''}
+                       onchange="spatialManager.toggleHomepageMapResource('${resource.resource_id}', this.checked)">
+                <span class="map-toggle-slider"></span>
+              </label>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  async toggleHomepageMapResource(resourceId, isActive) {
+    try {
+      const response = await fetch('/api/spatial-resources/homepage-map/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          resource_id: resourceId,
+          show_on_homepage: isActive
+        })
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Toggle failed');
+
+      // Update local state
+      if (isActive) {
+        this.homepageMapResources.add(resourceId);
+      } else {
+        this.homepageMapResources.delete(resourceId);
+      }
+
+      // Update UI
+      const item = document.getElementById(`map-item-${resourceId}`);
+      if (item) {
+        if (isActive) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      }
+
+      console.log('✅ Homepage map resource toggled:', resourceId, isActive);
+    } catch (error) {
+      console.error('❌ Toggle homepage map error:', error);
+      alert('Hata: ' + error.message);
+      // Revert checkbox
+      const checkbox = document.querySelector(`#map-item-${resourceId} input[type="checkbox"]`);
+      if (checkbox) checkbox.checked = !isActive;
+    }
   }
 }
 

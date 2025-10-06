@@ -553,9 +553,15 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
+        position: relative;
       }
       .resource-item:hover { background: #f1f3f5; transform: translateX(8px); box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
-      .resource-content-left { flex-grow: 1; margin-right: 20px; }
+      .resource-content-left { 
+        flex-grow: 1; 
+        margin-right: 20px; 
+        position: relative;
+        padding-bottom: 35px; /* Spatial badge için alan */
+      }
       .resource-title { font-weight: 700; color: #2c3e50; margin-bottom: 12px; font-size: 2rem; }
       .resource-format {
         background: #667eea;
@@ -572,6 +578,36 @@
       .resource-actions-right a { color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; }
       .resource-actions-right a:first-child { background:#6c757d; }
       .resource-actions-right a:last-child { background:#667eea; }
+
+      /* Mekansal Gösterim Badge */
+      .spatial-badge {
+        position: absolute;
+        bottom: 10px;
+        left: 0;
+        background: linear-gradient(135deg, #28a745, #20c997);
+        color: #fff;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+        100% { transform: scale(1); }
+      }
+
+      .spatial-badge svg {
+        width: 16px;
+        height: 16px;
+        fill: currentColor;
+      }
 
       /* Responsive */
       @media (max-width: 1024px) {
@@ -657,6 +693,7 @@ class ModernDatasetPage {
         this.dataset = null;
         this.organization = null;
         this.stats = {};
+        this.spatialResources = []; // Mekansal kaynaklar listesi
         this.init();
     }
     getDatasetId() {
@@ -667,6 +704,7 @@ class ModernDatasetPage {
     async init() {
         try {
             await this.loadDataset();
+            await this.loadSpatialResources(); // Mekansal kaynakları yükle
             await this.loadStats();
             this.renderHeader();
             this.renderDatasetContent();
@@ -691,6 +729,20 @@ class ModernDatasetPage {
             catch(e){ console.warn('Org load error',e); }
         }
     }
+    
+    async loadSpatialResources() {
+        try {
+            const response = await fetch('/api/spatial-resources/list');
+            const data = await response.json();
+            if (data.success && data.spatial_resources) {
+                this.spatialResources = data.spatial_resources.map(r => r.resource_id);
+                console.log('Loaded spatial resources:', this.spatialResources);
+            }
+        } catch (e) {
+            console.warn('Could not load spatial resources:', e);
+        }
+    }
+    
     async loadStats(){
         try{ this.stats.followers = await this.apiCall('dataset_follower_count',{id:this.datasetId}); }
         catch(e){ this.stats.followers = 0; }
@@ -724,51 +776,62 @@ class ModernDatasetPage {
     }
     
     renderResourcesContent(){
-    const el = document.getElementById('resources-content');
-    let html = '';
-    if (this.dataset.resources?.length) {
-        html += '<div class="resource-list">';
-        this.dataset.resources.forEach(r => {
-            const viewUrl = `/dataset/${this.dataset.name}/resource/${r.id}`;
-            const editUrl = `${viewUrl}/edit`; // Kaynak düzenleme linki
+        const el = document.getElementById('resources-content');
+        let html = '';
+        if (this.dataset.resources?.length) {
+            html += '<div class="resource-list">';
+            this.dataset.resources.forEach(r => {
+                const viewUrl = `/dataset/${this.dataset.name}/resource/${r.id}`;
+                const editUrl = `${viewUrl}/edit`;
+                
+                // Mekansal kaynak kontrolü
+                const isSpatial = this.spatialResources.includes(r.id);
 
-            html += `<div class="resource-item">
-                <div class="resource-content-left">
-                    <h4 class="resource-title">${r.name || r.id}</h4>
-                    <span class="resource-format">${r.format || 'Bilinmiyor'}</span>
-                    ${r.description ? `<p class="resource-description">${r.description}</p>` : ''}
-                </div>
-                <div class="resource-actions-right">
-                    <a href="${viewUrl}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#6c757d;">👁️ Görüntüle</a>
-                    <a href="${r.url}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#667eea;">💾 İndir</a>
-                    
-                    {# Sadece bu kısım Jinja2 tarafından işlenir ve yetki kontrolü yapar #}
-                    {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
-                        <a href="${editUrl}" style="
-                            background-color: #dc3545; /* Kırmızı arka plan */
-                            color: #fff; /* Beyaz metin */
-                            padding: 8px 15px;
-                            border-radius: 5px;
-                            text-decoration: none;
-                            font-weight: 600;
-                            font-size: 13px;
-                            display: flex; /* İkon ve metni hizalamak için */
-                            align-items: center;
-                            gap: 5px; /* İkon ile metin arasına boşluk */
-                        ">
-                            <i class="fa fa-cog" style="color: #fff;"></i>
-                            Düzenle
-                        </a>
-                    {% endif %}
-                </div>
-            </div>`;
-        });
-        html += '</div>';
-    } else {
-        html += '<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti için henüz kaynak eklenmemiş.</p>';
+                html += `<div class="resource-item">
+                    <div class="resource-content-left">
+                        <h4 class="resource-title">${r.name || r.id}</h4>
+                        <span class="resource-format">${r.format || 'Bilinmiyor'}</span>
+                        ${r.description ? `<p class="resource-description">${r.description}</p>` : ''}
+                        ${isSpatial ? `
+                            <div class="spatial-badge">
+                                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                                </svg>
+                                Mekansal Gösterim
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="resource-actions-right">
+                        <a href="${viewUrl}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#6c757d;">👁️ Görüntüle</a>
+                        <a href="${r.url}" target="_blank" style="color: #fff; font-weight: 600; font-size: 13px; padding: 8px 15px; border-radius: 5px; text-decoration: none; background:#667eea;">💾 İndir</a>
+                        
+                        {# Sadece bu kısım Jinja2 tarafından işlenir ve yetki kontrolü yapar #}
+                        {% if h.check_access('package_update', {'id': pkg_dict.id}) %}
+                            <a href="${editUrl}" style="
+                                background-color: #dc3545; /* Kırmızı arka plan */
+                                color: #fff; /* Beyaz metin */
+                                padding: 8px 15px;
+                                border-radius: 5px;
+                                text-decoration: none;
+                                font-weight: 600;
+                                font-size: 13px;
+                                display: flex; /* İkon ve metni hizalamak için */
+                                align-items: center;
+                                gap: 5px; /* İkon ile metin arasına boşluk */
+                            ">
+                                <i class="fa fa-cog" style="color: #fff;"></i>
+                                Düzenle
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>`;
+            });
+            html += '</div>';
+        } else {
+            html += '<p style="color:#6c757d;font-size:1.6rem;">Bu veri seti için henüz kaynak eklenmemiş.</p>';
+        }
+        el.innerHTML = html;
     }
-    el.innerHTML = html;
-}
     
     renderGroupsContent(){
         const el=document.getElementById('groups-content');

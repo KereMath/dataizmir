@@ -1036,9 +1036,7 @@ display:none !important;
                 }
 
                 // Result type'a göre işle
-                if (result.type === 'shp') {
-                  await this.processShpData(result.url);
-                } else if (result.type === 'api') {
+                if (result.type === 'api') {
                   await this.processApiData(result.url);
                 } else if (result.type === 'geojson_url') {
                   await this.processGeoJsonUrl(result.url);
@@ -1050,14 +1048,16 @@ display:none !important;
                   await this.addWMSLayer(result.url);
                 } else if (result.type === 'geotiff') {
                   await this.addGeoTIFFLayer(result.url);
+                } else if (result.type === 'shp') {
+                  // Backend SHP desteği yoksa shp.js kullan (fallback)
+                  console.warn('Backend SHP → GeoJSON dönüşümü yapamadı, frontend fallback kullanılıyor');
+                  await this.processShpData(result.url);
                 } else {
                   console.warn('Desteklenmeyen format:', result.type);
                 }
 
-                // Haritayı layer'a fit et
-                if (this.layer.getLayers().length > 0) {
-                  this.map.fitBounds(this.layer.getBounds(), { padding: [50, 50] });
-                }
+                // Haritayı fit et
+                this.fitMapToBounds();
 
               } catch (error) {
                 console.error('❌ Data load hatası:', error);
@@ -1206,6 +1206,51 @@ display:none !important;
               console.log('🗺️ Adding GeoTIFF Layer:', url);
               console.warn('GeoTIFF preview resource page üzerinde desteklenmiyor - Mekansal Gösterim sayfasını kullanın');
               this.showError('GeoTIFF dosyaları için lütfen Mekansal Gösterim sayfasını kullanın');
+            }
+
+            fitMapToBounds() {
+              // Haritayı mevcut layer'lara göre fit et
+              const layers = this.layer.getLayers();
+
+              if (layers.length === 0) {
+                console.log('No layers to fit');
+                return;
+              }
+
+              try {
+                // GeoJSON layer'lar için getBounds() çalışır
+                const bounds = this.layer.getBounds();
+                if (bounds && bounds.isValid()) {
+                  this.map.fitBounds(bounds, { padding: [50, 50] });
+                  console.log('✓ Map fitted to GeoJSON bounds');
+                  return;
+                }
+              } catch (e) {
+                // getBounds() çalışmazsa (CircleMarker'lar için), manuel bounds hesapla
+                console.log('Calculating manual bounds for markers...');
+              }
+
+              // Manual bounds calculation (CircleMarker'lar için)
+              let minLat = Infinity, maxLat = -Infinity;
+              let minLng = Infinity, maxLng = -Infinity;
+
+              layers.forEach(layer => {
+                if (layer.getLatLng) {
+                  const latlng = layer.getLatLng();
+                  minLat = Math.min(minLat, latlng.lat);
+                  maxLat = Math.max(maxLat, latlng.lat);
+                  minLng = Math.min(minLng, latlng.lng);
+                  maxLng = Math.max(maxLng, latlng.lng);
+                }
+              });
+
+              if (minLat !== Infinity && maxLat !== -Infinity) {
+                const bounds = [[minLat, minLng], [maxLat, maxLng]];
+                this.map.fitBounds(bounds, { padding: [50, 50] });
+                console.log(`✓ Map fitted to ${layers.length} marker bounds`);
+              } else {
+                console.log('Could not calculate bounds, using default view');
+              }
             }
 
             showError(message) {

@@ -1624,7 +1624,7 @@ def get_metadata_mappings(resource_id):
     try:
         query = text("""
             SELECT field_mappings, hidden_fields, visibility_mode, visible_fields,
-                   created_by, created_date, updated_by, updated_date
+                   default_fields, created_by, created_date, updated_by, updated_date
             FROM spatial_metadata_mappings
             WHERE resource_id = :resource_id
         """)
@@ -1637,6 +1637,7 @@ def get_metadata_mappings(resource_id):
                 'success': True,
                 'resource_id': resource_id,
                 'field_mappings': {},
+                'default_fields': [],
                 'hidden_fields': [],
                 'visibility_mode': 'show_all',
                 'visible_fields': [],
@@ -1658,6 +1659,7 @@ def get_metadata_mappings(resource_id):
             'hidden_fields': result.hidden_fields or [],
             'visibility_mode': result.visibility_mode or 'show_all',
             'visible_fields': result.visible_fields or [],
+            'default_fields': result.default_fields or [],
             'created_by': result.created_by,
             'created_date': result.created_date.isoformat() if result.created_date else None,
             'updated_by': result.updated_by,
@@ -1685,6 +1687,7 @@ def save_metadata_mappings(resource_id):
     hidden_fields = data.get('hidden_fields', [])
     visibility_mode = data.get('visibility_mode', 'show_all')
     visible_fields = data.get('visible_fields', [])
+    default_fields = data.get('default_fields', [])
 
     try:
         # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
@@ -1711,34 +1714,54 @@ def save_metadata_mappings(resource_id):
         ).fetchone()
 
         if existing:
-            # Güncelle
-            model.Session.execute(
-                text("""
-                    UPDATE spatial_metadata_mappings
-                    SET field_mappings = :field_mappings,
-                        hidden_fields = :hidden_fields,
-                        visibility_mode = :visibility_mode,
-                        visible_fields = :visible_fields,
-                        updated_by = :updated_by,
-                        updated_date = CURRENT_TIMESTAMP
-                    WHERE resource_id = :resource_id
-                """),
-                {
-                    'resource_id': resource_id,
-                    'field_mappings': json.dumps(field_mappings),
-                    'hidden_fields': hidden_fields,
-                    'visibility_mode': visibility_mode,
-                    'visible_fields': visible_fields,
-                    'updated_by': user.name
-                }
-            )
+            # Güncelle (default_fields güncelleme yapılırsa güncelle, yoksa dokunma)
+            update_params = {
+                'resource_id': resource_id,
+                'field_mappings': json.dumps(field_mappings),
+                'hidden_fields': hidden_fields,
+                'visibility_mode': visibility_mode,
+                'visible_fields': visible_fields,
+                'updated_by': user.name
+            }
+
+            # Eğer default_fields gönderildiyse güncelle
+            if default_fields:
+                update_params['default_fields'] = default_fields
+                model.Session.execute(
+                    text("""
+                        UPDATE spatial_metadata_mappings
+                        SET field_mappings = :field_mappings,
+                            hidden_fields = :hidden_fields,
+                            visibility_mode = :visibility_mode,
+                            visible_fields = :visible_fields,
+                            default_fields = :default_fields,
+                            updated_by = :updated_by,
+                            updated_date = CURRENT_TIMESTAMP
+                        WHERE resource_id = :resource_id
+                    """),
+                    update_params
+                )
+            else:
+                model.Session.execute(
+                    text("""
+                        UPDATE spatial_metadata_mappings
+                        SET field_mappings = :field_mappings,
+                            hidden_fields = :hidden_fields,
+                            visibility_mode = :visibility_mode,
+                            visible_fields = :visible_fields,
+                            updated_by = :updated_by,
+                            updated_date = CURRENT_TIMESTAMP
+                        WHERE resource_id = :resource_id
+                    """),
+                    update_params
+                )
         else:
             # Oluştur
             model.Session.execute(
                 text("""
                     INSERT INTO spatial_metadata_mappings
-                    (resource_id, field_mappings, hidden_fields, visibility_mode, visible_fields, created_by, updated_by)
-                    VALUES (:resource_id, :field_mappings, :hidden_fields, :visibility_mode, :visible_fields, :created_by, :updated_by)
+                    (resource_id, field_mappings, hidden_fields, visibility_mode, visible_fields, default_fields, created_by, updated_by)
+                    VALUES (:resource_id, :field_mappings, :hidden_fields, :visibility_mode, :visible_fields, :default_fields, :created_by, :updated_by)
                 """),
                 {
                     'resource_id': resource_id,
@@ -1746,6 +1769,7 @@ def save_metadata_mappings(resource_id):
                     'hidden_fields': hidden_fields,
                     'visibility_mode': visibility_mode,
                     'visible_fields': visible_fields,
+                    'default_fields': default_fields,
                     'created_by': user.name,
                     'updated_by': user.name
                 }

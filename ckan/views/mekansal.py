@@ -49,7 +49,7 @@ def get_spatial_resources():
     
     try:
         query = text("""
-            SELECT 
+            SELECT
                 p.id as package_id,
                 p.name as package_name,
                 p.title as package_title,
@@ -60,6 +60,7 @@ def get_spatial_resources():
                 r.size,
                 p.owner_org,
                 COALESCE(sr.is_spatial, false) as is_spatial,
+                COALESCE(sr.show_on_homepage, false) as show_on_homepage,
                 sr.added_by,
                 sr.updated_date
             FROM package p
@@ -91,6 +92,7 @@ def get_spatial_resources():
                 'size': row.size,
                 'organization_title': org_title,
                 'is_spatial': bool(row.is_spatial),
+                'show_on_homepage': bool(row.show_on_homepage),
                 'added_by': row.added_by,
                 'updated_date': row.updated_date.isoformat() if row.updated_date else None
             })

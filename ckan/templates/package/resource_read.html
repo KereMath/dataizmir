@@ -1067,6 +1067,44 @@ display:none !important;
                 console.error('Spatial check failed:', e);
               });
 
+            // Basemap definitions
+            let baseMaps = null;
+            let currentBaseMap = 'sokak';
+
+            function initBaseMaps() {
+              baseMaps = {
+                sokak: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                  maxZoom: 19,
+                  attribution: '© OpenStreetMap'
+                }),
+                uydu: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                  maxZoom: 17,
+                  attribution: '© Esri'
+                }),
+                arazi: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                  maxZoom: 17,
+                  attribution: '© OpenTopoMap'
+                }),
+                sade: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                  maxZoom: 19,
+                  attribution: '© CartoDB'
+                })
+              };
+            }
+
+            function switchBasemap(basemap) {
+              if (!spatialMap || !baseMaps) return;
+              if (basemap === currentBaseMap) return;
+
+              spatialMap.removeLayer(baseMaps[currentBaseMap]);
+              baseMaps[basemap].addTo(spatialMap);
+              currentBaseMap = basemap;
+
+              document.querySelectorAll('.basemap-button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.basemap === basemap);
+              });
+            }
+
             // Load spatial view when tab is activated
             const spatialTabLink = document.querySelector('a[href="#spatial-mode"]');
             if (spatialTabLink) {
@@ -1076,7 +1114,10 @@ display:none !important;
                 // Wait for tab to be shown
                 setTimeout(() => {
                   if (spatialDataLoaded) {
-                    console.log('Already loaded');
+                    console.log('Already loaded, invalidating size');
+                    if (spatialMap) {
+                      spatialMap.invalidateSize();
+                    }
                     return;
                   }
                   spatialDataLoaded = true;
@@ -1093,15 +1134,49 @@ display:none !important;
                     return;
                   }
 
-                  // Create map container
-                  document.getElementById('spatial-map-view').innerHTML = '<div id="leaflet-map" style="width:100%; height:650px;"></div>';
+                  // Create map container with basemap controls
+                  document.getElementById('spatial-map-view').innerHTML = `
+                    <div style="position:relative; width:100%; height:650px;">
+                      <div class="basemap-control-resource" style="position:absolute; top:10px; right:10px; z-index:1000; background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:flex; gap:5px; padding:5px;">
+                        <button class="basemap-button active" data-basemap="sokak" style="padding:8px 12px; border:none; background:#667eea; color:white; border-radius:5px; cursor:pointer; font-size:13px; font-weight:500; transition:all 0.2s;">🗺️ Sokak</button>
+                        <button class="basemap-button" data-basemap="uydu" style="padding:8px 12px; border:none; background:#e5e7eb; color:#374151; border-radius:5px; cursor:pointer; font-size:13px; font-weight:500; transition:all 0.2s;">🛰️ Uydu</button>
+                        <button class="basemap-button" data-basemap="arazi" style="padding:8px 12px; border:none; background:#e5e7eb; color:#374151; border-radius:5px; cursor:pointer; font-size:13px; font-weight:500; transition:all 0.2s;">⛰️ Arazi</button>
+                        <button class="basemap-button" data-basemap="sade" style="padding:8px 12px; border:none; background:#e5e7eb; color:#374151; border-radius:5px; cursor:pointer; font-size:13px; font-weight:500; transition:all 0.2s;">📍 Sade</button>
+                      </div>
+                      <div id="leaflet-map" style="width:100%; height:100%; border-radius:8px;"></div>
+                    </div>
+                  `;
+
+                  // Initialize basemaps
+                  initBaseMaps();
 
                   // Initialize map
-                  spatialMap = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
-                  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                    maxZoom: 19,
-                    attribution: '© OpenStreetMap'
-                  }).addTo(spatialMap);
+                  spatialMap = L.map('leaflet-map', {
+                    center: [38.4237, 27.1428],
+                    zoom: 10,
+                    zoomControl: true,
+                    scrollWheelZoom: true,
+                    preferCanvas: true
+                  });
+
+                  // Add initial basemap
+                  baseMaps[currentBaseMap].addTo(spatialMap);
+
+                  // Attach basemap button listeners
+                  document.querySelectorAll('.basemap-button').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                      const basemap = e.target.dataset.basemap;
+                      switchBasemap(basemap);
+                    });
+                  });
+
+                  // Force resize after a moment to ensure proper rendering
+                  setTimeout(() => {
+                    if (spatialMap) {
+                      spatialMap.invalidateSize();
+                      console.log('✓ Map size invalidated');
+                    }
+                  }, 250);
 
                   // Add data
                   if (result.type === 'geojson' && result.data) {
@@ -1121,16 +1196,29 @@ display:none !important;
                       style: () => ({color:"#667eea", weight:3, opacity:0.7, fillOpacity:0.4})
                     }).addTo(spatialMap);
 
-                    spatialMap.fitBounds(layer.getBounds());
+                    if (layer.getBounds && layer.getBounds().isValid()) {
+                      spatialMap.fitBounds(layer.getBounds(), {padding: [30, 30]});
+                    }
+                  } else if (result.type === 'wms' && result.data) {
+                    // WMS layer support
+                    L.tileLayer.wms(result.data.url, {
+                      layers: result.data.layers || '',
+                      format: 'image/png',
+                      transparent: true,
+                      attribution: result.data.attribution || ''
+                    }).addTo(spatialMap);
                   } else {
-                    document.getElementById('leaflet-map').innerHTML =
-                      '<div style="text-align:center; padding:3rem;"><i class="fa fa-info-circle fa-2x" style="color:#667eea; margin-bottom:1rem;"></i><br>Format not fully supported: ' + result.type + '</div>';
+                    const infoDiv = document.createElement('div');
+                    infoDiv.style.cssText = 'position:absolute; bottom:20px; left:50%; transform:translateX(-50%); background:white; padding:15px 25px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.2); z-index:1000;';
+                    infoDiv.innerHTML = '<i class="fa fa-info-circle" style="color:#667eea; margin-right:8px;"></i>Format: ' + result.type;
+                    document.getElementById('leaflet-map').parentElement.appendChild(infoDiv);
                   }
                 })
                 .catch(err => {
                   document.getElementById('spatial-map-loading').style.display = 'none';
                   document.getElementById('spatial-map-view').innerHTML =
                     '<div style="text-align:center; padding:3rem; color:#dc2626;"><i class="fa fa-times-circle fa-3x" style="margin-bottom:1rem;"></i><br><strong>Error:</strong> ' + err.message + '</div>';
+                  console.error('Map load error:', err);
                 });
                 }, 100); // End setTimeout
               }); // End click event
@@ -1142,6 +1230,17 @@ display:none !important;
           @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+          }
+
+          .basemap-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+          }
+
+          .basemap-button.active {
+            background: #667eea !important;
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
           }
         </style>
 

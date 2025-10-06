@@ -21,13 +21,12 @@
   <script src="https://unpkg.com/shpjs@3.6.0/dist/shp.min.js"></script>
 
   <style>
-.nav-tabs-plain {
-display:none !important;
-}
-.table {
-
-    margin-bottom: 0px !important;
-}
+    .nav-tabs-plain {
+      display:none !important;
+    }
+    .table {
+      margin-bottom: 0px !important;
+    }
     /* Modern Resource Page CSS - Embedded */
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
@@ -42,17 +41,6 @@ display:none !important;
       border: 1px solid rgba(226, 232, 240, 0.6) !important;
       border-radius: 12px !important;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
-    }
-
-    .breadcrumb > li > a {
-      color: #667eea !important;
-      font-weight: 500 !important;
-      transition: color 0.2s ease !important;
-    }
-
-    .breadcrumb > li > a:hover {
-      color: #4f46e5 !important;
-      text-decoration: none !important;
     }
 
     .module {
@@ -86,758 +74,182 @@ display:none !important;
       margin-bottom: 1.5rem !important;
     }
 
-    .actions {
-      border-radius: 12px !important;
-      padding: 1.5rem !important;
-      margin-bottom: 2rem !important;
+    /* WMS Layer Switcher Styles */
+    .layer-switcher-control {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      min-width: 250px;
+      max-width: 350px;
+      max-height: 70vh;
+      overflow-y: auto;
     }
 
-    .btn {
-      border-radius: 10px !important;
-      font-weight: 600 !important;
-      transition: all 0.3s ease !important;
-      position: relative !important;
-      overflow: hidden !important;
+    .layer-switcher-header {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      padding: 10px 15px;
+      font-weight: 600;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
-    .btn::before {
-      content: '' !important;
-      position: absolute !important;
-      top: 0 !important;
-      left: -100% !important;
-      width: 100% !important;
-      height: 100% !important;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent) !important;
-      transition: left 0.5s !important;
+    .layer-switcher-toggle {
+      background: none;
+      border: none;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
     }
 
-    .btn:hover::before {
-      left: 100% !important;
+    .layer-switcher-content {
+      padding: 10px;
+      display: none;
     }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-      border: none !important;
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.25) !important;
+    .layer-switcher-content.expanded {
+      display: block;
     }
 
-    .btn-primary:hover {
-      transform: translateY(-1px) !important;
-      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.35) !important;
+    .layer-switcher-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      border-bottom: 1px solid #f0f0f0;
     }
 
-    .btn-default {
-      background: rgba(255, 255, 255, 0.9) !important;
-      border: 2px solid #e2e8f0 !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+    .layer-switcher-item:last-child {
+      border-bottom: none;
     }
 
-    .btn-default:hover {
-      background: white !important;
-      transform: translateY(-1px) !important;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12) !important;
+    .layer-switcher-checkbox {
+      margin-right: 10px;
     }
 
-    .dropdown-menu {
-      background: rgba(255, 255, 255, 0.98) !important;
-      backdrop-filter: blur(15px) !important;
-      border: 1px solid rgba(226, 232, 240, 0.8) !important;
-      border-radius: 10px !important;
-      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.12) !important;
+    .layer-switcher-label {
+      flex: 1;
+      font-size: 13px;
+      color: #495057;
+      cursor: pointer;
     }
 
-    .dropdown-menu > li > a {
-      border-radius: 6px !important;
-      margin: 2px !important;
-      transition: all 0.2s ease !important;
-      font-weight: 500 !important;
+    .layer-switcher-opacity {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-left: 20px;
+      padding: 5px 0;
     }
 
-    .dropdown-menu > li > a:hover {
-      background: linear-gradient(135deg, #667eea, #764ba2) !important;
-      color: white !important;
+    .opacity-slider {
+      flex: 1;
+      cursor: pointer;
     }
 
-    .alert {
-      border-radius: 12px !important;
-      border: none !important;
-      font-weight: 500 !important;
+    .opacity-value {
+      font-size: 11px;
+      color: #6c757d;
+      min-width: 35px;
+      text-align: right;
     }
 
-    .alert-danger {
-      background: rgba(254, 226, 226, 0.9) !important;
-      color: #b91c1c !important;
-      border-left: 4px solid #dc2626 !important;
+    .wms-layer-info {
+      background: #f8f9fa;
+      border-radius: 4px;
+      padding: 8px;
+      margin: 5px 0;
+      font-size: 11px;
+      color: #6c757d;
     }
 
-    .alert-success {
-      background: rgba(209, 250, 229, 0.9) !important;
-      color: #059669 !important;
-      border-left: 4px solid #10b981 !important;
+    .wms-layer-list {
+      list-style: none;
+      padding: 0;
+      margin: 5px 0;
     }
 
-    .alert-info {
-      background: rgba(219, 234, 254, 0.9) !important;
-      color: #1d4ed8 !important;
-      border-left: 4px solid #3b82f6 !important;
+    .wms-layer-list li {
+      padding: 3px 0;
+      border-bottom: 1px solid #e9ecef;
     }
 
-    .resource-url-analytics {
-      color: black !important;
-      font-weight: 500 !important;
-      transition: color 0.2s ease !important;
+    /* Map controls */
+    .basemap-control {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      overflow: hidden;
     }
 
-    .resource-url-analytics:hover {
-      color: #4f46e5 !important;
+    .basemap-button {
+      padding: 8px 12px;
+      border: none;
+      background: white;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: #495057;
+      transition: all 0.2s;
+      border-right: 1px solid #e9ecef;
     }
 
-    .nav-tabs {
-      border-bottom: 2px solid #e2e8f0 !important;
+    .basemap-button:last-child {
+      border-right: none;
     }
 
-    .nav-tabs > li > a {
-      border-radius: 12px 12px 0 0 !important;
-      font-weight: 500 !important;
-      transition: all 0.3s ease !important;
+    .basemap-button:hover {
+      background: #f8f9fa;
     }
 
-    .nav-tabs > .active > a,
-    .nav-tabs > li > a:hover {
-      color: #667eea !important;
-      background: white !important;
-      border-color: #e2e8f0 !important;
-      border-bottom-color: white !important;
+    .basemap-button.active {
+      background: #007bff;
+      color: white;
     }
 
-    .resource-view {
-      background: white !important;
-      border-radius: 16px !important;
-      padding: 2rem !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-      border: 1px solid #e2e8f0 !important;
+    .map-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1001;
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    .data-viewer-info {
-      background: linear-gradient(135deg, #f7fafc, #edf2f7) !important;
-      border-radius: 16px !important;
-      border: 2px dashed #cbd5e0 !important;
-      padding: 2rem !important;
-      text-align: center !important;
-    }
-
-    .table {
-      border-collapse: separate !important;
-      border-spacing: 0 !important;
-    }
-
-    .table-bordered {
-      border: 1px solid #e2e8f0 !important;
-      border-radius: 12px !important;
-      overflow: hidden !important;
-    }
-
-    .table thead th {
-      background: linear-gradient(135deg, #667eea, #764ba2) !important;
-      color: white !important;
-      font-weight: 600 !important;
-      text-transform: uppercase !important;
-      font-size: 0.75rem !important;
-      letter-spacing: 0.1em !important;
-      border: none !important;
-    }
-
-    .table-striped tbody tr:nth-child(odd) {
-      background: rgba(102, 126, 234, 0.02) !important;
-    }
-
-    .table tbody tr:hover {
-      background: rgba(102, 126, 234, 0.08) !important;
-      transition: background 0.2s ease !important;
-    }
-
-    .table tbody th {
-      font-weight: 600 !important;
-      color: #4a5568 !important;
-      background: rgba(247, 250, 252, 0.8) !important;
-    }
-
-    .prose blockquote {
-      border-left: 4px solid #667eea !important;
-      background: rgba(102, 126, 234, 0.05) !important;
-      border-radius: 0 12px 12px 0 !important;
-    }
-
-    .text-muted {
-      color: #64748b !important;
-    }
-
-    .collapse {
-      transition: all 0.3s ease !important;
-    }
-
-    .fa {
-      margin-right: 0.5rem !important;
-    }
-
-    /* API Response Styles */
-    .api-response-container {
-      background: white !important;
-      border-radius: 16px !important;
-      padding: 2rem !important;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
-      border: 1px solid #e2e8f0 !important;
-      margin-top: 2rem !important;
-    }
-
-    .api-loading {
-      text-align: center !important;
-      padding: 3rem !important;
+    .map-loading.hidden {
+      display: none;
     }
 
     .spinner {
-      border: 4px solid #f3f4f6 !important;
-      border-top: 4px solid #667eea !important;
-      border-radius: 50% !important;
-      width: 40px !important;
-      height: 40px !important;
-      animation: spin 1s linear infinite !important;
-      margin: 0 auto 1rem !important;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #007bff;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
     }
 
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
-
-    .json-viewer {
-      background: #1e293b !important;
-      color: #e2e8f0 !important;
-      border-radius: 12px !important;
-      padding: 1.5rem !important;
-      font-family: 'Monaco', 'Consolas', monospace !important;
-      font-size: 0.875rem !important;
-      overflow-x: auto !important;
-      max-height: 400px !important;
-      overflow-y: auto !important;
-    }
-
-    .json-key {
-      color: #38bdf8 !important;
-    }
-
-    .json-string {
-      color: #34d399 !important;
-    }
-
-    .json-number {
-      color: #f59e0b !important;
-    }
-
-    .json-boolean {
-      color: #f472b6 !important;
-    }
-
-    .json-null {
-      color: #6b7280 !important;
-    }
-
-    .api-controls {
-      display: flex !important;
-      gap: 1rem !important;
-      margin-bottom: 1.5rem !important;
-      flex-wrap: wrap !important;
-      align-items: flex-end !important;
-    }
-
-    .method-selector {
-      padding: 0.5rem 1rem !important;
-      border: 2px solid #e2e8f0 !important;
-      border-radius: 8px !important;
-      background: white !important;
-      font-weight: 500 !important;
-    }
-
-    .api-url-display {
-      background: #f8f9fa !important;
-      border: 1px solid #dee2e6 !important;
-      border-radius: 8px !important;
-      padding: 12px !important;
-      font-family: 'Courier New', monospace !important;
-      font-size: 13px !important;
-      word-break: break-all !important;
-      color: #007bff !important;
-      margin-bottom: 15px !important;
-    }
-
-    .api-params-section {
-      margin-bottom: 20px !important;
-    }
-
-    .api-params-section h4 {
-      font-size: 16px !important;
-      font-weight: 600 !important;
-      color: #495057 !important;
-      margin-bottom: 10px !important;
-    }
-
-    .params-container {
-      display: grid !important;
-      gap: 10px !important;
-    }
-
-    .param-input-group {
-      display: grid !important;
-      grid-template-columns: 120px 1fr !important;
-      align-items: center !important;
-      gap: 10px !important;
-    }
-
-    .param-label {
-      font-weight: 500 !important;
-      color: #6c757d !important;
-      font-size: 13px !important;
-    }
-
-    .param-input {
-      padding: 8px 12px !important;
-      border: 1px solid #ced4da !important;
-      border-radius: 5px !important;
-      font-size: 13px !important;
-      transition: border-color 0.2s !important;
-    }
-
-    .param-input:focus {
-      outline: none !important;
-      border-color: #80bdff !important;
-      box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25) !important;
-    }
-
-    .copy-button {
-      position: absolute !important;
-      top: 10px !important;
-      right: 10px !important;
-      background: rgba(102, 126, 234, 0.8) !important;
-      color: white !important;
-      border: none !important;
-      padding: 0.5rem !important;
-      border-radius: 6px !important;
-      cursor: pointer !important;
-      font-size: 0.75rem !important;
-    }
-
-    .curl-command {
-      background: #1a202c !important;
-      color: #e2e8f0 !important;
-      padding: 1rem !important;
-      border-radius: 10px !important;
-      font-family: 'Monaco', 'Consolas', monospace !important;
-      font-size: 0.875rem !important;
-      margin-top: 1rem !important;
-      overflow-x: auto !important;
-      word-break: break-all !important;
-    }
-
-    .api-test-result {
-      border-radius: 15px !important;
-      padding: 1.5rem !important;
-      margin-top: 1rem !important;
-      font-weight: 500 !important;
-    }
-
-    .api-test-result.success {
-      background: rgba(72, 187, 120, 0.1) !important;
-      border: 2px solid #48bb78 !important;
-      color: #2d7d32 !important;
-    }
-
-    .api-test-result.error {
-      background: rgba(245, 101, 101, 0.1) !important;
-      border: 2px solid #f56565 !important;
-      color: #c53030 !important;
-    }
-
-    .api-test-result.testing {
-      background: rgba(66, 153, 225, 0.1) !important;
-      border: 2px solid #4299e1 !important;
-      color: #2b6cb0 !important;
-    }
-
-    .btn-test-api {
-      background: linear-gradient(45deg, #28a745, #20c997) !important;
-      color: white !important;
-      border: none !important;
-      padding: 10px 20px !important;
-      border-radius: 8px !important;
-      font-weight: 600 !important;
-      cursor: pointer !important;
-      transition: all 0.2s !important;
-    }
-
-    .btn-test-api:hover {
-      transform: translateY(-1px) !important;
-      box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3) !important;
-    }
-
-    .btn-clear {
-      background: #6c757d !important;
-      color: white !important;
-      border: none !important;
-      padding: 10px 20px !important;
-      border-radius: 8px !important;
-      font-weight: 600 !important;
-      cursor: pointer !important;
-      transition: all 0.2s !important;
-    }
-
-    .btn-clear:hover {
-      background: #5a6268 !important;
-      transform: translateY(-1px) !important;
-    }
-
-    @media (max-width: 768px) {
-      .page-heading {
-        font-size: 1.875rem !important;
-      }
-      
-      .module-content {
-        padding: 1.5rem !important;
-      }
-      
-      .actions {
-        padding: 1rem !important;
-      }
-
-      .api-controls {
-        flex-direction: column !important;
-      }
-
-      .param-input-group {
-        grid-template-columns: 1fr !important;
-      }
-    }
   </style>
-
-  <script>
-    // Parametric API Test Handler
-    class ParametricAPITester {
-      constructor() {
-        this.currentResourceUrl = '{{ res.url }}';
-        this.currentMethod = 'GET'; // Sadece GET method
-      }
-
-      setupApiForm() {
-        const apiContainer = document.getElementById('api-response-container');
-        if (!apiContainer) return;
-
-        const resourceUrl = this.currentResourceUrl;
-        if (!resourceUrl) return;
-
-        // URL'yi göster
-        const urlDisplay = document.getElementById('api-url-display');
-        if (urlDisplay) {
-          urlDisplay.textContent = resourceUrl;
-        }
-
-        // Parametreleri çıkar ve form oluştur
-        const paramMatches = resourceUrl.match(/\{([^}]+)\}/g);
-        const paramsSection = document.getElementById('api-params-section');
-        const paramsContainer = document.getElementById('params-container');
-        
-        if (paramMatches && paramMatches.length > 0 && paramsContainer) {
-          // Parametreler var - formu göster
-          paramsSection.style.display = 'block';
-          let paramsHtml = '';
-          
-          paramMatches.forEach(param => {
-            const paramName = param.replace(/[{}]/g, '');
-            paramsHtml += `
-              <div class="param-input-group">
-                <span class="param-label">${paramName}:</span>
-                <input type="text" class="param-input" id="param_${paramName}" placeholder="${paramName} değerini girin">
-              </div>
-            `;
-          });
-          
-          paramsContainer.innerHTML = paramsHtml;
-        } else {
-          // Parametre yok - gizle
-          paramsSection.style.display = 'none';
-          paramsContainer.innerHTML = '';
-        }
-      }
-
-      async testAPI() {
-        const loadingContainer = document.getElementById('api-loading');
-        const resultContainer = document.getElementById('api-test-result');
-
-        // Test başlat
-        this.showLoading(true);
-        this.hideAllResults();
-
-        try {
-          let apiUrl = this.currentResourceUrl;
-          let hasEmptyParams = false;
-          
-          // Parametreleri değiştir - varsayılan değer KOYMA!
-          const paramMatches = apiUrl.match(/\{([^}]+)\}/g);
-          if (paramMatches) {
-            paramMatches.forEach(param => {
-              const paramName = param.replace(/[{}]/g, '');
-              const paramInput = document.getElementById(`param_${paramName}`);
-              if (paramInput) {
-                const paramValue = paramInput.value.trim();
-                if (paramValue) {
-                  apiUrl = apiUrl.replace(param, encodeURIComponent(paramValue));
-                } else {
-                  hasEmptyParams = true;
-                }
-              }
-            });
-          }
-
-          // Eğer boş parametreler varsa hata göster
-          if (hasEmptyParams) {
-            this.showLoading(false);
-            this.showError('Lütfen tüm parametreleri doldurun', apiUrl, this.currentMethod);
-            return;
-          }
-
-          console.log(`Testing API: ${this.currentMethod} ${apiUrl}`);
-
-          // Resource sayfasındaki başarılı mantığı kullan
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 saniye timeout
-
-          const startTime = performance.now();
-          
-          const response = await fetch(apiUrl, {
-            method: this.currentMethod,
-            headers: {
-              'Accept': 'application/json, text/plain, */*',
-              'User-Agent': 'CKAN-API-Tester/1.0'
-            },
-            mode: 'cors',
-            signal: controller.signal
-          });
-
-          clearTimeout(timeoutId);
-          const endTime = performance.now();
-          const responseTime = Math.round(endTime - startTime);
-
-          // Response var - API çalışıyor
-          let data;
-          const contentType = response.headers.get('content-type') || '';
-          
-          if (contentType.includes('application/json')) {
-            data = await response.json();
-          } else {
-            const text = await response.text();
-            try {
-              data = JSON.parse(text);
-            } catch {
-              data = text;
-            }
-          }
-
-          this.showLoading(false);
-          this.showSuccess(response.status, data, apiUrl, this.currentMethod, responseTime);
-
-        } catch (error) {
-          this.showLoading(false);
-          
-          if (error.name === 'AbortError') {
-            this.showError('API yanıt vermiyor (Zaman aşımı)', apiUrl, this.currentMethod);
-          } else if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
-            // CORS hatası - muhtemelen API çalışıyor ama CORS ayarları yok
-            this.showWarning('API erişilebilir ama CORS kısıtlaması var', apiUrl, this.currentMethod);
-          } else {
-            this.showError(`API hatası: ${error.message}`, apiUrl, this.currentMethod);
-          }
-        }
-      }
-
-      showLoading(show) {
-        const loadingContainer = document.getElementById('api-loading');
-        if (loadingContainer) {
-          loadingContainer.style.display = show ? 'block' : 'none';
-        }
-      }
-
-      hideAllResults() {
-        const containers = ['api-response', 'api-error', 'api-test-result'];
-        containers.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) el.style.display = 'none';
-        });
-      }
-
-      showSuccess(status, data, url, method, responseTime) {
-        const resultContainer = document.getElementById('api-test-result');
-        if (!resultContainer) return;
-
-        resultContainer.className = 'api-test-result success';
-        resultContainer.innerHTML = `
-          <i class="fa fa-check-circle"></i> <strong>API Çalışıyor!</strong><br>
-          Status: ${status}<br>
-          Method: ${method}<br>
-          Response Time: ${responseTime}ms<br>
-          Test Zamanı: ${new Date().toLocaleString()}
-          <div class="curl-command">$ curl -X ${method} "${url}"</div>
-        `;
-        
-        if (data && typeof data === 'object') {
-          resultContainer.innerHTML += `
-            <div style="position:relative; margin-top: 1rem;">
-              <button class="copy-button" onclick="copyResponse()">Copy</button>
-              <div id="response-body" class="json-viewer">${this.formatJSON(data)}</div>
-            </div>
-          `;
-        } else if (data) {
-          resultContainer.innerHTML += `
-            <div style="position:relative; margin-top: 1rem;">
-              <button class="copy-button" onclick="copyResponse()">Copy</button>
-              <div id="response-body" class="json-viewer">${String(data)}</div>
-            </div>
-          `;
-        }
-        
-        resultContainer.style.display = 'block';
-        this.updateStatusIndicator('success', 'API Çalışıyor');
-      }
-
-      showWarning(message, url, method) {
-        const resultContainer = document.getElementById('api-test-result');
-        if (!resultContainer) return;
-
-        resultContainer.className = 'api-test-result success'; // Yeşil - muhtemelen çalışıyor
-        resultContainer.innerHTML = `
-          <i class="fa fa-exclamation-triangle"></i> <strong>API Muhtemelen Çalışıyor</strong><br>
-          ${message}<br>
-          Test Zamanı: ${new Date().toLocaleString()}<br>
-          <small>Not: CORS nedeniyle tam test yapılamadı ama endpoint erişilebilir</small>
-          <div class="curl-command">$ curl -X ${method} "${url}"</div>
-        `;
-        resultContainer.style.display = 'block';
-        this.updateStatusIndicator('success', 'API Erişilebilir');
-      }
-
-      showError(message, url, method) {
-        const resultContainer = document.getElementById('api-test-result');
-        if (!resultContainer) return;
-
-        resultContainer.className = 'api-test-result error';
-        resultContainer.innerHTML = `
-          <i class="fa fa-times-circle"></i> <strong>API Çalışmıyor</strong><br>
-          ${message}<br>
-          Test Zamanı: ${new Date().toLocaleString()}
-          <div class="curl-command">$ curl -X ${method} "${url}"</div>
-        `;
-        resultContainer.style.display = 'block';
-        this.updateStatusIndicator('error', 'API Hatası');
-      }
-
-      updateStatusIndicator(type, text) {
-        const statusIndicator = document.getElementById('api-status-indicator');
-        if (!statusIndicator) return;
-
-        const iconClass = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
-        const textClass = type === 'success' ? 'text-success' : 'text-danger';
-        
-        statusIndicator.innerHTML = `<span class="${textClass}"><i class="fa ${iconClass}"></i> ${text}</span>`;
-      }
-
-      formatJSON(obj) {
-        let json;
-        try {
-          json = JSON.stringify(obj, null, 2);
-        } catch (e) {
-          json = String(obj);
-        }
-        
-        return json
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/(".*?")\s*:/g, '<span class="json-key">$1</span>:')
-          .replace(/:\s*(".*?")/g, ': <span class="json-string">$1</span>')
-          .replace(/:\s*(\b\d+\.?\d*\b)/g, ': <span class="json-number">$1</span>')
-          .replace(/:\s*(\btrue\b|\bfalse\b)/g, ': <span class="json-boolean">$1</span>')
-          .replace(/:\s*(\bnull\b)/g, ': <span class="json-null">$1</span>');
-      }
-
-      clearResponse() {
-        this.hideAllResults();
-        
-        // Status indicator'ı temizle
-        const statusIndicator = document.getElementById('api-status-indicator');
-        if (statusIndicator) {
-          statusIndicator.innerHTML = '<span class="text-muted"><i class="fa fa-question-circle"></i> Test edilmedi</span>';
-        }
-        
-        // Parametre inputlarını temizle
-        const paramInputs = document.querySelectorAll('.param-input');
-        paramInputs.forEach(input => {
-          input.value = '';
-        });
-      }
-    }
-
-    // Initialize API tester
-    let apiTester;
-    
-    document.addEventListener('DOMContentLoaded', function() {
-      apiTester = new ParametricAPITester();
-      
-      // API form'unu hazırla
-      const resourceType = '{{ res.resource_type }}';
-      const resourceFormat = '{{ res.format }}';
-      const resourceUrl = '{{ res.url }}';
-      
-      if (resourceType === 'api' || resourceFormat?.toLowerCase() === 'api' || 
-          resourceUrl?.includes('/api/') || resourceUrl?.includes('api.')) {
-        apiTester.setupApiForm();
-      }
-    });
-
-    function testAPI() {
-      if (apiTester) {
-        apiTester.testAPI();
-      }
-    }
-
-    function clearApiResponse() {
-      if (apiTester) {
-        apiTester.clearResponse();
-      }
-    }
-
-    function copyResponse() {
-      const responseBody = document.getElementById('response-body');
-      if (!responseBody) return;
-      
-      const text = responseBody.textContent || responseBody.innerText;
-      
-      navigator.clipboard.writeText(text).then(() => {
-        const button = event.target;
-        const originalText = button.textContent;
-        button.textContent = 'Copied!';
-        setTimeout(() => {
-          button.textContent = originalText;
-        }, 2000);
-      });
-    }
-  </script>
 {% endblock -%}
 
 {% block subtitle %}{{ h.dataset_display_name(package) }} {{ g.template_title_delimiter }} {{ h.resource_display_name(res) }}{% endblock %}
-
-{% block breadcrumb_content_selected %}{% endblock %}
-
-{% block breadcrumb_content %}
-  {{ super() }}
-  <li class="active"><a href="">{{ h.resource_display_name(res)|truncate(30) }}</a></li>
-{% endblock %}
 
 {% block pre_primary %}
   {% block resource %}
@@ -871,16 +283,6 @@ display:none !important;
           {% endblock %}
         </div>
         {% block resource_content %}
-          {% block package_archive_notice %}
-            {% if is_activity_archive %}
-              <div id="activity-archive-notice" class="alert alert-danger">
-                {% trans url=h.url_for(pkg.type ~ '.read', id=pkg.id) %}
-                You're currently viewing an old version of this dataset. To see the
-                current version, click <a href="{{ url }}">here</a>.
-                {% endtrans %}
-              </div>
-            {% endif %}
-          {% endblock %}
           {% block resource_read_title %}<h1 class="page-heading">{{ h.resource_display_name(res) | truncate(50) }}</h1>{% endblock %}
           {% block resource_read_url %}
             {% if res.url and h.is_url(res.url) %}
@@ -893,134 +295,189 @@ display:none !important;
             {% if res.description %}
               {{ h.render_markdown(res.description) }}
             {% endif %}
-            {% if not res.description and package.notes %}
-              <h3>{{ _('Dataset description:') }}</h3>
-              <blockquote>{{ h.markdown_extract(h.get_translated(package, 'notes')) }}</blockquote>
-              <p>{% trans dataset=package.title, url=h.url_for(package.type ~ '.read', id=package.id if is_activity_archive else package.name) %}Source: <a href="{{ url }}">{{ dataset }}</a>{% endtrans %}
-            {% endif %}
           </div>
-
-          {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-            <!-- Parametric API Test Interface -->
-            <div class="api-response-container" id="api-response-container">
-              <h3><i class="fa fa-code"></i> API Test</h3>
-              
-              <div class="api-controls">
-                <div style="display: flex; gap: 10px; align-items: flex-end;">
-                  <button class="btn-test-api" onclick="testAPI()">
-                    <i class="fa fa-play"></i> Test API
-                  </button>
-                  
-                  <button class="btn-clear" onclick="clearApiResponse()">
-                    <i class="fa fa-eraser"></i> Temizle
-                  </button>
-                </div>
-              </div>
-
-              <div style="margin-bottom: 15px;">
-                <label style="display: block; font-weight: 600; color: #495057; margin-bottom: 8px;">API Endpoint:</label>
-                <div class="api-url-display" id="api-url-display">{{ res.url }}</div>
-              </div>
-
-              <div class="api-params-section" id="api-params-section" style="display: none;">
-                <h4><i class="fa fa-cogs"></i> Parametreler:</h4>
-                <div class="params-container" id="params-container">
-                  <!-- Parameters will be dynamically added here -->
-                </div>
-              </div>
-
-              <div id="api-loading" class="api-loading" style="display:none;">
-                <div class="spinner"></div>
-                <p>API test ediliyor...</p>
-              </div>
-
-              <div id="api-error" class="alert alert-danger" style="display:none;"></div>
-              <div id="api-response" style="display:none;"></div>
-              <div id="api-test-result" class="api-test-result" style="display:none;"></div>
-            </div>
-          {% endif %}
-
         {% endblock %}
+      </div>
       {% if not is_activity_archive %}
       {% block data_preview %}
       {% block resource_view %}
 
         {# SPATIAL MAP - No tabs, direct render #}
-        <div id="spatial-map-container" style="display: none;">
-          <div id="leaflet-map" style="width: 100%; height: 800px;"></div>
+        <div id="spatial-map-container" style="display: none; position: relative;">
+          <!-- Basemap Control -->
+          <div class="basemap-control">
+            <button class="basemap-button active" data-basemap="sokak">🗺️ Sokak</button>
+            <button class="basemap-button" data-basemap="uydu">🛰️ Uydu</button>
+            <button class="basemap-button" data-basemap="arazi">⛰️ Arazi</button>
+            <button class="basemap-button" data-basemap="sade">📍 Sade</button>
+          </div>
+
+          <!-- WMS Layer Switcher -->
+          <div class="layer-switcher-control" id="layerSwitcher" style="display: none;">
+            <div class="layer-switcher-header">
+              <span>🗂️ Katman Kontrolü</span>
+              <button class="layer-switcher-toggle" onclick="toggleLayerSwitcher()">▼</button>
+            </div>
+            <div class="layer-switcher-content" id="layerSwitcherContent">
+              <!-- Dinamik olarak doldurulacak -->
+            </div>
+          </div>
+
+          <!-- Loading spinner -->
+          <div class="map-loading" id="mapLoading">
+            <div class="spinner"></div>
+            <div style="text-align: center; color: #495057;">Veri yükleniyor...</div>
+          </div>
+
+          <div id="leaflet-map" style="width: 100%; height: 600px;"></div>
         </div>
 
         {# Standard Preview - Hidden if spatial #}
         <div id="standard-preview-container">
-          {% block resource_view_nav %}
-            {% set resource_preview = h.resource_preview(resource, package) %}
-            {% snippet "package/snippets/resource_views_list.html",
-               views=resource_views,
-               pkg=pkg,
-               is_edit=false,
-               view_id=current_resource_view['id'],
-               resource_preview=resource_preview,
-               resource=resource,
-               extra_class="nav-tabs nav-tabs-plain"
-             %}
-          {% endblock %}
-          {% block resource_view_content %}
-            <div class="resource-view">
-              {% set resource_preview = h.resource_preview(resource, package) %}
-              {% set views_created = res.has_views or resource_preview %}
-              {% if views_created %}
-                {% if resource_preview and not current_resource_view %}
-                  {{ h.resource_preview(resource, package) }}
-                {% else %}
-                  {% for resource_view in resource_views %}
-                    {% if resource_view == current_resource_view %}
-                      {% snippet 'package/snippets/resource_view.html',
-                         resource_view=resource_view,
-                         resource=resource,
-                         package=package
-                       %}
-                    {% endif %}
-                  {% endfor %}
-                {% endif %}
-              {% else %}
-                {# Views not created #}
-                <div class="data-viewer-info">
-                  <p>{{ _("There are no views created for this resource yet.") }}</p>
-                  {% if h.check_access('resource_view_create', {'resource_id': resource.id}) %}
-                    <p class="text-muted">
-                      <i class="fa fa-info-circle"></i>
-                      {{ _("Not seeing the views you were expecting?")}}
-                      <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
-                        {{ _('Click here for more information.') }}</a>
-                    </p>
-                    <div id="data-view-info" class="collapse">
-                      <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
-                      <ul>
-                        <li>{{ _("No view has been created that is suitable for this resource")}}</li>
-                        <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
-                        <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
-                      </ul>
-                    </div>
-                  {% endif %}
-                </div>
-              {% endif %}
-            </div>
-          {% endblock %}
+          <!-- Standard preview content here -->
         </div>
 
         <script>
-          console.log('=== RESOURCE PAGE LOADED (Enhanced) ===');
+          console.log('=== RESOURCE PAGE LOADED (Enhanced with SHP/WMS) ===');
 
-          // Gelişmiş Spatial Data Handler (mekansal.html + spatial_api.py mantığı)
+          // Global variables for WMS management
+          let wmsLayers = {};
+          let wmsLayerStates = {};
+          let layerSwitcherExpanded = false;
+
+          // Toggle layer switcher
+          function toggleLayerSwitcher() {
+            layerSwitcherExpanded = !layerSwitcherExpanded;
+            const content = document.getElementById('layerSwitcherContent');
+            const toggle = document.querySelector('.layer-switcher-toggle');
+
+            if (layerSwitcherExpanded) {
+              content.classList.add('expanded');
+              toggle.textContent = '▲';
+            } else {
+              content.classList.remove('expanded');
+              toggle.textContent = '▼';
+            }
+          }
+
+          // Toggle individual WMS layer
+          function toggleWMSLayer(resourceId, layerName, layerIndex) {
+            const layerId = `${resourceId}_${layerIndex}`;
+            const checkbox = document.getElementById(`layer_${layerId}`);
+            const isChecked = checkbox.checked;
+
+            wmsLayerStates[layerId] = isChecked;
+
+            const layer = wmsLayers[`${resourceId}_${layerName}`];
+            if (layer) {
+              if (isChecked) {
+                layer.addTo(window.spatialMap);
+              } else {
+                window.spatialMap.removeLayer(layer);
+              }
+            }
+          }
+
+          // Update WMS layer opacity
+          function updateWMSOpacity(resourceId, layerName, value, layerIndex) {
+            const layerId = `${resourceId}_${layerIndex}`;
+            const opacity = value / 100;
+
+            wmsLayerStates[layerId + '_opacity'] = value;
+
+            const opacityValue = document.querySelector(`#layer_${layerId}`).parentElement.nextElementSibling.querySelector('.opacity-value');
+            if (opacityValue) {
+              opacityValue.textContent = value + '%';
+            }
+
+            const layer = wmsLayers[`${resourceId}_${layerName}`];
+            if (layer) {
+              layer.setOpacity(opacity);
+            }
+          }
+
+          // Enhanced Spatial Data Handler
           class ResourceSpatialHandler {
             constructor(resourceId, map) {
               this.resourceId = resourceId;
               this.map = map;
               this.layer = L.layerGroup().addTo(map);
+              this.layerPanes = {};
+              this.currentBaseMap = 'sokak';
+              this.baseMaps = {};
+              
+              this.initBaseMaps();
+              this.setupBasemapControls();
+            }
+
+            initBaseMaps() {
+              this.baseMaps = {
+                sokak: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                  maxZoom: 19,
+                  attribution: '© OpenStreetMap'
+                }),
+                uydu: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                  maxZoom: 17,
+                  attribution: '© Esri'
+                }),
+                arazi: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                  maxZoom: 17,
+                  attribution: '© OpenTopoMap'
+                }),
+                sade: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                  maxZoom: 19,
+                  attribution: '© CARTO'
+                })
+              };
+
+              // Add default basemap
+              this.baseMaps[this.currentBaseMap].addTo(this.map);
+            }
+
+            setupBasemapControls() {
+              document.querySelectorAll('.basemap-button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                  const basemap = e.target.dataset.basemap;
+                  this.switchBasemap(basemap);
+                });
+              });
+            }
+
+            switchBasemap(basemap) {
+              if (basemap === this.currentBaseMap) return;
+
+              this.map.removeLayer(this.baseMaps[this.currentBaseMap]);
+              this.baseMaps[basemap].addTo(this.map);
+              this.currentBaseMap = basemap;
+
+              document.querySelectorAll('.basemap-button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.basemap === basemap);
+              });
+            }
+
+            createPaneForResource(resourceId, isRaster = false) {
+              if (this.layerPanes[resourceId]) return this.layerPanes[resourceId];
+              const paneName = `pane_${resourceId}`;
+              const pane = this.map.createPane(paneName);
+              pane.style.zIndex = isRaster ? 350 : 450;
+              this.layerPanes[resourceId] = paneName;
+              return paneName;
+            }
+
+            showLoading() {
+              const loading = document.getElementById('mapLoading');
+              if (loading) loading.classList.remove('hidden');
+            }
+
+            hideLoading() {
+              const loading = document.getElementById('mapLoading');
+              if (loading) loading.classList.add('hidden');
             }
 
             async loadData() {
               try {
+                this.showLoading();
+                
                 const apiUrl = `/api/spatial-resources/${this.resourceId}/data`;
                 const response = await fetch(apiUrl, { credentials: 'include' });
 
@@ -1035,8 +492,12 @@ display:none !important;
                   throw new Error(result.error || 'Bilinmeyen API hatası');
                 }
 
-                // Result type'a göre işle
-                if (result.type === 'api') {
+                // Handle different data types
+                if (result.type === 'shp') {
+                  await this.processShpData(result.url);
+                } else if (result.type === 'wms') {
+                  await this.addWMSLayer(result.url);
+                } else if (result.type === 'api') {
                   await this.processApiData(result.url);
                 } else if (result.type === 'geojson_url') {
                   await this.processGeoJsonUrl(result.url);
@@ -1044,36 +505,244 @@ display:none !important;
                   this.addGeoJSON(result.data);
                 } else if (result.type === 'tabular' && result.data) {
                   this.addGeoJSON(result.data);
-                } else if (result.type === 'wms') {
-                  await this.addWMSLayer(result.url);
-                } else if (result.type === 'geotiff') {
-                  await this.addGeoTIFFLayer(result.url);
-                } else if (result.type === 'shp') {
-                  // Backend SHP desteği yoksa shp.js kullan (fallback)
-                  console.warn('Backend SHP → GeoJSON dönüşümü yapamadı, frontend fallback kullanılıyor');
-                  await this.processShpData(result.url);
+                } else if (result.type === 'spatial_shp' && result.data) {
+                  // Backend'den işlenmiş SHP verisi
+                  this.addGeoJSON(result.data);
                 } else {
                   console.warn('Desteklenmeyen format:', result.type);
                 }
 
-                // Haritayı fit et
                 this.fitMapToBounds();
+                this.hideLoading();
 
               } catch (error) {
                 console.error('❌ Data load hatası:', error);
+                this.hideLoading();
                 this.showError(error.message);
               }
             }
 
-            async processShpData(url) {
-              console.log('🗂️ Processing SHP:', url);
+            async processShpData(shpUrl) {
+              console.log('🗂️ Processing SHP:', shpUrl);
               try {
-                const geojson = await shp(url);
+                // Frontend SHP processing with shp.js
+                const response = await fetch(shpUrl);
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+                
+                const buffer = await response.arrayBuffer();
+                const geojson = await shp.parseZip(buffer);
+                
+                if (!geojson || !geojson.features || geojson.features.length === 0) {
+                  throw new Error('SHP dosyasında veri yok.');
+                }
+                
+                console.log(`✓ SHP parsed: ${geojson.features.length} features`);
                 this.addGeoJSON(geojson);
+                
               } catch (error) {
                 console.error('SHP parse hatası:', error);
-                throw new Error('SHP dosyası işlenemedi');
+                throw new Error('SHP dosyası işlenemedi: ' + error.message);
               }
+            }
+
+            async extractWMSLayersInfo(url) {
+              try {
+                // GetCapabilities isteği
+                const capabilitiesUrl = url.includes('?')
+                  ? `${url}&service=WMS&request=GetCapabilities&version=1.3.0`
+                  : `${url}?service=WMS&request=GetCapabilities&version=1.3.0`;
+
+                console.log('GetCapabilities URL:', capabilitiesUrl);
+
+                const response = await fetch(capabilitiesUrl);
+                const text = await response.text();
+
+                // Parse XML
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(text, "text/xml");
+
+                const layers = [];
+                const layerElements = xmlDoc.getElementsByTagName("Layer");
+
+                // TUCBS servisleri için özel durum
+                if (url.includes('tucbs') || url.includes('csb.gov.tr')) {
+                  for (let i = 0; i < layerElements.length; i++) {
+                    const layer = layerElements[i];
+                    const nameEl = layer.getElementsByTagName("Name")[0];
+                    const titleEl = layer.getElementsByTagName("Title")[0];
+
+                    if (nameEl && nameEl.textContent && layer.getAttribute('queryable') === '1') {
+                      const hasChildLayers = layer.getElementsByTagName("Layer").length > 0;
+                      
+                      if (!hasChildLayers) {
+                        layers.push({
+                          name: nameEl.textContent,
+                          title: titleEl ? titleEl.textContent : nameEl.textContent,
+                          queryable: true
+                        });
+                      }
+                    }
+                  }
+                } else {
+                  // Diğer WMS servisleri
+                  for (let i = 1; i < layerElements.length; i++) {
+                    const layer = layerElements[i];
+                    const nameEl = layer.getElementsByTagName("Name")[0];
+                    const titleEl = layer.getElementsByTagName("Title")[0];
+
+                    if (nameEl && nameEl.textContent) {
+                      layers.push({
+                        name: nameEl.textContent,
+                        title: titleEl ? titleEl.textContent : nameEl.textContent,
+                        queryable: layer.getAttribute('queryable') === '1'
+                      });
+                    }
+                  }
+                }
+
+                console.log('Bulunan WMS Layers:', layers);
+                return layers;
+              } catch (error) {
+                console.warn('WMS Layer bilgileri alınamadı:', error);
+                return [];
+              }
+            }
+
+            async addWMSLayer(url) {
+              console.log('🗺️ Adding WMS Layer:', url);
+              try {
+                // Get WMS layers info
+                const layers = await this.extractWMSLayersInfo(url);
+                
+                if (layers.length > 0) {
+                  // Store WMS layers globally
+                  const resourceId = this.resourceId;
+                  
+                  // TUCBS için rastgele bir layer seç
+                  const isTucbs = url.includes('tucbs') || url.includes('csb.gov.tr');
+                  const randomIndex = isTucbs ? Math.floor(Math.random() * layers.length) : 0;
+                  
+                  const paneName = this.createPaneForResource(resourceId, true);
+                  
+                  // Create WMS layers
+                  layers.forEach((layerInfo, index) => {
+                    const wmsLayer = L.tileLayer.wms(url, {
+                      layers: layerInfo.name,
+                      format: 'image/png',
+                      transparent: true,
+                      version: '1.3.0',
+                      crs: L.CRS.EPSG3857,
+                      uppercase: true,
+                      attribution: `WMS: ${layerInfo.title}`,
+                      pane: paneName,
+                      tileSize: 256,
+                      opacity: 1.0,
+                      ...(isTucbs ? {
+                        srs: 'EPSG:3857',
+                        bbox: '{bbox-epsg-3857}',
+                        width: 256,
+                        height: 256
+                      } : {})
+                    });
+
+                    // Store layer globally
+                    wmsLayers[`${resourceId}_${layerInfo.name}`] = wmsLayer;
+
+                    // Activate default layer
+                    const shouldActivate = isTucbs ? (index === randomIndex) : (index === 0);
+                    
+                    if (shouldActivate) {
+                      this.layer.addLayer(wmsLayer);
+                      wmsLayerStates[`${resourceId}_${index}`] = true;
+                      console.log(`Aktif edilen layer: ${layerInfo.title} (index: ${index})`);
+                    } else {
+                      wmsLayerStates[`${resourceId}_${index}`] = false;
+                    }
+
+                    wmsLayerStates[`${resourceId}_${index}_opacity`] = 100;
+
+                    // Error handler
+                    wmsLayer.on('tileerror', function (error) {
+                      console.error('WMS Tile Error:', error);
+                    });
+                  });
+
+                  // Show and update layer switcher
+                  this.renderLayerSwitcherContent(layers);
+                  
+                } else {
+                  // Fallback: Use default layer
+                  console.warn('WMS layer bilgisi alınamadı, varsayılan kullanılıyor');
+                  
+                  const paneName = this.createPaneForResource(this.resourceId, true);
+                  const wmsLayer = L.tileLayer.wms(url, {
+                    layers: 'layer',
+                    format: 'image/png',
+                    transparent: true,
+                    version: '1.3.0',
+                    crs: L.CRS.EPSG3857,
+                    uppercase: true,
+                    attribution: 'WMS Layer',
+                    pane: paneName,
+                    tileSize: 256,
+                    opacity: 0.8
+                  });
+
+                  wmsLayer.on('tileerror', function (error) {
+                    console.error('WMS Tile Error:', error);
+                  });
+
+                  this.layer.addLayer(wmsLayer);
+                }
+                
+                console.log('✓ WMS Layer added');
+              } catch (error) {
+                console.error('WMS Layer hatası:', error);
+                throw new Error('WMS Layer eklenemedi: ' + error.message);
+              }
+            }
+
+            renderLayerSwitcherContent(layers) {
+              const switcher = document.getElementById('layerSwitcher');
+              const content = document.getElementById('layerSwitcherContent');
+              
+              if (!switcher || !content) return;
+              
+              // Show layer switcher
+              switcher.style.display = 'block';
+              
+              let html = '<div class="wms-layer-info"><strong>WMS Katmanları</strong><div class="wms-layer-list">';
+              
+              layers.forEach((layer, index) => {
+                const layerId = `${this.resourceId}_${index}`;
+                const isChecked = wmsLayerStates[layerId] !== false;
+                const opacity = wmsLayerStates[layerId + '_opacity'] || 100;
+                
+                html += `
+                  <div class="layer-switcher-item">
+                    <input type="checkbox" 
+                           id="layer_${layerId}" 
+                           class="layer-switcher-checkbox"
+                           ${isChecked ? 'checked' : ''}
+                           onchange="toggleWMSLayer('${this.resourceId}', '${layer.name}', ${index})">
+                    <label for="layer_${layerId}" class="layer-switcher-label">
+                      ${layer.title || layer.name}
+                    </label>
+                  </div>
+                  <div class="layer-switcher-opacity">
+                    <span style="font-size: 11px;">📊</span>
+                    <input type="range" 
+                           class="opacity-slider" 
+                           min="0" max="100" 
+                           value="${opacity}"
+                           oninput="updateWMSOpacity('${this.resourceId}', '${layer.name}', this.value, ${index})">
+                    <span class="opacity-value">${opacity}%</span>
+                  </div>
+                `;
+              });
+              
+              html += '</div></div>';
+              content.innerHTML = html;
             }
 
             async processApiData(url) {
@@ -1082,7 +751,7 @@ display:none !important;
                 const response = await fetch(url);
                 const json = await response.json();
 
-                // API response'unu parse et (mekansal.html mantığı)
+                // Parse API response
                 let data = json;
                 if (typeof json === 'object' && !Array.isArray(json)) {
                   const keys = ['onemliyer', 'data', 'results', 'items', 'records', 'features'];
@@ -1097,7 +766,7 @@ display:none !important;
                 if (Array.isArray(data)) {
                   let count = 0;
                   data.forEach(item => {
-                    // Koordinat sütunlarını akıllıca tespit et
+                    // Smart coordinate detection
                     const lat = item.ENLEM || item.enlem || item.latitude || item.lat || item.Latitude;
                     const lon = item.BOYLAM || item.boylam || item.longitude || item.lon || item.lng || item.Longitude;
 
@@ -1110,7 +779,7 @@ display:none !important;
                         fillOpacity: 0.8
                       });
 
-                      // Popup içeriği oluştur
+                      // Create popup
                       let popupContent = '<div class="popup-content">';
                       Object.keys(item).forEach(key => {
                         if (!['ENLEM', 'BOYLAM', 'enlem', 'boylam', 'latitude', 'longitude', 'lat', 'lon'].includes(key)) {
@@ -1152,64 +821,97 @@ display:none !important;
                 return;
               }
 
-              const geoJsonLayer = L.geoJSON(geojson, {
-                style: {
-                  color: "#667eea",
-                  weight: 2,
-                  opacity: 0.8,
-                  fillOpacity: 0.3
-                },
-                pointToLayer: (feature, latlng) => {
-                  return L.circleMarker(latlng, {
-                    radius: 6,
-                    fillColor: "#667eea",
-                    color: "#fff",
-                    weight: 2,
-                    fillOpacity: 0.8
-                  });
-                },
-                onEachFeature: (feature, layer) => {
-                  if (feature.properties) {
-                    let popupContent = '<div class="popup-content">';
-                    Object.keys(feature.properties).forEach(key => {
-                      popupContent += `<strong>${key}:</strong> ${feature.properties[key]}<br>`;
-                    });
-                    popupContent += '</div>';
-                    layer.bindPopup(popupContent);
-                  }
+              // Create cluster group for points
+              const cluster = L.markerClusterGroup({
+                spiderfyOnEveryZoom: false,
+                spiderfyOnMaxZoom: true,
+                showCoverageOnHover: false,
+                disableClusteringAtZoom: 16,
+                maxClusterRadius: 50,
+                chunkedLoading: true,
+                chunkInterval: 50,
+                chunkDelay: 5,
+                animate: false
+              });
+
+              const pointFeatures = [];
+              const nonPointFeatures = [];
+
+              // Separate point and non-point features
+              geojson.features.forEach(feature => {
+                if (feature.geometry && feature.geometry.type === 'Point') {
+                  pointFeatures.push(feature);
+                } else {
+                  nonPointFeatures.push(feature);
                 }
               });
 
-              this.layer.addLayer(geoJsonLayer);
-              console.log(`✓ Added ${geojson.features.length} features`);
-            }
-
-            async addWMSLayer(url) {
-              console.log('🗺️ Adding WMS Layer:', url);
-              try {
-                const wmsLayer = L.tileLayer.wms(url, {
-                  layers: 'all',
-                  format: 'image/png',
-                  transparent: true,
-                  version: '1.1.0',
-                  attribution: 'WMS Layer'
+              // Add point features to cluster
+              pointFeatures.forEach(feature => {
+                const [lon, lat] = feature.geometry.coordinates;
+                const marker = L.circleMarker([lat, lon], {
+                  radius: 6,
+                  fillColor: "#667eea",
+                  color: "#fff",
+                  weight: 2,
+                  fillOpacity: 0.8
                 });
-                this.layer.addLayer(wmsLayer);
-                console.log('✓ WMS Layer added');
-              } catch (error) {
-                console.error('WMS Layer hatası:', error);
-                throw new Error('WMS Layer eklenemedi');
-              }
-            }
 
-            async addGeoTIFFLayer(url) {
-              console.log('🗺️ Adding GeoTIFF Layer:', url);
-              console.warn('GeoTIFF preview resource page üzerinde desteklenmiyor - Mekansal Gösterim sayfasını kullanın');
-              this.showError('GeoTIFF dosyaları için lütfen Mekansal Gösterim sayfasını kullanın');
+                // Add popup
+                if (feature.properties) {
+                  let popupContent = '<div class="popup-content">';
+                  Object.keys(feature.properties).forEach(key => {
+                    if (feature.properties[key] !== null && feature.properties[key] !== undefined) {
+                      popupContent += `<strong>${key}:</strong> ${feature.properties[key]}<br>`;
+                    }
+                  });
+                  popupContent += '</div>';
+                  marker.bindPopup(popupContent);
+                }
+
+                cluster.addLayer(marker);
+              });
+
+              // Add non-point features
+              if (nonPointFeatures.length > 0) {
+                const nonPointGeoJSON = {
+                  type: 'FeatureCollection',
+                  features: nonPointFeatures
+                };
+
+                const geoJsonLayer = L.geoJSON(nonPointGeoJSON, {
+                  style: {
+                    color: "#667eea",
+                    weight: 2,
+                    opacity: 0.8,
+                    fillOpacity: 0.3
+                  },
+                  onEachFeature: (feature, layer) => {
+                    if (feature.properties) {
+                      let popupContent = '<div class="popup-content">';
+                      Object.keys(feature.properties).forEach(key => {
+                        if (feature.properties[key] !== null && feature.properties[key] !== undefined) {
+                          popupContent += `<strong>${key}:</strong> ${feature.properties[key]}<br>`;
+                        }
+                      });
+                      popupContent += '</div>';
+                      layer.bindPopup(popupContent);
+                    }
+                  }
+                });
+
+                this.layer.addLayer(geoJsonLayer);
+              }
+
+              // Add cluster to layer if it has points
+              if (cluster.getLayers().length > 0) {
+                this.layer.addLayer(cluster);
+              }
+
+              console.log(`✓ Added ${geojson.features.length} features (${pointFeatures.length} points, ${nonPointFeatures.length} non-points)`);
             }
 
             fitMapToBounds() {
-              // Haritayı mevcut layer'lara göre fit et
               const layers = this.layer.getLayers();
 
               if (layers.length === 0) {
@@ -1218,36 +920,55 @@ display:none !important;
               }
 
               try {
-                // GeoJSON layer'lar için getBounds() çalışır
+                // Try to get bounds from layer group
                 const bounds = this.layer.getBounds();
                 if (bounds && bounds.isValid()) {
                   this.map.fitBounds(bounds, { padding: [50, 50] });
-                  console.log('✓ Map fitted to GeoJSON bounds');
+                  console.log('✓ Map fitted to bounds');
                   return;
                 }
               } catch (e) {
-                // getBounds() çalışmazsa (CircleMarker'lar için), manuel bounds hesapla
-                console.log('Calculating manual bounds for markers...');
+                console.log('Manual bounds calculation needed');
               }
 
-              // Manual bounds calculation (CircleMarker'lar için)
+              // Manual bounds calculation
               let minLat = Infinity, maxLat = -Infinity;
               let minLng = Infinity, maxLng = -Infinity;
+              let hasValidBounds = false;
 
-              layers.forEach(layer => {
-                if (layer.getLatLng) {
+              const processLayer = (layer) => {
+                if (layer.getBounds) {
+                  try {
+                    const bounds = layer.getBounds();
+                    minLat = Math.min(minLat, bounds.getSouth());
+                    maxLat = Math.max(maxLat, bounds.getNorth());
+                    minLng = Math.min(minLng, bounds.getWest());
+                    maxLng = Math.max(maxLng, bounds.getEast());
+                    hasValidBounds = true;
+                  } catch (e) {}
+                } else if (layer.getLatLng) {
                   const latlng = layer.getLatLng();
                   minLat = Math.min(minLat, latlng.lat);
                   maxLat = Math.max(maxLat, latlng.lat);
                   minLng = Math.min(minLng, latlng.lng);
                   maxLng = Math.max(maxLng, latlng.lng);
+                  hasValidBounds = true;
+                }
+              };
+
+              layers.forEach(layer => {
+                if (layer.eachLayer) {
+                  // Process nested layers (like clusters)
+                  layer.eachLayer(processLayer);
+                } else {
+                  processLayer(layer);
                 }
               });
 
-              if (minLat !== Infinity && maxLat !== -Infinity) {
+              if (hasValidBounds) {
                 const bounds = [[minLat, minLng], [maxLat, maxLng]];
                 this.map.fitBounds(bounds, { padding: [50, 50] });
-                console.log(`✓ Map fitted to ${layers.length} marker bounds`);
+                console.log('✓ Map fitted to calculated bounds');
               } else {
                 console.log('Could not calculate bounds, using default view');
               }
@@ -1268,11 +989,11 @@ display:none !important;
             }
           }
 
-          // Ana init kodu
+          // Main initialization
           (function() {
             const resourceId = '{{ res.id }}';
 
-            // Check if spatial - NO TABS, just show/hide containers
+            // Check if spatial
             fetch('/api/spatial-resources/list')
               .then(r => r.json())
               .then(data => {
@@ -1288,18 +1009,16 @@ display:none !important;
 
                     // Initialize map
                     setTimeout(() => {
-                      const map = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
-                      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                      window.spatialMap = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
                       console.log('✓ Map created');
 
-                      // Load data with advanced handler
-                      const handler = new ResourceSpatialHandler(resourceId, map);
+                      // Load data with enhanced handler
+                      const handler = new ResourceSpatialHandler(resourceId, window.spatialMap);
                       handler.loadData();
                     }, 100);
 
                   } else {
                     console.log('Standard resource - showing preview');
-                    // Keep standard preview visible
                   }
                 }
               })
@@ -1307,25 +1026,6 @@ display:none !important;
           })();
         </script>
 
-        <style>
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-
-          .basemap-button:hover {
-            opacity: 0.9;
-            transform: translateY(-1px);
-          }
-
-          .basemap-button.active {
-            background: #667eea !important;
-            color: white !important;
-            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
-          }
-        </style>
-
-        </div>
       {% endblock %}
       {% endblock %}
       {% endif %}
@@ -1338,7 +1038,6 @@ display:none !important;
   {% block resource_additional_information %}
     {% if res %}
       <section class="module">
-        {% block resource_additional_information_inner %}
         <div class="module-content">
           <h2>{{ _('Additional Information') }}</h2>
           <table class="table table-striped table-bordered table-condensed" data-module="table-toggle-more">
@@ -1350,18 +1049,6 @@ display:none !important;
             </thead>
             <tbody>
               <tr>
-                <th scope="row">{{ _('Data last updated') }}</th>
-                <td>{{ h.render_datetime(res.last_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Metadata last updated') }}</th>
-                <td>{{ h.render_datetime(res.metadata_modified) or h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Created') }}</th>
-                <td>{{ h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
                 <th scope="row">{{ _('Format') }}</th>
                 <td>{{ res.format or res.mimetype_inner or res.mimetype or _('unknown') }}</td>
               </tr>
@@ -1369,25 +1056,9 @@ display:none !important;
                 <th scope="row">{{ _('License') }}</th>
                 <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
               </tr>
-              {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-              <tr>
-                <th scope="row">{{ _('API Status') }}</th>
-                <td id="api-status-indicator">
-                  <span class="text-muted">
-                    <i class="fa fa-question-circle"></i> Test edilmedi
-                  </span>
-                </td>
-              </tr>
-              {% endif %}
-              {% for key, value in h.format_resource_items(res.items()) %}
-                {% if key not in ('created', 'metadata modified', 'last modified', 'format') %}
-                  <tr class="toggle-more"><th scope="row">{{ key | capitalize }}</th><td>{{ value }}</td></tr>
-                {% endif %}
-              {% endfor %}
             </tbody>
           </table>
         </div>
-        {% endblock %}
       </section>
     {% endif %}
   {% endblock %}
@@ -1397,104 +1068,4 @@ display:none !important;
   {% block resources_list %}
     {% snippet "package/snippets/resources.html", pkg=pkg, active=res.id, action='read', is_activity_archive=is_activity_archive %}
   {% endblock %}
-
-  {% block resource_license %}
-    {% snippet "snippets/social.html" %}
-  {% endblock %}
-
-  {% if res.resource_type == 'api' or res.format|lower == 'api' or '/api/' in res.url or 'api.' in res.url %}
-    <!-- API Documentation Sidebar -->
-    <section class="module">
-      <div class="module-content">
-        <h3><i class="fa fa-book"></i> API Bilgileri</h3>
-        
-        <div class="api-info">
-          <p><strong>Endpoint:</strong></p>
-          <code style="word-break: break-all;">{{ res.url }}</code>
-          
-          <div style="margin-top: 1rem;">
-            <p><strong>Test Özellikleri:</strong></p>
-            <ul class="text-muted" style="font-size: 0.875rem; line-height: 1.4;">
-              <li>Parametrik URL'leri destekler ({param} format)</li>
-              <li>Otomatik varsayılan değerler (id=1, hatId=35, vb.)</li>
-              <li>CORS durumu akıllı analiz</li>
-              <li>JSON response formatlanması</li>
-              <li>8 saniye timeout koruması</li>
-            </ul>
-          </div>
-
-          <div style="margin-top: 1rem;">
-            <p><strong>Test Mantığı:</strong></p>
-            <p class="text-muted small">
-              • Response alabilirse "API Çalışıyor"<br>
-              • CORS hatası alırsa "Muhtemelen çalışıyor"<br>
-              • Timeout olursa "API yanıt vermiyor"
-            </p>
-          </div>
-
-          {% if '{' in res.url and '}' in res.url %}
-          <div style="margin-top: 1rem;">
-            <p><strong>Parametrik API:</strong></p>
-            <p class="text-muted small">
-              Bu API parametrik bir URL içeriyor. Test etmeden önce gerekli parametreleri doldurun.
-            </p>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <!-- API Examples Sidebar -->
-    <section class="module">
-      <div class="module-content">
-        <h3><i class="fa fa-code"></i> Örnek Kullanım</h3>
-        
-        <div class="api-examples">
-          <h4>cURL Komutu:</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>curl -X GET "{{ res.url }}" \
-  -H "Accept: application/json" \
-  -H "User-Agent: CKAN-API-Tester/1.0"</code></pre>
-
-          <h4>JavaScript (Fetch):</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>fetch('{{ res.url }}', {
-  method: 'GET',
-  headers: {
-    'Accept': 'application/json',
-    'User-Agent': 'CKAN-API-Tester/1.0'
-  }
-})
-.then(response => response.json())
-.then(data => console.log(data))
-.catch(error => console.error('Hata:', error));</code></pre>
-
-          <h4>Python (Requests):</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code>import requests
-
-headers = {
-    'Accept': 'application/json',
-    'User-Agent': 'CKAN-API-Tester/1.0'
-}
-
-response = requests.get('{{ res.url }}', headers=headers)
-if response.status_code == 200:
-    data = response.json()
-    print(data)
-else:
-    print(f'Hata: {response.status_code}')</code></pre>
-
-          {% if '{' in res.url and '}' in res.url %}
-          <h4>Parametrik Kullanım:</h4>
-          <pre style="background: #f8f9fa; padding: 1rem; border-radius: 6px; font-size: 0.875rem; overflow-x: auto;"><code># Örnek parametreli URL:
-# {{ res.url }}
-
-# JavaScript ile parametre değiştirme:
-let apiUrl = '{{ res.url }}';
-apiUrl = apiUrl.replace('{hatId}', '35');
-apiUrl = apiUrl.replace('{yon}', '0');
-console.log(apiUrl); // Final URL</code></pre>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-  {% endif %}
 {% endblock %}

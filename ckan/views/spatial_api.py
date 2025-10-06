@@ -787,9 +787,8 @@ def process_spatial_files(url, format_type):
         
         return jsonify({
             'success': True,
-            'type': 'geojson',  # Frontend'de uniform handling için
+            'type': f'spatial_{format_type}',
             'data': geojson_data,
-            'source_format': format_type  # Debug için orijinal format
         })
         
     except Exception as e:

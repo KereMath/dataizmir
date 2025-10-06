@@ -421,11 +421,7 @@ def get_spatial_data(resource_id):
         # Yeni Hayvan İçme Suyu (HİS) Göletleri
         "413173de-3443-4abb-a194-611b102d201c": "https://dataizmir.izka.org.tr/dataset/09e585f5-00b4-4f47-8a03-6a841a242cff/resource/413173de-3443-4abb-a194-611b102d201c/download/hisgoleti-yeni.xlsx",
         # Otobüs Hat Güzergahlarının Konum Bilgileri
-        "211488": "https://openfiles.izmir.bel.tr/211488/docs/eshot-otobus-hat-guzergahlari.csv",
-
-        # SHP DOSYALARI
-        # Akarsular OSM
-        "10a1b182-c716-4385-83bd-fdbdbd47cdaf": "https://dataizmir.izka.org.tr/dataset/b47f9bff-9fe6-4125-b69f-637a61b52029/resource/10a1b182-c716-4385-83bd-fdbdbd47cdaf/download/akarsu.zip"
+        "211488": "https://openfiles.izmir.bel.tr/211488/docs/eshot-otobus-hat-guzergahlari.csv"
     }
 
     # 2. CORS sorunu olmayan ve FRONTEND'de işlenecek kaynakların ID'leri

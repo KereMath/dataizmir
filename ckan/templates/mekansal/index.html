@@ -1268,6 +1268,21 @@
         </div>
       </div>
 
+      <!-- Excluded Formats Info -->
+      <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border: 2px solid #ffc107; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="font-size: 20px;">ℹ️</div>
+          <div>
+            <div style="font-size: 12px; font-weight: 600; color: #856404; margin-bottom: 2px;">
+              Hariç Tutulan Formatlar
+            </div>
+            <div style="font-size: 11px; color: #856404; line-height: 1.4;">
+              SHP, WMS ve WFS formatındaki kaynaklar metaveri düzenleme için uygun değildir ve listeden hariç tutulmuştur.
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Resource Selection -->
       <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
         <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #495057;">
@@ -2652,8 +2667,12 @@ class SpatialResourceManager {
   async populateMetadataResourceList() {
     const select = document.getElementById('metadataResourceSelect');
 
-    // Get only spatial resources
-    const spatialResources = this.allResources.filter(r => this.spatialResourceIds.has(r.resource_id));
+    // Get only spatial resources, excluding SHP and WMS formats
+    const excludedFormats = ['shp', 'wms', 'wfs'];
+    const spatialResources = this.allResources.filter(r => {
+      const format = (r.format || '').toLowerCase();
+      return this.spatialResourceIds.has(r.resource_id) && !excludedFormats.includes(format);
+    });
 
     select.innerHTML = '<option value="">-- Bir mekansal kaynak seçin --</option>' +
       spatialResources.map(r => `<option value="${r.resource_id}">${r.resource_name || 'İsimsiz kaynak'}</option>`).join('');

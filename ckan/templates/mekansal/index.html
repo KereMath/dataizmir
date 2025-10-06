@@ -1803,6 +1803,8 @@ class SpatialResourceManager {
 
   async toggleHomepageMapResource(resourceId, isActive) {
     try {
+      console.log(`🔄 Toggle request: resourceId=${resourceId}, isActive=${isActive}`);
+
       const response = await fetch('/api/spatial-resources/homepage-map/toggle', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1813,7 +1815,11 @@ class SpatialResourceManager {
         })
       });
 
+      console.log(`📥 Toggle response status: ${response.status}`);
+
       const data = await response.json();
+      console.log(`📥 Toggle response data:`, data);
+
       if (!data.success) throw new Error(data.error || 'Toggle failed');
 
       // Update local state
@@ -1833,7 +1839,7 @@ class SpatialResourceManager {
         }
       }
 
-      console.log('✅ Homepage map resource toggled:', resourceId, isActive);
+      console.log(`✅ Homepage map resource toggled: ${resourceId}, isActive=${isActive}, total active=${this.homepageMapResources.size}`);
     } catch (error) {
       console.error('❌ Toggle homepage map error:', error);
       alert('Hata: ' + error.message);

@@ -17,6 +17,8 @@ import json
 from urllib.parse import urljoin, urlparse
 import subprocess
 import xml.etree.ElementTree as ET
+import numpy as np
+import math
 
 # SHP ve diğer formatlar için yeni kütüphaneler
 try:
@@ -29,6 +31,22 @@ except ImportError:
     SPATIAL_SUPPORT = False
 
 spatial_api = Blueprint('spatial_api', __name__)
+
+def convert_numpy_types(obj):
+    """NumPy tiplerini Python native tiplerine çevir (JSON serialization için)"""
+    if isinstance(obj, np.integer):
+        return int(obj)
+    elif isinstance(obj, np.floating):
+        if math.isnan(obj) or math.isinf(obj):
+            return None
+        return float(obj)
+    elif isinstance(obj, np.ndarray):
+        return obj.tolist()
+    elif isinstance(obj, dict):
+        return {k: convert_numpy_types(v) for k, v in obj.items()}
+    elif isinstance(obj, list):
+        return [convert_numpy_types(item) for item in obj]
+    return obj
 
 def get_absolute_url(base_url, resource_url):
     """Resource URL'ini mutlak URL'ye çevirir. URL zaten tam ise olduğu gibi döndürür."""
@@ -403,7 +421,11 @@ def get_spatial_data(resource_id):
         # Yeni Hayvan İçme Suyu (HİS) Göletleri
         "413173de-3443-4abb-a194-611b102d201c": "https://dataizmir.izka.org.tr/dataset/09e585f5-00b4-4f47-8a03-6a841a242cff/resource/413173de-3443-4abb-a194-611b102d201c/download/hisgoleti-yeni.xlsx",
         # Otobüs Hat Güzergahlarının Konum Bilgileri
-        "211488": "https://openfiles.izmir.bel.tr/211488/docs/eshot-otobus-hat-guzergahlari.csv"
+        "211488": "https://openfiles.izmir.bel.tr/211488/docs/eshot-otobus-hat-guzergahlari.csv",
+
+        # SHP DOSYALARI
+        # Akarsular OSM
+        "10a1b182-c716-4385-83bd-fdbdbd47cdaf": "https://dataizmir.izka.org.tr/dataset/b47f9bff-9fe6-4125-b69f-637a61b52029/resource/10a1b182-c716-4385-83bd-fdbdbd47cdaf/download/akarsu.zip"
     }
 
     # 2. CORS sorunu olmayan ve FRONTEND'de işlenecek kaynakların ID'leri
@@ -473,8 +495,13 @@ def get_spatial_data(resource_id):
             return jsonify({'success': True, 'type': 'geotiff', 'url': url})
         
         elif format_type in ['shp', 'zip']:
-            proxy_url = f"{site_url}/dataset/{result.package_name}/resource/{resource_id}/download"
-            return jsonify({'success': True, 'type': 'shp', 'url': proxy_url})
+            # SHP dosyalarını backend'de işleyip GeoJSON'a çevir
+            if SPATIAL_SUPPORT:
+                return process_spatial_files(url, 'shp')
+            else:
+                # Fallback: Frontend'e gerçek URL'i gönder (shp.js ile işlesin)
+                # URL zaten get_absolute_url ile mutlak hale getirilmiş durumda
+                return jsonify({'success': True, 'type': 'shp', 'url': url})
 
         elif format_type in ['csv', 'xls', 'xlsx']:
             return process_tabular_data(url, format_type, resource_id)
@@ -747,9 +774,11 @@ def process_spatial_files(url, format_type):
         print(f"File downloaded to: {temp_file_path}")
         
         geojson_data = None
-        
+
         if format_type in ['kml', 'gpx']:
             geojson_data = process_other_formats(temp_file_path, format_type)
+        elif format_type == 'shp':
+            geojson_data = process_shp_file(temp_file_path)
         else:
             return jsonify({
                 'error': f'Desteklenmeyen spatial format: {format_type}'
@@ -762,8 +791,9 @@ def process_spatial_files(url, format_type):
         
         return jsonify({
             'success': True,
-            'type': f'spatial_{format_type}',
+            'type': 'geojson',  # Frontend'de uniform handling için
             'data': geojson_data,
+            'source_format': format_type  # Debug için orijinal format
         })
         
     except Exception as e:
@@ -806,6 +836,77 @@ def process_other_formats(file_path, format_type):
         
     except Exception as e:
         print(f"{format_type.upper()} processing error: {str(e)}")
+        raise
+
+def process_shp_file(file_path):
+    """SHP/ZIP dosyasını işleyip GeoJSON'a çevir"""
+    try:
+        print(f"Processing SHP file: {file_path}")
+
+        # Eğer .zip ise, önce extract et
+        if file_path.endswith('.zip'):
+            temp_extract_dir = os.path.join(os.path.dirname(file_path), 'extracted')
+            os.makedirs(temp_extract_dir, exist_ok=True)
+
+            with zipfile.ZipFile(file_path, 'r') as zip_ref:
+                zip_ref.extractall(temp_extract_dir)
+
+            # Extract edilen dosyalar arasından .shp dosyasını bul
+            shp_file = None
+            for root, dirs, files in os.walk(temp_extract_dir):
+                for file in files:
+                    if file.endswith('.shp'):
+                        shp_file = os.path.join(root, file)
+                        break
+                if shp_file:
+                    break
+
+            if not shp_file:
+                raise Exception("ZIP içinde .shp dosyası bulunamadı")
+
+            file_path = shp_file
+            print(f"Found SHP file in ZIP: {file_path}")
+
+        # SHP dosyasını oku ve GeoJSON'a çevir
+        geojson_features = []
+        with fiona.open(file_path, 'r') as source:
+            print(f"SHP CRS: {source.crs}")
+            print(f"Feature count: {len(source)}")
+            print(f"Schema: {source.schema}")
+
+            for feature in source:
+                # Properties'deki None değerleri temizle
+                clean_props = {}
+                if feature['properties']:
+                    for key, value in feature['properties'].items():
+                        # None, NaN, inf değerlerini filtrele
+                        if value is not None:
+                            try:
+                                if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
+                                    clean_props[key] = None
+                                else:
+                                    clean_props[key] = value
+                            except (TypeError, ValueError):
+                                clean_props[key] = value
+
+                geojson_features.append({
+                    "type": "Feature",
+                    "geometry": feature['geometry'],
+                    "properties": clean_props
+                })
+
+        geojson_data = {
+            "type": "FeatureCollection",
+            "features": geojson_features
+        }
+
+        print(f"✓ Converted {len(geojson_features)} features from SHP to GeoJSON")
+        return geojson_data
+
+    except Exception as e:
+        print(f"SHP processing error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         raise
 
 def process_api_data(url, format_type, resource_id):
@@ -1170,7 +1271,9 @@ def generate_suggestions(df, lat_candidates, lon_candidates):
         suggestions.append("Boylam için aday sütun bulunamadı. 'lon', 'longitude', 'boylam', 'x' gibi isimler arıyoruz.")
     
     try:
-        sample_data = df.head(2).to_dict('records')
+        # NaN değerlerini temizle
+        clean_df = df.head(2).where(pd.notna(df.head(2)), None)
+        sample_data = clean_df.to_dict('records')
         suggestions.append(f"Örnek veri: {sample_data}")
     except:
         pass
@@ -1493,6 +1596,16 @@ def get_resource_metadata_fields(resource_id):
         url = get_absolute_url(site_url, result.url)
         format_type = (result.format or '').lower()
 
+        # Edge case: Fix known 404 URLs
+        url_fixes = {
+            'd5662ab6-60b4-4bc8-8f5c-3d840391e73e': 'https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/d5662ab6-60b4-4bc8-8f5c-3d840391e73e/download/egms_aepnd_v2022.0.xlsx',
+            '84dac4aa-a10d-4ed6-afad-915fc8585edb': 'https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/84dac4aa-a10d-4ed6-afad-915fc8585edb/download/egms_aepnd_v2023.0.csv'
+        }
+
+        if resource_id in url_fixes:
+            print(f"Using edge case URL fix for resource: {resource_id}")
+            url = url_fixes[resource_id]
+
         # Veri tipine göre örnek veriyi çek
         fields = []
         sample_data = None
@@ -1543,7 +1656,21 @@ def get_resource_metadata_fields(resource_id):
             df = df.where(pd.notna(df), None)
 
             fields = list(df.columns)
-            sample_data = df.iloc[0].to_dict() if len(df) > 0 else {}
+            # CSV/Excel için her column'u ayrı ayrı listelemek için
+            sample_data = {}
+            if len(df) > 0:
+                for col in df.columns:
+                    value = df.iloc[0][col]
+                    # NaN, None veya inf değerlerini kontrol et
+                    if pd.isna(value):
+                        sample_data[col] = None
+                    elif isinstance(value, (int, float)):
+                        if math.isinf(value) or math.isnan(value):
+                            sample_data[col] = None
+                        else:
+                            sample_data[col] = value
+                    else:
+                        sample_data[col] = value
 
         elif format_type in ['json', 'api', 'rest']:
             response = requests.get(url, timeout=30, verify=False)
@@ -1563,12 +1690,13 @@ def get_resource_metadata_fields(resource_id):
                     fields = list(first_item.keys())
                     sample_data = first_item
 
+        # Tüm format tiplerinde NumPy tiplerini Python native tiplerine çevir
         return jsonify({
             'success': True,
             'resource_id': resource_id,
             'format': format_type,
-            'fields': fields,
-            'sample_data': sample_data,
+            'fields': convert_numpy_types(fields),
+            'sample_data': convert_numpy_types(sample_data),
             'total_fields': len(fields)
         })
 
@@ -1589,7 +1717,7 @@ def get_metadata_mappings(resource_id):
     try:
         query = text("""
             SELECT field_mappings, hidden_fields, visibility_mode, visible_fields,
-                   created_by, created_date, updated_by, updated_date
+                   default_fields, created_by, created_date, updated_by, updated_date
             FROM spatial_metadata_mappings
             WHERE resource_id = :resource_id
         """)
@@ -1602,6 +1730,7 @@ def get_metadata_mappings(resource_id):
                 'success': True,
                 'resource_id': resource_id,
                 'field_mappings': {},
+                'default_fields': [],
                 'hidden_fields': [],
                 'visibility_mode': 'show_all',
                 'visible_fields': [],
@@ -1623,6 +1752,7 @@ def get_metadata_mappings(resource_id):
             'hidden_fields': result.hidden_fields or [],
             'visibility_mode': result.visibility_mode or 'show_all',
             'visible_fields': result.visible_fields or [],
+            'default_fields': result.default_fields or [],
             'created_by': result.created_by,
             'created_date': result.created_date.isoformat() if result.created_date else None,
             'updated_by': result.updated_by,
@@ -1650,6 +1780,7 @@ def save_metadata_mappings(resource_id):
     hidden_fields = data.get('hidden_fields', [])
     visibility_mode = data.get('visibility_mode', 'show_all')
     visible_fields = data.get('visible_fields', [])
+    default_fields = data.get('default_fields', [])
 
     try:
         # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
@@ -1676,34 +1807,54 @@ def save_metadata_mappings(resource_id):
         ).fetchone()
 
         if existing:
-            # Güncelle
-            model.Session.execute(
-                text("""
-                    UPDATE spatial_metadata_mappings
-                    SET field_mappings = :field_mappings,
-                        hidden_fields = :hidden_fields,
-                        visibility_mode = :visibility_mode,
-                        visible_fields = :visible_fields,
-                        updated_by = :updated_by,
-                        updated_date = CURRENT_TIMESTAMP
-                    WHERE resource_id = :resource_id
-                """),
-                {
-                    'resource_id': resource_id,
-                    'field_mappings': json.dumps(field_mappings),
-                    'hidden_fields': hidden_fields,
-                    'visibility_mode': visibility_mode,
-                    'visible_fields': visible_fields,
-                    'updated_by': user.name
-                }
-            )
+            # Güncelle (default_fields güncelleme yapılırsa güncelle, yoksa dokunma)
+            update_params = {
+                'resource_id': resource_id,
+                'field_mappings': json.dumps(field_mappings),
+                'hidden_fields': hidden_fields,
+                'visibility_mode': visibility_mode,
+                'visible_fields': visible_fields,
+                'updated_by': user.name
+            }
+
+            # Eğer default_fields gönderildiyse güncelle
+            if default_fields:
+                update_params['default_fields'] = default_fields
+                model.Session.execute(
+                    text("""
+                        UPDATE spatial_metadata_mappings
+                        SET field_mappings = :field_mappings,
+                            hidden_fields = :hidden_fields,
+                            visibility_mode = :visibility_mode,
+                            visible_fields = :visible_fields,
+                            default_fields = :default_fields,
+                            updated_by = :updated_by,
+                            updated_date = CURRENT_TIMESTAMP
+                        WHERE resource_id = :resource_id
+                    """),
+                    update_params
+                )
+            else:
+                model.Session.execute(
+                    text("""
+                        UPDATE spatial_metadata_mappings
+                        SET field_mappings = :field_mappings,
+                            hidden_fields = :hidden_fields,
+                            visibility_mode = :visibility_mode,
+                            visible_fields = :visible_fields,
+                            updated_by = :updated_by,
+                            updated_date = CURRENT_TIMESTAMP
+                        WHERE resource_id = :resource_id
+                    """),
+                    update_params
+                )
         else:
             # Oluştur
             model.Session.execute(
                 text("""
                     INSERT INTO spatial_metadata_mappings
-                    (resource_id, field_mappings, hidden_fields, visibility_mode, visible_fields, created_by, updated_by)
-                    VALUES (:resource_id, :field_mappings, :hidden_fields, :visibility_mode, :visible_fields, :created_by, :updated_by)
+                    (resource_id, field_mappings, hidden_fields, visibility_mode, visible_fields, default_fields, created_by, updated_by)
+                    VALUES (:resource_id, :field_mappings, :hidden_fields, :visibility_mode, :visible_fields, :default_fields, :created_by, :updated_by)
                 """),
                 {
                     'resource_id': resource_id,
@@ -1711,6 +1862,7 @@ def save_metadata_mappings(resource_id):
                     'hidden_fields': hidden_fields,
                     'visibility_mode': visibility_mode,
                     'visible_fields': visible_fields,
+                    'default_fields': default_fields,
                     'created_by': user.name,
                     'updated_by': user.name
                 }

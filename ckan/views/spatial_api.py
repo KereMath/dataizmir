@@ -514,10 +514,27 @@ def get_resource_columns(resource_id):
         if format_type == 'csv':
             response = requests.get(url, timeout=30, verify=False)
             response.raise_for_status()
-            try:
-                df = pd.read_csv(io.StringIO(response.text), nrows=5, encoding='utf-8')
-            except UnicodeDecodeError:
-                df = pd.read_csv(io.StringIO(response.text), nrows=5, encoding='latin-1')
+
+            # Delimiter auto-detection (öncelik noktalı virgülde)
+            df = None
+            delimiters = [';', ',', '\t', '|']
+            encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1254']
+
+            for delimiter in delimiters:
+                for encoding in encodings:
+                    try:
+                        df = pd.read_csv(io.StringIO(response.text), delimiter=delimiter, encoding=encoding, nrows=5)
+                        if len(df.columns) > 1:
+                            print(f"Column detection CSV parsed: delimiter='{delimiter}', encoding='{encoding}', columns={len(df.columns)}")
+                            break
+                    except:
+                        continue
+                if df is not None and len(df.columns) > 1:
+                    break
+
+            if df is None or len(df.columns) <= 1:
+                # Fallback to default
+                df = pd.read_csv(io.StringIO(response.text), nrows=5)
         elif format_type in ['xls', 'xlsx']:
             response = requests.get(url, timeout=30, verify=False)
             response.raise_for_status()
@@ -1490,10 +1507,27 @@ def get_resource_metadata_fields(resource_id):
             if format_type == 'csv':
                 response = requests.get(url, timeout=30, verify=False)
                 response.raise_for_status()
-                try:
-                    df = pd.read_csv(io.StringIO(response.text), nrows=5, encoding='utf-8')
-                except UnicodeDecodeError:
-                    df = pd.read_csv(io.StringIO(response.text), nrows=5, encoding='latin-1')
+
+                # Delimiter auto-detection (öncelik noktalı virgülde)
+                df = None
+                delimiters = [';', ',', '\t', '|']
+                encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1254']
+
+                for delimiter in delimiters:
+                    for encoding in encodings:
+                        try:
+                            df = pd.read_csv(io.StringIO(response.text), delimiter=delimiter, encoding=encoding, nrows=5)
+                            if len(df.columns) > 1:
+                                print(f"Metadata fields CSV parsed: delimiter='{delimiter}', encoding='{encoding}', columns={len(df.columns)}")
+                                break
+                        except:
+                            continue
+                    if df is not None and len(df.columns) > 1:
+                        break
+
+                if df is None or len(df.columns) <= 1:
+                    # Fallback to default
+                    df = pd.read_csv(io.StringIO(response.text), nrows=5)
             else:
                 response = requests.get(url, timeout=30, verify=False)
                 response.raise_for_status()

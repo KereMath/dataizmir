@@ -44,6 +44,13 @@ BEGIN
     ELSE
         RAISE NOTICE 'Column show_on_homepage already exists in spatial_resources table';
     END IF;
+
+    -- Mevcut NULL değerleri FALSE yap
+    UPDATE spatial_resources
+    SET show_on_homepage = FALSE
+    WHERE show_on_homepage IS NULL;
+
+    RAISE NOTICE 'Updated NULL values to FALSE';
 END $$;
 """
 

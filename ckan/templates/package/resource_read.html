@@ -1021,279 +1021,84 @@ display:none !important;
 
           {# Spatial View Tab #}
           <div class="tab-pane" id="spatial-mode">
-            <div id="spatial-map-view" style="position: relative; height: 650px; background: white; border-radius: 12px; overflow: hidden;">
-              <div id="spatial-map-loading" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; background: rgba(255,255,255,0.95); z-index: 1000;">
-                <div class="spinner-border" style="width: 3rem; height: 3rem; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
-                <p style="margin-top: 1rem; color: #6c757d;">{{ _('Loading spatial data...') }}</p>
-              </div>
-            </div>
+            <div id="leaflet-map" style="width: 100%; height: 650px;"></div>
           </div>
         </div>
 
         <script>
-          console.log('=== SIMPLE SPATIAL VIEW FOR RESOURCE ===');
+          console.log('=== BASIT HARITA TEST ===');
 
           (function() {
             const resourceId = '{{ res.id }}';
-            let spatialMap = null;
-            let spatialDataLoaded = false;
-            let baseMaps = null;
-            let currentBaseMap = 'sokak';
+            let map = null;
 
-            // Check if resource is spatial
+            // Check if spatial
             fetch('/api/spatial-resources/list')
               .then(r => r.json())
               .then(data => {
                 if (data.success && data.spatial_resources) {
                   const isSpatial = data.spatial_resources.some(r => r.resource_id === resourceId);
-
                   if (isSpatial) {
                     document.getElementById('spatial-mode-tab').style.display = 'block';
-                    console.log('✓ Spatial resource detected');
+                    console.log('✓ Spatial detected');
                   }
                 }
-              })
-              .catch(e => console.error('Spatial check error:', e));
+              });
 
-            // Initialize basemaps
-            function initBaseMaps() {
-              baseMaps = {
-                sokak: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                  maxZoom: 19,
-                  attribution: '© OpenStreetMap'
-                }),
-                uydu: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                  maxZoom: 17,
-                  attribution: '© Esri'
-                }),
-                arazi: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                  maxZoom: 17,
-                  attribution: '© OpenTopoMap'
-                }),
-                sade: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-                  maxZoom: 19,
-                  attribution: '© CartoDB'
-                })
-              };
-            }
+            // Tab click
+            const tabLink = document.querySelector('a[href="#spatial-mode"]');
+            if (tabLink) {
+              tabLink.addEventListener('click', function() {
+                console.log('Tab clicked');
+                setTimeout(() => {
+                  if (!map) {
+                    console.log('Creating map...');
+                    map = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                    console.log('✓ Map created');
 
-            function switchBasemap(basemap) {
-              if (!spatialMap || !baseMaps || basemap === currentBaseMap) return;
+                    setTimeout(() => map.invalidateSize(), 100);
 
-              spatialMap.removeLayer(baseMaps[currentBaseMap]);
-              baseMaps[basemap].addTo(spatialMap);
-              currentBaseMap = basemap;
-
-              document.querySelectorAll('.basemap-button').forEach(btn => {
-                btn.classList.toggle('active', btn.dataset.basemap === basemap);
+                    // Load data
+                    loadData();
+                  } else {
+                    map.invalidateSize();
+                  }
+                }, 150);
               });
             }
 
-            // Spatial tab click handler
-            const spatialTabLink = document.querySelector('a[href="#spatial-mode"]');
-            if (spatialTabLink) {
-              spatialTabLink.addEventListener('click', function(e) {
-                console.log('Spatial tab clicked');
-
-                setTimeout(() => {
-                  if (spatialDataLoaded) {
-                    if (spatialMap) spatialMap.invalidateSize();
-                    return;
-                  }
-
-                  spatialDataLoaded = true;
-                  loadSpatialData();
-                }, 100);
-              });
-            }
-
-            async function loadSpatialData() {
+            async function loadData() {
               try {
-                const response = await fetch(`/api/spatial-resources/${resourceId}/data`);
-                const result = await response.json();
+                const r = await fetch(`/api/spatial-resources/${resourceId}/data`);
+                const result = await r.json();
+                console.log('Data loaded:', result.type);
 
-                document.getElementById('spatial-map-loading').style.display = 'none';
+                if (result.type === 'api' && result.url) {
+                  const apiRes = await fetch(result.url);
+                  const json = await apiRes.json();
+                  const data = json.onemliyer || json.data || json;
 
-                if (!result.success) {
-                  throw new Error(result.error || 'Failed to load');
-                }
+                  if (Array.isArray(data)) {
+                    const features = data.map(item => ({
+                      type: 'Feature',
+                      geometry: { type: 'Point', coordinates: [item.BOYLAM, item.ENLEM] },
+                      properties: item
+                    }));
 
-                // Create map container
-                document.getElementById('spatial-map-view').innerHTML = `
-                  <div style="position:relative; width:100%; height:650px;">
-                    <div style="position:absolute; top:10px; right:10px; z-index:1000; background:white; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,0.15); display:flex; gap:5px; padding:5px;">
-                      <button class="basemap-button active" data-basemap="sokak" style="padding:8px 12px; border:none; background:#667eea; color:white; border-radius:5px; cursor:pointer; font-size:13px;">🗺️ Sokak</button>
-                      <button class="basemap-button" data-basemap="uydu" style="padding:8px 12px; border:none; background:#e5e7eb; color:#374151; border-radius:5px; cursor:pointer; font-size:13px;">🛰️ Uydu</button>
-                      <button class="basemap-button" data-basemap="arazi" style="padding:8px 12px; border:none; background:#e5e7eb; color:#374151; border-radius:5px; cursor:pointer; font-size:13px;">⛰️ Arazi</button>
-                      <button class="basemap-button" data-basemap="sade" style="padding:8px 12px; border:none; background:#e5e7eb; color:#374151; border-radius:5px; cursor:pointer; font-size:13px;">📍 Sade</button>
-                    </div>
-                    <div id="leaflet-map" style="width:100%; height:100%; border-radius:8px;"></div>
-                  </div>
-                `;
+                    const layer = L.geoJSON({ type: 'FeatureCollection', features }, {
+                      pointToLayer: (f, ll) => L.circleMarker(ll, { radius: 6, fillColor: "#667eea", color: "#fff", weight: 2, fillOpacity: 0.8 })
+                    }).addTo(map);
 
-                // Initialize map
-                initBaseMaps();
-                spatialMap = L.map('leaflet-map', {
-                  center: [38.4237, 27.1428],
-                  zoom: 10,
-                  zoomControl: true,
-                  scrollWheelZoom: true,
-                  preferCanvas: true
-                });
-
-                baseMaps[currentBaseMap].addTo(spatialMap);
-
-                // Basemap buttons
-                document.querySelectorAll('.basemap-button').forEach(btn => {
-                  btn.addEventListener('click', (e) => {
-                    const basemap = e.target.dataset.basemap;
-                    switchBasemap(basemap);
-                  });
-                });
-
-                setTimeout(() => {
-                  if (spatialMap) spatialMap.invalidateSize();
-                }, 250);
-
-                // Process data
-                console.log('Data type:', result.type);
-
-                if (result.type === 'geojson' && result.data) {
-                  addGeoJSONToMap(result.data);
-                } else if (result.type === 'api' && result.url) {
-                  await processApiData(result.url);
-                } else if (result.type === 'shp' && result.url) {
-                  await processShpData(result.url);
-                } else {
-                  console.log('Unsupported type:', result.type);
-                }
-
-              } catch (error) {
-                console.error('Load error:', error);
-                document.getElementById('spatial-map-view').innerHTML =
-                  `<div style="text-align:center; padding:3rem; color:#dc2626;"><i class="fa fa-times-circle fa-3x"></i><br><strong>Error:</strong> ${error.message}</div>`;
-              }
-            }
-
-            async function processApiData(apiUrl) {
-              try {
-                const res = await fetch(apiUrl);
-                const json = await res.json();
-
-                // Find data array
-                let dataArray = json;
-                if (!Array.isArray(json)) {
-                  const keys = ['data', 'results', 'items', 'onemliyer', 'records'];
-                  for (const k of keys) {
-                    if (json[k] && Array.isArray(json[k])) {
-                      dataArray = json[k];
-                      break;
-                    }
+                    map.fitBounds(layer.getBounds());
+                    console.log('✓ Added', features.length, 'markers');
                   }
+                } else if (result.type === 'geojson' && result.data) {
+                  L.geoJSON(result.data).addTo(map);
+                  console.log('✓ GeoJSON added');
                 }
-
-                if (!Array.isArray(dataArray) || dataArray.length === 0) {
-                  throw new Error('No data array found');
-                }
-
-                // Detect coordinates
-                const firstItem = dataArray[0];
-                const columns = Object.keys(firstItem);
-
-                const latPatterns = ['lat', 'latitude', 'enlem', 'y'];
-                const lonPatterns = ['lon', 'lng', 'longitude', 'boylam', 'x'];
-
-                let latCol = null;
-                let lonCol = null;
-
-                for (const col of columns) {
-                  const lower = col.toLowerCase();
-                  if (!latCol && latPatterns.some(p => lower.includes(p))) latCol = col;
-                  if (!lonCol && lonPatterns.some(p => lower.includes(p))) lonCol = col;
-                }
-
-                if (!latCol || !lonCol) {
-                  throw new Error('Coordinate columns not found');
-                }
-
-                console.log('Found columns:', latCol, lonCol);
-
-                // Convert to GeoJSON
-                const features = [];
-                for (const row of dataArray) {
-                  const lat = parseFloat(row[latCol]);
-                  const lon = parseFloat(row[lonCol]);
-
-                  if (isNaN(lat) || isNaN(lon)) continue;
-                  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
-
-                  features.push({
-                    type: 'Feature',
-                    geometry: { type: 'Point', coordinates: [lon, lat] },
-                    properties: row
-                  });
-                }
-
-                console.log('Created features:', features.length);
-
-                const geojson = { type: 'FeatureCollection', features };
-                addGeoJSONToMap(geojson);
-
-              } catch (error) {
-                console.error('API processing error:', error);
-                throw error;
-              }
-            }
-
-            async function processShpData(shpUrl) {
-              if (typeof shp === 'undefined') {
-                throw new Error('SHP.js not loaded');
-              }
-
-              try {
-                const geojson = await shp(shpUrl);
-                addGeoJSONToMap(geojson);
-              } catch (error) {
-                console.error('SHP processing error:', error);
-                throw error;
-              }
-            }
-
-            function addGeoJSONToMap(geojsonData) {
-              const layer = L.geoJSON(geojsonData, {
-                onEachFeature: (feature, layer) => {
-                  if (feature.properties) {
-                    let popup = '<div style="max-width:280px; font-size:12px; line-height:1.4;">';
-                    popup += '<div style="background:#667eea; color:white; padding:8px; margin:-8px -12px 8px -12px; border-radius:4px 4px 0 0; font-weight:600;">Feature Info</div>';
-                    for (const [k, v] of Object.entries(feature.properties)) {
-                      if (v != null && v !== '') {
-                        popup += `<div style="padding:4px 0; border-bottom:1px solid #f0f0f0;"><strong style="color:#667eea;">${k}:</strong> ${v}</div>`;
-                      }
-                    }
-                    popup += '</div>';
-                    layer.bindPopup(popup);
-                  }
-                },
-                pointToLayer: (feature, latlng) =>
-                  L.circleMarker(latlng, {
-                    radius: 8,
-                    fillColor: "#667eea",
-                    color: "#fff",
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.8
-                  }),
-                style: (feature) => ({
-                  color: "#667eea",
-                  weight: 3,
-                  opacity: 0.7,
-                  fillOpacity: 0.4
-                })
-              }).addTo(spatialMap);
-
-              if (layer.getBounds && layer.getBounds().isValid()) {
-                spatialMap.fitBounds(layer.getBounds(), {padding: [30, 30]});
-                console.log('✓ Map bounds set');
+              } catch (e) {
+                console.error('Load error:', e);
               }
             }
           })();

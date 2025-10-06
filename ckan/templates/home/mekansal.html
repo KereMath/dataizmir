@@ -1704,7 +1704,7 @@
 
       // Organization filter
       const orgSelect = document.getElementById('organizationFilter');
-      orgSelect.innerHTML = '<option value="">Tüm Organizasyonlar</option>';
+      orgSelect.innerHTML = '<option value="">Tüm Veri Paydaşları</option>';
       [...organizations].filter(o => o).sort().forEach(org => {
         const option = document.createElement('option');
         option.value = org;

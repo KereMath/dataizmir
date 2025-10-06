@@ -1113,6 +1113,113 @@ display:none !important;
               });
             }
 
+            // API to GeoJSON converter (from mekansal.html)
+            function convertApiToGeoJSON(apiData) {
+              console.log('Converting API data to GeoJSON...');
+
+              // Extract array from API response
+              let dataArray = apiData;
+              if (typeof apiData === 'object' && !Array.isArray(apiData)) {
+                // Try common keys
+                const keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features'];
+                for (const key of keys) {
+                  if (apiData[key] && Array.isArray(apiData[key])) {
+                    dataArray = apiData[key];
+                    console.log(`Found data array in key: ${key}`);
+                    break;
+                  }
+                }
+              }
+
+              if (!Array.isArray(dataArray) || dataArray.length === 0) {
+                throw new Error('API yanıtı uygun formatta değil veya boş');
+              }
+
+              console.log(`Processing ${dataArray.length} records from API`);
+
+              // Detect coordinate columns
+              const firstItem = dataArray[0];
+              const coordColumns = detectCoordinateColumns(firstItem);
+
+              if (!coordColumns) {
+                throw new Error('Koordinat sütunları tespit edilemedi');
+              }
+
+              console.log('Detected columns:', coordColumns);
+
+              // Convert to GeoJSON
+              const features = [];
+              for (const item of dataArray) {
+                try {
+                  const lat = parseFloat(item[coordColumns.lat]);
+                  const lon = parseFloat(item[coordColumns.lon]);
+
+                  if (isNaN(lat) || isNaN(lon)) continue;
+                  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
+
+                  const properties = {};
+                  for (const [key, value] of Object.entries(item)) {
+                    if (key !== coordColumns.lat && key !== coordColumns.lon && value != null) {
+                      properties[key] = value;
+                    }
+                  }
+
+                  features.push({
+                    type: 'Feature',
+                    geometry: {
+                      type: 'Point',
+                      coordinates: [lon, lat]
+                    },
+                    properties: properties
+                  });
+                } catch (err) {
+                  console.warn('Skipping invalid record:', err);
+                }
+              }
+
+              console.log(`Created ${features.length} features`);
+
+              return {
+                type: 'FeatureCollection',
+                features: features
+              };
+            }
+
+            function detectCoordinateColumns(obj) {
+              const keys = Object.keys(obj).map(k => k.toLowerCase());
+
+              // Latitude patterns
+              const latPatterns = ['lat', 'latitude', 'enlem', 'y', 'kuzey'];
+              const lonPatterns = ['lon', 'lng', 'longitude', 'boylam', 'x', 'dogu', 'boyl'];
+
+              let latKey = null;
+              let lonKey = null;
+
+              // Find lat
+              for (const pattern of latPatterns) {
+                const found = Object.keys(obj).find(k => k.toLowerCase().includes(pattern));
+                if (found) {
+                  latKey = found;
+                  break;
+                }
+              }
+
+              // Find lon
+              for (const pattern of lonPatterns) {
+                const found = Object.keys(obj).find(k => k.toLowerCase().includes(pattern));
+                if (found) {
+                  lonKey = found;
+                  break;
+                }
+              }
+
+              if (latKey && lonKey) {
+                return { lat: latKey, lon: lonKey };
+              }
+
+              return null;
+            }
+
             // Load spatial view when tab is activated
             const spatialTabLink = document.querySelector('a[href="#spatial-mode"]');
             if (spatialTabLink) {
@@ -1281,13 +1388,63 @@ display:none !important;
                     }).addTo(spatialMap);
                   } else if (result.type === 'api' && result.url) {
                     console.log('API endpoint detected, fetching data from frontend:', result.url);
+
+                    // API verisini fetch et ve GeoJSON'a dönüştür
                     fetch(result.url)
                       .then(r => r.json())
                       .then(apiData => {
                         console.log('API data loaded:', apiData);
-                        // Try to convert API response to GeoJSON
-                        // This needs custom handling based on API structure
-                        alert('API verisi yüklendi. Haritaya dönüştürme işlemi yapılıyor...');
+
+                        // API response'unu GeoJSON'a dönüştür (mekansal.html mantığı)
+                        try {
+                          const geojson = convertApiToGeoJSON(apiData);
+                          console.log('Converted to GeoJSON, features:', geojson.features?.length);
+
+                          if (geojson.features && geojson.features.length > 0) {
+                            // GeoJSON'u haritaya ekle
+                            const layer = L.geoJSON(geojson, {
+                              onEachFeature: (feature, layer) => {
+                                if (feature.properties) {
+                                  let popup = '<div style="max-width:280px; font-size:12px; line-height:1.4;">';
+                                  popup += '<div style="background:#667eea; color:white; padding:8px; margin:-8px -12px 8px -12px; border-radius:4px 4px 0 0; font-weight:600;">API Verisi</div>';
+                                  for (const [k, v] of Object.entries(feature.properties)) {
+                                    if (v != null && v !== '') {
+                                      popup += `<div style="padding:4px 0; border-bottom:1px solid #f0f0f0;"><strong style="color:#667eea;">${k}:</strong> ${v}</div>`;
+                                    }
+                                  }
+                                  popup += '</div>';
+                                  layer.bindPopup(popup);
+                                }
+                              },
+                              pointToLayer: (feature, latlng) =>
+                                L.circleMarker(latlng, {
+                                  radius: 8,
+                                  fillColor: "#667eea",
+                                  color: "#fff",
+                                  weight: 2,
+                                  opacity: 1,
+                                  fillOpacity: 0.8
+                                }),
+                              style: (feature) => ({
+                                color: "#667eea",
+                                weight: 3,
+                                opacity: 0.7,
+                                fillOpacity: 0.4
+                              })
+                            }).addTo(spatialMap);
+
+                            if (layer.getBounds && layer.getBounds().isValid()) {
+                              spatialMap.fitBounds(layer.getBounds(), {padding: [30, 30]});
+                              console.log('✓ Map bounds set to API data');
+                            }
+                          } else {
+                            console.error('No features found in converted GeoJSON');
+                            alert('API verisinden koordinat çıkarılamadı');
+                          }
+                        } catch (err) {
+                          console.error('API to GeoJSON conversion error:', err);
+                          alert('API verisi haritaya dönüştürülemedi: ' + err.message);
+                        }
                       })
                       .catch(err => {
                         console.error('API fetch error:', err);

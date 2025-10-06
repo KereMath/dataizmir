@@ -1009,8 +1009,221 @@ display:none !important;
         </div>
 
         <script>
-          console.log('=== RESOURCE PAGE LOADED ===');
+          console.log('=== RESOURCE PAGE LOADED (Enhanced) ===');
 
+          // Gelişmiş Spatial Data Handler (mekansal.html + spatial_api.py mantığı)
+          class ResourceSpatialHandler {
+            constructor(resourceId, map) {
+              this.resourceId = resourceId;
+              this.map = map;
+              this.layer = L.layerGroup().addTo(map);
+            }
+
+            async loadData() {
+              try {
+                const apiUrl = `/api/spatial-resources/${this.resourceId}/data`;
+                const response = await fetch(apiUrl, { credentials: 'include' });
+
+                if (!response.ok) {
+                  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('✓ API Result:', result);
+
+                if (!result.success) {
+                  throw new Error(result.error || 'Bilinmeyen API hatası');
+                }
+
+                // Result type'a göre işle
+                if (result.type === 'shp') {
+                  await this.processShpData(result.url);
+                } else if (result.type === 'api') {
+                  await this.processApiData(result.url);
+                } else if (result.type === 'geojson_url') {
+                  await this.processGeoJsonUrl(result.url);
+                } else if (result.type === 'geojson' && result.data) {
+                  this.addGeoJSON(result.data);
+                } else if (result.type === 'tabular' && result.data) {
+                  this.addGeoJSON(result.data);
+                } else if (result.type === 'wms') {
+                  await this.addWMSLayer(result.url);
+                } else if (result.type === 'geotiff') {
+                  await this.addGeoTIFFLayer(result.url);
+                } else {
+                  console.warn('Desteklenmeyen format:', result.type);
+                }
+
+                // Haritayı layer'a fit et
+                if (this.layer.getLayers().length > 0) {
+                  this.map.fitBounds(this.layer.getBounds(), { padding: [50, 50] });
+                }
+
+              } catch (error) {
+                console.error('❌ Data load hatası:', error);
+                this.showError(error.message);
+              }
+            }
+
+            async processShpData(url) {
+              console.log('🗂️ Processing SHP:', url);
+              try {
+                const geojson = await shp(url);
+                this.addGeoJSON(geojson);
+              } catch (error) {
+                console.error('SHP parse hatası:', error);
+                throw new Error('SHP dosyası işlenemedi');
+              }
+            }
+
+            async processApiData(url) {
+              console.log('🔗 Processing API:', url);
+              try {
+                const response = await fetch(url);
+                const json = await response.json();
+
+                // API response'unu parse et (mekansal.html mantığı)
+                let data = json;
+                if (typeof json === 'object' && !Array.isArray(json)) {
+                  const keys = ['onemliyer', 'data', 'results', 'items', 'records', 'features'];
+                  for (const key of keys) {
+                    if (json[key] && Array.isArray(json[key])) {
+                      data = json[key];
+                      break;
+                    }
+                  }
+                }
+
+                if (Array.isArray(data)) {
+                  let count = 0;
+                  data.forEach(item => {
+                    // Koordinat sütunlarını akıllıca tespit et
+                    const lat = item.ENLEM || item.enlem || item.latitude || item.lat || item.Latitude;
+                    const lon = item.BOYLAM || item.boylam || item.longitude || item.lon || item.lng || item.Longitude;
+
+                    if (lat && lon) {
+                      const marker = L.circleMarker([lat, lon], {
+                        radius: 6,
+                        fillColor: "#667eea",
+                        color: "#fff",
+                        weight: 2,
+                        fillOpacity: 0.8
+                      });
+
+                      // Popup içeriği oluştur
+                      let popupContent = '<div class="popup-content">';
+                      Object.keys(item).forEach(key => {
+                        if (!['ENLEM', 'BOYLAM', 'enlem', 'boylam', 'latitude', 'longitude', 'lat', 'lon'].includes(key)) {
+                          popupContent += `<strong>${key}:</strong> ${item[key]}<br>`;
+                        }
+                      });
+                      popupContent += '</div>';
+
+                      marker.bindPopup(popupContent);
+                      this.layer.addLayer(marker);
+                      count++;
+                    }
+                  });
+                  console.log(`✓ Added ${count} markers from API`);
+                }
+              } catch (error) {
+                console.error('API parse hatası:', error);
+                throw new Error('API verisi işlenemedi');
+              }
+            }
+
+            async processGeoJsonUrl(url) {
+              console.log('🗺️ Processing GeoJSON URL:', url);
+              try {
+                const response = await fetch(url);
+                const geojson = await response.json();
+                this.addGeoJSON(geojson);
+              } catch (error) {
+                console.error('GeoJSON URL parse hatası:', error);
+                throw new Error('GeoJSON yüklenemedi');
+              }
+            }
+
+            addGeoJSON(geojson) {
+              console.log('📍 Adding GeoJSON to map...');
+
+              if (!geojson || !geojson.features) {
+                console.warn('Geçersiz GeoJSON format');
+                return;
+              }
+
+              const geoJsonLayer = L.geoJSON(geojson, {
+                style: {
+                  color: "#667eea",
+                  weight: 2,
+                  opacity: 0.8,
+                  fillOpacity: 0.3
+                },
+                pointToLayer: (feature, latlng) => {
+                  return L.circleMarker(latlng, {
+                    radius: 6,
+                    fillColor: "#667eea",
+                    color: "#fff",
+                    weight: 2,
+                    fillOpacity: 0.8
+                  });
+                },
+                onEachFeature: (feature, layer) => {
+                  if (feature.properties) {
+                    let popupContent = '<div class="popup-content">';
+                    Object.keys(feature.properties).forEach(key => {
+                      popupContent += `<strong>${key}:</strong> ${feature.properties[key]}<br>`;
+                    });
+                    popupContent += '</div>';
+                    layer.bindPopup(popupContent);
+                  }
+                }
+              });
+
+              this.layer.addLayer(geoJsonLayer);
+              console.log(`✓ Added ${geojson.features.length} features`);
+            }
+
+            async addWMSLayer(url) {
+              console.log('🗺️ Adding WMS Layer:', url);
+              try {
+                const wmsLayer = L.tileLayer.wms(url, {
+                  layers: 'all',
+                  format: 'image/png',
+                  transparent: true,
+                  version: '1.1.0',
+                  attribution: 'WMS Layer'
+                });
+                this.layer.addLayer(wmsLayer);
+                console.log('✓ WMS Layer added');
+              } catch (error) {
+                console.error('WMS Layer hatası:', error);
+                throw new Error('WMS Layer eklenemedi');
+              }
+            }
+
+            async addGeoTIFFLayer(url) {
+              console.log('🗺️ Adding GeoTIFF Layer:', url);
+              console.warn('GeoTIFF preview resource page üzerinde desteklenmiyor - Mekansal Gösterim sayfasını kullanın');
+              this.showError('GeoTIFF dosyaları için lütfen Mekansal Gösterim sayfasını kullanın');
+            }
+
+            showError(message) {
+              const errorDiv = document.createElement('div');
+              errorDiv.className = 'alert alert-danger';
+              errorDiv.style.margin = '20px';
+              errorDiv.innerHTML = `
+                <strong>⚠️ Hata:</strong> ${message}<br>
+                <small>Veriyi görüntülemek için <a href="/mekansal">Mekansal Gösterim</a> sayfasını deneyin.</small>
+              `;
+              const mapContainer = document.getElementById('leaflet-map');
+              if (mapContainer && mapContainer.parentElement) {
+                mapContainer.parentElement.insertBefore(errorDiv, mapContainer);
+              }
+            }
+          }
+
+          // Ana init kodu
           (function() {
             const resourceId = '{{ res.id }}';
 
@@ -1028,49 +1241,15 @@ display:none !important;
                     document.getElementById('standard-preview-container').style.display = 'none';
                     document.getElementById('spatial-map-container').style.display = 'block';
 
-                    // Initialize map immediately
+                    // Initialize map
                     setTimeout(() => {
                       const map = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
                       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
                       console.log('✓ Map created');
 
-                      // Load data
-                      fetch('/api/spatial-resources/' + resourceId + '/data')
-                        .then(r => r.json())
-                        .then(result => {
-                          console.log('Data type:', result.type);
-
-                          if (result.type === 'api' && result.url) {
-                            return fetch(result.url);
-                          } else if (result.type === 'geojson' && result.data) {
-                            L.geoJSON(result.data).addTo(map);
-                            console.log('✓ GeoJSON added');
-                            return null;
-                          }
-                        })
-                        .then(r => r ? r.json() : null)
-                        .then(json => {
-                          if (!json) return;
-
-                          const data = json.onemliyer || json.data || json;
-                          if (Array.isArray(data)) {
-                            let count = 0;
-                            data.forEach(item => {
-                              if (item.ENLEM && item.BOYLAM) {
-                                L.circleMarker([item.ENLEM, item.BOYLAM], {
-                                  radius: 6,
-                                  fillColor: "#667eea",
-                                  color: "#fff",
-                                  weight: 2,
-                                  fillOpacity: 0.8
-                                }).addTo(map).bindPopup(item.ADI || item.ISIM || 'Nokta');
-                                count++;
-                              }
-                            });
-                            console.log('✓ Added', count, 'markers');
-                          }
-                        })
-                        .catch(e => console.error('Error:', e));
+                      // Load data with advanced handler
+                      const handler = new ResourceSpatialHandler(resourceId, map);
+                      handler.loadData();
                     }, 100);
 
                   } else {

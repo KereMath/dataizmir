@@ -1513,6 +1513,16 @@ def get_resource_metadata_fields(resource_id):
         url = get_absolute_url(site_url, result.url)
         format_type = (result.format or '').lower()
 
+        # Edge case: Fix known 404 URLs
+        url_fixes = {
+            'd5662ab6-60b4-4bc8-8f5c-3d840391e73e': 'https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/d5662ab6-60b4-4bc8-8f5c-3d840391e73e/download/egms_aepnd_v2022.0.xlsx',
+            '84dac4aa-a10d-4ed6-afad-915fc8585edb': 'https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/84dac4aa-a10d-4ed6-afad-915fc8585edb/download/egms_aepnd_v2023.0.csv'
+        }
+
+        if resource_id in url_fixes:
+            print(f"Using edge case URL fix for resource: {resource_id}")
+            url = url_fixes[resource_id]
+
         # Veri tipine göre örnek veriyi çek
         fields = []
         sample_data = None

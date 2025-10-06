@@ -1277,7 +1277,7 @@
               Hariç Tutulan Formatlar
             </div>
             <div style="font-size: 11px; color: #856404; line-height: 1.4;">
-              SHP, WMS ve WFS formatındaki kaynaklar metaveri düzenleme için uygun değildir ve listeden hariç tutulmuştur.
+              SHP, WMS, WFS ve GeoJSON formatındaki kaynaklar metaveri düzenleme için uygun değildir ve listeden hariç tutulmuştur.
             </div>
           </div>
         </div>
@@ -2667,8 +2667,8 @@ class SpatialResourceManager {
   async populateMetadataResourceList() {
     const select = document.getElementById('metadataResourceSelect');
 
-    // Get only spatial resources, excluding SHP and WMS formats
-    const excludedFormats = ['shp', 'wms', 'wfs'];
+    // Get only spatial resources, excluding SHP, WMS, WFS and GeoJSON formats
+    const excludedFormats = ['shp', 'wms', 'wfs', 'geojson'];
     const spatialResources = this.allResources.filter(r => {
       const format = (r.format || '').toLowerCase();
       return this.spatialResourceIds.has(r.resource_id) && !excludedFormats.includes(format);
@@ -2734,7 +2734,18 @@ class SpatialResourceManager {
       // Get resource info for fallback handling
       const currentResource = this.allResources.find(r => r.resource_id === resourceId);
       const resourceFormat = currentResource ? (currentResource.format || '').toLowerCase() : '';
-      const resourceUrl = currentResource ? currentResource.url : '';
+      let resourceUrl = currentResource ? currentResource.url : '';
+
+      // Edge case: Fix known 404 URLs
+      const urlFixes = {
+        'd5662ab6-60b4-4bc8-8f5c-3d840391e73e': 'https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/d5662ab6-60b4-4bc8-8f5c-3d840391e73e/download/egms_aepnd_v2022.0.xlsx',
+        '84dac4aa-a10d-4ed6-afad-915fc8585edb': 'https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/84dac4aa-a10d-4ed6-afad-915fc8585edb/download/egms_aepnd_v2023.0.csv'
+      };
+
+      if (urlFixes[resourceId]) {
+        console.log('🔧 Using edge case URL fix for resource:', resourceId);
+        resourceUrl = urlFixes[resourceId];
+      }
 
       // Load fields from backend API first
       let fieldsData = null;

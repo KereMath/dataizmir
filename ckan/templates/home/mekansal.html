@@ -1105,6 +1105,22 @@
     <!-- Seçili katmanlar paneli -->
     <div class="selected-layers-panel" id="selectedLayersPanel" style="display: none;"></div>
   </div>
+
+  <!-- Related Data Modal (İlişkili Veriler Popup'ı) -->
+  <div id="relatedDataModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
+    <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; max-width: 800px; max-height: 80vh; width: 90%; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.4); margin: auto; margin-top: 5vh;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 18px;">📊 İlişkili Veri Setleri</h3>
+        <button onclick="spatialMapManager.closeRelatedDataModal()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+      <div id="relatedDataContent" style="padding: 20px; overflow-y: auto; flex: 1;">
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+          <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+          <p>Yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -2748,6 +2764,7 @@
             <div class="sel-name">${res.resource_name}</div>
             <div class="sel-actions">
               <button class="sel-btn ${focused ? 'active' : ''}" onclick="spatialMapManager.onChipFocus('${id}')" title="Odağı bu katmana al">🎯</button>
+              <button class="sel-btn" onclick="spatialMapManager.showRelatedData('${id}')" title="İlişkili verileri görüntüle">📊</button>
               <button class="sel-btn danger" onclick="spatialMapManager.onChipClose('${id}')" title="Kapat">✕</button>
             </div>
           </div>`;
@@ -3012,6 +3029,127 @@
         document.body.appendChild(modal);
         resolve();
       });
+    }
+
+    async showRelatedData(resourceId) {
+      try {
+        const modal = document.getElementById('relatedDataModal');
+        const content = document.getElementById('relatedDataContent');
+
+        modal.style.display = 'flex';
+
+        content.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #6c757d;">
+            <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+            <p>Yükleniyor...</p>
+          </div>
+        `;
+
+        console.log('🔄 Loading related data for:', resourceId);
+
+        const response = await fetch(`/api/spatial-resources/${resourceId}/relationships`, {
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'İlişkili veriler yüklenemedi');
+        }
+
+        const relationships = data.relationships || [];
+        const resource = this.resourceLayers[resourceId]?.resource;
+
+        if (relationships.length === 0) {
+          content.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+              <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+              <h3>İlişkili veri bulunamadı</h3>
+              <p><strong>${resource?.resource_name || 'Bu kaynak'}</strong> için henüz ilişkilendirilmiş veri yok.</p>
+            </div>
+          `;
+          return;
+        }
+
+        content.innerHTML = `
+          <div style="margin-bottom: 16px;">
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+              <div style="font-size: 14px; font-weight: 600; color: #495057;">
+                🗺️ ${resource?.resource_name || 'Mekansal Kaynak'}
+              </div>
+              <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">
+                ${relationships.length} ilişkili veri seti
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              ${relationships.map(rel => {
+                const formatClass = this.getFormatClass((rel.related_resource_format || 'other').toLowerCase());
+                return `
+                  <div style="background: white; border: 2px solid #e9ecef; border-radius: 8px; padding: 12px; transition: all 0.2s;"
+                       onmouseover="this.style.borderColor='#667eea'; this.style.background='#f8f9fa';"
+                       onmouseout="this.style.borderColor='#e9ecef'; this.style.background='white';">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                      <div style="flex: 1;">
+                        <div style="font-size: 14px; font-weight: 600; color: #495057; margin-bottom: 4px;">
+                          📄 ${rel.related_resource_name}
+                        </div>
+                        <div style="font-size: 12px; color: #6c757d;">
+                          📁 ${rel.package_title || 'Bilinmiyor'}
+                        </div>
+                      </div>
+                      <span class="format-badge ${formatClass}">${rel.related_resource_format}</span>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                      <a href="/dataset/${rel.package_name}/resource/${rel.related_resource_id}"
+                         target="_blank"
+                         style="flex: 1; background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.2s;"
+                         onmouseover="this.style.background='#218838'"
+                         onmouseout="this.style.background='#28a745'">
+                        👁️ Görüntüle
+                      </a>
+                      ${rel.related_resource_url ? `
+                        <a href="${rel.related_resource_url}"
+                           target="_blank"
+                           download
+                           style="flex: 1; background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.2s;"
+                           onmouseover="this.style.background='#0056b3'"
+                           onmouseout="this.style.background='#007bff'">
+                          ⬇️ İndir
+                        </a>
+                      ` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('❌ Error loading related data:', error);
+        document.getElementById('relatedDataContent').innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #dc3545;">
+            <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+            <h3>Hata oluştu</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    closeRelatedDataModal() {
+      document.getElementById('relatedDataModal').style.display = 'none';
+    }
+
+    getFormatClass(format) {
+      const map = {
+        'csv': 'format-csv', 'json': 'format-json', 'geojson': 'format-geojson',
+        'xml': 'format-xml', 'pdf': 'format-pdf', 'xls': 'format-xls',
+        'xlsx': 'format-xlsx', 'shp': 'format-shp', 'kml': 'format-kml'
+      };
+      return map[format] || 'format-other';
     }
 
     showError(message) {

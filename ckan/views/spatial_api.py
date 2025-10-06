@@ -1158,25 +1158,25 @@ def convert_to_geojson(df, coord_columns):
     features = []
     lat_col = coord_columns['lat']
     lon_col = coord_columns['lon']
-    
+
     print(f"GeoJSON'a çeviriliyor: lat='{lat_col}', lon='{lon_col}'")
-    
+
     for idx, row in df.iterrows():
         try:
             # Koordinat değerlerini temizle
             lat = clean_coordinate_value(row[lat_col])
             lon = clean_coordinate_value(row[lon_col])
-            
+
             # Geçersiz koordinatları atla
             if lat is None or lon is None:
                 print(f"Satır atlandı (idx={idx}): lat veya lon değeri None")
                 continue
-            
+
             # Koordinat aralığı kontrolü
             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
                 print(f"Geçersiz koordinat atlandı: lat={lat}, lon={lon}")
                 continue
-            
+
             # Properties oluştur
             properties = {}
             for col in df.columns:
@@ -1191,7 +1191,7 @@ def convert_to_geojson(df, coord_columns):
                             properties[col] = value
                     else:
                         properties[col] = None
-            
+
             feature = {
                 "type": "Feature",
                 "geometry": {
@@ -1204,10 +1204,234 @@ def convert_to_geojson(df, coord_columns):
         except (ValueError, TypeError) as e:
             print(f"Satır atlandı (idx={idx}): {e}")
             continue
-    
+
     print(f"Toplam {len(features)} feature oluşturuldu")
-    
+
     return {
         "type": "FeatureCollection",
         "features": features
     }
+
+# === SPATIAL RESOURCE RELATIONSHIPS ENDPOINTS ===
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/relationships')
+def get_resource_relationships(resource_id):
+    """Get all related resources for a spatial resource"""
+    try:
+        # Admin kontrolü
+        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
+        resource_check = model.Session.execute(
+            text("""
+                SELECT r.id, r.name, sr.is_spatial
+                FROM resource r
+                LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
+                WHERE r.id = :resource_id AND r.state = 'active'
+            """),
+            {'resource_id': resource_id}
+        ).fetchone()
+
+        if not resource_check:
+            return jsonify({'error': 'Resource not found'}), 404
+
+        if not resource_check.is_spatial:
+            return jsonify({'error': 'Resource is not marked as spatial'}), 400
+
+        # İlişkili kaynakları getir
+        query = text("""
+            SELECT
+                srr.id as relationship_id,
+                srr.related_resource_id,
+                r.name as related_resource_name,
+                r.format as related_resource_format,
+                r.url as related_resource_url,
+                p.id as package_id,
+                p.name as package_name,
+                p.title as package_title,
+                srr.created_date,
+                srr.created_by
+            FROM spatial_resource_relationships srr
+            JOIN resource r ON srr.related_resource_id = r.id
+            JOIN package p ON r.package_id = p.id
+            WHERE srr.spatial_resource_id = :resource_id
+            AND r.state = 'active'
+            AND p.state = 'active'
+            ORDER BY srr.created_date DESC
+        """)
+
+        result = model.Session.execute(query, {'resource_id': resource_id}).fetchall()
+
+        # Base URL
+        site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
+
+        relationships = []
+        for row in result:
+            # URL'yi mutlak hale getir
+            absolute_url = get_absolute_url(site_url, row.related_resource_url)
+
+            relationships.append({
+                'relationship_id': row.relationship_id,
+                'related_resource_id': row.related_resource_id,
+                'related_resource_name': row.related_resource_name or 'İsimsiz Kaynak',
+                'related_resource_format': row.related_resource_format,
+                'related_resource_url': absolute_url,
+                'package_id': row.package_id,
+                'package_name': row.package_name,
+                'package_title': row.package_title,
+                'created_date': row.created_date.isoformat() if row.created_date else None,
+                'created_by': row.created_by
+            })
+
+        return jsonify({
+            'success': True,
+            'spatial_resource_id': resource_id,
+            'spatial_resource_name': resource_check.name,
+            'count': len(relationships),
+            'relationships': relationships
+        })
+
+    except Exception as e:
+        print(f"Get relationships error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/relationships', methods=['POST'])
+def add_resource_relationship(resource_id):
+    """Add a relationship between a spatial resource and another resource"""
+    try:
+        # Admin kontrolü
+        user = toolkit.c.userobj
+        if not user or not authz.is_sysadmin(user.name):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    related_resource_id = data.get('related_resource_id')
+
+    if not related_resource_id:
+        return jsonify({'error': 'related_resource_id is required'}), 400
+
+    try:
+        # Spatial resource'un var olup olmadığını kontrol et
+        spatial_check = model.Session.execute(
+            text("""
+                SELECT r.id, sr.is_spatial
+                FROM resource r
+                LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
+                WHERE r.id = :resource_id AND r.state = 'active'
+            """),
+            {'resource_id': resource_id}
+        ).fetchone()
+
+        if not spatial_check:
+            return jsonify({'error': 'Spatial resource not found'}), 404
+
+        if not spatial_check.is_spatial:
+            return jsonify({'error': 'Resource is not marked as spatial'}), 400
+
+        # Related resource'un var olup olmadığını kontrol et
+        related_check = model.Session.execute(
+            text("SELECT id FROM resource WHERE id = :resource_id AND state = 'active'"),
+            {'resource_id': related_resource_id}
+        ).fetchone()
+
+        if not related_check:
+            return jsonify({'error': 'Related resource not found'}), 404
+
+        # Kendine referans kontrolü
+        if resource_id == related_resource_id:
+            return jsonify({'error': 'A resource cannot be related to itself'}), 400
+
+        # İlişkinin zaten var olup olmadığını kontrol et
+        existing = model.Session.execute(
+            text("""
+                SELECT id FROM spatial_resource_relationships
+                WHERE spatial_resource_id = :spatial_id AND related_resource_id = :related_id
+            """),
+            {'spatial_id': resource_id, 'related_id': related_resource_id}
+        ).fetchone()
+
+        if existing:
+            return jsonify({'error': 'Relationship already exists'}), 409
+
+        # İlişkiyi oluştur
+        model.Session.execute(
+            text("""
+                INSERT INTO spatial_resource_relationships
+                (spatial_resource_id, related_resource_id, created_by)
+                VALUES (:spatial_id, :related_id, :created_by)
+            """),
+            {
+                'spatial_id': resource_id,
+                'related_id': related_resource_id,
+                'created_by': user.name
+            }
+        )
+
+        model.Session.commit()
+
+        return jsonify({
+            'success': True,
+            'spatial_resource_id': resource_id,
+            'related_resource_id': related_resource_id,
+            'created_by': user.name,
+            'message': 'Relationship created successfully'
+        }), 201
+
+    except Exception as e:
+        model.Session.rollback()
+        print(f"Add relationship error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/relationships/<related_id>', methods=['DELETE'])
+def delete_resource_relationship(resource_id, related_id):
+    """Remove a relationship between a spatial resource and a related resource"""
+    try:
+        # Admin kontrolü
+        user = toolkit.c.userobj
+        if not user or not authz.is_sysadmin(user.name):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        # İlişkinin var olup olmadığını kontrol et
+        existing = model.Session.execute(
+            text("""
+                SELECT id FROM spatial_resource_relationships
+                WHERE spatial_resource_id = :spatial_id AND related_resource_id = :related_id
+            """),
+            {'spatial_id': resource_id, 'related_id': related_id}
+        ).fetchone()
+
+        if not existing:
+            return jsonify({'error': 'Relationship not found'}), 404
+
+        # İlişkiyi sil
+        model.Session.execute(
+            text("""
+                DELETE FROM spatial_resource_relationships
+                WHERE spatial_resource_id = :spatial_id AND related_resource_id = :related_id
+            """),
+            {'spatial_id': resource_id, 'related_id': related_id}
+        )
+
+        model.Session.commit()
+
+        return jsonify({
+            'success': True,
+            'spatial_resource_id': resource_id,
+            'related_resource_id': related_id,
+            'deleted_by': user.name,
+            'message': 'Relationship deleted successfully'
+        })
+
+    except Exception as e:
+        model.Session.rollback()
+        print(f"Delete relationship error: {str(e)}")
+        return jsonify({'error': str(e)}), 500

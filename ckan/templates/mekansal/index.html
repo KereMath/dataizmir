@@ -898,6 +898,151 @@
     margin-bottom: 16px;
     opacity: 0.5;
   }
+
+  /* Relationship Styles */
+  .rel-spatial-group {
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .rel-spatial-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .rel-spatial-title {
+    font-size: 14px;
+    font-weight: 600;
+    flex: 1;
+  }
+
+  .rel-count-badge {
+    background: rgba(255,255,255,0.3);
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .rel-resource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+    padding: 12px;
+    max-height: 400px;
+    overflow-y: auto;
+  }
+
+  .rel-resource-card {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 10px;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .rel-resource-card:hover {
+    border-color: #667eea;
+    background: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+
+  .rel-resource-card.selected {
+    border-color: #28a745;
+    background: linear-gradient(135deg, #e8f5e9 0%, #f8f9fa 100%);
+  }
+
+  .rel-resource-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 6px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .rel-resource-meta {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .rel-add-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .rel-add-btn:hover {
+    background: #218838;
+  }
+
+  .rel-add-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+  }
+
+  .rel-remove-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .rel-remove-btn:hover {
+    background: #c82333;
+  }
+
+  .rel-existing-list {
+    background: #e8f5e9;
+    border-radius: 6px;
+    padding: 8px;
+    margin-top: 8px;
+  }
+
+  .rel-existing-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 8px;
+    background: white;
+    border-radius: 4px;
+    margin-bottom: 4px;
+  }
+
+  .rel-existing-item:last-child {
+    margin-bottom: 0;
+  }
+
+  .rel-existing-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: #495057;
+    flex: 1;
+  }
 </style>
 
 <div class="page-container">
@@ -978,6 +1123,12 @@
   🗺️
 </button>
 
+<!-- Floating Relationship Button -->
+<button class="floating-map-btn" id="relationshipFloatingBtn" onclick="spatialManager.openRelationshipModal()"
+        title="Mekansal Verileri İlişkilendir" style="bottom: 110px;">
+  🔗
+</button>
+
 <!-- Map Modal -->
 <div class="map-modal-overlay" id="mapModalOverlay" onclick="spatialManager.closeMapModal(event)">
   <div class="map-modal" onclick="event.stopPropagation()">
@@ -987,6 +1138,57 @@
     </div>
     <div class="map-modal-body">
       <div class="map-resource-list" id="mapResourceList">
+        <div class="map-modal-empty">
+          <div class="map-modal-empty-icon">⏳</div>
+          <p>Yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Relationship Modal -->
+<div class="map-modal-overlay" id="relationshipModalOverlay" onclick="spatialManager.closeRelationshipModal(event)">
+  <div class="map-modal" onclick="event.stopPropagation()" style="max-width: 900px;">
+    <div class="map-modal-header">
+      <h2 class="map-modal-title">🔗 Mekansal Verilere Diğer Veri Setlerini Bağla</h2>
+      <button class="map-modal-close" onclick="spatialManager.closeRelationshipModal()">&times;</button>
+    </div>
+    <div class="map-modal-body" style="max-height: calc(80vh - 80px);">
+      <!-- Info Banner -->
+      <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-left: 4px solid #667eea; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+        <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px;">
+          💡 Nasıl çalışır?
+        </div>
+        <div style="font-size: 12px; color: #6c757d; line-height: 1.5;">
+          Mekansal verilerinizi (harita verileri) diğer veri setlerinizle (CSV, Excel, PDF vb.) ilişkilendirin.
+          Böylece haritada bir katmanı aktive ettiğinizde ilişkili verilere kolayca erişebilirsiniz.
+        </div>
+      </div>
+
+      <!-- Search and Filter Section -->
+      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <input type="search" id="relationshipSearch" placeholder="🔍 Mekansal kaynak veya veri seti ara..."
+               style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; margin-bottom: 12px;">
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+          <select id="relSpatialFilter" onchange="spatialManager.filterRelationships()"
+                  style="padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
+            <option value="">Tüm Mekansal Veriler</option>
+          </select>
+          <select id="relFormatFilter" onchange="spatialManager.filterRelationships()"
+                  style="padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
+            <option value="">Tüm Formatlar (Non-Spatial)</option>
+          </select>
+          <select id="relOrgFilter" onchange="spatialManager.filterRelationships()"
+                  style="padding: 8px; border: 1px solid #ced4da; border-radius: 6px;">
+            <option value="">Tüm Kuruluşlar</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Relationship List -->
+      <div id="relationshipList">
         <div class="map-modal-empty">
           <div class="map-modal-empty-icon">⏳</div>
           <p>Yükleniyor...</p>
@@ -1029,6 +1231,10 @@ class SpatialResourceManager {
 
     // Homepage map settings
     this.homepageMapResources = new Set();
+
+    // Relationship management
+    this.relationshipData = {};
+    this.filteredRelResources = [];
 
     this.init();
   }
@@ -1846,6 +2052,330 @@ class SpatialResourceManager {
       // Revert checkbox
       const checkbox = document.querySelector(`#map-item-${resourceId} input[type="checkbox"]`);
       if (checkbox) checkbox.checked = !isActive;
+    }
+  }
+
+  // ===== RELATIONSHIP MANAGEMENT =====
+
+  async openRelationshipModal() {
+    const overlay = document.getElementById('relationshipModalOverlay');
+    overlay.classList.add('active');
+    await this.loadRelationships();
+    this.setupRelationshipSearch();
+  }
+
+  closeRelationshipModal(event) {
+    if (event && event.target !== document.getElementById('relationshipModalOverlay') && !event.target.classList.contains('map-modal-close')) {
+      return;
+    }
+    const overlay = document.getElementById('relationshipModalOverlay');
+    overlay.classList.remove('active');
+  }
+
+  setupRelationshipSearch() {
+    const searchInput = document.getElementById('relationshipSearch');
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(() => this.filterRelationships(), 300);
+    });
+  }
+
+  async loadRelationships() {
+    try {
+      console.log('🔄 Loading relationships...');
+
+      // Get only spatial resources that are marked as spatial (from spatialResourceIds)
+      const spatialResources = this.allResources.filter(r => this.spatialResourceIds.has(r.resource_id));
+
+      if (spatialResources.length === 0) {
+        document.getElementById('relationshipList').innerHTML = `
+          <div class="map-modal-empty">
+            <div class="map-modal-empty-icon">🗺️</div>
+            <h3>Mekansal veri bulunamadı</h3>
+            <p>Önce mekansal olarak işaretlenmiş veri ekleyin.</p>
+          </div>
+        `;
+        return;
+      }
+
+      console.log('✅ Found', spatialResources.length, 'spatial resources');
+
+      // Load relationships for each spatial resource
+      const relationshipPromises = spatialResources.map(async (resource) => {
+        try {
+          const response = await fetch(`/api/spatial-resources/${resource.resource_id}/relationships`, {
+            credentials: 'include'
+          });
+          const data = await response.json();
+          if (data.success) {
+            return {
+              spatialResource: resource,
+              relationships: data.relationships || []
+            };
+          }
+        } catch (error) {
+          console.warn(`Failed to load relationships for ${resource.resource_id}:`, error);
+        }
+        return {
+          spatialResource: resource,
+          relationships: []
+        };
+      });
+
+      const results = await Promise.all(relationshipPromises);
+
+      // Build relationship data
+      this.relationshipData = {};
+      results.forEach(result => {
+        this.relationshipData[result.spatialResource.resource_id] = {
+          resource: result.spatialResource,
+          relationships: result.relationships
+        };
+      });
+
+      console.log('✅ Relationships loaded:', Object.keys(this.relationshipData).length, 'spatial resources');
+
+      // Populate filters
+      this.populateRelationshipFilters();
+
+      // Render
+      this.filterRelationships();
+    } catch (error) {
+      console.error('❌ Error loading relationships:', error);
+      document.getElementById('relationshipList').innerHTML = `
+        <div class="map-modal-empty">
+          <div class="map-modal-empty-icon">❌</div>
+          <h3>Hata oluştu</h3>
+          <p>${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  populateRelationshipFilters() {
+    // Spatial resources filter
+    const spatialFilter = document.getElementById('relSpatialFilter');
+    const spatialOptions = Object.values(this.relationshipData)
+      .map(rd => ({ id: rd.resource.resource_id, name: rd.resource.resource_name }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+
+    spatialFilter.innerHTML = '<option value="">Tüm Mekansal Veriler</option>' +
+      spatialOptions.map(opt => `<option value="${opt.id}">${opt.name}</option>`).join('');
+
+    // Format filter - ONLY non-spatial formats
+    const formatFilter = document.getElementById('relFormatFilter');
+    const nonSpatialResources = this.allResources.filter(r => !this.spatialResourceIds.has(r.resource_id));
+    const formats = new Set(nonSpatialResources.map(r => r.format).filter(f => f));
+    formatFilter.innerHTML = '<option value="">Tüm Formatlar (Non-Spatial)</option>' +
+      [...formats].sort().map(f => `<option value="${f}">${f.toUpperCase()}</option>`).join('');
+
+    // Organization filter
+    const orgFilter = document.getElementById('relOrgFilter');
+    const orgs = new Set(this.allResources.map(r => r.organization_title).filter(o => o));
+    orgFilter.innerHTML = '<option value="">Tüm Kuruluşlar</option>' +
+      [...orgs].sort().map(o => `<option value="${o}">${o}</option>`).join('');
+  }
+
+  filterRelationships() {
+    const searchTerm = document.getElementById('relationshipSearch')?.value.toLowerCase() || '';
+    const spatialFilter = document.getElementById('relSpatialFilter')?.value || '';
+    const formatFilter = document.getElementById('relFormatFilter')?.value || '';
+    const orgFilter = document.getElementById('relOrgFilter')?.value || '';
+
+    let filteredData = Object.values(this.relationshipData);
+
+    // Filter by spatial resource
+    if (spatialFilter) {
+      filteredData = filteredData.filter(rd => rd.resource.resource_id === spatialFilter);
+    }
+
+    // Filter by search term
+    if (searchTerm) {
+      filteredData = filteredData.filter(rd =>
+        rd.resource.resource_name.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Filter available resources by format and org - ONLY non-spatial resources
+    this.filteredRelResources = this.allResources.filter(r => {
+      // Only show NON-spatial resources (exclude those marked as spatial)
+      if (this.spatialResourceIds.has(r.resource_id)) return false;
+
+      if (formatFilter && r.format !== formatFilter) return false;
+      if (orgFilter && r.organization_title !== orgFilter) return false;
+      if (searchTerm) {
+        const text = `${r.resource_name} ${this.allPackages[r.package_id]?.title}`.toLowerCase();
+        if (!text.includes(searchTerm)) return false;
+      }
+      return true;
+    });
+
+    this.renderRelationships(filteredData);
+  }
+
+  renderRelationships(filteredData) {
+    const container = document.getElementById('relationshipList');
+
+    if (filteredData.length === 0) {
+      container.innerHTML = `
+        <div class="map-modal-empty">
+          <div class="map-modal-empty-icon">🔍</div>
+          <h3>Sonuç bulunamadı</h3>
+          <p>Filtreleri değiştirmeyi deneyin</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = filteredData.map(rd => {
+      const spatialResource = rd.resource;
+      const relationships = rd.relationships;
+
+      return `
+        <div class="rel-spatial-group">
+          <div class="rel-spatial-header">
+            <div class="rel-spatial-title">
+              🗺️ ${spatialResource.resource_name}
+            </div>
+            <div class="rel-count-badge">
+              ${relationships.length} ilişki
+            </div>
+          </div>
+
+          ${relationships.length > 0 ? `
+            <div class="rel-existing-list" style="margin: 12px;">
+              <div style="font-size: 11px; font-weight: 600; color: #28a745; margin-bottom: 8px;">
+                ✅ Bağlı Veri Setleri (${relationships.length}):
+              </div>
+              ${relationships.map(rel => `
+                <div class="rel-existing-item">
+                  <div class="rel-existing-name">
+                    📄 ${rel.related_resource_name}
+                    <span class="format-badge ${this.getFormatClass(rel.related_resource_format.toLowerCase())}">${rel.related_resource_format}</span>
+                  </div>
+                  <button class="rel-remove-btn" onclick="spatialManager.removeRelationship('${spatialResource.resource_id}', '${rel.related_resource_id}')">
+                    🗑️ Kaldır
+                  </button>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
+          <div style="margin: 12px 12px 8px 12px;">
+            <div style="font-size: 11px; font-weight: 600; color: #667eea; margin-bottom: 8px;">
+              📊 Bağlanabilir Veri Setleri (Mekansal Olmayan):
+            </div>
+          </div>
+
+          ${this.filteredRelResources.length === 0 ? `
+            <div style="padding: 24px; text-align: center; color: #6c757d; background: #f8f9fa; margin: 0 12px 12px 12px; border-radius: 8px;">
+              <div style="font-size: 32px; margin-bottom: 8px;">📭</div>
+              <div style="font-size: 12px;">Mekansal olmayan veri bulunamadı veya hepsi zaten bağlı.</div>
+            </div>
+          ` : `
+          <div class="rel-resource-grid">
+            ${this.filteredRelResources.slice(0, 20).map(resource => {
+              const isRelated = relationships.some(rel => rel.related_resource_id === resource.resource_id);
+              const pkg = this.allPackages[resource.package_id];
+
+              return `
+                <div class="rel-resource-card ${isRelated ? 'selected' : ''}" id="rel-card-${spatialResource.resource_id}-${resource.resource_id}">
+                  <div class="rel-resource-name" title="${resource.resource_name}">
+                    ${resource.resource_name}
+                  </div>
+                  <div class="rel-resource-meta">
+                    <span class="format-badge ${this.getFormatClass(resource.format.toLowerCase())}">
+                      ${resource.format}
+                    </span>
+                    ${resource.size ? `<span style="font-size: 10px; color: #6c757d;">📦 ${this.formatFileSize(resource.size)}</span>` : ''}
+                  </div>
+                  <div style="font-size: 10px; color: #6c757d; margin-top: 4px;">
+                    📁 ${pkg?.title || 'Bilinmiyor'}
+                  </div>
+                  ${!isRelated ? `
+                    <button class="rel-add-btn" style="width: 100%; margin-top: 8px;"
+                            onclick="spatialManager.addRelationship('${spatialResource.resource_id}', '${resource.resource_id}')">
+                      ➕ İlişkilendir
+                    </button>
+                  ` : `
+                    <div style="text-align: center; margin-top: 8px; color: #28a745; font-size: 11px; font-weight: 600;">
+                      ✅ İlişkilendirilmiş
+                    </div>
+                  `}
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          ${this.filteredRelResources.length > 20 ? `
+            <div style="padding: 12px; text-align: center; color: #6c757d; font-size: 12px;">
+              ${this.filteredRelResources.length - 20} veri daha var. Filtreleri kullanarak daraltın.
+            </div>
+          ` : ''}
+          `}
+        </div>
+      `;
+    }).join('');
+  }
+
+  async addRelationship(spatialResourceId, relatedResourceId) {
+    try {
+      console.log(`🔄 Adding relationship: ${spatialResourceId} -> ${relatedResourceId}`);
+
+      const response = await fetch(`/api/spatial-resources/${spatialResourceId}/relationships`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          related_resource_id: relatedResourceId
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'İlişkilendirme başarısız');
+      }
+
+      console.log('✅ Relationship added successfully');
+
+      // Reload relationships
+      await this.loadRelationships();
+
+    } catch (error) {
+      console.error('❌ Error adding relationship:', error);
+      alert('Hata: ' + error.message);
+    }
+  }
+
+  async removeRelationship(spatialResourceId, relatedResourceId) {
+    if (!confirm('Bu ilişkiyi kaldırmak istediğinizden emin misiniz?')) {
+      return;
+    }
+
+    try {
+      console.log(`🔄 Removing relationship: ${spatialResourceId} -> ${relatedResourceId}`);
+
+      const response = await fetch(`/api/spatial-resources/${spatialResourceId}/relationships/${relatedResourceId}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'İlişki kaldırma başarısız');
+      }
+
+      console.log('✅ Relationship removed successfully');
+
+      // Reload relationships
+      await this.loadRelationships();
+
+    } catch (error) {
+      console.error('❌ Error removing relationship:', error);
+      alert('Hata: ' + error.message);
     }
   }
 }

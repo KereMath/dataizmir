@@ -945,180 +945,141 @@ display:none !important;
       {% block data_preview %}
       {% block resource_view %}
 
-        {# Spatial/Preview Navigation Tabs #}
-        <ul class="nav nav-tabs" id="viewModeNav" role="tablist" style="margin-bottom: 1rem;">
-          <li class="active">
-            <a href="#preview-mode" data-toggle="tab" role="tab">
-              <i class="fa fa-table"></i> {{ _('Preview') }}
-            </a>
-          </li>
-          <li id="spatial-mode-tab" style="display: none;">
-            <a href="#spatial-mode" data-toggle="tab" role="tab">
-              <i class="fa fa-map-marker"></i> {{ _('Mekansal Görünüm') }}
-            </a>
-          </li>
-        </ul>
+        {# SPATIAL MAP - No tabs, direct render #}
+        <div id="spatial-map-container" style="display: none;">
+          <div id="leaflet-map" style="width: 100%; height: 800px;"></div>
+        </div>
 
-        {# Tab Content #}
-        <div class="tab-content">
-          {# Standard Preview Tab #}
-          <div class="tab-pane active" id="preview-mode">
-            {% block resource_view_nav %}
+        {# Standard Preview - Hidden if spatial #}
+        <div id="standard-preview-container">
+          {% block resource_view_nav %}
+            {% set resource_preview = h.resource_preview(resource, package) %}
+            {% snippet "package/snippets/resource_views_list.html",
+               views=resource_views,
+               pkg=pkg,
+               is_edit=false,
+               view_id=current_resource_view['id'],
+               resource_preview=resource_preview,
+               resource=resource,
+               extra_class="nav-tabs nav-tabs-plain"
+             %}
+          {% endblock %}
+          {% block resource_view_content %}
+            <div class="resource-view">
               {% set resource_preview = h.resource_preview(resource, package) %}
-              {% snippet "package/snippets/resource_views_list.html",
-                 views=resource_views,
-                 pkg=pkg,
-                 is_edit=false,
-                 view_id=current_resource_view['id'],
-                 resource_preview=resource_preview,
-                 resource=resource,
-                 extra_class="nav-tabs nav-tabs-plain"
-               %}
-            {% endblock %}
-            {% block resource_view_content %}
-              <div class="resource-view">
-                {% set resource_preview = h.resource_preview(resource, package) %}
-                {% set views_created = res.has_views or resource_preview %}
-                {% if views_created %}
-                  {% if resource_preview and not current_resource_view %}
-                    {{ h.resource_preview(resource, package) }}
-                  {% else %}
-                    {% for resource_view in resource_views %}
-                      {% if resource_view == current_resource_view %}
-                        {% snippet 'package/snippets/resource_view.html',
-                           resource_view=resource_view,
-                           resource=resource,
-                           package=package
-                         %}
-                      {% endif %}
-                    {% endfor %}
-                  {% endif %}
+              {% set views_created = res.has_views or resource_preview %}
+              {% if views_created %}
+                {% if resource_preview and not current_resource_view %}
+                  {{ h.resource_preview(resource, package) }}
                 {% else %}
-                  {# Views not created #}
-                  <div class="data-viewer-info">
-                    <p>{{ _("There are no views created for this resource yet.") }}</p>
-                    {% if h.check_access('resource_view_create', {'resource_id': resource.id}) %}
-                      <p class="text-muted">
-                        <i class="fa fa-info-circle"></i>
-                        {{ _("Not seeing the views you were expecting?")}}
-                        <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
-                          {{ _('Click here for more information.') }}</a>
-                      </p>
-                      <div id="data-view-info" class="collapse">
-                        <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
-                        <ul>
-                          <li>{{ _("No view has been created that is suitable for this resource")}}</li>
-                          <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
-                          <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
-                        </ul>
-                      </div>
+                  {% for resource_view in resource_views %}
+                    {% if resource_view == current_resource_view %}
+                      {% snippet 'package/snippets/resource_view.html',
+                         resource_view=resource_view,
+                         resource=resource,
+                         package=package
+                       %}
                     {% endif %}
-                  </div>
+                  {% endfor %}
                 {% endif %}
-              </div>
-            {% endblock %}
-          </div>
-
-          {# Spatial View Tab #}
-          <div class="tab-pane" id="spatial-mode">
-            <div id="leaflet-map" style="width: 100%; height: 800px; background: #e0e0e0;"></div>
-          </div>
+              {% else %}
+                {# Views not created #}
+                <div class="data-viewer-info">
+                  <p>{{ _("There are no views created for this resource yet.") }}</p>
+                  {% if h.check_access('resource_view_create', {'resource_id': resource.id}) %}
+                    <p class="text-muted">
+                      <i class="fa fa-info-circle"></i>
+                      {{ _("Not seeing the views you were expecting?")}}
+                      <a href="javascript:void(0);" data-toggle="collapse" data-target="#data-view-info">
+                        {{ _('Click here for more information.') }}</a>
+                    </p>
+                    <div id="data-view-info" class="collapse">
+                      <p>{{ _('Here are some reasons you may not be seeing expected views:') }}</p>
+                      <ul>
+                        <li>{{ _("No view has been created that is suitable for this resource")}}</li>
+                        <li>{{ _("The site administrators may not have enabled the relevant view plugins")}}</li>
+                        <li>{{ _("If a view requires the DataStore, the DataStore plugin may not be enabled, or the data may not have been pushed to the DataStore, or the DataStore hasn't finished processing the data yet")}}</li>
+                      </ul>
+                    </div>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </div>
+          {% endblock %}
         </div>
 
         <script>
-          console.log('=== RESOURCE SPATIAL TAB ===');
+          console.log('=== RESOURCE PAGE LOADED ===');
 
           (function() {
             const resourceId = '{{ res.id }}';
-            let map = null;
 
-            // Check if spatial
+            // Check if spatial - NO TABS, just show/hide containers
             fetch('/api/spatial-resources/list')
               .then(r => r.json())
               .then(data => {
                 if (data.success && data.spatial_resources) {
                   const isSpatial = data.spatial_resources.some(r => r.resource_id === resourceId);
+
                   if (isSpatial) {
-                    document.getElementById('spatial-mode-tab').style.display = 'block';
-                    console.log('✓ Spatial resource detected');
-                  }
-                }
-              });
+                    console.log('✓ SPATIAL RESOURCE - Loading map...');
 
-            // Tab click handler
-            const tabLink = document.querySelector('a[href="#spatial-mode"]');
-            if (tabLink) {
-              tabLink.addEventListener('click', function() {
-                console.log('Spatial tab clicked');
+                    // Hide standard preview, show map
+                    document.getElementById('standard-preview-container').style.display = 'none';
+                    document.getElementById('spatial-map-container').style.display = 'block';
 
-                setTimeout(() => {
-                  const mapDiv = document.getElementById('leaflet-map');
-
-                  if (!map && mapDiv) {
-                    console.log('Initializing map...');
-
-                    // Create map - EXACTLY like standalone version
-                    map = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
-                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                    console.log('✓ Map initialized');
-
-                    // Force resize
+                    // Initialize map immediately
                     setTimeout(() => {
-                      if (map) {
-                        map.invalidateSize();
-                        console.log('✓ Map resized');
-                      }
+                      const map = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
+                      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+                      console.log('✓ Map created');
+
+                      // Load data
+                      fetch('/api/spatial-resources/' + resourceId + '/data')
+                        .then(r => r.json())
+                        .then(result => {
+                          console.log('Data type:', result.type);
+
+                          if (result.type === 'api' && result.url) {
+                            return fetch(result.url);
+                          } else if (result.type === 'geojson' && result.data) {
+                            L.geoJSON(result.data).addTo(map);
+                            console.log('✓ GeoJSON added');
+                            return null;
+                          }
+                        })
+                        .then(r => r ? r.json() : null)
+                        .then(json => {
+                          if (!json) return;
+
+                          const data = json.onemliyer || json.data || json;
+                          if (Array.isArray(data)) {
+                            let count = 0;
+                            data.forEach(item => {
+                              if (item.ENLEM && item.BOYLAM) {
+                                L.circleMarker([item.ENLEM, item.BOYLAM], {
+                                  radius: 6,
+                                  fillColor: "#667eea",
+                                  color: "#fff",
+                                  weight: 2,
+                                  fillOpacity: 0.8
+                                }).addTo(map).bindPopup(item.ADI || item.ISIM || 'Nokta');
+                                count++;
+                              }
+                            });
+                            console.log('✓ Added', count, 'markers');
+                          }
+                        })
+                        .catch(e => console.error('Error:', e));
                     }, 100);
 
-                    // Load spatial data
-                    fetch('/api/spatial-resources/' + resourceId + '/data')
-                      .then(r => r.json())
-                      .then(result => {
-                        console.log('Data type:', result.type);
-
-                        if (result.type === 'api' && result.url) {
-                          return fetch(result.url);
-                        } else if (result.type === 'geojson' && result.data) {
-                          L.geoJSON(result.data).addTo(map);
-                          console.log('✓ GeoJSON added');
-                          return null;
-                        }
-                      })
-                      .then(r => r ? r.json() : null)
-                      .then(json => {
-                        if (!json) return;
-
-                        const data = json.onemliyer || json.data || json;
-                        if (Array.isArray(data)) {
-                          let count = 0;
-                          data.forEach(item => {
-                            if (item.ENLEM && item.BOYLAM) {
-                              L.circleMarker([item.ENLEM, item.BOYLAM], {
-                                radius: 6,
-                                fillColor: "#667eea",
-                                color: "#fff",
-                                weight: 2,
-                                fillOpacity: 0.8
-                              }).addTo(map).bindPopup(item.ADI || item.ISIM || 'Nokta');
-                              count++;
-                            }
-                          });
-                          console.log('✓ Added', count, 'markers');
-                        }
-                      })
-                      .catch(e => {
-                        console.error('Error loading data:', e);
-                      });
-
-                  } else if (map) {
-                    console.log('Map already exists, resizing...');
-                    map.invalidateSize();
                   } else {
-                    console.error('Map div not found!');
+                    console.log('Standard resource - showing preview');
+                    // Keep standard preview visible
                   }
-                }, 200);
-              });
-            }
+                }
+              })
+              .catch(e => console.error('Error checking spatial:', e));
           })();
         </script>
 

@@ -1026,7 +1026,7 @@ display:none !important;
         </div>
 
         <script>
-          console.log('=== RESOURCE SPATIAL TAB ===');
+          console.log('=== RESOURCE MAP ===');
 
           (function() {
             const resourceId = '{{ res.id }}';
@@ -1040,48 +1040,33 @@ display:none !important;
                   const isSpatial = data.spatial_resources.some(r => r.resource_id === resourceId);
                   if (isSpatial) {
                     document.getElementById('spatial-mode-tab').style.display = 'block';
-                    console.log('✓ Spatial resource detected');
                   }
                 }
               });
 
-            // Tab click handler
+            // Tab click - AYNI KOD resource_map.html'den
             const tabLink = document.querySelector('a[href="#spatial-mode"]');
             if (tabLink) {
               tabLink.addEventListener('click', function() {
-                console.log('Spatial tab clicked');
-
                 setTimeout(() => {
-                  const mapDiv = document.getElementById('leaflet-map');
+                  if (!map) {
+                    console.log('Creating map...');
 
-                  if (!map && mapDiv) {
-                    console.log('Initializing map...');
-
-                    // Create map - EXACTLY like standalone version
+                    // DIREKT L.map() - resource_map.html ile AYNI
                     map = L.map('leaflet-map').setView([38.4237, 27.1428], 10);
                     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-                    console.log('✓ Map initialized');
+                    console.log('✓ Map created');
 
-                    // Force resize
-                    setTimeout(() => {
-                      if (map) {
-                        map.invalidateSize();
-                        console.log('✓ Map resized');
-                      }
-                    }, 100);
-
-                    // Load spatial data
-                    fetch('/api/spatial-resources/' + resourceId + '/data')
+                    // Load data - AYNI KOD
+                    fetch(`/api/spatial-resources/${resourceId}/data`)
                       .then(r => r.json())
                       .then(result => {
-                        console.log('Data type:', result.type);
+                        console.log('Type:', result.type);
 
                         if (result.type === 'api' && result.url) {
                           return fetch(result.url);
                         } else if (result.type === 'geojson' && result.data) {
                           L.geoJSON(result.data).addTo(map);
-                          console.log('✓ GeoJSON added');
-                          return null;
                         }
                       })
                       .then(r => r ? r.json() : null)
@@ -1090,7 +1075,6 @@ display:none !important;
 
                         const data = json.onemliyer || json.data || json;
                         if (Array.isArray(data)) {
-                          let count = 0;
                           data.forEach(item => {
                             if (item.ENLEM && item.BOYLAM) {
                               L.circleMarker([item.ENLEM, item.BOYLAM], {
@@ -1100,21 +1084,14 @@ display:none !important;
                                 weight: 2,
                                 fillOpacity: 0.8
                               }).addTo(map).bindPopup(item.ADI || item.ISIM || 'Nokta');
-                              count++;
                             }
                           });
-                          console.log('✓ Added', count, 'markers');
+                          console.log('✓ Markers added');
                         }
                       })
-                      .catch(e => {
-                        console.error('Error loading data:', e);
-                      });
-
-                  } else if (map) {
-                    console.log('Map already exists, resizing...');
-                    map.invalidateSize();
+                      .catch(e => console.error(e));
                   } else {
-                    console.error('Map div not found!');
+                    map.invalidateSize();
                   }
                 }, 200);
               });

@@ -2659,6 +2659,42 @@ class SpatialResourceManager {
       spatialResources.map(r => `<option value="${r.resource_id}">${r.resource_name || 'İsimsiz kaynak'}</option>`).join('');
   }
 
+  // Frontend API helpers (copied from mekansal.html for CORS handling)
+  findDataArrayInJson(jsonData) {
+    if (Array.isArray(jsonData)) return jsonData;
+    if (typeof jsonData === 'object' && jsonData !== null) {
+      const keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features'];
+      for (const k of keys) {
+        if (k in jsonData && Array.isArray(jsonData[k])) return jsonData[k];
+      }
+      for (const k in jsonData) {
+        if (Array.isArray(jsonData[k]) && jsonData[k].length > 0) return jsonData[k];
+      }
+    }
+    return null;
+  }
+
+  async loadMetadataFieldsFromApiFrontend(apiUrl) {
+    // Try to fetch API data directly in frontend with CORS
+    const res = await fetch(apiUrl, { mode: 'cors' });
+    if (!res.ok) throw new Error(`API isteği başarısız: Status ${res.status}`);
+    const json = await res.json();
+    const dataArray = this.findDataArrayInJson(json);
+    if (!dataArray || dataArray.length === 0) {
+      throw new Error('API yanıtında uygun formatta veri bulunamadı.');
+    }
+
+    // Extract fields and sample data from first item
+    const firstItem = dataArray[0];
+    if (typeof firstItem === 'object' && firstItem !== null) {
+      const fields = Object.keys(firstItem);
+      const sampleData = firstItem;
+      return { fields, sampleData };
+    }
+
+    throw new Error('API verisi geçersiz formatta');
+  }
+
   async loadMetadataFields(resourceId) {
     if (!resourceId) {
       document.getElementById('metadataFieldsEditor').style.display = 'none';
@@ -2676,18 +2712,47 @@ class SpatialResourceManager {
 
       this.currentMetadataResourceId = resourceId;
 
-      // Load fields from API
-      const fieldsResponse = await fetch(`/api/spatial-resources/${resourceId}/metadata-fields`, { credentials: 'include' });
-      const fieldsData = await fieldsResponse.json();
+      // Get resource info for fallback handling
+      const currentResource = this.allResources.find(r => r.resource_id === resourceId);
+      const resourceFormat = currentResource ? (currentResource.format || '').toLowerCase() : '';
+      const resourceUrl = currentResource ? currentResource.url : '';
 
-      if (!fieldsData.success) {
-        throw new Error(fieldsData.error || 'Alanlar yüklenemedi');
+      // Load fields from backend API first
+      let fieldsData = null;
+      let backendError = null;
+
+      try {
+        const fieldsResponse = await fetch(`/api/spatial-resources/${resourceId}/metadata-fields`, { credentials: 'include' });
+        fieldsData = await fieldsResponse.json();
+
+        if (!fieldsData.success) {
+          backendError = fieldsData.error || 'Alanlar yüklenemedi';
+        }
+      } catch (error) {
+        backendError = error.message;
       }
 
-      this.currentMetadataFields = fieldsData.fields || [];
-      this.currentMetadataSample = fieldsData.sample_data;
+      // If backend fails and resource is API/REST format, try frontend fallback
+      if (backendError && ['api', 'rest', 'json'].includes(resourceFormat) && resourceUrl) {
+        console.log('⚠️ Backend failed, trying frontend API fetch for:', resourceUrl);
+        console.log('⚠️ Backend error was:', backendError);
 
-      console.log('✅ Loaded fields:', this.currentMetadataFields);
+        try {
+          const frontendResult = await this.loadMetadataFieldsFromApiFrontend(resourceUrl);
+          this.currentMetadataFields = frontendResult.fields || [];
+          this.currentMetadataSample = frontendResult.sampleData;
+          console.log('✅ Loaded fields via frontend fallback:', this.currentMetadataFields);
+        } catch (frontendError) {
+          console.error('❌ Frontend fallback also failed:', frontendError);
+          throw new Error(`Backend hatası: ${backendError}. Frontend denemesi de başarısız: ${frontendError.message}`);
+        }
+      } else if (backendError) {
+        throw new Error(backendError);
+      } else {
+        this.currentMetadataFields = fieldsData.fields || [];
+        this.currentMetadataSample = fieldsData.sample_data;
+        console.log('✅ Loaded fields from backend:', this.currentMetadataFields);
+      }
 
       // Load existing mappings
       const mappingsResponse = await fetch(`/api/spatial-resources/${resourceId}/metadata-mappings`, { credentials: 'include' });

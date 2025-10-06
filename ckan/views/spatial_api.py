@@ -564,6 +564,9 @@ def get_resource_columns(resource_id):
             else:
                 return jsonify({'error': 'JSON verisi uygun formatta değil'}), 400
         
+        # NaN değerlerini None'a çevir (JSON için)
+        df = df.where(pd.notna(df), None)
+
         return jsonify({
             'success': True,
             'columns': list(df.columns),
@@ -956,11 +959,14 @@ def process_tabular_data(url, format_type, resource_id):
     coord_result = smart_detect_coordinate_columns(df)
     
     if not coord_result['found']:
+        # NaN değerlerini temizle
+        clean_df = df.head(3).where(pd.notna(df.head(3)), None)
+
         return jsonify({
             'success': False,
             'error': 'Koordinat sütunları otomatik tespit edilemedi',
             'columns': list(df.columns),
-            'sample_data': df.head(3).to_dict('records'),
+            'sample_data': clean_df.to_dict('records'),
             'suggestions': coord_result['suggestions'],
         }), 400
     
@@ -1164,7 +1170,9 @@ def generate_suggestions(df, lat_candidates, lon_candidates):
         suggestions.append("Boylam için aday sütun bulunamadı. 'lon', 'longitude', 'boylam', 'x' gibi isimler arıyoruz.")
     
     try:
-        sample_data = df.head(2).to_dict('records')
+        # NaN değerlerini temizle
+        clean_df = df.head(2).where(pd.notna(df.head(2)), None)
+        sample_data = clean_df.to_dict('records')
         suggestions.append(f"Örnek veri: {sample_data}")
     except:
         pass
@@ -1532,6 +1540,9 @@ def get_resource_metadata_fields(resource_id):
                 response = requests.get(url, timeout=30, verify=False)
                 response.raise_for_status()
                 df = pd.read_excel(io.BytesIO(response.content), nrows=5)
+
+            # NaN değerlerini None'a çevir (JSON için)
+            df = df.where(pd.notna(df), None)
 
             fields = list(df.columns)
             sample_data = df.iloc[0].to_dict() if len(df) > 0 else {}

@@ -119,7 +119,7 @@
   }
 
   .stat-label {
-    font-size: 0.85rem;
+    font-size: 13px;
     opacity: 0.9;
     margin-top: 4px;
     font-weight: 500;
@@ -2471,8 +2471,13 @@
             icon: getDivIcon(),
             pane: paneName
           });
-          const popupContent = this.createPopupContent(feature, resource);
-          marker.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
+
+          // Lazy load popup content when opened
+          marker.on('click', async () => {
+            const popupContent = await this.createPopupContent(feature, resource);
+            marker.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' }).openPopup();
+          });
+
           return marker;
         });
 
@@ -2497,8 +2502,11 @@
               fillOpacity: 0.3
             }),
             onEachFeature: (feature, layer) => {
-              const popupContent = this.createPopupContent(feature, resource);
-              layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
+              // Lazy load popup content when opened
+              layer.on('click', async () => {
+                const popupContent = await this.createPopupContent(feature, resource);
+                layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' }).openPopup();
+              });
 
               if (layer.setStyle) {
                 layer.on('mouseover', () => {
@@ -2579,21 +2587,94 @@
       }
     }
 
-    createPopupContent(feature, resource) {
+    async createPopupContent(feature, resource) {
+      // Load metadata mappings for this resource
+      const mappingsData = await this.getMetadataMappings(resource.resource_id);
+      const mappings = mappingsData.field_mappings || {};
+      const visibilityMode = mappingsData.visibility_mode || 'show_all';
+      const visibleFields = mappingsData.visible_fields || [];
+
       let content = '<div class="popup-content">';
       content += `<div class="popup-resource-header">${resource.resource_name}<br><small style="opacity:.8;">${resource.format || 'Bilinmiyor'}</small></div>`;
+
       if (feature.properties && typeof feature.properties === 'object') {
         Object.entries(feature.properties).forEach(([k, v]) => {
           if (v !== null && v !== undefined && v !== '') {
-            content += `<div><strong>${k}:</strong> ${v}</div>`;
+            const mapping = mappings[k];
+
+            // Determine if field should be shown based on visibility mode
+            let shouldShow = false;
+
+            if (visibilityMode === 'show_all') {
+              // Show all mode: show unless explicitly hidden
+              shouldShow = !(mapping && mapping.hidden);
+            } else {
+              // Show selected mode: show only if in visible_fields list
+              shouldShow = visibleFields.includes(k);
+            }
+
+            if (!shouldShow) {
+              return; // Skip this field
+            }
+
+            // Get display name (default to original key)
+            const displayName = mapping?.displayName || k;
+
+            // Apply value mapping if exists
+            let displayValue = v;
+            if (mapping?.valueMapping && mapping.valueMapping[v]) {
+              displayValue = mapping.valueMapping[v];
+            }
+
+            content += `<div><strong>${displayName}:</strong> ${displayValue}</div>`;
           }
         });
       }
+
       content += `<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; text-align: center;">
         <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" target="_blank" style="color:#007bff;text-decoration:none;font-weight:500;">Kaynağı Görüntüle →</a>
       </div>`;
       content += '</div>';
       return content;
+    }
+
+    async getMetadataMappings(resourceId) {
+      // Cache metadata mappings to avoid repeated API calls
+      if (!this.metadataMappingsCache) {
+        this.metadataMappingsCache = {};
+      }
+
+      if (this.metadataMappingsCache[resourceId] !== undefined) {
+        return this.metadataMappingsCache[resourceId];
+      }
+
+      try {
+        const response = await fetch(`/api/spatial-resources/${resourceId}/metadata-mappings`, {
+          credentials: 'include'
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          const mappingsData = {
+            field_mappings: data.field_mappings || {},
+            visibility_mode: data.visibility_mode || 'show_all',
+            visible_fields: data.visible_fields || []
+          };
+          this.metadataMappingsCache[resourceId] = mappingsData;
+          return mappingsData;
+        }
+      } catch (error) {
+        console.warn('Could not load metadata mappings for', resourceId, error);
+      }
+
+      // Return empty mappings if not found or error
+      const emptyMappings = {
+        field_mappings: {},
+        visibility_mode: 'show_all',
+        visible_fields: []
+      };
+      this.metadataMappingsCache[resourceId] = emptyMappings;
+      return emptyMappings;
     }
 
     findDataArrayInJson(jsonData) {

@@ -1129,6 +1129,12 @@
   🔗
 </button>
 
+<!-- Floating Metadata Settings Button -->
+<button class="floating-map-btn" id="metadataFloatingBtn" onclick="spatialManager.openMetadataModal()"
+        title="Metaveri Ayarları" style="bottom: 190px;">
+  🏷️
+</button>
+
 <!-- Map Modal -->
 <div class="map-modal-overlay" id="mapModalOverlay" onclick="spatialManager.closeMapModal(event)">
   <div class="map-modal" onclick="event.stopPropagation()">
@@ -1224,6 +1230,102 @@
   </div>
 </div>
 
+<!-- Metadata Settings Modal -->
+<div class="map-modal-overlay" id="metadataModalOverlay" onclick="spatialManager.closeMetadataModal(event)">
+  <div class="map-modal" onclick="event.stopPropagation()" style="max-width: 1000px;">
+    <div class="map-modal-header">
+      <h2 class="map-modal-title">🏷️ Metaveri Ayarları</h2>
+      <button class="map-modal-close" onclick="spatialManager.closeMetadataModal()">&times;</button>
+    </div>
+    <div class="map-modal-body" style="max-height: calc(85vh - 80px);">
+      <!-- Info Banner -->
+      <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+        <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px;">
+          💡 Metaveri Düzenleme
+        </div>
+        <div style="font-size: 12px; color: #6c757d; line-height: 1.5;">
+          Haritada gösterilen metaveri alanlarını düzenleyin. Alan adlarını değiştirebilir, bazı alanları gizleyebilir ve değerleri özelleştirebilirsiniz.
+        </div>
+      </div>
+
+      <!-- Resource Selection -->
+      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <label style="display: block; font-weight: 600; margin-bottom: 8px; color: #495057;">
+          📦 Kaynak Seçin
+        </label>
+        <select id="metadataResourceSelect" onchange="spatialManager.loadMetadataFields(this.value)"
+                style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+          <option value="">-- Bir mekansal kaynak seçin --</option>
+        </select>
+      </div>
+
+      <!-- Fields Editor (will be populated when resource is selected) -->
+      <div id="metadataFieldsEditor" style="display: none;">
+        <div style="background: white; border: 2px solid #e9ecef; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3 style="margin: 0; font-size: 16px; color: #495057;">📋 Metaveri Alanları</h3>
+            <button onclick="spatialManager.saveMetadataMappings()"
+                    style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                    onmouseover="this.style.background='#218838'"
+                    onmouseout="this.style.background='#28a745'">
+              💾 Kaydet
+            </button>
+          </div>
+
+          <!-- Visibility Mode Selector -->
+          <div style="background: #f0f8ff; border: 2px solid #4dabf7; border-radius: 6px; padding: 12px; margin-bottom: 16px;">
+            <div style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 8px;">
+              👁️ Görünürlük Modu
+            </div>
+            <div style="display: flex; gap: 12px;">
+              <label style="flex: 1; cursor: pointer; background: white; border: 2px solid #ced4da; border-radius: 6px; padding: 10px; display: flex; align-items: center; gap: 8px; transition: all 0.2s;"
+                     id="visibilityModeShowAll"
+                     onclick="spatialManager.setVisibilityMode('show_all')">
+                <input type="radio" name="visibilityMode" value="show_all" checked style="cursor: pointer;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 600; color: #495057;">Tüm Alanları Göster</div>
+                  <div style="font-size: 10px; color: #6c757d;">Sadece seçtiklerini gizle</div>
+                </div>
+              </label>
+              <label style="flex: 1; cursor: pointer; background: white; border: 2px solid #ced4da; border-radius: 6px; padding: 10px; display: flex; align-items: center; gap: 8px; transition: all 0.2s;"
+                     id="visibilityModeShowSelected"
+                     onclick="spatialManager.setVisibilityMode('show_selected')">
+                <input type="radio" name="visibilityMode" value="show_selected" style="cursor: pointer;">
+                <div>
+                  <div style="font-size: 12px; font-weight: 600; color: #495057;">Sadece Seçilenleri Göster</div>
+                  <div style="font-size: 10px; color: #6c757d;">Sadece işaretlediklerini göster</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Sample Data Preview -->
+          <div id="sampleDataPreview" style="background: #e3f2fd; padding: 12px; border-radius: 6px; margin-bottom: 16px; display: none;">
+            <div style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 8px;">
+              📊 Örnek Veri (İlk Kayıt):
+            </div>
+            <div id="sampleDataContent" style="font-size: 11px; color: #6c757d; font-family: monospace; max-height: 120px; overflow-y: auto;"></div>
+          </div>
+
+          <!-- Field List -->
+          <div id="metadataFieldsList" style="max-height: 450px; overflow-y: auto;">
+            <!-- Will be populated dynamically -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="metadataEmptyState">
+        <div style="text-align: center; padding: 60px 20px; color: #6c757d;">
+          <div style="font-size: 64px; margin-bottom: 16px; opacity: 0.5;">🏷️</div>
+          <h3 style="margin: 0 0 8px 0; color: #495057;">Metaveri Ayarlarını Başlatın</h3>
+          <p style="margin: 0; font-size: 14px;">Yukarıdan bir mekansal kaynak seçerek başlayın</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 console.log('🚀 Modern Mekansal Resource Yönetimi');
 
@@ -1266,6 +1368,13 @@ class SpatialResourceManager {
     this.pickerSpatialResourceId = null;
     this.pickerResources = [];
     this.filteredPickerResources = [];
+
+    // Metadata settings
+    this.currentMetadataResourceId = null;
+    this.currentMetadataFields = [];
+    this.currentMetadataSample = null;
+    this.metadataMappings = {}; // { fieldName: { displayName: '...', valueMapping: {...}, hidden: bool, visible: bool } }
+    this.visibilityMode = 'show_all'; // 'show_all' or 'show_selected'
 
     this.init();
   }
@@ -2484,6 +2593,332 @@ class SpatialResourceManager {
 
     } catch (error) {
       console.error('❌ Error adding relationship:', error);
+      alert('Hata: ' + error.message);
+    }
+  }
+
+  // ===== METADATA SETTINGS MANAGEMENT =====
+
+  async openMetadataModal() {
+    const overlay = document.getElementById('metadataModalOverlay');
+    overlay.classList.add('active');
+    await this.populateMetadataResourceList();
+  }
+
+  closeMetadataModal(event) {
+    if (event && event.target !== document.getElementById('metadataModalOverlay') && !event.target.classList.contains('map-modal-close')) {
+      return;
+    }
+    document.getElementById('metadataModalOverlay').classList.remove('active');
+    // Reset state
+    this.currentMetadataResourceId = null;
+    this.currentMetadataFields = [];
+    this.currentMetadataSample = null;
+    this.metadataMappings = {};
+    document.getElementById('metadataResourceSelect').value = '';
+    document.getElementById('metadataFieldsEditor').style.display = 'none';
+    document.getElementById('metadataEmptyState').style.display = 'block';
+  }
+
+  async populateMetadataResourceList() {
+    const select = document.getElementById('metadataResourceSelect');
+
+    // Get only spatial resources
+    const spatialResources = this.allResources.filter(r => this.spatialResourceIds.has(r.resource_id));
+
+    select.innerHTML = '<option value="">-- Bir mekansal kaynak seçin --</option>' +
+      spatialResources.map(r => `<option value="${r.resource_id}">${r.resource_name || 'İsimsiz kaynak'}</option>`).join('');
+  }
+
+  async loadMetadataFields(resourceId) {
+    if (!resourceId) {
+      document.getElementById('metadataFieldsEditor').style.display = 'none';
+      document.getElementById('metadataEmptyState').style.display = 'block';
+      return;
+    }
+
+    try {
+      console.log('🔄 Loading metadata fields for:', resourceId);
+
+      // Show loading
+      document.getElementById('metadataEmptyState').style.display = 'none';
+      document.getElementById('metadataFieldsEditor').style.display = 'block';
+      document.getElementById('metadataFieldsList').innerHTML = '<div style="text-align: center; padding: 40px;"><div style="font-size: 32px;">⏳</div><p>Yükleniyor...</p></div>';
+
+      this.currentMetadataResourceId = resourceId;
+
+      // Load fields from API
+      const fieldsResponse = await fetch(`/api/spatial-resources/${resourceId}/metadata-fields`, { credentials: 'include' });
+      const fieldsData = await fieldsResponse.json();
+
+      if (!fieldsData.success) {
+        throw new Error(fieldsData.error || 'Alanlar yüklenemedi');
+      }
+
+      this.currentMetadataFields = fieldsData.fields || [];
+      this.currentMetadataSample = fieldsData.sample_data;
+
+      console.log('✅ Loaded fields:', this.currentMetadataFields);
+
+      // Load existing mappings
+      const mappingsResponse = await fetch(`/api/spatial-resources/${resourceId}/metadata-mappings`, { credentials: 'include' });
+      const mappingsData = await mappingsResponse.json();
+
+      if (mappingsData.success && mappingsData.field_mappings) {
+        this.metadataMappings = mappingsData.field_mappings;
+        this.visibilityMode = mappingsData.visibility_mode || 'show_all';
+        console.log('✅ Loaded existing mappings:', this.metadataMappings);
+        console.log('✅ Visibility mode:', this.visibilityMode);
+      } else {
+        // Initialize empty mappings
+        this.metadataMappings = {};
+        this.visibilityMode = 'show_all';
+      }
+
+      // Update visibility mode radio buttons
+      document.querySelector('input[name="visibilityMode"][value="show_all"]').checked = (this.visibilityMode === 'show_all');
+      document.querySelector('input[name="visibilityMode"][value="show_selected"]').checked = (this.visibilityMode === 'show_selected');
+      this.updateVisibilityModeStyles();
+
+      // Render fields
+      this.renderMetadataFields();
+
+    } catch (error) {
+      console.error('❌ Error loading metadata fields:', error);
+      document.getElementById('metadataFieldsList').innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #dc3545;">
+          <div style="font-size: 32px;">❌</div>
+          <p>Hata: ${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  renderMetadataFields() {
+    const container = document.getElementById('metadataFieldsList');
+    const samplePreview = document.getElementById('sampleDataPreview');
+    const sampleContent = document.getElementById('sampleDataContent');
+
+    // Show sample data
+    if (this.currentMetadataSample) {
+      samplePreview.style.display = 'block';
+      sampleContent.innerHTML = Object.entries(this.currentMetadataSample)
+        .map(([key, value]) => `<div><strong>${key}:</strong> ${value}</div>`)
+        .join('');
+    } else {
+      samplePreview.style.display = 'none';
+    }
+
+    if (this.currentMetadataFields.length === 0) {
+      container.innerHTML = '<div style="text-align: center; padding: 40px; color: #6c757d;"><p>Alan bulunamadı</p></div>';
+      return;
+    }
+
+    // Get hidden fields list
+    const hiddenFields = Object.entries(this.metadataMappings)
+      .filter(([_, mapping]) => mapping.hidden)
+      .map(([fieldName, _]) => fieldName);
+
+    container.innerHTML = this.currentMetadataFields.map(fieldName => {
+      const mapping = this.metadataMappings[fieldName] || { displayName: fieldName, valueMapping: {}, hidden: false, visible: false };
+      const sampleValue = this.currentMetadataSample?.[fieldName] || '';
+
+      // Determine visibility based on mode
+      let isChecked, isActive, statusLabel, checkboxLabel, bgColor, borderColor;
+
+      if (this.visibilityMode === 'show_all') {
+        // Show all mode: checkbox = "Gizle"
+        isChecked = mapping.hidden || false;
+        isActive = !isChecked;
+        statusLabel = isChecked ? '🚫 GİZLİ' : '';
+        checkboxLabel = 'Gizle';
+        bgColor = isChecked ? '#f8d7da' : '#f8f9fa';
+        borderColor = isChecked ? '#f5c6cb' : '#e9ecef';
+      } else {
+        // Show selected mode: checkbox = "Göster"
+        isChecked = mapping.visible || false;
+        isActive = isChecked;
+        statusLabel = isChecked ? '✅ GÖSTERİLİYOR' : '🚫 GİZLİ';
+        checkboxLabel = 'Göster';
+        bgColor = isChecked ? '#d4edda' : '#f8d7da';
+        borderColor = isChecked ? '#c3e6cb' : '#f5c6cb';
+      }
+
+      return `
+        <div style="background: ${bgColor}; border: 2px solid ${borderColor};
+                    border-radius: 8px; padding: 12px; margin-bottom: 12px; transition: all 0.2s;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="font-weight: 600; color: #495057; flex: 1;">
+              ${fieldName}
+              ${statusLabel ? `<span style="color: ${isActive ? '#28a745' : '#dc3545'}; font-size: 11px; margin-left: 8px;">${statusLabel}</span>` : ''}
+            </div>
+            <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; color: #6c757d;">
+              <input type="checkbox"
+                     ${isChecked ? 'checked' : ''}
+                     onchange="spatialManager.toggleFieldVisibility('${fieldName.replace(/'/g, "\\'")}', this.checked)"
+                     style="cursor: pointer;">
+              ${checkboxLabel}
+            </label>
+          </div>
+
+          ${isActive ? `
+            <div style="margin-bottom: 8px;">
+              <label style="display: block; font-size: 11px; font-weight: 600; color: #6c757d; margin-bottom: 4px;">
+                Görünen Ad:
+              </label>
+              <input type="text"
+                     value="${mapping.displayName || fieldName}"
+                     onchange="spatialManager.updateFieldDisplayName('${fieldName.replace(/'/g, "\\'")}', this.value)"
+                     placeholder="${fieldName}"
+                     style="width: 100%; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;">
+            </div>
+
+            ${sampleValue ? `
+              <div style="background: white; padding: 8px; border-radius: 4px; border: 1px solid #dee2e6;">
+                <div style="font-size: 11px; font-weight: 600; color: #6c757d; margin-bottom: 6px;">
+                  Örnek Değer: <code style="background: #e9ecef; padding: 2px 6px; border-radius: 3px;">${sampleValue}</code>
+                </div>
+                <label style="display: block; font-size: 11px; font-weight: 600; color: #6c757d; margin-bottom: 4px;">
+                  Değer Eşleştirme (Opsiyonel - bu değer yerine başka bir şey göster):
+                </label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="text"
+                         value="${sampleValue}"
+                         disabled
+                         style="flex: 1; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px; background: #e9ecef;">
+                  <span style="padding: 6px 8px; color: #6c757d;">→</span>
+                  <input type="text"
+                         value="${mapping.valueMapping?.[sampleValue] || ''}"
+                         onchange="spatialManager.updateValueMapping('${fieldName.replace(/'/g, "\\'")}', '${String(sampleValue).replace(/'/g, "\\'")}', this.value)"
+                         placeholder="Özel değer"
+                         style="flex: 1; padding: 6px 8px; border: 1px solid #ced4da; border-radius: 4px; font-size: 12px;">
+                </div>
+              </div>
+            ` : ''}
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  toggleFieldVisibility(fieldName, isChecked) {
+    if (!this.metadataMappings[fieldName]) {
+      this.metadataMappings[fieldName] = { displayName: fieldName, valueMapping: {}, hidden: false, visible: false };
+    }
+
+    if (this.visibilityMode === 'show_all') {
+      // Show all mode: checkbox controls "hidden"
+      this.metadataMappings[fieldName].hidden = isChecked;
+      this.metadataMappings[fieldName].visible = false; // Clear visible flag
+      console.log(`✏️ Toggle field hidden: ${fieldName} = ${isChecked}`);
+    } else {
+      // Show selected mode: checkbox controls "visible"
+      this.metadataMappings[fieldName].visible = isChecked;
+      this.metadataMappings[fieldName].hidden = false; // Clear hidden flag
+      console.log(`✏️ Toggle field visible: ${fieldName} = ${isChecked}`);
+    }
+
+    this.renderMetadataFields();
+  }
+
+  updateFieldDisplayName(fieldName, displayName) {
+    if (!this.metadataMappings[fieldName]) {
+      this.metadataMappings[fieldName] = { displayName: fieldName, valueMapping: {}, hidden: false };
+    }
+    this.metadataMappings[fieldName].displayName = displayName;
+    console.log(`✏️ Updated display name: ${fieldName} -> ${displayName}`);
+  }
+
+  updateValueMapping(fieldName, originalValue, newValue) {
+    if (!this.metadataMappings[fieldName]) {
+      this.metadataMappings[fieldName] = { displayName: fieldName, valueMapping: {}, hidden: false };
+    }
+    if (!this.metadataMappings[fieldName].valueMapping) {
+      this.metadataMappings[fieldName].valueMapping = {};
+    }
+    if (newValue) {
+      this.metadataMappings[fieldName].valueMapping[originalValue] = newValue;
+    } else {
+      delete this.metadataMappings[fieldName].valueMapping[originalValue];
+    }
+    console.log(`✏️ Updated value mapping: ${fieldName}.${originalValue} -> ${newValue}`);
+  }
+
+  setVisibilityMode(mode) {
+    this.visibilityMode = mode;
+    console.log(`✏️ Visibility mode changed: ${mode}`);
+
+    // Update radio buttons
+    document.querySelector('input[name="visibilityMode"][value="show_all"]').checked = (mode === 'show_all');
+    document.querySelector('input[name="visibilityMode"][value="show_selected"]').checked = (mode === 'show_selected');
+
+    // Update styles
+    this.updateVisibilityModeStyles();
+
+    // Re-render fields
+    this.renderMetadataFields();
+  }
+
+  updateVisibilityModeStyles() {
+    const showAllLabel = document.getElementById('visibilityModeShowAll');
+    const showSelectedLabel = document.getElementById('visibilityModeShowSelected');
+
+    if (this.visibilityMode === 'show_all') {
+      showAllLabel.style.borderColor = '#4dabf7';
+      showAllLabel.style.background = '#e7f5ff';
+      showSelectedLabel.style.borderColor = '#ced4da';
+      showSelectedLabel.style.background = 'white';
+    } else {
+      showAllLabel.style.borderColor = '#ced4da';
+      showAllLabel.style.background = 'white';
+      showSelectedLabel.style.borderColor = '#4dabf7';
+      showSelectedLabel.style.background = '#e7f5ff';
+    }
+  }
+
+  async saveMetadataMappings() {
+    if (!this.currentMetadataResourceId) {
+      alert('Hata: Kaynak seçilmedi');
+      return;
+    }
+
+    try {
+      console.log('💾 Saving metadata mappings:', this.metadataMappings);
+      console.log('💾 Visibility mode:', this.visibilityMode);
+
+      // Extract hidden fields (for show_all mode)
+      const hiddenFields = Object.entries(this.metadataMappings)
+        .filter(([_, mapping]) => mapping.hidden)
+        .map(([fieldName, _]) => fieldName);
+
+      // Extract visible fields (for show_selected mode)
+      const visibleFields = Object.entries(this.metadataMappings)
+        .filter(([_, mapping]) => mapping.visible)
+        .map(([fieldName, _]) => fieldName);
+
+      const response = await fetch(`/api/spatial-resources/${this.currentMetadataResourceId}/metadata-mappings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          field_mappings: this.metadataMappings,
+          hidden_fields: hiddenFields,
+          visibility_mode: this.visibilityMode,
+          visible_fields: visibleFields
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Kaydetme başarısız');
+      }
+
+      console.log('✅ Metadata mappings saved successfully');
+      alert('✅ Metaveri ayarları başarıyla kaydedildi!');
+
+    } catch (error) {
+      console.error('❌ Error saving metadata mappings:', error);
       alert('Hata: ' + error.message);
     }
   }

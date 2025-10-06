@@ -1435,3 +1435,249 @@ def delete_resource_relationship(resource_id, related_id):
         model.Session.rollback()
         print(f"Delete relationship error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+# === METADATA MAPPINGS ENDPOINTS ===
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/metadata-fields')
+def get_resource_metadata_fields(resource_id):
+    """Get all metadata fields for a spatial resource by fetching sample data"""
+    try:
+        # Admin kontrolü
+        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
+        query = text("""
+            SELECT r.url, r.format, sr.is_spatial
+            FROM resource r
+            LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
+            WHERE r.id = :resource_id AND r.state = 'active'
+        """)
+
+        result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
+
+        if not result:
+            return jsonify({'error': 'Resource not found'}), 404
+
+        if not result.is_spatial:
+            return jsonify({'error': 'Resource is not marked as spatial'}), 400
+
+        site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
+        url = get_absolute_url(site_url, result.url)
+        format_type = (result.format or '').lower()
+
+        # Veri tipine göre örnek veriyi çek
+        fields = []
+        sample_data = None
+
+        if format_type == 'geojson':
+            response = requests.get(url, timeout=30, verify=False)
+            response.raise_for_status()
+            geojson_data = response.json()
+
+            if geojson_data.get('type') == 'FeatureCollection' and geojson_data.get('features'):
+                # İlk feature'dan property'leri al
+                first_feature = geojson_data['features'][0]
+                if 'properties' in first_feature:
+                    fields = list(first_feature['properties'].keys())
+                    sample_data = first_feature['properties']
+
+        elif format_type in ['csv', 'xls', 'xlsx']:
+            if format_type == 'csv':
+                response = requests.get(url, timeout=30, verify=False)
+                response.raise_for_status()
+                try:
+                    df = pd.read_csv(io.StringIO(response.text), nrows=5, encoding='utf-8')
+                except UnicodeDecodeError:
+                    df = pd.read_csv(io.StringIO(response.text), nrows=5, encoding='latin-1')
+            else:
+                response = requests.get(url, timeout=30, verify=False)
+                response.raise_for_status()
+                df = pd.read_excel(io.BytesIO(response.content), nrows=5)
+
+            fields = list(df.columns)
+            sample_data = df.iloc[0].to_dict() if len(df) > 0 else {}
+
+        elif format_type in ['json', 'api', 'rest']:
+            response = requests.get(url, timeout=30, verify=False)
+            response.raise_for_status()
+            json_data = response.json()
+
+            # API response'unu parse et
+            if isinstance(json_data, dict):
+                for key in ['data', 'results', 'items', 'onemliyer', 'records']:
+                    if key in json_data and isinstance(json_data[key], list) and len(json_data[key]) > 0:
+                        json_data = json_data[key]
+                        break
+
+            if isinstance(json_data, list) and len(json_data) > 0:
+                first_item = json_data[0]
+                if isinstance(first_item, dict):
+                    fields = list(first_item.keys())
+                    sample_data = first_item
+
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'format': format_type,
+            'fields': fields,
+            'sample_data': sample_data,
+            'total_fields': len(fields)
+        })
+
+    except Exception as e:
+        print(f"Get metadata fields error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/metadata-mappings')
+def get_metadata_mappings(resource_id):
+    """Get metadata mappings for a spatial resource"""
+    try:
+        # Admin kontrolü
+        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        query = text("""
+            SELECT field_mappings, hidden_fields, visibility_mode, visible_fields,
+                   created_by, created_date, updated_by, updated_date
+            FROM spatial_metadata_mappings
+            WHERE resource_id = :resource_id
+        """)
+
+        result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
+
+        if not result:
+            # Henüz mapping yok, boş döndür
+            return jsonify({
+                'success': True,
+                'resource_id': resource_id,
+                'field_mappings': {},
+                'hidden_fields': [],
+                'visibility_mode': 'show_all',
+                'visible_fields': [],
+                'exists': False
+            })
+
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'field_mappings': result.field_mappings,
+            'hidden_fields': result.hidden_fields or [],
+            'visibility_mode': result.visibility_mode or 'show_all',
+            'visible_fields': result.visible_fields or [],
+            'created_by': result.created_by,
+            'created_date': result.created_date.isoformat() if result.created_date else None,
+            'updated_by': result.updated_by,
+            'updated_date': result.updated_date.isoformat() if result.updated_date else None,
+            'exists': True
+        })
+
+    except Exception as e:
+        print(f"Get metadata mappings error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/metadata-mappings', methods=['POST'])
+def save_metadata_mappings(resource_id):
+    """Save or update metadata mappings for a spatial resource"""
+    try:
+        # Admin kontrolü
+        user = toolkit.c.userobj
+        if not user or not authz.is_sysadmin(user.name):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    field_mappings = data.get('field_mappings', {})
+    hidden_fields = data.get('hidden_fields', [])
+    visibility_mode = data.get('visibility_mode', 'show_all')
+    visible_fields = data.get('visible_fields', [])
+
+    try:
+        # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
+        resource_check = model.Session.execute(
+            text("""
+                SELECT r.id, sr.is_spatial
+                FROM resource r
+                LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
+                WHERE r.id = :resource_id AND r.state = 'active'
+            """),
+            {'resource_id': resource_id}
+        ).fetchone()
+
+        if not resource_check:
+            return jsonify({'error': 'Resource not found'}), 404
+
+        if not resource_check.is_spatial:
+            return jsonify({'error': 'Resource is not marked as spatial'}), 400
+
+        # Mevcut mapping var mı kontrol et
+        existing = model.Session.execute(
+            text("SELECT id FROM spatial_metadata_mappings WHERE resource_id = :resource_id"),
+            {'resource_id': resource_id}
+        ).fetchone()
+
+        if existing:
+            # Güncelle
+            model.Session.execute(
+                text("""
+                    UPDATE spatial_metadata_mappings
+                    SET field_mappings = :field_mappings,
+                        hidden_fields = :hidden_fields,
+                        visibility_mode = :visibility_mode,
+                        visible_fields = :visible_fields,
+                        updated_by = :updated_by,
+                        updated_date = CURRENT_TIMESTAMP
+                    WHERE resource_id = :resource_id
+                """),
+                {
+                    'resource_id': resource_id,
+                    'field_mappings': json.dumps(field_mappings),
+                    'hidden_fields': hidden_fields,
+                    'visibility_mode': visibility_mode,
+                    'visible_fields': visible_fields,
+                    'updated_by': user.name
+                }
+            )
+        else:
+            # Oluştur
+            model.Session.execute(
+                text("""
+                    INSERT INTO spatial_metadata_mappings
+                    (resource_id, field_mappings, hidden_fields, visibility_mode, visible_fields, created_by, updated_by)
+                    VALUES (:resource_id, :field_mappings, :hidden_fields, :visibility_mode, :visible_fields, :created_by, :updated_by)
+                """),
+                {
+                    'resource_id': resource_id,
+                    'field_mappings': json.dumps(field_mappings),
+                    'hidden_fields': hidden_fields,
+                    'visibility_mode': visibility_mode,
+                    'visible_fields': visible_fields,
+                    'created_by': user.name,
+                    'updated_by': user.name
+                }
+            )
+
+        model.Session.commit()
+
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'field_mappings': field_mappings,
+            'hidden_fields': hidden_fields,
+            'visibility_mode': visibility_mode,
+            'visible_fields': visible_fields,
+            'saved_by': user.name,
+            'message': 'Metadata mappings saved successfully'
+        })
+
+    except Exception as e:
+        model.Session.rollback()
+        print(f"Save metadata mappings error: {str(e)}")
+        return jsonify({'error': str(e)}), 500

@@ -34,8 +34,8 @@
   /* Site scroll'u kaldır */
   html,
   body {
-    overflow: hidden;
-    height: 100vh;
+    overflow: auto !important;
+    height: auto !important;
   }
 
   #content {
@@ -64,9 +64,9 @@
 
   .page-container {
     display: flex;
-    height: 100vh;
+    height: auto !important;
     overflow: hidden;
-    position: fixed;
+    position: relative !important;
     width: 100%;
   }
 
@@ -860,6 +860,29 @@
     text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
   }
 
+  /* Zoom limit warning animasyonları */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+  }
+
   /* ==== MOBİL ==== */
   @media (max-width: 900px) {
 
@@ -1240,7 +1263,7 @@
           attribution: '© OpenStreetMap'
         }),
         uydu: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-          maxZoom: 19,
+          maxZoom: 17, // Uydu için maksimum zoom limiti
           attribution: '© Esri'
         }),
         arazi: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
@@ -1255,6 +1278,11 @@
 
       // Default haritayı ekle
       this.baseMaps[this.currentBaseMap].addTo(this.map);
+
+      // Zoom limit kontrolü için event listener
+      this.map.on('zoomend', () => {
+        this.checkZoomLimit();
+      });
 
       // Basemap değiştirme butonları
       document.querySelectorAll('.basemap-button').forEach(btn => {
@@ -1275,6 +1303,63 @@
       document.querySelectorAll('.basemap-button').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.basemap === basemap);
       });
+
+      // Uydu görünümüne geçildiğinde zoom kontrolü
+      this.checkZoomLimit();
+    }
+
+    checkZoomLimit() {
+      // Sadece uydu görünümü için zoom limiti kontrolü
+      if (this.currentBaseMap === 'uydu') {
+        const currentZoom = this.map.getZoom();
+        const maxZoom = this.baseMaps.uydu.options.maxZoom;
+
+        if (currentZoom >= maxZoom) {
+          // Uyarı mesajı göster
+          this.showZoomLimitWarning();
+        }
+      }
+    }
+
+    showZoomLimitWarning() {
+      // Eğer zaten varsa gösterme
+      if (document.getElementById('zoomLimitWarning')) return;
+
+      const warning = document.createElement('div');
+      warning.id = 'zoomLimitWarning';
+      warning.style.cssText = `
+        position: absolute;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1001;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideDown 0.3s ease;
+      `;
+      warning.innerHTML = `
+        <span style="font-size: 20px;">⚠️</span>
+        <span>Uydu görünümünde maksimum yakınlaştırma seviyesine ulaştınız.</span>
+        <button onclick="this.parentElement.remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 10px;">✕</button>
+      `;
+
+      document.querySelector('.main-container').appendChild(warning);
+
+      // 5 saniye sonra otomatik kaldır
+      setTimeout(() => {
+        if (warning.parentElement) {
+          warning.style.animation = 'slideUp 0.3s ease';
+          setTimeout(() => warning.remove(), 300);
+        }
+      }, 5000);
     }
 
     toggleLayerSwitcher() {

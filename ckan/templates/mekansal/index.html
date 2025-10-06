@@ -1238,13 +1238,33 @@
       <button class="map-modal-close" onclick="spatialManager.closeMetadataModal()">&times;</button>
     </div>
     <div class="map-modal-body" style="max-height: calc(85vh - 80px);">
+      <!-- Global Reset Button (En Üstte) -->
+      <div style="background: linear-gradient(135deg, #ffe5e5 0%, #ffcccc 100%); border: 2px solid #dc3545; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="flex: 1;">
+            <div style="font-size: 14px; font-weight: 700; color: #dc3545; margin-bottom: 4px;">
+              ⚠️ Tehlikeli Bölge
+            </div>
+            <div style="font-size: 12px; color: #6c757d; line-height: 1.5;">
+              Tüm kaynaklar için tüm metaveri özelleştirmelerini sıfırlayın
+            </div>
+          </div>
+          <button onclick="spatialManager.resetAllResources()"
+                  style="background: #dc3545; color: white; border: none; padding: 12px 20px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.2s; white-space: nowrap;"
+                  onmouseover="this.style.background='#c82333'"
+                  onmouseout="this.style.background='#dc3545'">
+            🗑️ HEPSİNİ SIFIRLA
+          </button>
+        </div>
+      </div>
+
       <!-- Info Banner -->
       <div style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); border-left: 4px solid #ffc107; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
         <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px;">
           💡 Metaveri Düzenleme
         </div>
         <div style="font-size: 12px; color: #6c757d; line-height: 1.5;">
-          Haritada gösterilen metaveri alanlarını düzenleyin. Alan adlarını değiştirebilir, bazı alanları gizleyebilir ve değerleri özelleştirebilirsiniz.
+          Haritada gösterilen metaveri alanlarını düzenleyin. Alan adlarını değiştirebilir, bazı alanları gizleyebilirsiniz.
         </div>
       </div>
 
@@ -1265,19 +1285,12 @@
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
             <h3 style="margin: 0; font-size: 16px; color: #495057;">📋 Metaveri Alanları</h3>
             <div style="display: flex; gap: 8px;">
-              <button onclick="spatialManager.resetToDefaults()"
+              <button onclick="spatialManager.resetCurrentResourceToDefaults()"
                       style="background: #6c757d; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
                       onmouseover="this.style.background='#5a6268'"
                       onmouseout="this.style.background='#6c757d'"
                       title="Bu kaynağı varsayılan haline döndür">
                 🔄 Varsayılana Dön
-              </button>
-              <button onclick="spatialManager.resetAllMappings()"
-                      style="background: #dc3545; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                      onmouseover="this.style.background='#c82333'"
-                      onmouseout="this.style.background='#dc3545'"
-                      title="Tüm değişiklikleri sıfırla">
-                🗑️ Hepsini Sıfırla
               </button>
               <button onclick="spatialManager.saveMetadataMappings()"
                       style="background: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
@@ -2919,14 +2932,34 @@ class SpatialResourceManager {
     }
   }
 
-  resetToDefaults() {
+  resetCurrentResourceToDefaults() {
     if (!this.currentMetadataResourceId) {
-      alert('Hata: Kaynak seçilmedi');
+      alert('❌ Hata: Kaynak seçilmedi');
       return;
     }
 
     if (!this.defaultFields || this.defaultFields.length === 0) {
       alert('❌ Bu kaynak için varsayılan alan bilgisi yok');
+      return;
+    }
+
+    // Seçili kaynağı bul
+    const currentResource = this.allResources.find(r => r.resource_id === this.currentMetadataResourceId);
+    const resourceName = currentResource ? currentResource.resource_name : 'Bu kaynak';
+
+    const confirmReset = confirm(
+      `⚠️ EMİN MİSİNİZ?\n\n` +
+      `Kaynak: ${resourceName}\n\n` +
+      `Bu işlem bu kaynağın tüm metaveri özelleştirmelerini silecek:\n` +
+      `• Tüm görünen ad değişiklikleri\n` +
+      `• Gizleme/gösterme ayarları\n` +
+      `• Görünürlük modu\n\n` +
+      `Kaynak ilk yüklendiği varsayılan haline dönecektir.\n\n` +
+      `Devam etmek istiyor musunuz?`
+    );
+
+    if (!confirmReset) {
+      console.log('❌ Reset cancelled by user');
       return;
     }
 
@@ -2953,54 +2986,95 @@ class SpatialResourceManager {
     // Yeniden render et
     this.renderMetadataFields();
 
-    alert('🔄 Bu kaynak varsayılan haline döndürüldü. Kaydetmeyi unutmayın!');
+    alert('🔄 Kaynak varsayılan haline döndürüldü. Kaydetmeyi unutmayın!');
   }
 
-  resetAllMappings() {
-    if (!this.currentMetadataResourceId) {
-      alert('Hata: Kaynak seçilmedi');
-      return;
-    }
-
+  async resetAllResources() {
     const confirmReset = confirm(
-      '⚠️ EMİN MİSİNİZ?\n\n' +
-      'Bu işlem tüm metaveri özelleştirmelerinizi silecek:\n' +
-      '• Tüm görünen ad değişiklikleri\n' +
-      '• Gizleme/gösterme ayarları\n' +
-      '• Görünürlük modu\n\n' +
-      'Orijinal alan adlarına geri dönülecektir.\n\n' +
-      'Devam etmek istiyor musunuz?'
+      `🚨 UYARI: TÜM KAYNAKLARI SIFIRLAMA 🚨\n\n` +
+      `Bu işlem GERİ ALINAMAZ!\n\n` +
+      `TÜM mekansal kaynaklar için:\n` +
+      `• Tüm görünen ad değişiklikleri silinecek\n` +
+      `• Tüm gizleme/gösterme ayarları silinecek\n` +
+      `• Tüm görünürlük modları sıfırlanacak\n` +
+      `• Tüm özelleştirmeler varsayılana dönecek\n\n` +
+      `Toplam ${this.allResources.filter(r => this.spatialResourceIds.has(r.resource_id)).length} kaynak etkilenecek.\n\n` +
+      `⚠️ Bu işlemi yapmak istediğinizden EMİN MİSİNİZ?`
     );
 
     if (!confirmReset) {
-      console.log('❌ Reset cancelled by user');
+      console.log('❌ Global reset cancelled by user');
       return;
     }
 
-    console.log('🗑️ Resetting all mappings');
+    // İkinci onay
+    const doubleConfirm = confirm(
+      `⚠️ SON ONAY ⚠️\n\n` +
+      `Tüm metaveri özelleştirmeleri kalıcı olarak silinecek.\n\n` +
+      `Bu işleme devam etmek istiyor musunuz?`
+    );
 
-    // Tüm mappings'i temizle
-    this.metadataMappings = {};
+    if (!doubleConfirm) {
+      console.log('❌ Global reset cancelled on second confirmation');
+      return;
+    }
 
-    // Mevcut field'lar için boş mapping'ler oluştur
-    this.currentMetadataFields.forEach(fieldName => {
-      this.metadataMappings[fieldName] = {
-        displayName: fieldName,
-        hidden: false,
-        visible: false
-      };
-    });
+    try {
+      console.log('🗑️ Resetting ALL resources to defaults...');
 
-    // Visibility mode'u varsayılana çevir
-    this.visibilityMode = 'show_all';
-    document.querySelector('input[name="visibilityMode"][value="show_all"]').checked = true;
-    document.querySelector('input[name="visibilityMode"][value="show_selected"]').checked = false;
-    this.updateVisibilityModeStyles();
+      // Tüm spatial resource'ları al
+      const spatialResources = this.allResources.filter(r => this.spatialResourceIds.has(r.resource_id));
+      let successCount = 0;
+      let errorCount = 0;
 
-    // Yeniden render et
-    this.renderMetadataFields();
+      for (const resource of spatialResources) {
+        try {
+          // Her kaynak için DELETE veya boş mapping kaydet
+          const response = await fetch(`/api/spatial-resources/${resource.resource_id}/metadata-mappings`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              field_mappings: {},
+              hidden_fields: [],
+              visibility_mode: 'show_all',
+              visible_fields: [],
+              default_fields: [] // Reset default fields too
+            })
+          });
 
-    alert('🗑️ Tüm özelleştirmeler sıfırlandı. Kaydetmeyi unutmayın!');
+          if (response.ok) {
+            successCount++;
+            console.log(`✅ Reset successful: ${resource.resource_name}`);
+          } else {
+            errorCount++;
+            console.error(`❌ Reset failed: ${resource.resource_name}`);
+          }
+        } catch (error) {
+          errorCount++;
+          console.error(`❌ Reset error for ${resource.resource_name}:`, error);
+        }
+      }
+
+      // Mevcut açık resource'u da resetle
+      if (this.currentMetadataResourceId) {
+        this.metadataMappings = {};
+        this.visibilityMode = 'show_all';
+        this.defaultFields = [];
+        this.renderMetadataFields();
+      }
+
+      alert(
+        `✅ Tüm kaynaklar sıfırlandı!\n\n` +
+        `Başarılı: ${successCount}\n` +
+        `Hatalı: ${errorCount}\n\n` +
+        `Tüm metaveri özelleştirmeleri varsayılana döndü.`
+      );
+
+    } catch (error) {
+      console.error('❌ Global reset error:', error);
+      alert('❌ Hata: ' + error.message);
+    }
   }
 }
 

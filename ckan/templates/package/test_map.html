@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { width: 100vw; height: 100vh; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+
+  <script>
+    console.log('Creating map...');
+    const map = L.map('map').setView([38.4237, 27.1428], 10);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    console.log('✓ Map created');
+
+    // Test marker
+    L.marker([38.4237, 27.1428]).addTo(map).bindPopup('Test!');
+
+    // Load API data
+    fetch('https://openapi.izmir.bel.tr/api/ibb/cbs/universiteler')
+      .then(r => r.json())
+      .then(json => {
+        const data = json.onemliyer || json.data || json;
+        console.log('Data:', data.length, 'items');
+
+        data.forEach(item => {
+          if (item.ENLEM && item.BOYLAM) {
+            L.circleMarker([item.ENLEM, item.BOYLAM], {
+              radius: 6,
+              fillColor: "#667eea",
+              color: "#fff",
+              weight: 2,
+              fillOpacity: 0.8
+            }).addTo(map).bindPopup(item.ADI || 'Unknown');
+          }
+        });
+
+        console.log('✓ Markers added');
+      })
+      .catch(e => console.error(e));
+  </script>
+</body>
+</html>

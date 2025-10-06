@@ -17,8 +17,6 @@ import json
 from urllib.parse import urljoin, urlparse
 import subprocess
 import xml.etree.ElementTree as ET
-import numpy as np
-import math
 
 # SHP ve diğer formatlar için yeni kütüphaneler
 try:
@@ -31,22 +29,6 @@ except ImportError:
     SPATIAL_SUPPORT = False
 
 spatial_api = Blueprint('spatial_api', __name__)
-
-def convert_numpy_types(obj):
-    """NumPy tiplerini Python native tiplerine çevir (JSON serialization için)"""
-    if isinstance(obj, np.integer):
-        return int(obj)
-    elif isinstance(obj, np.floating):
-        if math.isnan(obj) or math.isinf(obj):
-            return None
-        return float(obj)
-    elif isinstance(obj, np.ndarray):
-        return obj.tolist()
-    elif isinstance(obj, dict):
-        return {k: convert_numpy_types(v) for k, v in obj.items()}
-    elif isinstance(obj, list):
-        return [convert_numpy_types(item) for item in obj]
-    return obj
 
 def get_absolute_url(base_url, resource_url):
     """Resource URL'ini mutlak URL'ye çevirir. URL zaten tam ise olduğu gibi döndürür."""
@@ -421,11 +403,7 @@ def get_spatial_data(resource_id):
         # Yeni Hayvan İçme Suyu (HİS) Göletleri
         "413173de-3443-4abb-a194-611b102d201c": "https://dataizmir.izka.org.tr/dataset/09e585f5-00b4-4f47-8a03-6a841a242cff/resource/413173de-3443-4abb-a194-611b102d201c/download/hisgoleti-yeni.xlsx",
         # Otobüs Hat Güzergahlarının Konum Bilgileri
-        "211488": "https://openfiles.izmir.bel.tr/211488/docs/eshot-otobus-hat-guzergahlari.csv",
-
-        # SHP DOSYALARI
-        # Akarsular OSM
-        "10a1b182-c716-4385-83bd-fdbdbd47cdaf": "https://dataizmir.izka.org.tr/dataset/b47f9bff-9fe6-4125-b69f-637a61b52029/resource/10a1b182-c716-4385-83bd-fdbdbd47cdaf/download/akarsu.zip"
+        "211488": "https://openfiles.izmir.bel.tr/211488/docs/eshot-otobus-hat-guzergahlari.csv"
     }
 
     # 2. CORS sorunu olmayan ve FRONTEND'de işlenecek kaynakların ID'leri
@@ -495,13 +473,8 @@ def get_spatial_data(resource_id):
             return jsonify({'success': True, 'type': 'geotiff', 'url': url})
         
         elif format_type in ['shp', 'zip']:
-            # SHP dosyalarını backend'de işleyip GeoJSON'a çevir
-            if SPATIAL_SUPPORT:
-                return process_spatial_files(url, 'shp')
-            else:
-                # Fallback: Frontend'e gerçek URL'i gönder (shp.js ile işlesin)
-                # URL zaten get_absolute_url ile mutlak hale getirilmiş durumda
-                return jsonify({'success': True, 'type': 'shp', 'url': url})
+            proxy_url = f"{site_url}/dataset/{result.package_name}/resource/{resource_id}/download"
+            return jsonify({'success': True, 'type': 'shp', 'url': proxy_url})
 
         elif format_type in ['csv', 'xls', 'xlsx']:
             return process_tabular_data(url, format_type, resource_id)
@@ -541,27 +514,10 @@ def get_resource_columns(resource_id):
         if format_type == 'csv':
             response = requests.get(url, timeout=30, verify=False)
             response.raise_for_status()
-
-            # Delimiter auto-detection (öncelik noktalı virgülde)
-            df = None
-            delimiters = [';', ',', '\t', '|']
-            encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1254']
-
-            for delimiter in delimiters:
-                for encoding in encodings:
-                    try:
-                        df = pd.read_csv(io.StringIO(response.text), delimiter=delimiter, encoding=encoding, nrows=5)
-                        if len(df.columns) > 1:
-                            print(f"Column detection CSV parsed: delimiter='{delimiter}', encoding='{encoding}', columns={len(df.columns)}")
-                            break
-                    except:
-                        continue
-                if df is not None and len(df.columns) > 1:
-                    break
-
-            if df is None or len(df.columns) <= 1:
-                # Fallback to default
-                df = pd.read_csv(io.StringIO(response.text), nrows=5)
+            try:
+                df = pd.read_csv(io.StringIO(response.text), nrows=5, encoding='utf-8')
+            except UnicodeDecodeError:
+                df = pd.read_csv(io.StringIO(response.text), nrows=5, encoding='latin-1')
         elif format_type in ['xls', 'xlsx']:
             response = requests.get(url, timeout=30, verify=False)
             response.raise_for_status()
@@ -591,9 +547,6 @@ def get_resource_columns(resource_id):
             else:
                 return jsonify({'error': 'JSON verisi uygun formatta değil'}), 400
         
-        # NaN değerlerini None'a çevir (JSON için)
-        df = df.where(pd.notna(df), None)
-
         return jsonify({
             'success': True,
             'columns': list(df.columns),
@@ -774,11 +727,9 @@ def process_spatial_files(url, format_type):
         print(f"File downloaded to: {temp_file_path}")
         
         geojson_data = None
-
+        
         if format_type in ['kml', 'gpx']:
             geojson_data = process_other_formats(temp_file_path, format_type)
-        elif format_type == 'shp':
-            geojson_data = process_shp_file(temp_file_path)
         else:
             return jsonify({
                 'error': f'Desteklenmeyen spatial format: {format_type}'
@@ -791,9 +742,8 @@ def process_spatial_files(url, format_type):
         
         return jsonify({
             'success': True,
-            'type': 'geojson',  # Frontend'de uniform handling için
+            'type': f'spatial_{format_type}',
             'data': geojson_data,
-            'source_format': format_type  # Debug için orijinal format
         })
         
     except Exception as e:
@@ -836,77 +786,6 @@ def process_other_formats(file_path, format_type):
         
     except Exception as e:
         print(f"{format_type.upper()} processing error: {str(e)}")
-        raise
-
-def process_shp_file(file_path):
-    """SHP/ZIP dosyasını işleyip GeoJSON'a çevir"""
-    try:
-        print(f"Processing SHP file: {file_path}")
-
-        # Eğer .zip ise, önce extract et
-        if file_path.endswith('.zip'):
-            temp_extract_dir = os.path.join(os.path.dirname(file_path), 'extracted')
-            os.makedirs(temp_extract_dir, exist_ok=True)
-
-            with zipfile.ZipFile(file_path, 'r') as zip_ref:
-                zip_ref.extractall(temp_extract_dir)
-
-            # Extract edilen dosyalar arasından .shp dosyasını bul
-            shp_file = None
-            for root, dirs, files in os.walk(temp_extract_dir):
-                for file in files:
-                    if file.endswith('.shp'):
-                        shp_file = os.path.join(root, file)
-                        break
-                if shp_file:
-                    break
-
-            if not shp_file:
-                raise Exception("ZIP içinde .shp dosyası bulunamadı")
-
-            file_path = shp_file
-            print(f"Found SHP file in ZIP: {file_path}")
-
-        # SHP dosyasını oku ve GeoJSON'a çevir
-        geojson_features = []
-        with fiona.open(file_path, 'r') as source:
-            print(f"SHP CRS: {source.crs}")
-            print(f"Feature count: {len(source)}")
-            print(f"Schema: {source.schema}")
-
-            for feature in source:
-                # Properties'deki None değerleri temizle
-                clean_props = {}
-                if feature['properties']:
-                    for key, value in feature['properties'].items():
-                        # None, NaN, inf değerlerini filtrele
-                        if value is not None:
-                            try:
-                                if isinstance(value, float) and (math.isnan(value) or math.isinf(value)):
-                                    clean_props[key] = None
-                                else:
-                                    clean_props[key] = value
-                            except (TypeError, ValueError):
-                                clean_props[key] = value
-
-                geojson_features.append({
-                    "type": "Feature",
-                    "geometry": feature['geometry'],
-                    "properties": clean_props
-                })
-
-        geojson_data = {
-            "type": "FeatureCollection",
-            "features": geojson_features
-        }
-
-        print(f"✓ Converted {len(geojson_features)} features from SHP to GeoJSON")
-        return geojson_data
-
-    except Exception as e:
-        print(f"SHP processing error: {str(e)}")
-        import traceback
-        traceback.print_exc()
         raise
 
 def process_api_data(url, format_type, resource_id):
@@ -1023,13 +902,12 @@ def process_tabular_data(url, format_type, resource_id):
     except Exception as e:
         print(f"Tabular data işleme hatası: {str(e)}")
         return jsonify({'error': f'Tabular data işlenemedi: {str(e)}'}), 500
-
+    
     df = None
     if format_type == 'csv':
-        # ÖNCELİKLE NOKTALÎ VİRGÜL DENENMELİ!
-        delimiters = [';', ',', '\t', '|']
+        delimiters = [',', ';', '\t', '|']
         encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1254', 'utf-8-sig']
-
+        
         for delimiter in delimiters:
             for encoding in encodings:
                 try:
@@ -1060,14 +938,11 @@ def process_tabular_data(url, format_type, resource_id):
     coord_result = smart_detect_coordinate_columns(df)
     
     if not coord_result['found']:
-        # NaN değerlerini temizle
-        clean_df = df.head(3).where(pd.notna(df.head(3)), None)
-
         return jsonify({
             'success': False,
             'error': 'Koordinat sütunları otomatik tespit edilemedi',
             'columns': list(df.columns),
-            'sample_data': clean_df.to_dict('records'),
+            'sample_data': df.head(3).to_dict('records'),
             'suggestions': coord_result['suggestions'],
         }), 400
     
@@ -1271,9 +1146,7 @@ def generate_suggestions(df, lat_candidates, lon_candidates):
         suggestions.append("Boylam için aday sütun bulunamadı. 'lon', 'longitude', 'boylam', 'x' gibi isimler arıyoruz.")
     
     try:
-        # NaN değerlerini temizle
-        clean_df = df.head(2).where(pd.notna(df.head(2)), None)
-        sample_data = clean_df.to_dict('records')
+        sample_data = df.head(2).to_dict('records')
         suggestions.append(f"Örnek veri: {sample_data}")
     except:
         pass
@@ -1285,25 +1158,25 @@ def convert_to_geojson(df, coord_columns):
     features = []
     lat_col = coord_columns['lat']
     lon_col = coord_columns['lon']
-
+    
     print(f"GeoJSON'a çeviriliyor: lat='{lat_col}', lon='{lon_col}'")
-
+    
     for idx, row in df.iterrows():
         try:
             # Koordinat değerlerini temizle
             lat = clean_coordinate_value(row[lat_col])
             lon = clean_coordinate_value(row[lon_col])
-
+            
             # Geçersiz koordinatları atla
             if lat is None or lon is None:
                 print(f"Satır atlandı (idx={idx}): lat veya lon değeri None")
                 continue
-
+            
             # Koordinat aralığı kontrolü
             if not (-90 <= lat <= 90) or not (-180 <= lon <= 180):
                 print(f"Geçersiz koordinat atlandı: lat={lat}, lon={lon}")
                 continue
-
+            
             # Properties oluştur
             properties = {}
             for col in df.columns:
@@ -1318,7 +1191,7 @@ def convert_to_geojson(df, coord_columns):
                             properties[col] = value
                     else:
                         properties[col] = None
-
+            
             feature = {
                 "type": "Feature",
                 "geometry": {
@@ -1331,557 +1204,10 @@ def convert_to_geojson(df, coord_columns):
         except (ValueError, TypeError) as e:
             print(f"Satır atlandı (idx={idx}): {e}")
             continue
-
+    
     print(f"Toplam {len(features)} feature oluşturuldu")
-
+    
     return {
         "type": "FeatureCollection",
         "features": features
     }
-
-# === SPATIAL RESOURCE RELATIONSHIPS ENDPOINTS ===
-
-@spatial_api.route('/api/spatial-resources/<resource_id>/relationships')
-def get_resource_relationships(resource_id):
-    """Get all related resources for a spatial resource"""
-    try:
-        # Admin kontrolü
-        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    try:
-        # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
-        resource_check = model.Session.execute(
-            text("""
-                SELECT r.id, r.name, sr.is_spatial
-                FROM resource r
-                LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
-                WHERE r.id = :resource_id AND r.state = 'active'
-            """),
-            {'resource_id': resource_id}
-        ).fetchone()
-
-        if not resource_check:
-            return jsonify({'error': 'Resource not found'}), 404
-
-        if not resource_check.is_spatial:
-            return jsonify({'error': 'Resource is not marked as spatial'}), 400
-
-        # İlişkili kaynakları getir
-        query = text("""
-            SELECT
-                srr.id as relationship_id,
-                srr.related_resource_id,
-                r.name as related_resource_name,
-                r.format as related_resource_format,
-                r.url as related_resource_url,
-                p.id as package_id,
-                p.name as package_name,
-                p.title as package_title,
-                srr.created_date,
-                srr.created_by
-            FROM spatial_resource_relationships srr
-            JOIN resource r ON srr.related_resource_id = r.id
-            JOIN package p ON r.package_id = p.id
-            WHERE srr.spatial_resource_id = :resource_id
-            AND r.state = 'active'
-            AND p.state = 'active'
-            ORDER BY srr.created_date DESC
-        """)
-
-        result = model.Session.execute(query, {'resource_id': resource_id}).fetchall()
-
-        # Base URL
-        site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
-
-        relationships = []
-        for row in result:
-            # URL'yi mutlak hale getir
-            absolute_url = get_absolute_url(site_url, row.related_resource_url)
-
-            relationships.append({
-                'relationship_id': row.relationship_id,
-                'related_resource_id': row.related_resource_id,
-                'related_resource_name': row.related_resource_name or 'İsimsiz Kaynak',
-                'related_resource_format': row.related_resource_format,
-                'related_resource_url': absolute_url,
-                'package_id': row.package_id,
-                'package_name': row.package_name,
-                'package_title': row.package_title,
-                'created_date': row.created_date.isoformat() if row.created_date else None,
-                'created_by': row.created_by
-            })
-
-        return jsonify({
-            'success': True,
-            'spatial_resource_id': resource_id,
-            'spatial_resource_name': resource_check.name,
-            'count': len(relationships),
-            'relationships': relationships
-        })
-
-    except Exception as e:
-        print(f"Get relationships error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@spatial_api.route('/api/spatial-resources/<resource_id>/relationships', methods=['POST'])
-def add_resource_relationship(resource_id):
-    """Add a relationship between a spatial resource and another resource"""
-    try:
-        # Admin kontrolü
-        user = toolkit.c.userobj
-        if not user or not authz.is_sysadmin(user.name):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    data = request.get_json()
-    related_resource_id = data.get('related_resource_id')
-
-    if not related_resource_id:
-        return jsonify({'error': 'related_resource_id is required'}), 400
-
-    try:
-        # Spatial resource'un var olup olmadığını kontrol et
-        spatial_check = model.Session.execute(
-            text("""
-                SELECT r.id, sr.is_spatial
-                FROM resource r
-                LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
-                WHERE r.id = :resource_id AND r.state = 'active'
-            """),
-            {'resource_id': resource_id}
-        ).fetchone()
-
-        if not spatial_check:
-            return jsonify({'error': 'Spatial resource not found'}), 404
-
-        if not spatial_check.is_spatial:
-            return jsonify({'error': 'Resource is not marked as spatial'}), 400
-
-        # Related resource'un var olup olmadığını kontrol et
-        related_check = model.Session.execute(
-            text("SELECT id FROM resource WHERE id = :resource_id AND state = 'active'"),
-            {'resource_id': related_resource_id}
-        ).fetchone()
-
-        if not related_check:
-            return jsonify({'error': 'Related resource not found'}), 404
-
-        # Kendine referans kontrolü
-        if resource_id == related_resource_id:
-            return jsonify({'error': 'A resource cannot be related to itself'}), 400
-
-        # İlişkinin zaten var olup olmadığını kontrol et
-        existing = model.Session.execute(
-            text("""
-                SELECT id FROM spatial_resource_relationships
-                WHERE spatial_resource_id = :spatial_id AND related_resource_id = :related_id
-            """),
-            {'spatial_id': resource_id, 'related_id': related_resource_id}
-        ).fetchone()
-
-        if existing:
-            return jsonify({'error': 'Relationship already exists'}), 409
-
-        # İlişkiyi oluştur
-        model.Session.execute(
-            text("""
-                INSERT INTO spatial_resource_relationships
-                (spatial_resource_id, related_resource_id, created_by)
-                VALUES (:spatial_id, :related_id, :created_by)
-            """),
-            {
-                'spatial_id': resource_id,
-                'related_id': related_resource_id,
-                'created_by': user.name
-            }
-        )
-
-        model.Session.commit()
-
-        return jsonify({
-            'success': True,
-            'spatial_resource_id': resource_id,
-            'related_resource_id': related_resource_id,
-            'created_by': user.name,
-            'message': 'Relationship created successfully'
-        }), 201
-
-    except Exception as e:
-        model.Session.rollback()
-        print(f"Add relationship error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@spatial_api.route('/api/spatial-resources/<resource_id>/relationships/<related_id>', methods=['DELETE'])
-def delete_resource_relationship(resource_id, related_id):
-    """Remove a relationship between a spatial resource and a related resource"""
-    try:
-        # Admin kontrolü
-        user = toolkit.c.userobj
-        if not user or not authz.is_sysadmin(user.name):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    try:
-        # İlişkinin var olup olmadığını kontrol et
-        existing = model.Session.execute(
-            text("""
-                SELECT id FROM spatial_resource_relationships
-                WHERE spatial_resource_id = :spatial_id AND related_resource_id = :related_id
-            """),
-            {'spatial_id': resource_id, 'related_id': related_id}
-        ).fetchone()
-
-        if not existing:
-            return jsonify({'error': 'Relationship not found'}), 404
-
-        # İlişkiyi sil
-        model.Session.execute(
-            text("""
-                DELETE FROM spatial_resource_relationships
-                WHERE spatial_resource_id = :spatial_id AND related_resource_id = :related_id
-            """),
-            {'spatial_id': resource_id, 'related_id': related_id}
-        )
-
-        model.Session.commit()
-
-        return jsonify({
-            'success': True,
-            'spatial_resource_id': resource_id,
-            'related_resource_id': related_id,
-            'deleted_by': user.name,
-            'message': 'Relationship deleted successfully'
-        })
-
-    except Exception as e:
-        model.Session.rollback()
-        print(f"Delete relationship error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-# === METADATA MAPPINGS ENDPOINTS ===
-
-@spatial_api.route('/api/spatial-resources/<resource_id>/metadata-fields')
-def get_resource_metadata_fields(resource_id):
-    """Get all metadata fields for a spatial resource by fetching sample data"""
-    try:
-        # Admin kontrolü
-        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    try:
-        # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
-        query = text("""
-            SELECT r.url, r.format, sr.is_spatial
-            FROM resource r
-            LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
-            WHERE r.id = :resource_id AND r.state = 'active'
-        """)
-
-        result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
-
-        if not result:
-            return jsonify({'error': 'Resource not found'}), 404
-
-        if not result.is_spatial:
-            return jsonify({'error': 'Resource is not marked as spatial'}), 400
-
-        site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
-        url = get_absolute_url(site_url, result.url)
-        format_type = (result.format or '').lower()
-
-        # Edge case: Fix known 404 URLs
-        url_fixes = {
-            'd5662ab6-60b4-4bc8-8f5c-3d840391e73e': 'https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/d5662ab6-60b4-4bc8-8f5c-3d840391e73e/download/egms_aepnd_v2022.0.xlsx',
-            '84dac4aa-a10d-4ed6-afad-915fc8585edb': 'https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/84dac4aa-a10d-4ed6-afad-915fc8585edb/download/egms_aepnd_v2023.0.csv'
-        }
-
-        if resource_id in url_fixes:
-            print(f"Using edge case URL fix for resource: {resource_id}")
-            url = url_fixes[resource_id]
-
-        # Veri tipine göre örnek veriyi çek
-        fields = []
-        sample_data = None
-
-        if format_type == 'geojson':
-            response = requests.get(url, timeout=30, verify=False)
-            response.raise_for_status()
-            geojson_data = response.json()
-
-            if geojson_data.get('type') == 'FeatureCollection' and geojson_data.get('features'):
-                # İlk feature'dan property'leri al
-                first_feature = geojson_data['features'][0]
-                if 'properties' in first_feature:
-                    fields = list(first_feature['properties'].keys())
-                    sample_data = first_feature['properties']
-
-        elif format_type in ['csv', 'xls', 'xlsx']:
-            if format_type == 'csv':
-                response = requests.get(url, timeout=30, verify=False)
-                response.raise_for_status()
-
-                # Delimiter auto-detection (öncelik noktalı virgülde)
-                df = None
-                delimiters = [';', ',', '\t', '|']
-                encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1254']
-
-                for delimiter in delimiters:
-                    for encoding in encodings:
-                        try:
-                            df = pd.read_csv(io.StringIO(response.text), delimiter=delimiter, encoding=encoding, nrows=5)
-                            if len(df.columns) > 1:
-                                print(f"Metadata fields CSV parsed: delimiter='{delimiter}', encoding='{encoding}', columns={len(df.columns)}")
-                                break
-                        except:
-                            continue
-                    if df is not None and len(df.columns) > 1:
-                        break
-
-                if df is None or len(df.columns) <= 1:
-                    # Fallback to default
-                    df = pd.read_csv(io.StringIO(response.text), nrows=5)
-            else:
-                response = requests.get(url, timeout=30, verify=False)
-                response.raise_for_status()
-                df = pd.read_excel(io.BytesIO(response.content), nrows=5)
-
-            # NaN değerlerini None'a çevir (JSON için)
-            df = df.where(pd.notna(df), None)
-
-            fields = list(df.columns)
-            # CSV/Excel için her column'u ayrı ayrı listelemek için
-            sample_data = {}
-            if len(df) > 0:
-                for col in df.columns:
-                    value = df.iloc[0][col]
-                    # NaN, None veya inf değerlerini kontrol et
-                    if pd.isna(value):
-                        sample_data[col] = None
-                    elif isinstance(value, (int, float)):
-                        if math.isinf(value) or math.isnan(value):
-                            sample_data[col] = None
-                        else:
-                            sample_data[col] = value
-                    else:
-                        sample_data[col] = value
-
-        elif format_type in ['json', 'api', 'rest']:
-            response = requests.get(url, timeout=30, verify=False)
-            response.raise_for_status()
-            json_data = response.json()
-
-            # API response'unu parse et
-            if isinstance(json_data, dict):
-                for key in ['data', 'results', 'items', 'onemliyer', 'records']:
-                    if key in json_data and isinstance(json_data[key], list) and len(json_data[key]) > 0:
-                        json_data = json_data[key]
-                        break
-
-            if isinstance(json_data, list) and len(json_data) > 0:
-                first_item = json_data[0]
-                if isinstance(first_item, dict):
-                    fields = list(first_item.keys())
-                    sample_data = first_item
-
-        # Tüm format tiplerinde NumPy tiplerini Python native tiplerine çevir
-        return jsonify({
-            'success': True,
-            'resource_id': resource_id,
-            'format': format_type,
-            'fields': convert_numpy_types(fields),
-            'sample_data': convert_numpy_types(sample_data),
-            'total_fields': len(fields)
-        })
-
-    except Exception as e:
-        print(f"Get metadata fields error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@spatial_api.route('/api/spatial-resources/<resource_id>/metadata-mappings')
-def get_metadata_mappings(resource_id):
-    """Get metadata mappings for a spatial resource"""
-    try:
-        # Admin kontrolü
-        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    try:
-        query = text("""
-            SELECT field_mappings, hidden_fields, visibility_mode, visible_fields,
-                   default_fields, created_by, created_date, updated_by, updated_date
-            FROM spatial_metadata_mappings
-            WHERE resource_id = :resource_id
-        """)
-
-        result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
-
-        if not result:
-            # Henüz mapping yok, boş döndür
-            return jsonify({
-                'success': True,
-                'resource_id': resource_id,
-                'field_mappings': {},
-                'default_fields': [],
-                'hidden_fields': [],
-                'visibility_mode': 'show_all',
-                'visible_fields': [],
-                'exists': False
-            })
-
-        # JSON string'i parse et
-        field_mappings = result.field_mappings
-        if isinstance(field_mappings, str):
-            try:
-                field_mappings = json.loads(field_mappings)
-            except:
-                field_mappings = {}
-
-        return jsonify({
-            'success': True,
-            'resource_id': resource_id,
-            'field_mappings': field_mappings,
-            'hidden_fields': result.hidden_fields or [],
-            'visibility_mode': result.visibility_mode or 'show_all',
-            'visible_fields': result.visible_fields or [],
-            'default_fields': result.default_fields or [],
-            'created_by': result.created_by,
-            'created_date': result.created_date.isoformat() if result.created_date else None,
-            'updated_by': result.updated_by,
-            'updated_date': result.updated_date.isoformat() if result.updated_date else None,
-            'exists': True
-        })
-
-    except Exception as e:
-        print(f"Get metadata mappings error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
-
-@spatial_api.route('/api/spatial-resources/<resource_id>/metadata-mappings', methods=['POST'])
-def save_metadata_mappings(resource_id):
-    """Save or update metadata mappings for a spatial resource"""
-    try:
-        # Admin kontrolü
-        user = toolkit.c.userobj
-        if not user or not authz.is_sysadmin(user.name):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    data = request.get_json()
-    field_mappings = data.get('field_mappings', {})
-    hidden_fields = data.get('hidden_fields', [])
-    visibility_mode = data.get('visibility_mode', 'show_all')
-    visible_fields = data.get('visible_fields', [])
-    default_fields = data.get('default_fields', [])
-
-    try:
-        # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
-        resource_check = model.Session.execute(
-            text("""
-                SELECT r.id, sr.is_spatial
-                FROM resource r
-                LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
-                WHERE r.id = :resource_id AND r.state = 'active'
-            """),
-            {'resource_id': resource_id}
-        ).fetchone()
-
-        if not resource_check:
-            return jsonify({'error': 'Resource not found'}), 404
-
-        if not resource_check.is_spatial:
-            return jsonify({'error': 'Resource is not marked as spatial'}), 400
-
-        # Mevcut mapping var mı kontrol et
-        existing = model.Session.execute(
-            text("SELECT id FROM spatial_metadata_mappings WHERE resource_id = :resource_id"),
-            {'resource_id': resource_id}
-        ).fetchone()
-
-        if existing:
-            # Güncelle (default_fields güncelleme yapılırsa güncelle, yoksa dokunma)
-            update_params = {
-                'resource_id': resource_id,
-                'field_mappings': json.dumps(field_mappings),
-                'hidden_fields': hidden_fields,
-                'visibility_mode': visibility_mode,
-                'visible_fields': visible_fields,
-                'updated_by': user.name
-            }
-
-            # Eğer default_fields gönderildiyse güncelle
-            if default_fields:
-                update_params['default_fields'] = default_fields
-                model.Session.execute(
-                    text("""
-                        UPDATE spatial_metadata_mappings
-                        SET field_mappings = :field_mappings,
-                            hidden_fields = :hidden_fields,
-                            visibility_mode = :visibility_mode,
-                            visible_fields = :visible_fields,
-                            default_fields = :default_fields,
-                            updated_by = :updated_by,
-                            updated_date = CURRENT_TIMESTAMP
-                        WHERE resource_id = :resource_id
-                    """),
-                    update_params
-                )
-            else:
-                model.Session.execute(
-                    text("""
-                        UPDATE spatial_metadata_mappings
-                        SET field_mappings = :field_mappings,
-                            hidden_fields = :hidden_fields,
-                            visibility_mode = :visibility_mode,
-                            visible_fields = :visible_fields,
-                            updated_by = :updated_by,
-                            updated_date = CURRENT_TIMESTAMP
-                        WHERE resource_id = :resource_id
-                    """),
-                    update_params
-                )
-        else:
-            # Oluştur
-            model.Session.execute(
-                text("""
-                    INSERT INTO spatial_metadata_mappings
-                    (resource_id, field_mappings, hidden_fields, visibility_mode, visible_fields, default_fields, created_by, updated_by)
-                    VALUES (:resource_id, :field_mappings, :hidden_fields, :visibility_mode, :visible_fields, :default_fields, :created_by, :updated_by)
-                """),
-                {
-                    'resource_id': resource_id,
-                    'field_mappings': json.dumps(field_mappings),
-                    'hidden_fields': hidden_fields,
-                    'visibility_mode': visibility_mode,
-                    'visible_fields': visible_fields,
-                    'default_fields': default_fields,
-                    'created_by': user.name,
-                    'updated_by': user.name
-                }
-            )
-
-        model.Session.commit()
-
-        return jsonify({
-            'success': True,
-            'resource_id': resource_id,
-            'field_mappings': field_mappings,
-            'hidden_fields': hidden_fields,
-            'visibility_mode': visibility_mode,
-            'visible_fields': visible_fields,
-            'saved_by': user.name,
-            'message': 'Metadata mappings saved successfully'
-        })
-
-    except Exception as e:
-        model.Session.rollback()
-        print(f"Save metadata mappings error: {str(e)}")
-        return jsonify({'error': str(e)}), 500

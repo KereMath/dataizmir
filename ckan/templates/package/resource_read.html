@@ -765,39 +765,81 @@
 
                 if (Array.isArray(data)) {
                   let count = 0;
+                  let skippedCount = 0;
+                  
                   data.forEach(item => {
-                    // Smart coordinate detection
-                    const lat = item.ENLEM || item.enlem || item.latitude || item.lat || item.Latitude;
-                    const lon = item.BOYLAM || item.boylam || item.longitude || item.lon || item.lng || item.Longitude;
+                    // Smart coordinate detection - CASE INSENSITIVE
+                    // Check all possible variations including capitalized versions
+                    const lat = item.Enlem || item.ENLEM || item.enlem || 
+                                item.Latitude || item.latitude || item.LATITUDE ||
+                                item.Lat || item.lat || item.LAT ||
+                                item.y || item.Y;
+                    
+                    const lon = item.Boylam || item.BOYLAM || item.boylam || 
+                                item.Longitude || item.longitude || item.LONGITUDE ||
+                                item.Lon || item.lon || item.LON ||
+                                item.Lng || item.lng || item.LNG ||
+                                item.x || item.X;
 
                     if (lat && lon) {
-                      const marker = L.circleMarker([lat, lon], {
-                        radius: 6,
-                        fillColor: "#667eea",
-                        color: "#fff",
-                        weight: 2,
-                        fillOpacity: 0.8
-                      });
+                      // Parse coordinates (handle both number and string formats)
+                      const latNum = parseFloat(lat);
+                      const lonNum = parseFloat(lon);
+                      
+                      // Validate coordinates
+                      if (!isNaN(latNum) && !isNaN(lonNum) && 
+                          latNum >= -90 && latNum <= 90 && 
+                          lonNum >= -180 && lonNum <= 180) {
+                        
+                        const marker = L.circleMarker([latNum, lonNum], {
+                          radius: 6,
+                          fillColor: "#667eea",
+                          color: "#fff",
+                          weight: 2,
+                          fillOpacity: 0.8
+                        });
 
-                      // Create popup
-                      let popupContent = '<div class="popup-content">';
-                      Object.keys(item).forEach(key => {
-                        if (!['ENLEM', 'BOYLAM', 'enlem', 'boylam', 'latitude', 'longitude', 'lat', 'lon'].includes(key)) {
-                          popupContent += `<strong>${key}:</strong> ${item[key]}<br>`;
-                        }
-                      });
-                      popupContent += '</div>';
+                        // Create popup
+                        let popupContent = '<div class="popup-content">';
+                        Object.keys(item).forEach(key => {
+                          // Exclude coordinate fields from popup
+                          const keyLower = key.toLowerCase();
+                          if (!['enlem', 'boylam', 'latitude', 'longitude', 'lat', 'lon', 'lng', 'x', 'y'].includes(keyLower)) {
+                            const value = item[key];
+                            if (value !== null && value !== undefined && value !== '') {
+                              popupContent += `<strong>${key}:</strong> ${value}<br>`;
+                            }
+                          }
+                        });
+                        popupContent += '</div>';
 
-                      marker.bindPopup(popupContent);
-                      this.layer.addLayer(marker);
-                      count++;
+                        marker.bindPopup(popupContent);
+                        this.layer.addLayer(marker);
+                        count++;
+                      } else {
+                        console.warn(`Invalid coordinates: lat=${latNum}, lon=${lonNum}`);
+                        skippedCount++;
+                      }
+                    } else {
+                      // Debug: Show what fields are available
+                      if (skippedCount === 0) { // Only log first item
+                        console.log('Available fields in data:', Object.keys(item));
+                        console.log('Sample item:', item);
+                      }
+                      skippedCount++;
                     }
                   });
-                  console.log(`✓ Added ${count} markers from API`);
+                  
+                  console.log(`✓ Added ${count} markers from API (${skippedCount} items skipped)`);
+                  
+                  if (count === 0 && data.length > 0) {
+                    console.warn('No markers added. Check coordinate field names.');
+                    console.log('First item structure:', data[0]);
+                  }
                 }
               } catch (error) {
                 console.error('API parse hatası:', error);
-                throw new Error('API verisi işlenemedi');
+                throw new Error('API verisi işlenemedi: ' + error.message);
               }
             }
 

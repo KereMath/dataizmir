@@ -2502,11 +2502,8 @@
               fillOpacity: 0.3
             }),
             onEachFeature: (feature, layer) => {
-              // Lazy load popup content when opened
-              layer.on('click', async () => {
-                const popupContent = await this.createPopupContent(feature, resource);
-                layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' }).openPopup();
-              });
+              const popupContent = this.createPopupContent(feature, resource);
+              layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
 
               if (layer.setStyle) {
                 layer.on('mouseover', () => {
@@ -2590,9 +2587,7 @@
     async createPopupContent(feature, resource) {
       // Load metadata mappings for this resource
       const mappingsData = await this.getMetadataMappings(resource.resource_id);
-      const mappings = mappingsData.field_mappings || {};
-      const visibilityMode = mappingsData.visibility_mode || 'show_all';
-      const visibleFields = mappingsData.visible_fields || [];
+      const { mappings, visibilityMode, visibleFields, hiddenFields } = mappingsData;
 
       let content = '<div class="popup-content">';
       content += `<div class="popup-resource-header">${resource.resource_name}<br><small style="opacity:.8;">${resource.format || 'Bilinmiyor'}</small></div>`;
@@ -2600,21 +2595,23 @@
       if (feature.properties && typeof feature.properties === 'object') {
         Object.entries(feature.properties).forEach(([k, v]) => {
           if (v !== null && v !== undefined && v !== '') {
-            const mapping = mappings[k];
-
-            // Determine if field should be shown based on visibility mode
-            let shouldShow = false;
-
+            // Visibility kontrolü
             if (visibilityMode === 'show_all') {
-              // Show all mode: show unless explicitly hidden
-              shouldShow = !(mapping && mapping.hidden);
-            } else {
-              // Show selected mode: show only if in visible_fields list
-              shouldShow = visibleFields.includes(k);
+              // "Tüm alanları göster" modu - sadece hiddenFields'de olanları gizle
+              if (hiddenFields && hiddenFields.includes(k)) {
+                return; // Skip hidden fields
+              }
+            } else if (visibilityMode === 'show_selected') {
+              // "Sadece seçilenleri göster" modu - sadece visibleFields'de olanları göster
+              if (!visibleFields || !visibleFields.includes(k)) {
+                return; // Skip non-visible fields
+              }
             }
 
-            if (!shouldShow) {
-              return; // Skip this field
+            // Eski hidden kontrolü (backward compatibility)
+            const mapping = mappings[k];
+            if (mapping && mapping.hidden) {
+              return; // Skip hidden fields
             }
 
             // Get display name (default to original key)
@@ -2655,26 +2652,28 @@
         const data = await response.json();
 
         if (data.success) {
-          const mappingsData = {
-            field_mappings: data.field_mappings || {},
-            visibility_mode: data.visibility_mode || 'show_all',
-            visible_fields: data.visible_fields || []
+          const result = {
+            mappings: data.field_mappings || {},
+            visibilityMode: data.visibility_mode || 'show_all',
+            visibleFields: data.visible_fields || [],
+            hiddenFields: data.hidden_fields || []
           };
-          this.metadataMappingsCache[resourceId] = mappingsData;
-          return mappingsData;
+          this.metadataMappingsCache[resourceId] = result;
+          return result;
         }
       } catch (error) {
         console.warn('Could not load metadata mappings for', resourceId, error);
       }
 
       // Return empty mappings if not found or error
-      const emptyMappings = {
-        field_mappings: {},
-        visibility_mode: 'show_all',
-        visible_fields: []
+      const emptyResult = {
+        mappings: {},
+        visibilityMode: 'show_all',
+        visibleFields: [],
+        hiddenFields: []
       };
-      this.metadataMappingsCache[resourceId] = emptyMappings;
-      return emptyMappings;
+      this.metadataMappingsCache[resourceId] = emptyResult;
+      return emptyResult;
     }
 
     findDataArrayInJson(jsonData) {

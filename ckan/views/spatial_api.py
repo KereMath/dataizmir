@@ -902,12 +902,13 @@ def process_tabular_data(url, format_type, resource_id):
     except Exception as e:
         print(f"Tabular data işleme hatası: {str(e)}")
         return jsonify({'error': f'Tabular data işlenemedi: {str(e)}'}), 500
-    
+
     df = None
     if format_type == 'csv':
-        delimiters = [',', ';', '\t', '|']
+        # ÖNCELİKLE NOKTALÎ VİRGÜL DENENMELİ!
+        delimiters = [';', ',', '\t', '|']
         encodings = ['utf-8', 'latin-1', 'iso-8859-1', 'cp1254', 'utf-8-sig']
-        
+
         for delimiter in delimiters:
             for encoding in encodings:
                 try:
@@ -1564,10 +1565,18 @@ def get_metadata_mappings(resource_id):
                 'exists': False
             })
 
+        # JSON string'i parse et
+        field_mappings = result.field_mappings
+        if isinstance(field_mappings, str):
+            try:
+                field_mappings = json.loads(field_mappings)
+            except:
+                field_mappings = {}
+
         return jsonify({
             'success': True,
             'resource_id': resource_id,
-            'field_mappings': result.field_mappings,
+            'field_mappings': field_mappings,
             'hidden_fields': result.hidden_fields or [],
             'visibility_mode': result.visibility_mode or 'show_all',
             'visible_fields': result.visible_fields or [],

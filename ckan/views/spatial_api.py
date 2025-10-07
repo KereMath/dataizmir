@@ -48,20 +48,32 @@ def convert_numpy_types(obj):
         return [convert_numpy_types(item) for item in obj]
     return obj
 
-def get_absolute_url(base_url, resource_url):
+def get_absolute_url(base_url, resource_url, package_name=None, resource_id=None):
     """Resource URL'ini mutlak URL'ye çevirir. URL zaten tam ise olduğu gibi döndürür."""
     if not resource_url:
         return None
-    
+
     # Eğer zaten tam URL ise, olduğu gibi döndür
     if resource_url.startswith(('http://', 'https://')):
         return resource_url
-    
+
+    # Eğer sadece dosya adı ise (path'te / yoksa veya sadece /filename ise)
+    # CKAN download URL pattern'ini kullan
+    if package_name and resource_id:
+        # Dosya adını temizle (baştaki / varsa kaldır)
+        filename = resource_url.lstrip('/')
+
+        # CKAN standard download URL formatı
+        site_url = base_url or toolkit.config.get('ckan.site_url', 'http://localhost:5000')
+        download_url = f"{site_url}/dataset/{package_name}/resource/{resource_id}/download/{filename}"
+        print(f"[DEBUG] Constructed download URL: {download_url}")
+        return download_url
+
     # Eğer göreceli bir URL ise, base URL ile birleştir
     if base_url:
         return urljoin(base_url, resource_url)
-    
-    # Eğer sadece dosya adı ise (önceki kontrol başarısız olduysa), CKAN storage URL'i ile birleştir
+
+    # Fallback: CKAN storage URL'i ile birleştir
     site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
     return urljoin(site_url, resource_url)
 
@@ -110,10 +122,10 @@ def get_spatial_resources():
     resources = []
     for row in result:
         org_title = org_dict.get(row.owner_org, 'Bilinmiyor')
-        
+
         # URL'yi mutlak hale getir
-        absolute_url = get_absolute_url(site_url, row.url)
-        
+        absolute_url = get_absolute_url(site_url, row.url, row.package_name, row.resource_id)
+
         resources.append({
             'package_id': row.package_id,
             'package_name': row.package_name,
@@ -247,7 +259,7 @@ def get_spatial_resource_list():
         resources = []
         for row in result:
             # URL'yi mutlak hale getir
-            absolute_url = get_absolute_url(site_url, row.url)
+            absolute_url = get_absolute_url(site_url, row.url, row.package_name, row.resource_id)
 
             resources.append({
                 'package_id': row.package_id,
@@ -464,12 +476,12 @@ def get_spatial_data(resource_id):
         """)
         
         result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
-        
+
         if not result: return jsonify({'error': 'Spatial resource bulunamadı'}), 404
-        
+
         site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
-        url = get_absolute_url(site_url, result.url)
-        
+        url = get_absolute_url(site_url, result.url, result.package_name, resource_id)
+
         if not url: return jsonify({'error': 'Geçersiz resource URL'}), 400
         
         format_type = (result.format or '').lower()
@@ -516,19 +528,20 @@ def get_resource_columns(resource_id):
     """Resource'un sütunlarını döndür (manuel seçim için)"""
     try:
         query = text("""
-            SELECT r.url, r.format
+            SELECT r.url, r.format, p.name as package_name
             FROM resource r
+            JOIN package p ON r.package_id = p.id
             JOIN spatial_resources sr ON r.id = sr.resource_id
             WHERE r.id = :resource_id AND sr.is_spatial = true
         """)
-        
+
         result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
-        
+
         if not result:
             return jsonify({'error': 'Resource bulunamadı'}), 404
-        
+
         site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
-        url = get_absolute_url(site_url, result.url)
+        url = get_absolute_url(site_url, result.url, result.package_name, resource_id)
         format_type = (result.format or '').lower()
         
         if format_type not in ['csv', 'xls', 'xlsx', 'json', 'api', 'rest']:
@@ -611,19 +624,20 @@ def process_with_manual_columns(resource_id):
             return jsonify({'error': 'Enlem ve boylam sütunları gerekli'}), 400
         
         query = text("""
-            SELECT r.url, r.format
+            SELECT r.url, r.format, p.name as package_name
             FROM resource r
+            JOIN package p ON r.package_id = p.id
             JOIN spatial_resources sr ON r.id = sr.resource_id
             WHERE r.id = :resource_id AND sr.is_spatial = true
         """)
-        
+
         result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
-        
+
         if not result:
             return jsonify({'error': 'Resource bulunamadı'}), 404
-        
+
         site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
-        url = get_absolute_url(site_url, result.url)
+        url = get_absolute_url(site_url, result.url, result.package_name, resource_id)
         format_type = (result.format or '').lower()
         
         if format_type == 'csv':
@@ -1323,7 +1337,7 @@ def get_resource_relationships(resource_id):
         relationships = []
         for row in result:
             # URL'yi mutlak hale getir
-            absolute_url = get_absolute_url(site_url, row.related_resource_url)
+            absolute_url = get_absolute_url(site_url, row.related_resource_url, row.package_name, row.related_resource_id)
 
             relationships.append({
                 'relationship_id': row.relationship_id,
@@ -1502,8 +1516,9 @@ def get_resource_metadata_fields(resource_id):
     try:
         # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
         query = text("""
-            SELECT r.url, r.format, sr.is_spatial
+            SELECT r.url, r.format, sr.is_spatial, p.name as package_name
             FROM resource r
+            JOIN package p ON r.package_id = p.id
             LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
             WHERE r.id = :resource_id AND r.state = 'active'
         """)
@@ -1517,7 +1532,7 @@ def get_resource_metadata_fields(resource_id):
             return jsonify({'error': 'Resource is not marked as spatial'}), 400
 
         site_url = toolkit.config.get('ckan.site_url', 'http://localhost:5000')
-        url = get_absolute_url(site_url, result.url)
+        url = get_absolute_url(site_url, result.url, result.package_name, resource_id)
         format_type = (result.format or '').lower()
 
         # Edge case: Fix known 404 URLs

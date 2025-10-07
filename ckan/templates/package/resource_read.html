@@ -21,9 +21,6 @@
   <script src="https://unpkg.com/shpjs@3.6.0/dist/shp.min.js"></script>
 
   <style>
-    .nav-tabs-plain {
-      display:none !important;
-    }
     .table {
       margin-bottom: 0px !important;
     }
@@ -259,6 +256,60 @@
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
+
+    /* Custom Tab Styles for Spatial View */
+    .spatial-view-tabs {
+      display: none;
+      margin-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .spatial-view-tabs.active {
+      display: flex;
+      gap: 0;
+    }
+
+    .spatial-tab-button {
+      background: transparent;
+      border: none;
+      padding: 14px 28px;
+      font-size: 16px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border-bottom: 3px solid transparent;
+      position: relative;
+    }
+
+    .spatial-tab-button:hover {
+      color: #667eea;
+      background: rgba(102, 126, 234, 0.05);
+    }
+
+    .spatial-tab-button.active {
+      color: #667eea;
+      border-bottom-color: #667eea;
+      font-weight: 600;
+    }
+
+    .spatial-tab-content {
+      display: none;
+    }
+
+    .spatial-tab-content.active {
+      display: block;
+    }
+
+    /* Original data preview iframe */
+    #original-data-frame {
+      width: 100%;
+      height: calc(100vh - 250px);
+      min-height: 700px;
+      border: none;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
   </style>
 {% endblock -%}
 
@@ -315,10 +366,21 @@
       {% block data_preview %}
       {% block resource_view %}
 
-        {# SPATIAL MAP - No tabs, direct render #}
-        <div id="spatial-map-container" style="display: none; position: relative;">
-          <!-- Basemap Control -->
-          <div class="basemap-control">
+        {# Tab Navigation for Spatial Resources #}
+        <div class="spatial-view-tabs" id="spatialViewTabs">
+          <button class="spatial-tab-button active" data-tab="map-view" onclick="switchSpatialTab('map-view')">
+            🗺️ Harita Görünümü
+          </button>
+          <button class="spatial-tab-button" data-tab="original-view" onclick="switchSpatialTab('original-view')">
+            📊 Orijinal Veri
+          </button>
+        </div>
+
+        {# SPATIAL MAP TAB #}
+        <div id="map-view" class="spatial-tab-content active" style="display: none;">
+          <div id="spatial-map-container" style="position: relative;">
+            <!-- Basemap Control -->
+            <div class="basemap-control">
             <button class="basemap-button active" data-basemap="sokak">🗺️ Sokak</button>
             <button class="basemap-button" data-basemap="uydu">🛰️ Uydu</button>
             <button class="basemap-button" data-basemap="arazi">⛰️ Arazi</button>
@@ -342,12 +404,30 @@
             <div style="text-align: center; color: #495057;">Veri yükleniyor...</div>
           </div>
 
-          <div id="leaflet-map" style="width: 100%; height: calc(100vh - 200px); min-height: 700px;"></div>
+            <div id="leaflet-map" style="width: 100%; height: calc(100vh - 200px); min-height: 700px;"></div>
+          </div>
         </div>
 
-        {# Standard Preview - Hidden if spatial #}
+        {# ORIGINAL DATA TAB #}
+        <div id="original-view" class="spatial-tab-content" style="display: none;">
+          <div id="original-data-container" style="background: white; border-radius: 12px; padding: 20px; min-height: 600px;">
+            <div id="data-preview-loading" style="text-align: center; padding: 40px;">
+              <div class="spinner" style="margin: 0 auto 20px;"></div>
+              <p style="color: #64748b; font-size: 16px;">Orijinal veri yükleniyor...</p>
+            </div>
+            <div id="data-preview-content" style="display: none;"></div>
+          </div>
+        </div>
+
+        {# Standard Preview - For non-spatial resources #}
         <div id="standard-preview-container">
-          <!-- Standard preview content here -->
+          <div id="standard-data-container" style="background: white; border-radius: 12px; padding: 20px; min-height: 600px;">
+            <div id="standard-preview-loading" style="text-align: center; padding: 40px;">
+              <div class="spinner" style="margin: 0 auto 20px;"></div>
+              <p style="color: #64748b; font-size: 16px;">Veri yükleniyor...</p>
+            </div>
+            <div id="standard-preview-content" style="display: none;"></div>
+          </div>
         </div>
 
         <script>
@@ -357,6 +437,162 @@
           let wmsLayers = {};
           let wmsLayerStates = {};
           let layerSwitcherExpanded = false;
+
+          // Tab switching function
+          function switchSpatialTab(tabName) {
+            console.log('Switching to tab:', tabName);
+
+            // Update tab buttons
+            document.querySelectorAll('.spatial-tab-button').forEach(btn => {
+              btn.classList.toggle('active', btn.dataset.tab === tabName);
+            });
+
+            // Update tab contents
+            document.querySelectorAll('.spatial-tab-content').forEach(content => {
+              content.classList.toggle('active', content.id === tabName);
+              content.style.display = content.id === tabName ? 'block' : 'none';
+            });
+
+            // Invalidate map size when switching to map view
+            if (tabName === 'map-view' && window.spatialMap) {
+              setTimeout(() => {
+                window.spatialMap.invalidateSize();
+              }, 100);
+            }
+
+            // Load original data preview when switching to original-view
+            if (tabName === 'original-view') {
+              loadOriginalDataPreview();
+            }
+          }
+
+          // Load original CKAN data preview
+          let originalDataLoaded = false;
+          function loadOriginalDataPreview() {
+            if (originalDataLoaded) return;
+
+            const resourceId = '{{ res.id }}';
+            const packageName = '{{ pkg.name }}';
+
+            // Try to get the first available resource view
+            fetch(`/api/3/action/resource_view_list?id=${resourceId}`)
+              .then(r => r.json())
+              .then(data => {
+                const loading = document.getElementById('data-preview-loading');
+                const content = document.getElementById('data-preview-content');
+
+                if (data.success && data.result && data.result.length > 0) {
+                  // Use first available view
+                  const view = data.result[0];
+                  const viewUrl = `/dataset/${packageName}/resource/${resourceId}/view/${view.id}`;
+
+                  content.innerHTML = `
+                    <iframe src="${viewUrl}"
+                            style="width: 100%; height: calc(100vh - 350px); min-height: 600px; border: none; border-radius: 8px;"
+                            frameborder="0">
+                    </iframe>
+                  `;
+                  loading.style.display = 'none';
+                  content.style.display = 'block';
+                  originalDataLoaded = true;
+                } else {
+                  // No views available, show raw data or download link
+                  content.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                      <i class="fa fa-file-o" style="font-size: 48px; color: #cbd5e1; margin-bottom: 20px;"></i>
+                      <h3 style="color: #475569; margin-bottom: 20px;">Önizleme Mevcut Değil</h3>
+                      <p style="color: #64748b; margin-bottom: 30px;">Bu kaynak için otomatik önizleme oluşturulamadı.</p>
+                      <a href="{{ res.url }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none; padding: 12px 24px; border-radius: 8px; color: white; text-decoration: none; display: inline-block;">
+                        <i class="fa fa-download"></i> Dosyayı İndir
+                      </a>
+                    </div>
+                  `;
+                  loading.style.display = 'none';
+                  content.style.display = 'block';
+                  originalDataLoaded = true;
+                }
+              })
+              .catch(err => {
+                console.error('Error loading preview:', err);
+                const loading = document.getElementById('data-preview-loading');
+                const content = document.getElementById('data-preview-content');
+
+                content.innerHTML = `
+                  <div style="text-align: center; padding: 40px;">
+                    <i class="fa fa-exclamation-triangle" style="font-size: 48px; color: #f59e0b; margin-bottom: 20px;"></i>
+                    <h3 style="color: #475569; margin-bottom: 20px;">Önizleme Yüklenemedi</h3>
+                    <p style="color: #64748b; margin-bottom: 30px;">Veri önizlemesi yüklenirken bir hata oluştu.</p>
+                    <a href="{{ res.url }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none; padding: 12px 24px; border-radius: 8px; color: white; text-decoration: none; display: inline-block;">
+                      <i class="fa fa-download"></i> Dosyayı İndir
+                    </a>
+                  </div>
+                `;
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                originalDataLoaded = true;
+              });
+          }
+
+          // Load standard (non-spatial) preview
+          function loadStandardPreview() {
+            const resourceId = '{{ res.id }}';
+            const packageName = '{{ pkg.name }}';
+
+            // Try to get the first available resource view
+            fetch(`/api/3/action/resource_view_list?id=${resourceId}`)
+              .then(r => r.json())
+              .then(data => {
+                const loading = document.getElementById('standard-preview-loading');
+                const content = document.getElementById('standard-preview-content');
+
+                if (data.success && data.result && data.result.length > 0) {
+                  // Use first available view
+                  const view = data.result[0];
+                  const viewUrl = `/dataset/${packageName}/resource/${resourceId}/view/${view.id}`;
+
+                  content.innerHTML = `
+                    <iframe src="${viewUrl}"
+                            style="width: 100%; height: calc(100vh - 300px); min-height: 600px; border: none; border-radius: 8px;"
+                            frameborder="0">
+                    </iframe>
+                  `;
+                  loading.style.display = 'none';
+                  content.style.display = 'block';
+                } else {
+                  // No views available
+                  content.innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                      <i class="fa fa-file-o" style="font-size: 48px; color: #cbd5e1; margin-bottom: 20px;"></i>
+                      <h3 style="color: #475569; margin-bottom: 20px;">Önizleme Mevcut Değil</h3>
+                      <p style="color: #64748b; margin-bottom: 30px;">Bu kaynak için otomatik önizleme oluşturulamadı.</p>
+                      <a href="{{ res.url }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none; padding: 12px 24px; border-radius: 8px; color: white; text-decoration: none; display: inline-block;">
+                        <i class="fa fa-download"></i> Dosyayı İndir
+                      </a>
+                    </div>
+                  `;
+                  loading.style.display = 'none';
+                  content.style.display = 'block';
+                }
+              })
+              .catch(err => {
+                console.error('Error loading standard preview:', err);
+                const loading = document.getElementById('standard-preview-loading');
+                const content = document.getElementById('standard-preview-content');
+
+                content.innerHTML = `
+                  <div style="text-align: center; padding: 40px;">
+                    <i class="fa fa-exclamation-triangle" style="font-size: 48px; color: #f59e0b; margin-bottom: 20px;"></i>
+                    <h3 style="color: #475569; margin-bottom: 20px;">Önizleme Yüklenemedi</h3>
+                    <p style="color: #64748b; margin-bottom: 30px;">Veri önizlemesi yüklenirken bir hata oluştu.</p>
+                    <a href="{{ res.url }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea, #764ba2); border: none; padding: 12px 24px; border-radius: 8px; color: white; text-decoration: none; display: inline-block;">
+                      <i class="fa fa-download"></i> Dosyayı İndir
+                    </a>
+                  </div>
+                `;
+                loading.style.display = 'none';
+                content.style.display = 'block';
+              });
+          }
 
           // Toggle layer switcher
           function toggleLayerSwitcher() {
@@ -1056,11 +1292,14 @@
                   const isSpatial = data.spatial_resources.some(r => r.resource_id === resourceId);
 
                   if (isSpatial) {
-                    console.log('✓ SPATIAL RESOURCE - Loading map...');
+                    console.log('✓ SPATIAL RESOURCE - Loading tabs and map...');
 
-                    // Hide standard preview, show map
+                    // Show tabs
+                    document.getElementById('spatialViewTabs').classList.add('active');
+
+                    // Hide standard preview, show spatial tabs
                     document.getElementById('standard-preview-container').style.display = 'none';
-                    document.getElementById('spatial-map-container').style.display = 'block';
+                    document.getElementById('map-view').style.display = 'block';
 
                     // Initialize map
                     setTimeout(() => {
@@ -1073,11 +1312,24 @@
                     }, 100);
 
                   } else {
-                    console.log('Standard resource - showing preview');
+                    console.log('✓ Standard resource - showing default preview');
+
+                    // Show standard preview (CKAN default)
+                    document.getElementById('standard-preview-container').style.display = 'block';
+                    document.getElementById('spatialViewTabs').style.display = 'none';
+                    document.getElementById('map-view').style.display = 'none';
+                    document.getElementById('original-view').style.display = 'none';
+
+                    // Load standard preview
+                    loadStandardPreview();
                   }
                 }
               })
-              .catch(e => console.error('Error checking spatial:', e));
+              .catch(e => {
+                console.error('Error checking spatial:', e);
+                // Fallback to standard preview
+                document.getElementById('standard-preview-container').style.display = 'block';
+              });
           })();
         </script>
 

@@ -742,7 +742,8 @@
               this.layerPanes = {};
               this.currentBaseMap = 'sokak';
               this.baseMaps = {};
-              
+              this.metadataMappingsCache = {}; // Cache for metadata mappings
+
               this.initBaseMaps();
               this.setupBasemapControls();
             }
@@ -1085,6 +1086,10 @@
             async processApiData(url) {
               console.log('🔗 Processing API:', url);
               try {
+                // Load metadata mappings first
+                const mappingsData = await this.getMetadataMappings(this.resourceId);
+                const { mappings, visibilityMode, visibleFields, hiddenFields } = mappingsData;
+
                 const response = await fetch(url);
                 const json = await response.json();
 
@@ -1103,7 +1108,7 @@
                 if (Array.isArray(data)) {
                   let count = 0;
                   let skippedCount = 0;
-                  
+
                   data.forEach(item => {
                     // Smart coordinate detection - CASE INSENSITIVE
                     // Check all possible variations including capitalized versions
@@ -1136,7 +1141,7 @@
                           fillOpacity: 0.8
                         });
 
-                        // Create popup
+                        // Create popup with metadata mapping
                         let popupContent = '<div class="popup-content">';
                         Object.keys(item).forEach(key => {
                           // Exclude coordinate fields from popup
@@ -1144,7 +1149,27 @@
                           if (!['enlem', 'boylam', 'latitude', 'longitude', 'lat', 'lon', 'lng', 'x', 'y'].includes(keyLower)) {
                             const value = item[key];
                             if (value !== null && value !== undefined && value !== '') {
-                              popupContent += `<div><strong>${key}:</strong> <span>${value}</span></div>`;
+                              // Visibility kontrolü
+                              if (visibilityMode === 'show_all') {
+                                if (hiddenFields && hiddenFields.includes(key)) return;
+                              } else if (visibilityMode === 'show_selected') {
+                                if (!visibleFields || !visibleFields.includes(key)) return;
+                              }
+
+                              // Eski hidden kontrolü (backward compatibility)
+                              const mapping = mappings[key];
+                              if (mapping && mapping.hidden) return;
+
+                              // Get display name
+                              const displayName = mapping?.displayName || key;
+
+                              // Apply value mapping
+                              let displayValue = value;
+                              if (mapping?.valueMapping && mapping.valueMapping[value]) {
+                                displayValue = mapping.valueMapping[value];
+                              }
+
+                              popupContent += `<div><strong>${displayName}:</strong> <span>${displayValue}</span></div>`;
                             }
                           }
                         });
@@ -1192,13 +1217,17 @@
               }
             }
 
-            addGeoJSON(geojson) {
+            async addGeoJSON(geojson) {
               console.log('📍 Adding GeoJSON to map...');
 
               if (!geojson || !geojson.features) {
                 console.warn('Geçersiz GeoJSON format');
                 return;
               }
+
+              // Load metadata mappings
+              const mappingsData = await this.getMetadataMappings(this.resourceId);
+              const { mappings, visibilityMode, visibleFields, hiddenFields } = mappingsData;
 
               // Create cluster group for points
               const cluster = L.markerClusterGroup({
@@ -1236,12 +1265,29 @@
                   fillOpacity: 0.8
                 });
 
-                // Add popup
+                // Add popup with metadata mapping
                 if (feature.properties) {
                   let popupContent = '<div class="popup-content">';
                   Object.keys(feature.properties).forEach(key => {
-                    if (feature.properties[key] !== null && feature.properties[key] !== undefined) {
-                      popupContent += `<div><strong>${key}:</strong> <span>${feature.properties[key]}</span></div>`;
+                    const value = feature.properties[key];
+                    if (value !== null && value !== undefined && value !== '') {
+                      // Visibility kontrolü
+                      if (visibilityMode === 'show_all') {
+                        if (hiddenFields && hiddenFields.includes(key)) return;
+                      } else if (visibilityMode === 'show_selected') {
+                        if (!visibleFields || !visibleFields.includes(key)) return;
+                      }
+
+                      const mapping = mappings[key];
+                      if (mapping && mapping.hidden) return;
+
+                      const displayName = mapping?.displayName || key;
+                      let displayValue = value;
+                      if (mapping?.valueMapping && mapping.valueMapping[value]) {
+                        displayValue = mapping.valueMapping[value];
+                      }
+
+                      popupContent += `<div><strong>${displayName}:</strong> <span>${displayValue}</span></div>`;
                     }
                   });
                   popupContent += '</div>';
@@ -1269,8 +1315,25 @@
                     if (feature.properties) {
                       let popupContent = '<div class="popup-content">';
                       Object.keys(feature.properties).forEach(key => {
-                        if (feature.properties[key] !== null && feature.properties[key] !== undefined) {
-                          popupContent += `<div><strong>${key}:</strong> <span>${feature.properties[key]}</span></div>`;
+                        const value = feature.properties[key];
+                        if (value !== null && value !== undefined && value !== '') {
+                          // Visibility kontrolü
+                          if (visibilityMode === 'show_all') {
+                            if (hiddenFields && hiddenFields.includes(key)) return;
+                          } else if (visibilityMode === 'show_selected') {
+                            if (!visibleFields || !visibleFields.includes(key)) return;
+                          }
+
+                          const mapping = mappings[key];
+                          if (mapping && mapping.hidden) return;
+
+                          const displayName = mapping?.displayName || key;
+                          let displayValue = value;
+                          if (mapping?.valueMapping && mapping.valueMapping[value]) {
+                            displayValue = mapping.valueMapping[value];
+                          }
+
+                          popupContent += `<div><strong>${displayName}:</strong> <span>${displayValue}</span></div>`;
                         }
                       });
                       popupContent += '</div>';
@@ -1351,6 +1414,48 @@
               } else {
                 console.log('Could not calculate bounds, using default view');
               }
+            }
+
+            async getMetadataMappings(resourceId, forceRefresh = false) {
+              // Cache metadata mappings to avoid repeated API calls
+              if (!forceRefresh && this.metadataMappingsCache[resourceId] !== undefined) {
+                return this.metadataMappingsCache[resourceId];
+              }
+
+              try {
+                const response = await fetch(`/api/spatial-resources/${resourceId}/metadata-mappings`, {
+                  credentials: 'include',
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                  }
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                  const result = {
+                    mappings: data.field_mappings || {},
+                    visibilityMode: data.visibility_mode || 'show_all',
+                    visibleFields: data.visible_fields || [],
+                    hiddenFields: data.hidden_fields || []
+                  };
+                  this.metadataMappingsCache[resourceId] = result;
+                  console.log('Metadata mappings loaded for', resourceId, result);
+                  return result;
+                }
+              } catch (error) {
+                console.warn('Could not load metadata mappings for', resourceId, error);
+              }
+
+              // Return empty mappings if not found or error
+              const emptyResult = {
+                mappings: {},
+                visibilityMode: 'show_all',
+                visibleFields: [],
+                hiddenFields: []
+              };
+              this.metadataMappingsCache[resourceId] = emptyResult;
+              return emptyResult;
             }
 
             showError(message) {

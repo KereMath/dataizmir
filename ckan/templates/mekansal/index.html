@@ -653,6 +653,12 @@
     opacity: 0.4;
   }
 
+  /* Spinner Animation */
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
   @media (max-width: 1200px) {
     .packages-grid {
       grid-template-columns: 1fr;
@@ -1420,61 +1426,95 @@ class SpatialResourceManager {
     this.metadataMappings = {}; // { fieldName: { displayName: '...', valueMapping: {...}, hidden: bool, visible: bool } }
     this.visibilityMode = 'show_all'; // 'show_all' or 'show_selected'
 
+    // Performance optimizations
+    this.renderCache = new Map(); // Cache rendered HTML
+    this.debounceTimers = {};
+
     this.init();
   }
 
   async init() {
+    const startTime = performance.now();
     try {
+      // Show loading state
+      this.showLoadingState();
+
       await this.loadSpatialResources();
+
+      // Paralel olarak geriye kalan işlemleri yap
       this.setupEventListeners();
-      this.populateFilters();
-      this.filterAndRender();
-      this.updateStats();
-      console.log('✅ Initialization complete');
+
+      // Use requestAnimationFrame for non-blocking UI updates
+      requestAnimationFrame(() => {
+        this.populateFilters();
+        requestAnimationFrame(() => {
+          this.filterAndRender();
+          this.updateStats();
+          const endTime = performance.now();
+          console.log(`✅ Initialization complete in ${Math.round(endTime - startTime)}ms`);
+        });
+      });
     } catch (error) {
       console.error('❌ Error:', error);
       this.showError('Veri yüklenirken hata: ' + error.message);
     }
   }
 
+  showLoadingState() {
+    const grid = document.getElementById('packagesGrid');
+    grid.innerHTML = `
+      <div class="loading" style="grid-column: 1 / -1;">
+        <div class="spinner" style="margin: 0 auto 20px; border: 4px solid #f3f3f3; border-top: 4px solid #667eea; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;"></div>
+        <h3 style="color: #495057; margin-bottom: 10px;">Veriler yükleniyor...</h3>
+        <p style="color: #6c757d; font-size: 14px;">Lütfen bekleyin</p>
+      </div>
+    `;
+  }
+
   async loadSpatialResources() {
     try {
-      const response = await fetch('/api/spatial-resources', { credentials: 'include' });
-      const data = await response.json();
+      // Paralel olarak hem resources hem de themes'i yükle
+      const [resourcesResponse, themesData] = await Promise.all([
+        fetch('/api/spatial-resources', { credentials: 'include' }),
+        this.loadThemes()
+      ]);
+
+      const data = await resourcesResponse.json();
 
       if (!data.success) throw new Error(data.error || 'API hatası');
 
       this.allResources = data.resources || [];
 
-      // Load themes first
-      await this.loadThemes();
-
       // Get unique package IDs
       const packageIds = [...new Set(this.allResources.map(r => r.package_id))];
 
-      // Fetch package details in parallel (limit batch size for performance)
-      const batchSize = 20;
+      // Fetch package details in parallel (optimize batch size)
+      const batchSize = 30; // Increased for better performance
       const packageMap = {};
+
+      // Progress loading için
+      const totalBatches = Math.ceil(packageIds.length / batchSize);
+      let completedBatches = 0;
 
       for (let i = 0; i < packageIds.length; i += batchSize) {
         const batch = packageIds.slice(i, i + batchSize);
-        const packagePromises = batch.map(async pkgId => {
-          try {
-            const pkgResponse = await fetch(`/api/3/action/package_show?id=${pkgId}`, { credentials: 'include' });
-            const pkgData = await pkgResponse.json();
-            if (pkgData.success && pkgData.result) {
-              return pkgData.result;
-            }
-          } catch (error) {
-            console.warn('Package load error:', pkgId, error);
-          }
-          return null;
-        });
+        const packagePromises = batch.map(pkgId =>
+          fetch(`/api/3/action/package_show?id=${pkgId}`, { credentials: 'include' })
+            .then(r => r.json())
+            .then(pkgData => pkgData.success && pkgData.result ? pkgData.result : null)
+            .catch(error => {
+              console.warn('Package load error:', pkgId);
+              return null;
+            })
+        );
 
         const packages = await Promise.all(packagePromises);
         packages.forEach(pkg => {
           if (pkg) packageMap[pkg.id] = pkg;
         });
+
+        completedBatches++;
+        console.log(`📦 Progress: ${completedBatches}/${totalBatches} batches loaded`);
       }
 
       // Collect package data and attributes
@@ -1537,32 +1577,37 @@ class SpatialResourceManager {
         return;
       }
 
-      // Tema-dataset ilişkilerini paralel yükle
-      const themePromises = themeListData.result.map(theme =>
-        fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
-          .then(r => r.json())
-          .then(data => {
-            if (data.success && data.result && data.result.datasets) {
-              return { theme: theme.name || theme.slug, datasets: data.result.datasets };
-            }
-            return null;
-          })
-          .catch(err => {
-            console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
-            return null;
-          })
-      );
-
-      const themeResults = await Promise.all(themePromises);
+      // Tema-dataset ilişkilerini paralel yükle (optimized with batching)
+      const themes = themeListData.result;
+      const batchSize = 10;
       this.packageThemeMap = {};
 
-      themeResults.forEach(result => {
-        if (result) {
-          result.datasets.forEach(dataset => {
-            this.packageThemeMap[dataset.id] = result.theme;
-          });
-        }
-      });
+      for (let i = 0; i < themes.length; i += batchSize) {
+        const batch = themes.slice(i, i + batchSize);
+        const themePromises = batch.map(theme =>
+          fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
+            .then(r => r.json())
+            .then(data => {
+              if (data.success && data.result && data.result.datasets) {
+                return { theme: theme.name || theme.slug, datasets: data.result.datasets };
+              }
+              return null;
+            })
+            .catch(err => {
+              console.warn(`Tema '${theme.slug}' yüklenemedi`);
+              return null;
+            })
+        );
+
+        const themeResults = await Promise.all(themePromises);
+        themeResults.forEach(result => {
+          if (result) {
+            result.datasets.forEach(dataset => {
+              this.packageThemeMap[dataset.id] = result.theme;
+            });
+          }
+        });
+      }
 
       console.log('✅ Themes loaded for', Object.keys(this.packageThemeMap).length, 'packages');
     } catch (error) {
@@ -1785,19 +1830,19 @@ class SpatialResourceManager {
       return;
     }
 
-    // Group by package
-    const packageGroups = {};
+    // Group by package (optimized with Map)
+    const packageGroups = new Map();
     this.filteredResources.forEach(resource => {
-      if (!packageGroups[resource.package_id]) {
-        packageGroups[resource.package_id] = {
+      if (!packageGroups.has(resource.package_id)) {
+        packageGroups.set(resource.package_id, {
           package: this.allPackages[resource.package_id],
           resources: []
-        };
+        });
       }
-      packageGroups[resource.package_id].resources.push(resource);
+      packageGroups.get(resource.package_id).resources.push(resource);
     });
 
-    const allPackageGroups = Object.values(packageGroups);
+    const allPackageGroups = Array.from(packageGroups.values());
     const totalPages = Math.ceil(allPackageGroups.length / this.itemsPerPage);
 
     // Ensure current page is valid
@@ -1810,7 +1855,17 @@ class SpatialResourceManager {
     const endIndex = startIndex + this.itemsPerPage;
     const pagePackages = allPackageGroups.slice(startIndex, endIndex);
 
-    grid.innerHTML = pagePackages.map(group => this.renderPackageCard(group)).join('');
+    // Use DocumentFragment for better performance
+    const fragment = document.createDocumentFragment();
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = pagePackages.map(group => this.renderPackageCard(group)).join('');
+
+    while (tempDiv.firstChild) {
+      fragment.appendChild(tempDiv.firstChild);
+    }
+
+    grid.innerHTML = '';
+    grid.appendChild(fragment);
 
     // Render pagination
     this.renderPagination(totalPages, allPackageGroups.length);

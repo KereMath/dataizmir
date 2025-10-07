@@ -412,7 +412,7 @@ def get_spatial_data(resource_id):
         "966cffaa-ccf1-4306-8da9-ac0cffbebb88": "https://acikveri.bizizmir.com/dataset/e3553de7-c06d-4082-892b-974d2187a234/resource/966cffaa-ccf1-4306-8da9-ac0cffbebb88/download/bisikletyollari.geojson",
         # Metro İstasyonları
         "7424cbc7-fa12-417f-9770-a0c104fc9475": "https://acikveri.bizizmir.com/dataset/d5c5522a-d6f6-4758-a2ec-0dd520e06f55/resource/7424cbc7-fa12-417f-9770-a0c104fc9475/download/metro.geojson",
-        "3f35e70e-0d3b-4c44-b92b-043d85bc903c":"https://dataizmir.izka.org.tr/dataset/660bad49-6d99-4099-a827-4d3734b1d57c/resource/3f35e70e-0d3b-4c44-b92b-043d85bc903c/download/merkez.csv"
+        "3f35e70e-0d3b-4c44-b92b-043d85bc903c":"https://dataizmir.izka.org.tr/dataset/660bad49-6d99-4099-a827-4d3734b1d57c/resource/3f35e70e-0d3b-4c44-b92b-043d85bc903c/download/merkez.csv",
         # YENİ EKLENEN CSV/EXCEL KAYNAKLARI
         # EGMS AEPND V2022.0 (XLSX)
         "d5662ab6-60b4-4bc8-8f5c-3d840391e73e": "https://dataizmir.izka.org.tr/dataset/ede74092-347f-4fa3-ac5b-d158fee0e1a5/resource/d5662ab6-60b4-4bc8-8f5c-3d840391e73e/download/egms_aepnd_v2022.0.xlsx",

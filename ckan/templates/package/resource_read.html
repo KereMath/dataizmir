@@ -459,7 +459,7 @@
           <button class="spatial-tab-button active" data-tab="map-view" onclick="switchSpatialTab('map-view')">
             🗺️ Harita Görünümü
           </button>
-          <button class="spatial-tab-button" data-tab="original-view" onclick="switchSpatialTab('original-view')">
+          <button class="spatial-tab-button" id="originalDataTab" data-tab="original-view" onclick="switchSpatialTab('original-view')">
             📊 Orijinal Veri
           </button>
         </div>
@@ -1476,6 +1476,7 @@
           // Main initialization
           (function() {
             const resourceId = '{{ res.id }}';
+            const resourceFormat = '{{ res.format }}'.toLowerCase();
 
             // Check if spatial
             fetch('/api/spatial-resources/list')
@@ -1493,6 +1494,19 @@
                     // Hide standard preview, show spatial tabs
                     document.getElementById('standard-preview-container').style.display = 'none';
                     document.getElementById('map-view').style.display = 'block';
+
+                    // Check if format is purely spatial (WMS, SHP, GeoJSON, KML, etc.)
+                    const purelySpatialFormats = ['wms', 'shp', 'geojson', 'kml', 'kmz', 'gml', 'gpx', 'wfs', 'wcs', 'shapefile', 'json'];
+                    const isPurelySpatialFormat = purelySpatialFormats.some(format => resourceFormat.includes(format));
+
+                    if (isPurelySpatialFormat) {
+                      // Hide original data tab for purely spatial formats
+                      const originalDataTab = document.getElementById('originalDataTab');
+                      if (originalDataTab) {
+                        originalDataTab.style.display = 'none';
+                      }
+                      console.log('✓ Purely spatial format detected, hiding original data tab');
+                    }
 
                     // Initialize map
                     setTimeout(() => {

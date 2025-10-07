@@ -1,134 +1,115 @@
 {% extends "page.html" %}
-
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7G9BC17B61"></script>
+<script src="https://unpkg.com/geotiff@2.0.7/dist/geotiff.bundle.min.js"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() { dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-7G9BC17B61');
+</script>
 {% block subtitle %}{{ _('Mekansal Gösterim') }}{% endblock %}
+
+{%- block header %}
+{% include "header.html" %}
+<div id="title" class="package-title container-fluid"
+  style="background-image:url(&quot;/base/images/theme/background_photo.jpg&quot;);color: #fff;">
+  <div class="background-overlay">
+    <div class="restricted-max-width">
+      <div class="col-xs-12 col-md-10 col-md-offset-1">
+        <div id="title-container" class="col-xs-10 col-md-6 text-left">
+          <h1 style="margin-left: 200px;">Mekansal Gösterim</h1>
+        </div>
+        <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
+          <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{%- endblock %}
 
 {% block primary %}
 <style>
-  /* Optimize edilmiş CSS - inline styles kaldırıldı, CSS variables kullanıldı */
-  :root {
-    --primary-color: #667eea;
-    --secondary-color: #764ba2;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --border-color: #e9ecef;
-    --text-color: #495057;
-    --bg-light: #f8f9fa;
-    --transition: all 0.2s ease;
+  /* Site scroll'u kaldır */
+  html,
+  body {
+    overflow: auto !important;
+    height: auto !important;
   }
 
-  * { box-sizing: border-box; }
-  
-  .search-form { display: none !important; }
-  
+  #content {
+    overflow: hidden !important;
+  }
+
+  .site-footer {
+    display: none !important;
+  }
+
+  .search-form {
+    display: none !important;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: #f8f9fa;
+    color: #333;
+  }
+
   .page-container {
     display: flex;
-    min-height: 100vh;
+    height: auto !important;
+    overflow: hidden;
+    position: relative !important;
+    width: 100%;
   }
 
   .sidebar-filter {
-    width: 270px;
+    width: 360px;
+    flex: 0 0 360px;
     background: #fff;
-    border-right: 1px solid var(--border-color);
+    border-right: 1px solid #e9ecef;
+    z-index: 1;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .layers-panel {
+    width: 100%;
+    height: 100%;
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
     padding: 20px;
-    overflow-y: auto;
-    box-shadow: 2px 0 4px rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     flex-shrink: 0;
   }
 
-  .sidebar-filter h3 {
-    margin-bottom: 20px;
-    color: var(--text-color);
-    font-size: 18px;
-    font-weight: 600;
-  }
-
-  .filter-section {
-    margin-bottom: 25px;
-  }
-
-  .filter-section label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: 500;
-    color: var(--text-color);
-    font-size: 14px;
-  }
-
-  .filter-section input[type="search"],
-  .filter-section select {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    font-size: 14px;
-    background: #fff;
-    transition: var(--transition);
-  }
-
-  .multi-select {
-    max-height: 200px;
-    overflow-y: auto;
-    border: 1px solid #ced4da;
-    border-radius: 6px;
-    background: #fff;
-  }
-
-  .multi-select-option {
-    padding: 10px 12px;
-    cursor: pointer;
-    transition: background-color 0.15s ease;
-    border-bottom: 1px solid var(--bg-light);
-    display: flex;
-    align-items: center;
-  }
-
-  .multi-select-option:hover { background: var(--bg-light); }
-  .multi-select-option.selected { background: #e3f2fd; color: #1976d2; }
-  .multi-select-option input[type="checkbox"] { margin-right: 8px; pointer-events: none; }
-
-  .main-container {
-    flex-grow: 1;
-    padding: 20px;
-    width: calc(100% - 320px);
-  }
-
-  .page-header {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    color: white;
-    padding: 12px 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    text-align: center;
-    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.2);
-  }
-
-  .page-title {
-    font-size: 2rem;
-    font-weight: 700;
-    margin: 0 0 15px 0;
-    text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  }
-
-  .stats-bar {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
   }
 
   .stat-item {
-    background: rgba(255,255,255,0.2);
-    padding: 10px 20px;
-    border-radius: 10px;
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255,255,255,0.3);
+    background: rgba(255, 255, 255, 0.15);
+    padding: 12px 10px;
+    border-radius: 8px;
     text-align: center;
-    transition: var(--transition);
-  }
-
-  .stat-item:hover {
-    background: rgba(255,255,255,0.3);
-    transform: translateY(-2px);
+    backdrop-filter: blur(10px);
   }
 
   .stat-number {
@@ -138,170 +119,217 @@
   }
 
   .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.95;
-    margin-top: 4px;
-  }
-
-  .results-header {
-    background: white;
-    padding: 10px 14px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-
-  .results-count {
     font-size: 13px;
-    font-weight: 600;
-    color: var(--text-color);
+    opacity: 0.9;
+    margin-top: 4px;
+    font-weight: 500;
   }
 
-  .results-count .number {
-    color: var(--primary-color);
-    font-size: 15px;
+  /* Filtreleme alanı */
+  .filter-section {
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-bottom: 1px solid #dee2e6;
+    flex-shrink: 0;
   }
 
-  /* Virtual scroll container */
-  .packages-container {
-    height: calc(100vh - 300px);
-    overflow-y: auto;
-    position: relative;
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
   }
 
-  .packages-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 15px;
-    padding-bottom: 15px;
+  .filter-row:last-child {
+    margin-bottom: 0;
   }
 
-  .package-card {
+  .filter-select {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 13px;
     background: white;
-    border-radius: 10px;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    cursor: pointer;
     overflow: hidden;
-    transition: var(--transition);
-    border: 2px solid transparent;
-    contain: layout style;
-    will-change: transform;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 100%;
   }
 
-  .package-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
-    border-color: var(--primary-color);
+  .filter-select:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .15);
+  }
+
+  .filter-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6c757d;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .search-section {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e9ecef;
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 14px;
+    background-color: #fff;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .15);
+  }
+
+  .layers-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: 20px;
+    min-height: 0;
+  }
+
+  .package-group {
+    margin: 12px 16px;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
 
   .package-header {
-    padding: 14px 16px;
-    background: linear-gradient(135deg, var(--bg-light) 0%, var(--border-color) 100%);
-    border-bottom: 2px solid #dee2e6;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 12px 14px;
     cursor: pointer;
     user-select: none;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+    transition: background 0.2s;
+  }
+
+  .package-header:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+  }
+
+  .package-title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
   }
 
   .package-title {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 600;
     color: #2c3e50;
-    text-decoration: none;
+    margin: 0;
     line-height: 1.3;
   }
 
-  .package-title:hover {
-    color: var(--primary-color);
+  .collapse-indicator {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 4px;
+    transition: transform 0.3s;
+  }
+
+  .collapse-indicator.collapsed {
+    transform: rotate(-90deg);
   }
 
   .package-meta {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 10px;
     flex-wrap: wrap;
-    gap: 8px;
-    margin: 10px 0;
   }
 
-  .resource-count-badge,
-  .spatial-count-badge {
+  .resource-count {
+    background: #28a745;
+    color: white;
     padding: 3px 8px;
-    border-radius: 10px;
-    font-size: 10px;
+    border-radius: 12px;
+    font-size: 11px;
     font-weight: 600;
+  }
+
+  .theme-badge {
+    background: #17a2b8;
     color: white;
-  }
-
-  .resource-count-badge { background: var(--success-color); }
-  .spatial-count-badge { background: #007bff; margin-left: 5px; }
-
-  .package-attributes {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px solid #dee2e6;
-  }
-
-  .attribute-badge {
-    padding: 3px 6px;
-    border-radius: 5px;
-    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
     font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 3px;
-    color: white;
   }
 
-  .attr-org { background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); }
-  .attr-theme { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
-  .attr-group { background: #6f42c1; }
+  .category-badge {
+    background: #6c757d;
+    color: white;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+  }
 
-  .resources-list {
-    padding: 10px;
-    max-height: 350px;
-    overflow-y: auto;
+  .resources-container {
     display: block;
-    background: #fafbfc;
+    max-height: 400px;
+    overflow-y: auto;
   }
 
-  .resources-list.collapsed { display: none; }
+  .resources-container.collapsed {
+    display: none;
+  }
 
   .resource-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 10px;
-    margin-bottom: 6px;
-    background: white;
-    border-radius: 6px;
-    border-left: 3px solid transparent;
-    transition: var(--transition);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f3f4;
+    cursor: default;
+    transition: all 0.2s;
+  }
+
+  .resource-item:last-child {
+    border-bottom: none;
   }
 
   .resource-item:hover {
-    background: var(--bg-light);
-    border-left-color: var(--primary-color);
-    box-shadow: 0 3px 6px rgba(0,0,0,0.08);
+    background: #f8f9fa;
   }
 
-  .resource-item.spatial-active {
-    border-left-color: var(--success-color);
-    background: linear-gradient(90deg, #f8fff9 0%, white 100%);
+  .resource-item.active {
+    background: linear-gradient(135deg, #e3f2fd 0%, #f0f8ff 100%);
+    border-left: 4px solid #1976d2;
+    padding-left: 8px;
   }
 
-  .resource-info { flex: 1; min-width: 0; }
+  .resource-info {
+    flex: 1;
+    min-width: 0;
+    cursor: default;
+  }
 
   .resource-name {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-color);
-    margin: 0 0 4px 0;
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    margin: 0 0 5px 0;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -310,51 +338,103 @@
   .resource-meta {
     display: flex;
     align-items: center;
-    gap: 4px;
-    flex-wrap: wrap;
-  }
-
-  .resource-size {
-    font-size: 9px;
-    color: #6c757d;
-  }
-
-  .resource-actions {
-    display: flex;
-    gap: 4px;
-    align-items: center;
-    flex-shrink: 0;
+    gap: 8px;
   }
 
   .format-badge {
     display: inline-block;
-    padding: 2px 5px;
+    padding: 2px 6px;
     border-radius: 4px;
     font-size: 9px;
-    font-weight: 700;
+    font-weight: 600;
     text-transform: uppercase;
-    min-width: 30px;
-    text-align: center;
   }
 
-  .format-csv { background: #d4edda; color: #155724; }
-  .format-json { background: #fff3cd; color: #856404; }
-  .format-geojson { background: #d1ecf1; color: #0c5460; }
-  .format-xml { background: #f8d7da; color: #721c24; }
-  .format-pdf { background: #cce5ff; color: #004085; }
-  .format-xls, .format-xlsx { background: #e2e3e5; color: #383d41; }
-  .format-shp { background: #dcfce7; color: #166534; }
-  .format-kml { background: #ddd6fe; color: #5b21b6; }
-  .format-other { background: #f1f5f9; color: #475569; }
+  .format-geojson {
+    background: #d1ecf1;
+    color: #0c5460;
+  }
 
-  .spatial-toggle {
+  .format-shp {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .format-kml {
+    background: #ddd6fe;
+    color: #5b21b6;
+  }
+
+  .format-csv {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .format-json {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .format-api {
+    background: #f0f9ff;
+    color: #0c4a6e;
+  }
+
+  .format-xlsx {
+    background: #e2e3e5;
+    color: #383d41;
+  }
+
+  .format-other {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  .format-wms {
+    background: #d6eaff;
+    color: #2a61a0;
+  }
+
+  .format-geotiff {
+    background: #fdf6e3;
+    color: #b58900;
+  }
+
+  .resource-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .download-resource-btn {
+    padding: 6px 10px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+  }
+
+  .download-resource-btn:hover {
+    background: #218838;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+  }
+
+  .modern-toggle {
     position: relative;
     display: inline-block;
-    width: 40px;
-    height: 22px;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
   }
 
-  .spatial-toggle input {
+  .modern-toggle input {
     opacity: 0;
     width: 0;
     height: 0;
@@ -367,1031 +447,2906 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-color: #ccc;
-    transition: .3s;
-    border-radius: 26px;
+    background: linear-gradient(135deg, #ddd, #ccc);
+    transition: all .3s ease;
+    border-radius: 24px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .toggle-slider:before {
     position: absolute;
     content: "";
-    height: 16px;
-    width: 16px;
+    height: 18px;
+    width: 18px;
     left: 3px;
     bottom: 3px;
-    background-color: white;
-    transition: .3s;
+    background: white;
+    transition: all .3s ease;
     border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
   }
 
-  input:checked + .toggle-slider { background-color: var(--success-color); }
-  input:checked + .toggle-slider:before { transform: translateX(18px); }
-
-  .action-btn {
-    padding: 4px 8px;
-    border: none;
-    border-radius: 5px;
-    font-size: 9px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: var(--transition);
-    cursor: pointer;
+  input:checked+.toggle-slider {
+    background: linear-gradient(135deg, #28a745, #20c997);
   }
 
-  .btn-view { background: var(--success-color); color: white; }
-  .btn-view:hover { background: #218838; color: white; }
-  .btn-download { background: #007bff; color: white; }
-  .btn-download:hover { background: #0056b3; color: white; }
+  .wms-resource input:checked+.toggle-slider {
+    background: linear-gradient(135deg, #2a61a0, #4c82c2);
+  }
 
-  .pagination {
+  .geotiff-resource input:checked+.toggle-slider {
+    background: linear-gradient(135deg, #b58900, #cb9700);
+  }
+
+  input:checked+.toggle-slider:before {
+    transform: translateX(20px);
+  }
+
+  .main-container {
+    flex: 1;
+    position: relative;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  #map {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+  }
+
+  /* Map controls için alan aç */
+  .leaflet-top.leaflet-left {
+    left: 10px;
+    top: 60px;
+  }
+
+  /* Harita taban seçici */
+  .basemap-control {
+    position: absolute;
+    top: 10px;
+    left: 10px;
     background: white;
-    padding: 12px;
-    border-radius: 10px;
-    margin-top: 15px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-
-  .pagination-btn {
-    padding: 5px 10px;
-    border: 2px solid var(--border-color);
-    background: white;
-    border-radius: 6px;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: var(--transition);
-    color: var(--text-color);
-    min-width: 32px;
-    text-align: center;
-  }
-
-  .pagination-btn:hover:not(:disabled) {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-    background: var(--bg-light);
-  }
-
-  .pagination-btn:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .pagination-btn.active {
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    color: white;
-    border-color: var(--primary-color);
-  }
-
-  .loading, .error, .empty-state {
-    text-align: center;
-    padding: 40px 20px;
-    color: #6c757d;
-    background: white;
-    border-radius: 10px;
-  }
-
-  .empty-icon {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    opacity: 0.4;
-  }
-
-  /* Floating buttons */
-  .floating-map-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    width: 64px;
-    height: 64px;
-    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    font-size: 28px;
-    cursor: pointer;
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
-    transition: var(--transition);
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    overflow: hidden;
   }
 
-  .floating-map-btn:hover {
-    transform: scale(1.1);
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
-  }
-
-  /* Modal styles */
-  .map-modal-overlay {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.6);
-    z-index: 2000;
-    backdrop-filter: blur(4px);
-  }
-
-  .map-modal-overlay.active {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.3s ease;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  .map-modal {
+  .basemap-button {
+    padding: 8px 12px;
+    border: none;
     background: white;
-    border-radius: 16px;
-    width: 90%;
-    max-width: 600px;
-    max-height: 80vh;
-    display: flex;
-    flex-direction: column;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-    animation: slideUp 0.3s ease;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: #495057;
+    transition: all 0.2s;
+    border-right: 1px solid #e9ecef;
   }
 
-  @keyframes slideUp {
-    from { transform: translateY(50px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+  .basemap-button:last-child {
+    border-right: none;
   }
 
-  .map-modal-header {
-    padding: 24px 28px;
-    border-bottom: 2px solid var(--border-color);
+  .basemap-button:hover {
+    background: #f8f9fa;
+  }
+
+  .basemap-button.active {
+    background: #007bff;
+    color: white;
+  }
+
+  /* Layer Switcher Control */
+  .layer-switcher-control {
+    position: absolute;
+    top: 10px;
+    right: 120px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    min-width: 250px;
+    max-width: 350px;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+
+  .layer-switcher-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 10px 15px;
+    font-weight: 600;
+    font-size: 14px;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, var(--bg-light) 0%, var(--border-color) 100%);
-    border-radius: 16px 16px 0 0;
   }
 
-  .map-modal-title {
-    font-size: 20px;
-    font-weight: 700;
-    color: #2c3e50;
-    margin: 0;
-  }
-
-  .map-modal-close {
+  .layer-switcher-toggle {
     background: none;
     border: none;
-    font-size: 28px;
-    color: #6c757d;
+    color: white;
     cursor: pointer;
-    transition: var(--transition);
-    padding: 0;
-    width: 32px;
-    height: 32px;
+    font-size: 16px;
+  }
+
+  .layer-switcher-content {
+    padding: 10px;
+    display: none;
+  }
+
+  .layer-switcher-content.expanded {
+    display: block;
+  }
+
+  .layer-switcher-item {
     display: flex;
     align-items: center;
-    justify-content: center;
+    padding: 8px;
+    border-bottom: 1px solid #f0f0f0;
   }
 
-  .map-modal-close:hover {
-    color: var(--danger-color);
-    transform: rotate(90deg);
+  .layer-switcher-item:last-child {
+    border-bottom: none;
   }
 
-  .map-modal-body {
-    padding: 20px 28px;
+  .layer-switcher-checkbox {
+    margin-right: 10px;
+  }
+
+  .layer-switcher-label {
+    flex: 1;
+    font-size: 13px;
+    color: #495057;
+    cursor: pointer;
+  }
+
+  .layer-switcher-opacity {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 20px;
+    padding: 5px 0;
+  }
+
+  .opacity-slider {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .opacity-value {
+    font-size: 11px;
+    color: #6c757d;
+    min-width: 35px;
+    text-align: right;
+  }
+
+  /* WMS Layer Info */
+  .wms-layer-info {
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 5px 0;
+    font-size: 11px;
+    color: #6c757d;
+  }
+
+  .wms-layer-list {
+    list-style: none;
+    padding: 0;
+    margin: 5px 0;
+  }
+
+  .wms-layer-list li {
+    padding: 3px 0;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .loading-section,
+  .error-section {
+    text-align: center;
+    padding: 40px 20px;
+    color: #6c757d;
+  }
+
+  .error-section {
+    background: #f8d7da;
+    color: #721c24;
+    margin: 20px;
+    border-radius: 8px;
+  }
+
+  /* Loading spinner */
+  .loading-spinner {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+  }
+
+  .loading-spinner.active {
+    display: block;
+  }
+
+  .spinner {
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007bff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px;
+  }
+
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .popup-content {
+    max-width: 280px;
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  .popup-resource-header {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 8px 12px;
+    margin: -8px -12px 8px -12px;
+    border-radius: 4px 4px 0 0;
+    font-weight: 600;
+  }
+
+  /* Seçili Katmanlar Paneli - Responsive */
+  .selected-layers-panel {
+    position: absolute;
+    top: 70px;
+    right: 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    z-index: 999;
+    pointer-events: auto;
+    padding: 12px;
+    max-height: calc(100vh - 100px);
     overflow-y: auto;
-    max-height: calc(80vh - 140px);
-  }
-
-  @media (max-width: 1200px) {
-    .packages-grid { grid-template-columns: 1fr; }
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    width: auto;
+    min-width: 280px;
+    max-width: calc(100vw - 400px);
   }
 
   @media (max-width: 768px) {
-    .page-container { flex-direction: column; }
-    .sidebar-filter { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); }
-    .main-container { width: 100%; padding: 15px; }
-    .packages-grid { grid-template-columns: 1fr; }
+    .selected-layers-panel {
+      min-width: 240px;
+      max-width: calc(100vw - 24px);
+      right: 8px;
+      top: 60px;
+    }
   }
 
-  /* Loading skeleton animation */
-  @keyframes skeleton-loading {
-    0% { background-color: #f0f0f0; }
-    100% { background-color: #e0e0e0; }
+  .sel-chip {
+    pointer-events: auto;
+    display: grid;
+    grid-template-columns: 16px auto auto;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.98);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 8px 10px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .08);
+    backdrop-filter: saturate(1.1) blur(4px);
+    width: fit-content;
   }
 
-  .skeleton {
-    animation: skeleton-loading 1s linear infinite alternate;
-    border-radius: 4px;
+  .sel-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .1);
   }
 
-  .skeleton-text { height: 12px; margin: 5px 0; }
-  .skeleton-card { height: 150px; margin-bottom: 15px; }
+  .sel-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: #223;
+    padding-right: 8px;
+  }
+
+  .sel-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .sel-btn {
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    border-radius: 8px;
+    padding: 5px 7px;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    color: #374151;
+    transition: all 0.2s;
+  }
+
+  .sel-btn:hover {
+    background: #f3f4f6;
+    transform: scale(1.05);
+  }
+
+  .sel-btn.danger:hover {
+    background: #fee2e2;
+    border-color: #fecaca;
+  }
+
+  .sel-btn.active {
+    border-color: #60a5fa;
+    background: #e0f2fe;
+  }
+
+  /* WMS GetCapabilities iframe görüntüleme düzeltmesi */
+  .ckanext-datapreview iframe {
+    width: 100% !important;
+    min-height: 600px !important;
+    background: white !important;
+    border: 1px solid #e9ecef !important;
+    border-radius: 8px !important;
+  }
+
+  /* XML görüntüleme için stil */
+  .ckanext-datapreview {
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+  }
+
+  .marker-cluster-small,
+  .marker-cluster-medium,
+  .marker-cluster-large {
+    background: transparent !important;
+  }
+
+  .marker-cluster-small div,
+  .marker-cluster-medium div,
+  .marker-cluster-large div {
+    background: transparent !important;
+  }
+
+
+  /* Özel cluster ikonumuz – katman rengini sabit tutar */
+  .cluster-icon {}
+
+  .cluster-icon .cluster-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg, #888);
+    opacity: var(--opacity, 0.85);
+    border: 2px solid #fff;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, .15);
+    position: relative;
+  }
+
+  .cluster-icon .cluster-dot>span {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 700;
+    font-size: 12px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, .5);
+  }
+
+  /* Zoom limit warning animasyonları */
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-20px);
+    }
+  }
+
+  /* ==== MOBİL ==== */
+  @media (max-width: 900px) {
+
+    html,
+    body {
+      overflow: auto !important;
+      height: auto !important;
+    }
+
+    #content {
+      overflow: visible !important;
+    }
+
+
+    .page-container {
+      position: static !important;
+      height: auto !important;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+
+    .sidebar-filter {
+      width: 100% !important;
+      border-right: 0;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .panel-header,
+    .filter-section,
+    .search-section {
+      display: block !important;
+      flex-shrink: 0;
+    }
+
+    .panel-header {
+      padding: 0 16px;
+    }
+
+    .filter-section {
+      padding: 10px 12px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .filter-label {
+      font-size: 10px;
+      margin-bottom: 6px;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .filter-select {
+      width: 100%;
+      min-height: 36px;
+      font-size: 13px;
+    }
+
+
+    .search-section {
+      padding: 8px 12px;
+      border-bottom: 1px solid #e9ecef;
+    }
+
+    .search-input {
+      width: 100%;
+      min-height: 36px;
+      font-size: 13px;
+    }
+
+
+    .layers-panel {
+      max-height: 48vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .layers-content {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 12px;
+    }
+
+
+    .resources-container {
+      max-height: none;
+    }
+
+    .resource-item {
+      padding: 10px 12px;
+    }
+
+    .main-container {
+      height: calc(100vh - 48vh);
+      position: relative !important;
+      overflow: hidden;
+    }
+
+    #map {
+      position: absolute;
+      inset: 0;
+    }
+
+    .basemap-control {
+      top: 10px;
+      left: 10px;
+    }
+
+    .layer-switcher-control {
+      top: 10px;
+      right: 10px;
+      max-width: 92vw;
+    }
+
+    .selected-layers-panel {
+      top: 60px;
+      right: 10px;
+      max-width: 80px;
+    }
+
+    .sel-name {
+      font-size: 8px;
+    }
+
+
+  }
+
+  @media (max-width: 600px) {
+    .layers-panel {
+      max-height: 52vh;
+    }
+
+    .main-container {
+      height: calc(100vh - 52vh);
+    }
+
+    .filter-row {
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .filter-select,
+    .search-input {
+      min-height: 34px;
+      font-size: 12px;
+    }
+  }
 </style>
 
 <div class="page-container">
-  <!-- Sidebar Filters -->
+  <!-- SOL: Sabit katman paneli -->
   <div class="sidebar-filter">
-    <h3>Filtreler</h3>
+    <div class="layers-panel" id="layersPanel">
+      <div class="panel-header">
+        <div class="stats-grid">
+          <div class="stat-item"><span class="stat-number" id="totalSpatialResources">-</span>
+            <div class="stat-label">Veri Seti</div>
+          </div>
+          <div class="stat-item"><span class="stat-number" id="totalSpatialPackages">-</span>
+            <div class="stat-label">Veri Kümesi</div>
+          </div>
+          <div class="stat-item"><span class="stat-number" id="activeLayers">-</span>
+            <div class="stat-label">Aktif Katman</div>
+          </div>
+          <div class="stat-item"><span class="stat-number" id="totalFormats">-</span>
+            <div class="stat-label">Veri Formatı</div>
+          </div>
+        </div>
+      </div>
 
-    <div class="filter-section">
-      <label for="searchInput">Arama</label>
-      <input type="search" id="searchInput" placeholder="Paket veya kaynak ara...">
-    </div>
+      <!-- Filtreleme alanı -->
+      <div class="filter-section">
+        <div class="filter-label">Filtreler</div>
+        <div class="filter-row">
+          <select class="filter-select" id="organizationFilter">
+            <option value="">Tüm Veri Paydaşları</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <select class="filter-select" id="formatFilter">
+            <option value="">Tüm Formatlar</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <select class="filter-select" id="themeFilter">
+            <option value="">Tüm Temalar</option>
+          </select>
+        </div>
+        <div class="filter-row">
+          <select class="filter-select" id="categoryFilter">
+            <option value="">Tüm Kategoriler</option>
+          </select>
+        </div>
+      </div>
 
-    <div class="filter-section">
-      <label>Veri Paydaşı</label>
-      <div class="multi-select" id="orgFilterContainer"></div>
-    </div>
+      <div class="search-section">
+        <input type="search" class="search-input" id="layerSearch" placeholder="Veri seti arayın...">
+      </div>
 
-    <div class="filter-section">
-      <label>Tema</label>
-      <div class="multi-select" id="themeFilterContainer"></div>
-    </div>
-
-    <div class="filter-section">
-      <label>Kategoriler</label>
-      <div class="multi-select" id="categoriesFilterContainer"></div>
-    </div>
-
-    <div class="filter-section">
-      <label>Mekansal Durum</label>
-      <div class="multi-select" id="spatialStatusFilterContainer"></div>
-    </div>
-
-    <div class="filter-section">
-      <label>Dosya Formatı</label>
-      <div class="multi-select" id="formatFilterContainer"></div>
+      <div class="layers-content" id="spatialLayersContainer">
+        <div class="loading-section">Mekansal katmanlar yükleniyor...</div>
+      </div>
     </div>
   </div>
 
-  <!-- Main Content -->
+  <!-- SAĞ: Harita -->
   <div class="main-container">
-    <div class="page-header">
-      <h1 class="page-title">🗺️ Mekansal Gösterim Yönetimi</h1>
-      <div class="stats-bar">
-        <div class="stat-item">
-          <span class="stat-number" id="totalPackages">-</span>
-          <div class="stat-label">Toplam Paket</div>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number" id="totalResources">-</span>
-          <div class="stat-label">Toplam Kaynak</div>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number" id="spatialResources">-</span>
-          <div class="stat-label">Mekansal Seçili</div>
-        </div>
-        <div class="stat-item">
-          <span class="stat-number" id="totalFormats">-</span>
-          <div class="stat-label">Farklı Format</div>
-        </div>
+    <!-- Harita taban seçici -->
+    <div class="basemap-control">
+      <button class="basemap-button active" data-basemap="sokak">🗺️ Sokak</button>
+      <button class="basemap-button" data-basemap="uydu">🛰️ Uydu</button>
+      <button class="basemap-button" data-basemap="arazi">⛰️ Arazi</button>
+      <button class="basemap-button" data-basemap="sade">📍 Sade</button>
+    </div>
+
+    <!-- Layer Switcher Control -->
+    <div class="layer-switcher-control" id="layerSwitcher" style="display: none;">
+      <div class="layer-switcher-header">
+        <span>🗂️ Katman Kontrolü</span>
+        <button class="layer-switcher-toggle" onclick="spatialMapManager.toggleLayerSwitcher()">▼</button>
+      </div>
+      <div class="layer-switcher-content" id="layerSwitcherContent">
+        <!-- Dinamik olarak doldurulacak -->
       </div>
     </div>
 
-    <div class="results-header">
-      <div class="results-count">
-        <span class="number" id="filteredCount">0</span> sonuç gösteriliyor
-      </div>
+    <div id="map"></div>
+
+    <!-- Loading spinner -->
+    <div class="loading-spinner" id="loadingSpinner">
+      <div class="spinner"></div>
+      <div style="text-align: center; color: #495057;">Veri yükleniyor...</div>
     </div>
 
-    <div class="packages-container">
-      <div class="packages-grid" id="packagesGrid">
-        <div class="loading">⏳ Veriler yükleniyor...</div>
+    <!-- Seçili katmanlar paneli -->
+    <div class="selected-layers-panel" id="selectedLayersPanel" style="display: none;"></div>
+  </div>
+
+  <!-- Related Data Modal (İlişkili Veriler Popup'ı) -->
+  <div id="relatedDataModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
+    <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; max-width: 800px; max-height: 80vh; width: 90%; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.4); margin: auto; margin-top: 5vh;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0; font-size: 18px;">📊 İlişkili Veri Setleri</h3>
+        <button onclick="spatialMapManager.closeRelatedDataModal()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1;">&times;</button>
+      </div>
+      <div id="relatedDataContent" style="padding: 20px; overflow-y: auto; flex: 1;">
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+          <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+          <p>Yükleniyor...</p>
+        </div>
       </div>
     </div>
-
-    <div class="pagination" id="pagination" style="display: none;"></div>
   </div>
 </div>
 
-<!-- Floating Buttons -->
-<button class="floating-map-btn" id="mapFloatingBtn" onclick="spatialManager.openMapModal()" title="Anasayfa Haritası">🗺️</button>
-<button class="floating-map-btn" id="relationshipFloatingBtn" onclick="spatialManager.openRelationshipModal()" title="İlişkilendir" style="bottom: 110px;">🔗</button>
-<button class="floating-map-btn" id="metadataFloatingBtn" onclick="spatialManager.openMetadataModal()" title="Metaveri" style="bottom: 190px;">🏷️</button>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- Lazy-loaded modals will be injected here -->
-<div id="modalsContainer"></div>
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-omnivore/0.3.4/leaflet-omnivore.min.js"></script>
+<script src="https://unpkg.com/shpjs@3.6.0/dist/shp.min.js"></script>
+
+<script src="https://unpkg.com/georaster@1.5.6/dist/georaster.browser.bundle.min.js"></script>
+<script src="https://unpkg.com/georaster-layer-for-leaflet@3.10.0/dist/georaster-layer-for-leaflet.min.js"></script>
+<script src="https://unpkg.com/geotiff@2.0.7/dist/geotiff.bundle.min.js"></script>
 
 <script>
-console.log('🚀 Optimize Edilmiş Mekansal Yönetim v2.0');
+  console.log('Modern Mekansal Görüntüleme Sistemi v4.0 - WMS Layer Switcher Desteği');
 
-class OptimizedSpatialManager {
-  constructor() {
-    // Core data
-    this.allResources = [];
-    this.allPackages = {};
-    this.filteredResources = [];
-    
-    // Cache management
-    this.cache = new Map();
-    this.packageCache = new Map();
-    this.themeCache = new Map();
-    
-    // Collections
-    this.organizations = new Set();
-    this.themes = new Set();
-    this.categories = new Set();
-    this.formats = new Set();
-    
-    // Filters
-    this.selectedOrgs = new Set();
-    this.selectedThemes = new Set();
-    this.selectedCategories = new Set();
-    this.selectedFormats = new Set();
-    this.selectedSpatialStatus = new Set();
-    
-    this.spatialFormats = ['geojson', 'shp', 'kml', 'gml', 'wkt', 'wfs', 'wms', 'wcs', 'gpx', 'kmz', 'api', 'json'];
-    this.spatialResourceIds = new Set();
-    this.collapsedPackages = new Set();
-    
-    // Pagination
-    this.currentPage = 1;
-    this.itemsPerPage = 10;
-    
-    // Performance flags
-    this.isRendering = false;
-    this.pendingRender = false;
-    
-    // Debounce timers
-    this.searchDebounce = null;
-    this.renderDebounce = null;
-    
-    // Initialize immediately
-    this.init();
-  }
+  class SpatialMapManager {
+    constructor() {
+      this.map = null;
+      this.spatialData = [];
+      this.packageGroups = {};
+      this.resourceLayers = {};
+      this.activeResources = new Set();
 
-  async init() {
-    try {
-      // Show initial loading state quickly
-      this.showLoadingState();
-      
-      // Load data in parallel
-      const [resources, themes] = await Promise.all([
-        this.loadSpatialResources(),
-        this.loadThemes()
-      ]);
-      
-      // Process data
-      await this.processPackageData();
-      
-      // Setup UI
-      this.setupEventListeners();
-      this.populateFilters();
-      this.filterAndRender();
-      this.updateStats();
-      
-      console.log('✅ Initialization complete');
-    } catch (error) {
-      console.error('❌ Error:', error);
-      this.showError('Veri yüklenirken hata: ' + error.message);
+      // Cache mekanizması
+      this.dataCache = new Map();
+      this.pendingRequests = new Map();
+
+      // Harita tabanları
+      this.baseMaps = {};
+      this.currentBaseMap = 'sokak';
+
+      // Default collapsed packages
+      this.collapsedPackages = new Set();
+      this.layerPanes = {};
+
+      // Focus durumu
+      this.focusMode = false;
+      this.focusedResourceId = null;
+
+      // Filtreler
+      this.selectedTheme = '';
+      this.selectedCategory = '';
+      this.selectedOrganization = '';
+      this.selectedFormat = '';
+      this.searchTerm = '';
+
+      // Kullanıcı durumu
+      this.isLoggedIn = false;
+
+      // Tema haritası
+      this.themeMap = {};
+
+      // WMS layer bilgileri
+      this.wmsLayers = {};
+      this.wmsLayerStates = {};
+
+      // Performans için throttling
+      this.renderThrottle = null;
+      this.loadingQueue = [];
+      this.isLoadingResource = false;
+
+      // Layer Switcher durumu
+      this.layerSwitcherExpanded = false;
+
+      this.init();
     }
-  }
 
-  showLoadingState() {
-    const grid = document.getElementById('packagesGrid');
-    // Show skeleton loaders immediately
-    const skeletons = Array(6).fill(0).map(() => 
-      '<div class="skeleton skeleton-card"></div>'
-    ).join('');
-    grid.innerHTML = skeletons;
-  }
-
-  async loadSpatialResources() {
-    // Check cache first
-    const cacheKey = 'spatial-resources';
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      if (Date.now() - cached.timestamp < 5 * 60 * 1000) { // 5 minutes cache
-        this.allResources = cached.data;
-        return cached.data;
-      }
-    }
-    
-    const response = await fetch('/api/spatial-resources', { credentials: 'include' });
-    const data = await response.json();
-    
-    if (!data.success) throw new Error(data.error || 'API hatası');
-    
-    this.allResources = data.resources || [];
-    
-    // Cache the result
-    this.cache.set(cacheKey, {
-      data: this.allResources,
-      timestamp: Date.now()
-    });
-    
-    return this.allResources;
-  }
-
-  async loadThemes() {
-    // Check cache
-    const cacheKey = 'themes';
-    if (this.themeCache.has(cacheKey)) {
-      this.packageThemeMap = this.themeCache.get(cacheKey);
-      return;
-    }
-    
-    const ckan_api_base = "/api/3/action/";
-    
-    try {
-      const themeListResponse = await fetch(ckan_api_base + "theme_category_list", { credentials: 'include' });
-      const themeListData = await themeListResponse.json();
-      
-      if (!themeListData.success || !themeListData.result) {
-        this.packageThemeMap = {};
-        return;
-      }
-      
-      // Batch load themes in parallel with limit
-      const batchSize = 5;
-      const themes = themeListData.result;
-      this.packageThemeMap = {};
-      
-      for (let i = 0; i < themes.length; i += batchSize) {
-        const batch = themes.slice(i, i + batchSize);
-        const promises = batch.map(theme => 
-          fetch(`${ckan_api_base}theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
-            .then(r => r.json())
-            .then(data => {
-              if (data.success && data.result && data.result.datasets) {
-                data.result.datasets.forEach(dataset => {
-                  this.packageThemeMap[dataset.id] = theme.name || theme.slug;
-                });
-              }
-            })
-            .catch(() => {}) // Ignore individual failures
-        );
-        
-        await Promise.all(promises);
-      }
-      
-      // Cache themes
-      this.themeCache.set(cacheKey, this.packageThemeMap);
-      
-    } catch (error) {
-      console.warn('Theme load error:', error);
-      this.packageThemeMap = {};
-    }
-  }
-
-  async processPackageData() {
-    // Get unique package IDs
-    const packageIds = [...new Set(this.allResources.map(r => r.package_id))];
-    
-    // Batch load packages with improved parallelization
-    const batchSize = 10; // Reduced batch size for faster initial load
-    const loadPromises = [];
-    
-    for (let i = 0; i < packageIds.length; i += batchSize) {
-      const batch = packageIds.slice(i, i + batchSize);
-      const batchPromise = this.loadPackageBatch(batch);
-      loadPromises.push(batchPromise);
-    }
-    
-    // Wait for all batches
-    await Promise.all(loadPromises);
-    
-    // Process resources and collect attributes
-    this.allResources.forEach(resource => {
-      const pkg = this.allPackages[resource.package_id];
-      if (!pkg) return;
-      
-      // Collect attributes
-      if (resource.organization_title) this.organizations.add(resource.organization_title);
-      if (pkg.theme) this.themes.add(pkg.theme);
-      if (resource.format) this.formats.add(resource.format.toLowerCase());
-      pkg.groups.forEach(g => this.categories.add(g));
-      
-      if (resource.is_spatial) this.spatialResourceIds.add(resource.resource_id);
-    });
-    
-    console.log('✅ Processed', Object.keys(this.allPackages).length, 'packages');
-  }
-
-  async loadPackageBatch(packageIds) {
-    const promises = packageIds.map(async pkgId => {
-      // Check package cache
-      if (this.packageCache.has(pkgId)) {
-        this.allPackages[pkgId] = this.packageCache.get(pkgId);
-        return;
-      }
-      
+    async init() {
       try {
-        const response = await fetch(`/api/3/action/package_show?id=${pkgId}`, { credentials: 'include' });
+        await this.checkUserAuth();
+        this.initMap();
+        await this.loadSpatialData();
+        this.setupFilters();
+        this.setupEventListeners();
+        this.renderLayers();
+        this.updateStats();
+      } catch (error) {
+        console.error('Initialization hatası:', error);
+        this.showError('Mekansal veriler yüklenirken hata oluştu: ' + error.message);
+      }
+    }
+
+    async checkUserAuth() {
+      try {
+        const response = await fetch('/api/3/action/dashboard_activity_list', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ limit: 1 })
+        });
+
         const data = await response.json();
-        
-        if (data.success && data.result) {
-          const pkg = data.result;
-          const groupTitles = pkg.groups?.map(g => g.display_name || g.title || g.name) || [];
-          const themeTitle = this.packageThemeMap?.[pkgId] || 'Tema Yok';
-          
-          const packageData = {
-            id: pkgId,
-            name: pkg.name,
-            title: pkg.title,
-            organization: pkg.organization?.title || pkg.organization?.name || 'Bilinmiyor',
-            theme: themeTitle,
-            private: pkg.private || false,
-            groups: groupTitles,
-            metadata_created: pkg.metadata_created,
-            metadata_modified: pkg.metadata_modified
-          };
-          
-          this.allPackages[pkgId] = packageData;
-          this.packageCache.set(pkgId, packageData);
+        this.isLoggedIn = data.success;
+        console.log('Kullanıcı giriş durumu:', this.isLoggedIn);
+      } catch {
+        this.isLoggedIn = false;
+      }
+    }
+
+    initMap() {
+      this.map = L.map('map', {
+        center: [38.4237, 27.1428],
+        zoom: 10,
+        zoomControl: true,
+        scrollWheelZoom: true,
+        preferCanvas: true // Performans için canvas renderer kullan
+      });
+
+      // Farklı harita tabanları
+      this.baseMaps = {
+        sokak: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 19,
+          attribution: '© OpenStreetMap'
+        }),
+        uydu: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          maxZoom: 17, // Uydu için maksimum zoom limiti
+          attribution: '© Esri'
+        }),
+        arazi: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+          maxZoom: 17,
+          attribution: '© OpenTopoMap'
+        }),
+        sade: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          maxZoom: 19,
+          attribution: '© CARTO'
+        })
+      };
+
+      // Default haritayı ekle
+      this.baseMaps[this.currentBaseMap].addTo(this.map);
+
+      // Zoom limit kontrolü için event listener
+      this.map.on('zoomend', () => {
+        this.checkZoomLimit();
+      });
+
+      // Basemap değiştirme butonları
+      document.querySelectorAll('.basemap-button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const basemap = e.target.dataset.basemap;
+          this.switchBasemap(basemap);
+        });
+      });
+    }
+
+    switchBasemap(basemap) {
+      if (basemap === this.currentBaseMap) return;
+
+      this.map.removeLayer(this.baseMaps[this.currentBaseMap]);
+      this.baseMaps[basemap].addTo(this.map);
+      this.currentBaseMap = basemap;
+
+      document.querySelectorAll('.basemap-button').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.basemap === basemap);
+      });
+
+      // Uydu görünümüne geçildiğinde zoom kontrolü
+      this.checkZoomLimit();
+    }
+
+    checkZoomLimit() {
+      // Sadece uydu görünümü için zoom limiti kontrolü
+      if (this.currentBaseMap === 'uydu') {
+        const currentZoom = this.map.getZoom();
+        const maxZoom = this.baseMaps.uydu.options.maxZoom;
+
+        if (currentZoom >= maxZoom) {
+          // Uyarı mesajı göster
+          this.showZoomLimitWarning();
+        }
+      }
+    }
+
+    showZoomLimitWarning() {
+      // Eğer zaten varsa gösterme
+      if (document.getElementById('zoomLimitWarning')) return;
+
+      const warning = document.createElement('div');
+      warning.id = 'zoomLimitWarning';
+      warning.style.cssText = `
+        position: absolute;
+        top: 60px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 1001;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        animation: slideDown 0.3s ease;
+      `;
+      warning.innerHTML = `
+        <span style="font-size: 20px;">⚠️</span>
+        <span>Uydu görünümünde maksimum yakınlaştırma seviyesine ulaştınız.</span>
+        <button onclick="this.parentElement.remove()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 8px; border-radius: 4px; cursor: pointer; margin-left: 10px;">✕</button>
+      `;
+
+      document.querySelector('.main-container').appendChild(warning);
+
+      // 5 saniye sonra otomatik kaldır
+      setTimeout(() => {
+        if (warning.parentElement) {
+          warning.style.animation = 'slideUp 0.3s ease';
+          setTimeout(() => warning.remove(), 300);
+        }
+      }, 5000);
+    }
+
+    toggleLayerSwitcher() {
+      this.layerSwitcherExpanded = !this.layerSwitcherExpanded;
+      const content = document.getElementById('layerSwitcherContent');
+      const toggle = document.querySelector('.layer-switcher-toggle');
+
+      if (this.layerSwitcherExpanded) {
+        content.classList.add('expanded');
+        toggle.textContent = '▲';
+      } else {
+        content.classList.remove('expanded');
+        toggle.textContent = '▼';
+      }
+    }
+
+    renderLayerSwitcherContent() {
+      const content = document.getElementById('layerSwitcherContent');
+      let html = '';
+
+      console.log('WMS Layers:', this.wmsLayers);
+      console.log('Active Resources:', this.activeResources);
+
+      // Tüm WMS layer'ları göster (activeResources kontrolü olmadan)
+      for (const [resourceId, layers] of Object.entries(this.wmsLayers)) {
+        const resource = this.resourceLayers[resourceId]?.resource;
+        if (!resource) continue;
+
+        html += `
+          <div class="wms-layer-info">
+            <strong>${resource.resource_name}</strong>
+            <div class="wms-layer-list">
+        `;
+
+        // Her layer için checkbox ve opacity slider ekle
+        layers.forEach((layer, index) => {
+          const layerId = `${resourceId}_${index}`;
+          const isChecked = this.wmsLayerStates[layerId] !== false;
+          const opacity = this.wmsLayerStates[layerId + '_opacity'] || 100;
+
+          html += `
+            <div class="layer-switcher-item">
+              <input type="checkbox" 
+                     id="layer_${layerId}" 
+                     class="layer-switcher-checkbox"
+                     ${isChecked ? 'checked' : ''}
+                     onchange="spatialMapManager.toggleWMSLayer('${resourceId}', '${layer.name}', ${index})">
+              <label for="layer_${layerId}" class="layer-switcher-label">
+                ${layer.title || layer.name}
+              </label>
+            </div>
+            <div class="layer-switcher-opacity">
+              <span style="font-size: 11px;">📊</span>
+              <input type="range" 
+                     class="opacity-slider" 
+                     min="0" max="100" 
+                     value="${opacity}"
+                     oninput="spatialMapManager.updateWMSOpacity('${resourceId}', '${layer.name}', this.value, ${index})">
+              <span class="opacity-value">${opacity}%</span>
+            </div>
+          `;
+        });
+
+        html += '</div></div>';
+      }
+
+      if (html === '') {
+        html = '<div style="padding: 10px; text-align: center; color: #6c757d;">Aktif WMS katmanı yok</div>';
+      }
+
+      content.innerHTML = html;
+    }
+
+    toggleWMSLayer(resourceId, layerName, layerIndex) {
+      const layerId = `${resourceId}_${layerIndex}`;
+      const checkbox = document.getElementById(`layer_${layerId}`);
+      const isChecked = checkbox.checked;
+
+      // State'i güncelle
+      this.wmsLayerStates[layerId] = isChecked;
+
+      // WMS layer'ı güncelle
+      const rl = this.resourceLayers[resourceId];
+      if (rl && rl.layer) {
+        if (rl.wmsLayerObjs && rl.wmsLayerObjs[layerName]) {
+          const layer = rl.wmsLayerObjs[layerName];
+          if (isChecked) {
+            layer.addTo(this.map);
+          } else {
+            this.map.removeLayer(layer);
+          }
+        }
+      }
+    }
+
+    updateWMSOpacity(resourceId, layerName, value, layerIndex) {
+      const layerId = `${resourceId}_${layerIndex}`;
+      const opacity = value / 100;
+
+      // State'i güncelle
+      this.wmsLayerStates[layerId + '_opacity'] = value;
+
+      // Opacity değerini güncelle
+      const opacityValue = document.querySelector(`#layer_${layerId}`).parentElement.nextElementSibling.querySelector('.opacity-value');
+      if (opacityValue) {
+        opacityValue.textContent = value + '%';
+      }
+
+      // WMS layer opacity'sini güncelle
+      const rl = this.resourceLayers[resourceId];
+      if (rl && rl.wmsLayerObjs && rl.wmsLayerObjs[layerName]) {
+        rl.wmsLayerObjs[layerName].setOpacity(opacity);
+      }
+    }
+
+    showLoading() {
+      document.getElementById('loadingSpinner').classList.add('active');
+    }
+
+    hideLoading() {
+      document.getElementById('loadingSpinner').classList.remove('active');
+    }
+
+    async loadSpatialData() {
+      const cacheKey = 'spatial-resources';
+      if (this.dataCache.has(cacheKey)) {
+        const cachedData = this.dataCache.get(cacheKey);
+        if (Date.now() - cachedData.timestamp < 300000) { // 5 dakika cache
+          this.spatialData = cachedData.data;
+          this.createPackageGroups();
+          return;
+        }
+      }
+
+      if (this.pendingRequests.has(cacheKey)) {
+        await this.pendingRequests.get(cacheKey);
+        return;
+      }
+
+      const promise = this.fetchSpatialData();
+      this.pendingRequests.set(cacheKey, promise);
+
+      try {
+        const data = await promise;
+        this.dataCache.set(cacheKey, { data, timestamp: Date.now() });
+        this.spatialData = data;
+        this.createPackageGroups();
+      } finally {
+        this.pendingRequests.delete(cacheKey);
+      }
+    }
+
+    async fetchSpatialData() {
+      const response = await fetch('/api/spatial-resources/list', {
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'max-age=300'
+        }
+      });
+      const data = await response.json();
+
+      if (!data.success) throw new Error(data.error || 'Spatial resources API hatası');
+
+      let resources = data.spatial_resources || [];
+
+      // Giriş yapmamış kullanıcı için private paketleri filtrele
+      if (!this.isLoggedIn) {
+        const publicPackages = await this.getPublicPackages();
+        resources = resources.filter(r => publicPackages.has(r.package_id));
+      }
+
+      // Tema ve kategori bilgilerini ekle
+      const enrichedData = await this.enrichResourcesWithPackageInfo(resources);
+      return enrichedData;
+    }
+
+    async getPublicPackages() {
+      const publicPackages = new Set();
+      try {
+        const response = await fetch('/api/3/action/package_search?rows=1000', {
+          credentials: 'include'
+        });
+        const data = await response.json();
+
+        if (data.success && data.result && data.result.results) {
+          data.result.results.forEach(pkg => {
+            if (!pkg.private) {
+              publicPackages.add(pkg.id);
+            }
+          });
         }
       } catch (error) {
-        console.warn('Package load error:', pkgId, error);
+        console.error('Public packages yüklenemedi:', error);
       }
-    });
-    
-    await Promise.all(promises);
-  }
-
-  setupEventListeners() {
-    const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', () => {
-      clearTimeout(this.searchDebounce);
-      this.searchDebounce = setTimeout(() => this.filterAndRender(), 150); // Faster debounce
-    });
-  }
-
-  populateFilters() {
-    // Use requestAnimationFrame for smooth UI updates
-    requestAnimationFrame(() => {
-      this.populateCheckboxFilter('orgFilterContainer', [...this.organizations].sort());
-      this.populateCheckboxFilter('themeFilterContainer', [...this.themes].sort());
-      this.populateCheckboxFilter('categoriesFilterContainer', [...this.categories].sort());
-      this.populateCheckboxFilter('formatFilterContainer', [...this.formats].sort());
-      this.populateCheckboxFilter('spatialStatusFilterContainer', ['Evet', 'Hayır']);
-    });
-  }
-
-  populateCheckboxFilter(containerId, items) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    
-    if (items.length === 0) {
-      container.innerHTML = '<div style="padding:10px; color:#999;">Seçenek yok</div>';
-      return;
+      return publicPackages;
     }
-    
-    // Use document fragment for better performance
-    const fragment = document.createDocumentFragment();
-    const wrapper = document.createElement('div');
-    
-    items.forEach(item => {
-      const option = document.createElement('div');
-      option.className = 'multi-select-option';
-      option.onclick = () => this.toggleFilter(containerId, item);
-      
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = this.getSelectedSet(containerId).has(item);
-      
-      const label = document.createElement('span');
-      label.textContent = item;
-      
-      option.appendChild(checkbox);
-      option.appendChild(label);
-      
-      if (checkbox.checked) option.classList.add('selected');
-      
-      wrapper.appendChild(option);
-    });
-    
-    fragment.appendChild(wrapper);
-    container.innerHTML = '';
-    container.appendChild(fragment);
-  }
 
-  getSelectedSet(containerId) {
-    const map = {
-      'orgFilterContainer': this.selectedOrgs,
-      'themeFilterContainer': this.selectedThemes,
-      'categoriesFilterContainer': this.selectedCategories,
-      'formatFilterContainer': this.selectedFormats,
-      'spatialStatusFilterContainer': this.selectedSpatialStatus
-    };
-    return map[containerId] || new Set();
-  }
+    async loadThemes() {
+      try {
+        // Tüm temaları çek
+        const themeListResponse = await fetch('/api/3/action/theme_category_list', { credentials: 'include' });
+        const themeListData = await themeListResponse.json();
 
-  toggleFilter(containerId, value) {
-    const selectedSet = this.getSelectedSet(containerId);
-    if (selectedSet.has(value)) {
-      selectedSet.delete(value);
-    } else {
-      selectedSet.add(value);
+        if (themeListData.success && themeListData.result) {
+          // Her tema için dataset ilişkilerini çek
+          const themePromises = themeListData.result.map(theme =>
+            fetch(`/api/3/action/theme_category_show?slug=${theme.slug}`, { credentials: 'include' })
+              .then(r => r.json())
+              .then(data => {
+                if (data.success && data.result && data.result.datasets) {
+                  return {
+                    themeName: theme.name || theme.slug,
+                    datasets: data.result.datasets
+                  };
+                }
+                return null;
+              })
+              .catch(err => {
+                console.warn(`Tema '${theme.slug}' yüklenemedi:`, err);
+                return null;
+              })
+          );
+
+          const themeResults = await Promise.all(themePromises);
+          const tempMap = {};
+
+          themeResults.forEach(result => {
+            if (result) {
+              result.datasets.forEach(dataset => {
+                // Dataset ID'ye göre tema adını kaydet
+                tempMap[dataset.id] = result.themeName;
+              });
+            }
+          });
+
+          return tempMap;
+        }
+      } catch (error) {
+        console.error("Tema listesi yüklenirken hata:", error);
+      }
+      return {};
     }
-    
-    // Update UI efficiently
-    requestAnimationFrame(() => {
-      const container = document.getElementById(containerId);
-      const options = container.querySelectorAll('.multi-select-option');
-      options.forEach(option => {
-        const text = option.querySelector('span').textContent;
-        const checkbox = option.querySelector('input');
-        if (text === value) {
-          checkbox.checked = selectedSet.has(value);
-          option.classList.toggle('selected', checkbox.checked);
+
+    async enrichResourcesWithPackageInfo(resources) {
+      // Önce temaları yükle
+      this.themeMap = await this.loadThemes();
+
+      const packageIds = [...new Set(resources.map(r => r.package_id))];
+
+      // Package bilgilerini paralel olarak çek
+      const packageInfos = await Promise.all(
+        packageIds.map(async (pid) => {
+          try {
+            const response = await fetch(`/api/3/action/package_show?id=${pid}`, {
+              credentials: 'include'
+            });
+            const data = await response.json();
+            return data.success ? data.result : null;
+          } catch {
+            return null;
+          }
+        })
+      );
+
+      const packageMap = new Map();
+      packageInfos.forEach((pkg, index) => {
+        if (pkg) {
+          const packageId = packageIds[index];
+          packageMap.set(packageId, {
+            // Tema bilgisini theme map'ten al
+            theme: this.themeMap[packageId] || null,
+            groups: pkg.groups || [],
+            tags: pkg.tags || [],
+            private: pkg.private || false,
+            organization_title: pkg.organization?.title || pkg.organization?.display_name || null
+          });
         }
       });
-    });
-    
-    this.filterAndRender();
-  }
 
-  filterAndRender() {
-    // Prevent multiple renders
-    if (this.isRendering) {
-      this.pendingRender = true;
-      return;
+      return resources.map(resource => {
+        const pkgInfo = packageMap.get(resource.package_id) || {};
+        return {
+          ...resource,
+          theme: pkgInfo.theme,
+          groups: pkgInfo.groups,
+          tags: pkgInfo.tags,
+          private: pkgInfo.private,
+          organization_title: pkgInfo.organization_title
+        };
+      });
     }
-    
-    clearTimeout(this.renderDebounce);
-    this.renderDebounce = setTimeout(() => {
-      this.doFilterAndRender();
-    }, 100);
-  }
 
-  doFilterAndRender() {
-    this.isRendering = true;
-    
-    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-    
-    // Fast filtering
-    this.filteredResources = this.allResources.filter(resource => {
-      const pkg = this.allPackages[resource.package_id];
-      if (!pkg) return false;
-      
-      // Search
-      if (searchTerm && !this.matchesSearch(resource, pkg, searchTerm)) return false;
-      
-      // Package filters
-      if (this.selectedOrgs.size && !this.selectedOrgs.has(pkg.organization)) return false;
-      if (this.selectedThemes.size && !this.selectedThemes.has(pkg.theme)) return false;
-      if (this.selectedCategories.size && !pkg.groups.some(g => this.selectedCategories.has(g))) return false;
-      
-      // Resource filters
-      if (this.selectedFormats.size && !this.selectedFormats.has((resource.format || '').toLowerCase())) return false;
-      
-      if (this.selectedSpatialStatus.size) {
-        const isSpatial = resource.is_spatial;
-        if (!((this.selectedSpatialStatus.has('Evet') && isSpatial) || 
-              (this.selectedSpatialStatus.has('Hayır') && !isSpatial))) return false;
+    createPackageGroups() {
+      this.packageGroups = {};
+      this.spatialData.forEach(resource => {
+        const pid = resource.package_id;
+        if (!this.packageGroups[pid]) {
+          this.packageGroups[pid] = {
+            id: pid,
+            name: resource.package_title,
+            package_name: resource.package_name,
+            theme: resource.theme,
+            groups: resource.groups,
+            resources: [],
+            private: resource.private
+          };
+        }
+        this.packageGroups[pid].resources.push(resource);
+        this.resourceLayers[resource.resource_id] = {
+          resource,
+          layer: L.layerGroup(),
+          visible: false,
+          loaded: false,
+          _cluster: null,
+          _vector: null,
+          wmsLayerObjs: {} // WMS layer objelerini saklayacağız
+        };
+      });
+
+      // Tüm paketleri başlangıçta collapsed olarak işaretle
+      Object.keys(this.packageGroups).forEach(pid => {
+        this.collapsedPackages.add(pid);
+      });
+    }
+
+    setupFilters() {
+      // Tema, kategori, organizasyon ve format listelerini oluştur
+      const themes = new Set(['']);
+      const categories = new Set(['']);
+      const organizations = new Set(['']);
+      const formats = new Set(['']);
+
+      this.spatialData.forEach(resource => {
+        if (resource.theme) themes.add(resource.theme);
+        if (resource.organization_title) organizations.add(resource.organization_title);
+        if (resource.format) formats.add(resource.format.toUpperCase());
+        resource.groups?.forEach(g => {
+          const categoryName = g.display_name || g.name;
+          if (categoryName) categories.add(categoryName);
+        });
+      });
+
+      // Organization filter
+      const orgSelect = document.getElementById('organizationFilter');
+      orgSelect.innerHTML = '<option value="">Tüm Veri Paydaşları</option>';
+      [...organizations].filter(o => o).sort().forEach(org => {
+        const option = document.createElement('option');
+        option.value = org;
+        option.textContent = org;
+        orgSelect.appendChild(option);
+      });
+
+      // Format filter
+      const formatSelect = document.getElementById('formatFilter');
+      formatSelect.innerHTML = '<option value="">Tüm Formatlar</option>';
+      [...formats].filter(f => f).sort().forEach(format => {
+        const option = document.createElement('option');
+        option.value = format;
+        option.textContent = format;
+        formatSelect.appendChild(option);
+      });
+
+      // Theme filter
+      const themeSelect = document.getElementById('themeFilter');
+      themeSelect.innerHTML = '<option value="">Tüm Temalar</option>';
+      [...themes].filter(t => t).sort().forEach(theme => {
+        const option = document.createElement('option');
+        option.value = theme;
+        option.textContent = theme;
+        themeSelect.appendChild(option);
+      });
+
+      // Category filter
+      const categorySelect = document.getElementById('categoryFilter');
+      categorySelect.innerHTML = '<option value="">Tüm Kategoriler</option>';
+      [...categories].filter(c => c).sort().forEach(category => {
+        const option = document.createElement('option');
+        option.value = category;
+        option.textContent = category;
+        categorySelect.appendChild(option);
+      });
+    }
+
+    filterPackages() {
+      const filtered = {};
+
+      Object.values(this.packageGroups).forEach(group => {
+        let shouldShow = true;
+
+        // Theme filter
+        if (this.selectedTheme && group.theme !== this.selectedTheme) {
+          shouldShow = false;
+        }
+
+        // Category filter
+        if (this.selectedCategory) {
+          const hasCategory = group.groups?.some(g =>
+            (g.display_name || g.name) === this.selectedCategory
+          );
+          if (!hasCategory) shouldShow = false;
+        }
+
+        // Organization filter
+        if (this.selectedOrganization) {
+          const hasOrg = group.resources.some(r =>
+            r.organization_title === this.selectedOrganization
+          );
+          if (!hasOrg) shouldShow = false;
+        }
+
+        // Format filter
+        if (this.selectedFormat) {
+          const hasFormat = group.resources.some(r =>
+            (r.format || '').toUpperCase() === this.selectedFormat
+          );
+          if (!hasFormat) shouldShow = false;
+        }
+
+        // Search filter
+        if (this.searchTerm) {
+          const matchesSearch = group.resources.some(r =>
+            r.package_title.toLowerCase().includes(this.searchTerm) ||
+            r.resource_name.toLowerCase().includes(this.searchTerm) ||
+            (r.format || '').toLowerCase().includes(this.searchTerm)
+          );
+          if (!matchesSearch) shouldShow = false;
+        }
+
+        if (shouldShow) {
+          filtered[group.id] = group;
+        }
+      });
+
+      return filtered;
+    }
+
+    createPaneForResource(resourceId, isRaster = false) {
+      if (this.layerPanes[resourceId]) return this.layerPanes[resourceId];
+      const paneName = `pane_${resourceId}`;
+      const pane = this.map.createPane(paneName);
+      // Base map: ~200, Raster: 300-400, Vector: 450-500
+      pane.style.zIndex = isRaster ? 350 : 450;
+      this.layerPanes[resourceId] = paneName;
+      return paneName;
+    }
+
+    async toggleResource(resourceId, isVisible) {
+      const rl = this.resourceLayers[resourceId];
+      if (!rl) return;
+
+      if (isVisible) {
+        // Resource'u yükleme kuyruğuna ekle
+        this.loadingQueue.push({ resourceId, action: 'load' });
+        this.processLoadingQueue();
+      } else {
+        // Kapatma işlemi
+        this.map.removeLayer(rl.layer);
+        this.activeResources.delete(resourceId);
+        rl.visible = false;
+
+        // WMS layer bilgilerini temizle
+        if (this.wmsLayers[resourceId]) {
+          delete this.wmsLayers[resourceId];
+          this.renderLayerSwitcherContent();
+
+          // Eğer hiç WMS layer kalmadıysa Layer Switcher'ı gizle
+          if (Object.keys(this.wmsLayers).length === 0) {
+            document.getElementById('layerSwitcher').style.display = 'none';
+          }
+        }
+
+        if (this.focusedResourceId === resourceId) {
+          this.focusMode = false;
+          this.focusedResourceId = null;
+        }
+
+        this.updateResourceToggleState(resourceId, false);
+        this.updateStats();
+        this.updateEmphasis();
+        this.renderSelectedLayersPanel();
       }
-      
-      return true;
-    });
-    
-    this.renderResources();
-    this.updateCounts();
-    
-    this.isRendering = false;
-    
-    // Check for pending render
-    if (this.pendingRender) {
-      this.pendingRender = false;
-      this.filterAndRender();
     }
-  }
 
-  matchesSearch(resource, pkg, searchTerm) {
-    const searchableText = `${pkg.title} ${resource.resource_name} ${pkg.organization} ${pkg.theme}`.toLowerCase();
-    return searchableText.includes(searchTerm);
-  }
+    async processLoadingQueue() {
+      if (this.isLoadingResource || this.loadingQueue.length === 0) return;
 
-  renderResources() {
-    const grid = document.getElementById('packagesGrid');
-    
-    if (this.filteredResources.length === 0) {
-      grid.innerHTML = `
-        <div class="empty-state">
-          <div class="empty-icon">🔍</div>
-          <h3>Sonuç bulunamadı</h3>
-          <p>Filtreleri değiştirmeyi deneyin</p>
-        </div>
-      `;
-      document.getElementById('pagination').style.display = 'none';
-      return;
+      this.isLoadingResource = true;
+      this.showLoading();
+
+      while (this.loadingQueue.length > 0) {
+        const { resourceId } = this.loadingQueue.shift();
+        const rl = this.resourceLayers[resourceId];
+
+        if (!rl.loaded) {
+          await this.loadResourceData(resourceId);
+        }
+
+        if (rl.loaded) {
+          rl.layer.addTo(this.map);
+          this.activeResources.add(resourceId);
+          rl.visible = true;
+
+          const fmt = (rl.resource.format || '').toLowerCase();
+          rl.layer.eachLayer(l => {
+            (fmt === 'wms' || fmt === 'geotiff') ? l.bringToBack?.() : l.bringToFront?.();
+          });
+        }
+
+        this.updateResourceToggleState(resourceId, true);
+        this.updateStats();
+        this.fitMapToActiveLayers();
+        this.updateEmphasis();
+        this.renderSelectedLayersPanel();
+      }
+
+      this.isLoadingResource = false;
+      this.hideLoading();
     }
-    
-    // Group by package
-    const packageGroups = new Map();
-    this.filteredResources.forEach(resource => {
-      if (!packageGroups.has(resource.package_id)) {
-        packageGroups.set(resource.package_id, {
-          package: this.allPackages[resource.package_id],
-          resources: []
+
+    async loadResourceData(resourceId) {
+      const rl = this.resourceLayers[resourceId];
+      if (!rl || rl.loaded) return;
+
+      try {
+        const fmt = (rl.resource.format || '').toLowerCase();
+
+        if (['wms', 'wfs', 'geotiff'].includes(fmt)) {
+          await this.addLayerFromUrl(rl.resource.url, fmt, rl.layer, resourceId);
+          rl.loaded = true;
+          return;
+        }
+
+        const cacheKey = `resource-${resourceId}`;
+        if (this.dataCache.has(cacheKey)) {
+          const cachedData = this.dataCache.get(cacheKey);
+          if (Date.now() - cachedData.timestamp < 600000) { // 10 dakika cache
+            this.processResourceData(cachedData.data, resourceId, cachedData.type);
+            rl.loaded = true;
+            return;
+          }
+        }
+
+        const apiUrl = `/api/spatial-resources/${resourceId}/data`;
+        const response = await fetch(apiUrl, { credentials: 'include' });
+
+        if (!response.ok) throw response;
+        const result = await response.json();
+
+        if (!result.success) throw new Error(result.error || 'Bilinmeyen API hatası');
+
+        this.dataCache.set(cacheKey, {
+          data: result.data || result.url,
+          type: result.type,
+          timestamp: Date.now()
+        });
+
+        if (result.type === 'shp') {
+          await this.processShpData(result.url, resourceId);
+        } else if (result.type === 'api') {
+          await this.processApiDataFrontend(result.url, resourceId);
+        } else if (result.type === 'geojson_url') {
+          await this.processGeoJsonFrontend(result.url, resourceId);
+        } else {
+          this.addGeoJSONToLayer(result.data, rl.layer, resourceId);
+          rl.loaded = true;
+        }
+
+      } catch (error) {
+        console.error('[DEBUG] Resource data yüklenirken hata:', error);
+        this.showResourceError(resourceId, error.message || 'Hata');
+        this.updateResourceToggleState(resourceId, false);
+        this.activeResources.delete(resourceId);
+      }
+    }
+
+    processResourceData(data, resourceId, type) {
+      const rl = this.resourceLayers[resourceId];
+      if (type === 'geojson' || !type) {
+        this.addGeoJSONToLayer(data, rl.layer, resourceId);
+      }
+    }
+
+    async downloadResourceData(resourceId) {
+      const rl = this.resourceLayers[resourceId];
+      if (!rl) return;
+
+      const resource = rl.resource;
+      const format = (resource.format || '').toLowerCase();
+
+      try {
+        this.showLoading();
+
+        // Edge case: EU Hydro River Network GeoTIFF için özel indirme linki
+        if (resourceId === '7acef04c-d0f5-461e-bd19-5940c4e7b520') {
+          const downloadUrl = 'https://dataizmir.izka.org.tr/dataset/8fb7040e-304d-4785-a50a-bb86a341e8f3/resource/7acef04c-d0f5-461e-bd19-5940c4e7b520/download/eu-hydro-river-tetwork-database.tif';
+          const a = document.createElement('a');
+          a.href = downloadUrl;
+          a.download = 'eu-hydro-river-network.tif';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          this.hideLoading();
+          return;
+        }
+
+        // API veya diğer formatlar için
+        const apiUrl = `/api/spatial-resources/${resourceId}/data`;
+        const response = await fetch(apiUrl, { credentials: 'include' });
+
+        if (!response.ok) {
+          throw new Error('Veri alınamadı');
+        }
+
+        const result = await response.json();
+
+        let dataToDownload;
+        let fileName = resource.resource_name || 'data';
+        let mimeType = 'application/json';
+
+        // Format'a göre dosya adı ve mime type ayarla
+        if (format === 'csv') {
+          mimeType = 'text/csv';
+          fileName += '.csv';
+        } else if (format === 'geojson') {
+          mimeType = 'application/geo+json';
+          fileName += '.geojson';
+        } else if (format === 'json' || format === 'api' || format === 'rest') {
+          mimeType = 'application/json';
+          fileName += '.json';
+        } else if (format === 'xlsx' || format === 'xls') {
+          // Excel dosyaları için doğrudan URL'den indir
+          if (resource.url) {
+            const a = document.createElement('a');
+            a.href = resource.url;
+            a.download = fileName + (format === 'xlsx' ? '.xlsx' : '.xls');
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            this.hideLoading();
+            return;
+          }
+        } else if (format === 'shp') {
+          // SHP için doğrudan ZIP URL'den indir
+          if (result.url) {
+            const a = document.createElement('a');
+            a.href = result.url;
+            a.download = fileName + '.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            this.hideLoading();
+            return;
+          }
+        } else {
+          fileName += '.json';
+        }
+
+        // Veriyi hazırla
+        if (result.data) {
+          dataToDownload = JSON.stringify(result.data, null, 2);
+        } else if (result.type === 'api' && result.url) {
+          // API verisi için fetch et
+          const apiResponse = await fetch(result.url);
+          const apiData = await apiResponse.json();
+          dataToDownload = JSON.stringify(apiData, null, 2);
+        } else if (result.type === 'geojson_url' && result.url) {
+          // GeoJSON URL'den fetch et
+          const geoResponse = await fetch(result.url);
+          const geoData = await geoResponse.json();
+          dataToDownload = JSON.stringify(geoData, null, 2);
+        } else {
+          throw new Error('İndirilecek veri bulunamadı');
+        }
+
+        // Blob oluştur ve indir
+        const blob = new Blob([dataToDownload], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        this.hideLoading();
+      } catch (error) {
+        console.error('İndirme hatası:', error);
+        alert('Veri indirme sırasında hata oluştu: ' + error.message);
+        this.hideLoading();
+      }
+    }
+
+    async extractWMSLayersInfo(url) {
+      try {
+        // GetCapabilities isteği yap
+        const capabilitiesUrl = url.includes('?')
+          ? `${url}&service=WMS&request=GetCapabilities&version=1.3.0`
+          : `${url}?service=WMS&request=GetCapabilities&version=1.3.0`;
+
+        console.log('GetCapabilities URL:', capabilitiesUrl);
+
+        const response = await fetch(capabilitiesUrl);
+        const text = await response.text();
+
+        // XML'den layer bilgilerini çıkar
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(text, "text/xml");
+
+        const layers = [];
+        const layerElements = xmlDoc.getElementsByTagName("Layer");
+
+        // TUCBS servisleri için özel durum
+        if (url.includes('tucbs') || url.includes('csb.gov.tr')) {
+          // Root layer'ı atla, sadece alt layer'ları al
+          // İlk Layer genellikle root, onun altındaki Layer'ları al
+          for (let i = 0; i < layerElements.length; i++) {
+            const layer = layerElements[i];
+            const nameEl = layer.getElementsByTagName("Name")[0];
+            const titleEl = layer.getElementsByTagName("Title")[0];
+
+            // Name'i olan ve queryable olan layer'ları al
+            if (nameEl && nameEl.textContent && layer.getAttribute('queryable') === '1') {
+              // Parent layer olmadığından emin ol (child layer kontrolü)
+              const hasChildLayers = layer.getElementsByTagName("Layer").length > 0;
+
+              // Eğer child layer'ı yoksa (yani kendisi leaf node ise) ekle
+              if (!hasChildLayers) {
+                layers.push({
+                  name: nameEl.textContent,
+                  title: titleEl ? titleEl.textContent : nameEl.textContent,
+                  queryable: true
+                });
+              }
+            }
+          }
+        } else {
+          // Diğer WMS servisleri için normal işlem
+          for (let i = 1; i < layerElements.length; i++) {
+            const layer = layerElements[i];
+            const nameEl = layer.getElementsByTagName("Name")[0];
+            const titleEl = layer.getElementsByTagName("Title")[0];
+
+            if (nameEl && nameEl.textContent) {
+              layers.push({
+                name: nameEl.textContent,
+                title: titleEl ? titleEl.textContent : nameEl.textContent,
+                queryable: layer.getAttribute('queryable') === '1'
+              });
+            }
+          }
+        }
+
+        console.log('Bulunan WMS Layers:', layers);
+        return layers;
+      } catch (error) {
+        console.warn('WMS Layer bilgileri alınamadı:', error);
+        return [];
+      }
+    }
+
+    async addLayerFromUrl(url, format, layerGroup, resourceId) {
+      layerGroup.clearLayers();
+      const resource = this.resourceLayers[resourceId].resource;
+
+      try {
+        switch ((format || '').toLowerCase()) {
+          case 'wms': {
+            // Önce WMS layer bilgilerini al
+            const layers = await this.extractWMSLayersInfo(url);
+
+            console.log('WMS Layers bulundu:', layers);
+
+            if (layers.length > 0) {
+              // WMS layer bilgilerini sakla
+              this.wmsLayers[resourceId] = layers;
+
+              // Tüm layer'ları ekle
+              const paneName = this.createPaneForResource(resourceId, true);
+              const rl = this.resourceLayers[resourceId];
+
+              // TUCBS için rastgele bir layer seç
+              const isTucbs = url.includes('tucbs') || url.includes('csb.gov.tr');
+              const randomIndex = isTucbs ? Math.floor(Math.random() * layers.length) : 0;
+
+              // Layer'ları oluştur
+              layers.forEach((layerInfo, index) => {
+                const wmsLayer = L.tileLayer.wms(url, {
+                  layers: layerInfo.name,
+                  format: 'image/png',
+                  transparent: true,
+                  version: '1.3.0',
+                  crs: L.CRS.EPSG3857,
+                  uppercase: true,
+                  attribution: `WMS: ${resource.resource_name} - ${layerInfo.title}`,
+                  pane: paneName,
+                  tileSize: 256,
+                  opacity: 1.0,
+                  // TUCBS için özel parametreler
+                  ...(isTucbs ? {
+                    srs: 'EPSG:3857',
+                    bbox: '{bbox-epsg-3857}',
+                    width: 256,
+                    height: 256
+                  } : {})
+                });
+
+                // Layer objesini sakla
+                if (!rl.wmsLayerObjs) rl.wmsLayerObjs = {};
+                rl.wmsLayerObjs[layerInfo.name] = wmsLayer;
+
+                // TUCBS için rastgele seçilen layer'ı veya normal için ilk layer'ı aktif et
+                const shouldActivate = isTucbs ? (index === randomIndex) : (index === 0);
+
+                if (shouldActivate) {
+                  layerGroup.addLayer(wmsLayer);
+                  this.wmsLayerStates[`${resourceId}_${index}`] = true;
+                  console.log(`Aktif edilen layer: ${layerInfo.title} (index: ${index})`);
+                } else {
+                  this.wmsLayerStates[`${resourceId}_${index}`] = false;
+                }
+
+                // Opacity state'i kaydet
+                this.wmsLayerStates[`${resourceId}_${index}_opacity`] = 100;
+
+                // Hata durumunda log
+                wmsLayer.on('tileerror', function (error) {
+                  console.error('WMS Tile Error:', error);
+                  console.error('Failed URL:', error.tile?.src);
+                });
+              });
+
+              // Layer Switcher'ı göster ve güncelle
+              document.getElementById('layerSwitcher').style.display = 'block';
+              this.renderLayerSwitcherContent();
+
+            } else {
+              // Eğer layer bilgisi alınamazsa varsayılan layer kullan
+              console.warn('WMS layer bilgisi alınamadı, varsayılan kullanılıyor');
+
+              const paneName = this.createPaneForResource(resourceId, true);
+              const newLayer = L.tileLayer.wms(url, {
+                layers: resource.wms_layer || 'layer',
+                format: 'image/png',
+                transparent: true,
+                version: '1.3.0',
+                crs: L.CRS.EPSG3857,
+                uppercase: true,
+                attribution: `WMS: ${resource.resource_name}`,
+                pane: paneName,
+                tileSize: 256,
+                opacity: 0.8
+              });
+
+              newLayer.on('tileerror', function (error) {
+                console.error('WMS Tile Error:', error);
+              });
+
+              layerGroup.addLayer(newLayer);
+            }
+            break;
+          }
+          case 'wfs': {
+            const layerName = resource.wfs_layer || 'layer';
+            const paneName = this.createPaneForResource(resourceId, true);
+            const newLayer = L.tileLayer.wms(url, {
+              layers: layerName,
+              format: 'image/png',
+              transparent: true,
+              attribution: `WFS: ${resource.resource_name}`,
+              pane: paneName
+            });
+            layerGroup.addLayer(newLayer);
+            break;
+          }
+          case 'geotiff':
+            await this.processGeoTiffData(url, resourceId);
+            return;
+          default:
+            throw new Error('Desteklenmeyen URL tabanlı format: ' + format);
+        }
+      } catch (error) {
+        console.error(`[DEBUG] Katman ekleme hatası (${format}):`, error);
+        this.showResourceError(resourceId, `${(format || '').toUpperCase()} dosyası işlenemedi: ${error.message}`);
+        this.updateResourceToggleState(resourceId, false);
+      }
+    }
+
+    async processGeoTiffData(url, resourceId) {
+      try {
+        const rl = this.resourceLayers[resourceId];
+
+        // Edge case: EU Hydro için özel URL
+        if (resourceId === '7acef04c-d0f5-461e-bd19-5940c4e7b520') {
+          console.log('EU Hydro River Network GeoTIFF işleniyor');
+          url = 'https://dataizmir.izka.org.tr/dataset/8fb7040e-304d-4785-a50a-bb86a341e8f3/resource/7acef04c-d0f5-461e-bd19-5940c4e7b520/download/eu-hydro-river-tetwork-database.tif';
+        }
+
+        // GeoTIFF kütüphanesi kontrolü
+        if (typeof window.GeoTIFF === 'undefined') {
+          console.error('GeoTIFF kütüphanesi yüklenmemiş');
+
+          // Basit image overlay olarak göster
+          const paneName = this.createPaneForResource(resourceId, true);
+
+          // İzmir bölgesi için tahminı bounds
+          const imageBounds = [[37.5, 26.5], [39.5, 28.0]];
+
+          // Direkt URL'den image overlay oluştur
+          const imageOverlay = L.imageOverlay(url, imageBounds, {
+            opacity: 0.7,
+            pane: paneName
+          });
+
+          rl.layer.clearLayers();
+          rl.layer.addLayer(imageOverlay);
+
+          this.map.fitBounds(imageBounds);
+          rl.loaded = true;
+
+          console.log('GeoTIFF basit image overlay olarak eklendi');
+          return;
+        }
+
+        console.log('GeoTIFF yükleniyor:', url);
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        const arrayBuffer = await response.arrayBuffer();
+
+        // window.GeoTIFF kullan
+        const tiff = await window.GeoTIFF.fromArrayBuffer(arrayBuffer);
+        const image = await tiff.getImage();
+        const width = image.getWidth();
+        const height = image.getHeight();
+        const bbox = image.getBoundingBox();
+
+        // Canvas oluştur
+        const canvas = document.createElement('canvas');
+        const maxSize = 2048;
+        const scale = Math.min(maxSize / width, maxSize / height, 1);
+        canvas.width = Math.floor(width * scale);
+        canvas.height = Math.floor(height * scale);
+
+        const ctx = canvas.getContext('2d');
+
+        // Raster verisini oku
+        const rasters = await image.readRasters({
+          width: canvas.width,
+          height: canvas.height,
+          fillValue: 0
+        });
+
+        const imageData = ctx.createImageData(canvas.width, canvas.height);
+        const data = imageData.data;
+        const raster = rasters[0];
+
+        // Min/max değerleri bul
+        let min = Infinity, max = -Infinity;
+        for (let i = 0; i < raster.length; i++) {
+          const val = raster[i];
+          if (val !== 0 && !isNaN(val)) {
+            min = Math.min(min, val);
+            max = Math.max(max, val);
+          }
+        }
+
+        // Renklendirme
+        for (let i = 0; i < raster.length; i++) {
+          const value = raster[i];
+
+          if (value === 0 || isNaN(value)) {
+            // Transparent
+            data[i * 4] = 0;
+            data[i * 4 + 1] = 0;
+            data[i * 4 + 2] = 0;
+            data[i * 4 + 3] = 0;
+          } else {
+            // Nehir ağı için mavi tonları
+            const normalized = (value - min) / (max - min);
+            data[i * 4] = Math.floor(20 + normalized * 50);
+            data[i * 4 + 1] = Math.floor(50 + normalized * 100);
+            data[i * 4 + 2] = Math.floor(150 + normalized * 105);
+            data[i * 4 + 3] = 255;
+          }
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+
+        // Image overlay olarak ekle
+        const paneName = this.createPaneForResource(resourceId, true);
+        const imageBounds = [[bbox[1], bbox[0]], [bbox[3], bbox[2]]];
+
+        const imageOverlay = L.imageOverlay(canvas.toDataURL('image/png'), imageBounds, {
+          opacity: 0.8,
+          pane: paneName
+        });
+
+        rl.layer.clearLayers();
+        rl.layer.addLayer(imageOverlay);
+
+        // Haritayı görüntüye odakla
+        if (bbox[0] && bbox[2]) {
+          this.map.fitBounds(imageBounds, { padding: [50, 50] });
+        }
+
+        rl.loaded = true;
+        console.log('GeoTIFF başarıyla render edildi');
+
+      } catch (error) {
+        console.error('GeoTIFF işleme hatası:', error);
+        this.showResourceError(resourceId, `GeoTIFF render edilemedi: ${error.message}`);
+        this.updateResourceToggleState(resourceId, false);
+      }
+    }
+
+    async processShpData(shpUrl, resourceId) {
+      try {
+        const response = await fetch(shpUrl);
+        if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        const buffer = await response.arrayBuffer();
+        const geojson = shp.parseZip(buffer);
+        if (!geojson || !geojson.features || geojson.features.length === 0) {
+          throw new Error('SHP dosyasında veri yok.');
+        }
+        const rl = this.resourceLayers[resourceId];
+        this.addGeoJSONToLayer(geojson, rl.layer, resourceId);
+        rl.loaded = true;
+      } catch (error) {
+        console.error(`SHP işleme hatası: ${error}`);
+        this.showResourceError(resourceId, `SHP dosyası işlenemedi: ${error.message}`);
+        this.updateResourceToggleState(resourceId, false);
+      }
+    }
+
+    addGeoJSONToLayer(geojsonData, layerGroup, resourceId) {
+      try {
+        layerGroup.clearLayers();
+        const resource = this.spatialData.find(r => r.resource_id === resourceId);
+        if (!resource) return;
+
+        const color = this.getResourceColor(resourceId) || '#888'; // <-- ÖNEMLİ: önce rengi al
+        const paneName = this.createPaneForResource(resourceId, false);
+
+        const pointFeatures = [];
+        const nonPointFeatures = [];
+
+        // Performans için sadece görünür features'ı işle
+        const maxFeatures = 5000;
+        let features = geojsonData.features || [];
+
+        if (features.length > maxFeatures) {
+          console.warn(`Çok fazla feature (${features.length}), ilk ${maxFeatures} tanesi işlenecek`);
+          features = features.slice(0, maxFeatures);
+        }
+
+        features.forEach(feature => {
+          if (feature.geometry && feature.geometry.type === 'Point') {
+            pointFeatures.push(feature);
+          } else {
+            nonPointFeatures.push(feature);
+          }
+        });
+
+
+
+        const cluster = L.markerClusterGroup({
+          spiderfyOnEveryZoom: false,
+          spiderfyOnMaxZoom: true,
+          showCoverageOnHover: false,
+          disableClusteringAtZoom: 16,
+          maxClusterRadius: 50,
+          chunkedLoading: true,
+          chunkInterval: 50,
+          chunkDelay: 5,
+          animate: false,
+
+          // Katman rengi sabit, yoğunluğa göre opaklık (istersen boyut) değişsin
+          iconCreateFunction: function (cl) {
+            var count = cl.getChildCount();
+
+            // Opaklık eşikleri
+            var opacity = count < 10 ? 0.65 : (count < 50 ? 0.80 : 1.0);
+
+            var html =
+              '<div class="cluster-dot" style="--bg:' + color + ';--opacity:' + opacity + '">'
+              + '<span>' + count + '</span>'
+              + '</div>';
+
+            return L.divIcon({
+              className: 'cluster-icon',
+              html: html,
+              iconSize: [32, 32],          // sabit
+              // iconSize: [size, size],    // adetle büyütmek istersen bunu aç
+            });
+          }
+        });
+
+        const getDivIcon = () => L.divIcon({
+          className: 'pin-glow',
+          html: `<div style="width:14px;height:14px;background:${color};border:2px solid #fff;border-radius:50%"></div>`,
+          iconSize: [18, 18],
+          iconAnchor: [9, 9]
+        });
+
+        // Batch marker ekleme
+        const markers = pointFeatures.map(feature => {
+          const [lon, lat] = feature.geometry.coordinates;
+          const marker = L.marker([lat, lon], {
+            icon: getDivIcon(),
+            pane: paneName
+          });
+
+          // Lazy load popup content when opened
+          marker.on('click', async () => {
+            const popupContent = await this.createPopupContent(feature, resource);
+            marker.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' }).openPopup();
+          });
+
+          return marker;
+        });
+
+        if (markers.length > 0) {
+          cluster.addLayers(markers);
+        }
+
+        let vectorLayer = null;
+        if (nonPointFeatures.length > 0) {
+          const nonPointGeoJSON = {
+            type: 'FeatureCollection',
+            features: nonPointFeatures
+          };
+
+          vectorLayer = L.geoJSON(nonPointGeoJSON, {
+            pane: paneName,
+            style: () => ({
+              color: color,
+              weight: 3,
+              opacity: 1.0,
+              fillColor: color,
+              fillOpacity: 0.3
+            }),
+            onEachFeature: (feature, layer) => {
+              const popupContent = this.createPopupContent(feature, resource);
+              layer.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
+
+              if (layer.setStyle) {
+                layer.on('mouseover', () => {
+                  layer.setStyle({ weight: 4, fillOpacity: 0.5 });
+                });
+                layer.on('mouseout', () => {
+                  layer.setStyle({ weight: 3, fillOpacity: 0.3 });
+                });
+              }
+            }
+          });
+        }
+
+        if (cluster.getLayers().length > 0) {
+          layerGroup.addLayer(cluster);
+        }
+
+        if (vectorLayer) {
+          layerGroup.addLayer(vectorLayer);
+        }
+
+        const rl = this.resourceLayers[resourceId];
+        rl._cluster = cluster.getLayers().length > 0 ? cluster : null;
+        rl._vector = vectorLayer;
+
+      } catch (error) {
+        console.error('[DEBUG] GeoJSON ekleme hatası:', error);
+        this.showResourceError(resourceId, `GeoJSON işlenemedi: ${error.message}`);
+      }
+    }
+
+    async processApiDataFrontend(apiUrl, resourceId) {
+      const rl = this.resourceLayers[resourceId];
+      try {
+        const res = await fetch(apiUrl, { mode: 'cors' });
+        if (!res.ok) throw new Error(`API isteği başarısız: Status ${res.status}`);
+        const json = await res.json();
+        const dataArray = this.findDataArrayInJson(json);
+        if (!dataArray || dataArray.length === 0) {
+          throw new Error('API yanıtında uygun formatta veri bulunamadı.');
+        }
+        rl.fetchedData = dataArray;
+
+        const coord = this.smartDetectCoordinateColumnsJS(dataArray);
+        if (coord.found) {
+          const geojson = this.convertDataToGeoJSON(dataArray, coord.columns);
+          this.addGeoJSONToLayer(geojson, rl.layer, resourceId);
+          rl.loaded = true;
+        } else {
+          await this.showManualColumnSelection(resourceId, coord.columns);
+        }
+      } catch (error) {
+        console.error(`[DEBUG] Frontend API işleme hatası:`, error);
+        this.showResourceError(resourceId, error.message || 'API verisi işlenemedi');
+        rl.loaded = false;
+        this.updateResourceToggleState(resourceId, false);
+      }
+    }
+
+    async processGeoJsonFrontend(url, resourceId) {
+      const rl = this.resourceLayers[resourceId];
+      try {
+        const response = await fetch(url, { mode: 'cors', credentials: 'include' });
+        if (!response.ok) {
+          throw new Error(`Dosya yüklenemedi: ${response.status} ${response.statusText}`);
+        }
+        const geojsonData = await response.json();
+        if (geojsonData.type !== 'FeatureCollection' && geojsonData.type !== 'Feature') {
+          throw new Error('Geçerli bir GeoJSON dosyası değil.');
+        }
+        this.addGeoJSONToLayer(geojsonData, rl.layer, resourceId);
+        rl.loaded = true;
+      } catch (error) {
+        console.error(`[DEBUG] Frontend GeoJSON işleme hatası:`, error);
+        this.showResourceError(resourceId, error.message || 'GeoJSON yüklenemedi');
+        rl.loaded = false;
+        this.updateResourceToggleState(resourceId, false);
+      }
+    }
+
+    async createPopupContent(feature, resource) {
+      // Load metadata mappings for this resource
+      const mappingsData = await this.getMetadataMappings(resource.resource_id);
+      const { mappings, visibilityMode, visibleFields, hiddenFields } = mappingsData;
+
+      let content = '<div class="popup-content">';
+      content += `<div class="popup-resource-header">${resource.resource_name}<br><small style="opacity:.8;">${resource.format || 'Bilinmiyor'}</small></div>`;
+
+      if (feature.properties && typeof feature.properties === 'object') {
+        Object.entries(feature.properties).forEach(([k, v]) => {
+          if (v !== null && v !== undefined && v !== '') {
+            // Visibility kontrolü
+            if (visibilityMode === 'show_all') {
+              // "Tüm alanları göster" modu - sadece hiddenFields'de olanları gizle
+              if (hiddenFields && hiddenFields.includes(k)) {
+                return; // Skip hidden fields
+              }
+            } else if (visibilityMode === 'show_selected') {
+              // "Sadece seçilenleri göster" modu - sadece visibleFields'de olanları göster
+              if (!visibleFields || !visibleFields.includes(k)) {
+                return; // Skip non-visible fields
+              }
+            }
+
+            // Eski hidden kontrolü (backward compatibility)
+            const mapping = mappings[k];
+            if (mapping && mapping.hidden) {
+              return; // Skip hidden fields
+            }
+
+            // Get display name (default to original key)
+            const displayName = mapping?.displayName || k;
+
+            // Apply value mapping if exists
+            let displayValue = v;
+            if (mapping?.valueMapping && mapping.valueMapping[v]) {
+              displayValue = mapping.valueMapping[v];
+            }
+
+            content += `<div><strong>${displayName}:</strong> ${displayValue}</div>`;
+          }
         });
       }
-      packageGroups.get(resource.package_id).resources.push(resource);
-    });
-    
-    const allPackageGroups = Array.from(packageGroups.values());
-    const totalPages = Math.ceil(allPackageGroups.length / this.itemsPerPage);
-    
-    // Ensure current page is valid
-    if (this.currentPage > totalPages) {
-      this.currentPage = Math.max(1, totalPages);
-    }
-    
-    // Get packages for current page
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    const endIndex = startIndex + this.itemsPerPage;
-    const pagePackages = allPackageGroups.slice(startIndex, endIndex);
-    
-    // Use document fragment for efficient DOM updates
-    const fragment = document.createDocumentFragment();
-    const wrapper = document.createElement('div');
-    wrapper.className = 'packages-grid';
-    
-    pagePackages.forEach(group => {
-      const card = this.createPackageCard(group);
-      wrapper.appendChild(card);
-    });
-    
-    fragment.appendChild(wrapper);
-    
-    // Single DOM update
-    requestAnimationFrame(() => {
-      grid.innerHTML = '';
-      grid.appendChild(fragment);
-      
-      // Render pagination
-      this.renderPagination(totalPages, allPackageGroups.length);
-    });
-  }
 
-  createPackageCard(group) {
-    const pkg = group.package;
-    const resources = group.resources;
-    const spatialCount = resources.filter(r => r.is_spatial).length;
-    const isCollapsed = this.collapsedPackages.has(pkg.id);
-    
-    const card = document.createElement('div');
-    card.className = 'package-card';
-    
-    // Create card HTML
-    card.innerHTML = `
-      <div class="package-header" data-package-id="${pkg.id}">
-        <a href="/dataset/${pkg.name}" class="package-title" onclick="event.stopPropagation()">
-          ${pkg.title}
-        </a>
-        <div class="package-meta">
-          <div>
-            <span class="resource-count-badge">${resources.length} kaynak</span>
-            <span class="spatial-count-badge">${spatialCount} mekansal</span>
-          </div>
-        </div>
-        <div class="package-attributes">
-          <span class="attribute-badge attr-org">🏢 ${pkg.organization}</span>
-          <span class="attribute-badge attr-theme">🎨 ${pkg.theme}</span>
-          ${pkg.groups.slice(0, 2).map(g => `<span class="attribute-badge attr-group">📁 ${g}</span>`).join('')}
-        </div>
-      </div>
-      <div class="resources-list ${isCollapsed ? 'collapsed' : ''}" id="resources-${pkg.id}">
-        ${resources.map(r => this.renderResourceItem(r)).join('')}
-      </div>
-    `;
-    
-    // Add event listener for collapse
-    const header = card.querySelector('.package-header');
-    header.addEventListener('click', () => this.togglePackageCollapse(pkg.id));
-    
-    return card;
-  }
-
-  renderResourceItem(resource) {
-    const format = (resource.format || 'other').toLowerCase();
-    const formatClass = this.getFormatClass(format);
-    const isSpatial = resource.is_spatial;
-    const resourceName = resource.resource_name || 'İsimsiz kaynak';
-    const resourceSize = resource.size ? this.formatFileSize(resource.size) : '';
-    
-    return `
-      <div class="resource-item ${isSpatial ? 'spatial-active' : ''}">
-        <div class="resource-info">
-          <div class="resource-name" title="${resourceName}">
-            ${resourceName}
-            ${this.isSpatialFormat(format) ? '<span style="color:#059669;font-size:12px;margin-left:4px;">🗺</span>' : ''}
-          </div>
-          <div class="resource-meta">
-            <span class="format-badge ${formatClass}">${format.toUpperCase()}</span>
-            ${resourceSize ? `<span class="resource-size">📦 ${resourceSize}</span>` : ''}
-          </div>
-        </div>
-        <div class="resource-actions">
-          <label class="spatial-toggle">
-            <input type="checkbox"
-                   ${isSpatial ? 'checked' : ''}
-                   onchange="spatialManager.toggleSpatialResource('${resource.resource_id}', this.checked)">
-            <span class="toggle-slider"></span>
-          </label>
-          <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" class="action-btn btn-view">👁️</a>
-        </div>
-      </div>
-    `;
-  }
-
-  renderPagination(totalPages, totalPackages) {
-    const paginationEl = document.getElementById('pagination');
-    
-    if (totalPages <= 1) {
-      paginationEl.style.display = 'none';
-      return;
+      content += `<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; text-align: center;">
+        <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" target="_blank" style="color:#007bff;text-decoration:none;font-weight:500;">Kaynağı Görüntüle →</a>
+      </div>`;
+      content += '</div>';
+      return content;
     }
-    
-    paginationEl.style.display = 'flex';
-    
-    const fragment = document.createDocumentFragment();
-    
-    // Previous button
-    const prevBtn = document.createElement('button');
-    prevBtn.className = 'pagination-btn';
-    prevBtn.textContent = '◀ Önceki';
-    prevBtn.disabled = this.currentPage === 1;
-    prevBtn.onclick = () => this.goToPage(this.currentPage - 1);
-    fragment.appendChild(prevBtn);
-    
-    // Page numbers (simplified for performance)
-    const maxVisible = 5;
-    let start = Math.max(1, this.currentPage - 2);
-    let end = Math.min(totalPages, start + maxVisible - 1);
-    
-    if (end - start < maxVisible - 1) {
-      start = Math.max(1, end - maxVisible + 1);
-    }
-    
-    for (let i = start; i <= end; i++) {
-      const pageBtn = document.createElement('button');
-      pageBtn.className = i === this.currentPage ? 'pagination-btn active' : 'pagination-btn';
-      pageBtn.textContent = i;
-      pageBtn.onclick = () => this.goToPage(i);
-      fragment.appendChild(pageBtn);
-    }
-    
-    // Next button
-    const nextBtn = document.createElement('button');
-    nextBtn.className = 'pagination-btn';
-    nextBtn.textContent = 'Sonraki ▶';
-    nextBtn.disabled = this.currentPage === totalPages;
-    nextBtn.onclick = () => this.goToPage(this.currentPage + 1);
-    fragment.appendChild(nextBtn);
-    
-    // Update DOM
-    paginationEl.innerHTML = '';
-    paginationEl.appendChild(fragment);
-  }
 
-  goToPage(page) {
-    this.currentPage = page;
-    this.renderResources();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
-  togglePackageCollapse(packageId) {
-    if (this.collapsedPackages.has(packageId)) {
-      this.collapsedPackages.delete(packageId);
-    } else {
-      this.collapsedPackages.add(packageId);
-    }
-    
-    const list = document.getElementById(`resources-${packageId}`);
-    if (list) {
-      list.classList.toggle('collapsed');
-    }
-  }
-
-  async toggleSpatialResource(resourceId, isSpatial) {
-    try {
-      const response = await fetch('/api/spatial-resources/toggle', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ resource_id: resourceId, is_spatial: isSpatial })
-      });
-      
-      const data = await response.json();
-      if (!data.success) throw new Error(data.error || 'Toggle failed');
-      
-      // Update local state
-      if (isSpatial) {
-        this.spatialResourceIds.add(resourceId);
-      } else {
-        this.spatialResourceIds.delete(resourceId);
+    async getMetadataMappings(resourceId, forceRefresh = false) {
+      // Cache metadata mappings to avoid repeated API calls
+      if (!this.metadataMappingsCache) {
+        this.metadataMappingsCache = {};
       }
-      
-      const resource = this.allResources.find(r => r.resource_id === resourceId);
-      if (resource) resource.is_spatial = isSpatial;
-      
-      this.updateStats();
-      return true;
-    } catch (error) {
-      console.error('❌ Toggle error:', error);
-      alert('Hata: ' + error.message);
-      return false;
+
+      // Force refresh bypasses cache
+      if (!forceRefresh && this.metadataMappingsCache[resourceId] !== undefined) {
+        return this.metadataMappingsCache[resourceId];
+      }
+
+      try {
+        const response = await fetch(`/api/spatial-resources/${resourceId}/metadata-mappings`, {
+          credentials: 'include',
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          const result = {
+            mappings: data.field_mappings || {},
+            visibilityMode: data.visibility_mode || 'show_all',
+            visibleFields: data.visible_fields || [],
+            hiddenFields: data.hidden_fields || []
+          };
+          this.metadataMappingsCache[resourceId] = result;
+          console.log('Metadata mappings loaded for', resourceId, result);
+          return result;
+        }
+      } catch (error) {
+        console.warn('Could not load metadata mappings for', resourceId, error);
+      }
+
+      // Return empty mappings if not found or error
+      const emptyResult = {
+        mappings: {},
+        visibilityMode: 'show_all',
+        visibleFields: [],
+        hiddenFields: []
+      };
+      this.metadataMappingsCache[resourceId] = emptyResult;
+      return emptyResult;
+    }
+
+    // Metadata cache'ini temizle
+    clearMetadataCache(resourceId = null) {
+      if (resourceId) {
+        // Sadece belirli bir resource için cache'i temizle
+        delete this.metadataMappingsCache[resourceId];
+        console.log('Metadata cache cleared for', resourceId);
+      } else {
+        // Tüm cache'i temizle
+        this.metadataMappingsCache = {};
+        console.log('All metadata cache cleared');
+      }
+    }
+
+    findDataArrayInJson(jsonData) {
+      if (Array.isArray(jsonData)) return jsonData;
+      if (typeof jsonData === 'object' && jsonData !== null) {
+        const keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features'];
+        for (const k of keys) {
+          if (k in jsonData && Array.isArray(jsonData[k])) return jsonData[k];
+        }
+        for (const k in jsonData) {
+          if (Array.isArray(jsonData[k]) && jsonData[k].length > 0) return jsonData[k];
+        }
+      }
+      return null;
+    }
+
+    smartDetectCoordinateColumnsJS(dataArray) {
+      if (!dataArray || dataArray.length === 0) return { found: false, columns: [] };
+      const columns = Object.keys(dataArray[0]);
+      const latPatterns = [/^(lat|latitude|enlem|y|kuzey)$/i, /lat/i, /enlem/i, /kuzey/i];
+      const lonPatterns = [/^(lon|lng|longitude|boylam|x|dogu)$/i, /lon|lng/i, /boylam/i, /dogu/i];
+      let latCol = null, lonCol = null;
+      for (const p of latPatterns) {
+        if (latCol = columns.find(c => p.test(c))) break;
+      }
+      for (const p of lonPatterns) {
+        if (lonCol = columns.find(c => p.test(c))) break;
+      }
+      if (latCol && lonCol && latCol !== lonCol) {
+        return { found: true, columns: { lat: latCol, lon: lonCol } };
+      }
+      return { found: false, columns };
+    }
+
+    convertDataToGeoJSON(dataArray, coordColumns) {
+      const features = [];
+      const { lat: latCol, lon: lonCol } = coordColumns;
+      for (const row of dataArray) {
+        try {
+          const lat = parseFloat(String(row[latCol]).replace(',', '.'));
+          const lon = parseFloat(String(row[lonCol]).replace(',', '.'));
+          if (isNaN(lat) || isNaN(lon) || lat < -90 || lat > 90 || lon < -180 || lon > 180) continue;
+          const properties = { ...row };
+          features.push({
+            type: 'Feature',
+            geometry: { type: 'Point', coordinates: [lon, lat] },
+            properties
+          });
+        } catch (_) { }
+      }
+      return { type: 'FeatureCollection', features };
+    }
+
+    async processManualSelection(resourceId, buttonElement) {
+      const modal = buttonElement.closest('.column-modal-overlay');
+      const latCol = modal.querySelector('#latColumn').value;
+      const lonCol = modal.querySelector('#lonColumn').value;
+
+      if (!latCol || !lonCol) {
+        alert('Lütfen enlem ve boylam sütunlarını seçin');
+        return;
+      }
+
+      const rl = this.resourceLayers[resourceId];
+      if (rl && rl.fetchedData) {
+        try {
+          const geojson = this.convertDataToGeoJSON(rl.fetchedData, { lat: latCol, lon: lonCol });
+          this.addGeoJSONToLayer(geojson, rl.layer, resourceId);
+          rl.loaded = true;
+          modal.remove();
+        } catch (error) {
+          alert('Veri işlenirken hata: ' + error.message);
+        }
+        return;
+      }
+
+      try {
+        const response = await fetch(`/api/spatial-resources/${resourceId}/process-manual`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ lat_column: latCol, lon_column: lonCol })
+        });
+        const result = await response.json();
+
+        if (result.success) {
+          this.addGeoJSONToLayer(result.data, rl.layer, resourceId);
+          rl.loaded = true;
+          modal.remove();
+        } else {
+          alert('Veri işlenirken hata: ' + result.error);
+        }
+      } catch (error) {
+        alert('İstek gönderilirken hata: ' + error.message);
+      }
+    }
+
+    getResourceColor(resourceId) {
+      const colors = [
+        '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
+        '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#10AC84',
+        '#EE5A24', '#FF6348'
+      ];
+      const hash = resourceId.split('').reduce((a, b) => {
+        a = ((a << 5) - a) + b.charCodeAt(0);
+        return a & a;
+      }, 0);
+      return colors[Math.abs(hash) % colors.length];
+    }
+
+    updateResourceToggleState(resourceId, isActive) {
+      const checkbox = document.querySelector(`input[data-resource="${resourceId}"]`);
+      const resourceItem = document.getElementById(`resource-${resourceId}`);
+
+      if (checkbox) {
+        checkbox.checked = isActive;
+      }
+
+      if (resourceItem) {
+        if (isActive) {
+          resourceItem.classList.add('active');
+        } else {
+          resourceItem.classList.remove('active');
+        }
+      }
+    }
+
+    showResourceError(resourceId, errorMessage) {
+      const el = document.getElementById(`resource-${resourceId}`);
+      if (el) {
+        const info = el.querySelector('.resource-info');
+        if (info) {
+          info.querySelector('.resource-error')?.remove();
+          const div = document.createElement('div');
+          div.className = 'resource-error';
+          div.style.cssText = 'color:#dc3545;font-size:10px;margin-top:3px;font-style:italic;';
+          div.textContent = errorMessage.length > 60 ? errorMessage.substring(0, 60) + '...' : errorMessage;
+          div.title = errorMessage;
+          info.appendChild(div);
+        }
+      }
+    }
+
+    setFocus(resourceId) {
+      if (!this.activeResources.has(resourceId)) return;
+      this.focusMode = true;
+      this.focusedResourceId = resourceId;
+      this.updateEmphasis();
+      this.renderSelectedLayersPanel();
+    }
+
+    clearFocus() {
+      this.focusMode = false;
+      this.focusedResourceId = null;
+      this.updateEmphasis();
+      this.renderSelectedLayersPanel();
+    }
+
+    applyEmphasis(resourceId, emphasized) {
+      const rl = this.resourceLayers[resourceId];
+      if (!rl) return;
+
+      if (rl._vector) {
+        try {
+          rl._vector.eachLayer(l => {
+            if (l.setStyle) {
+              l.setStyle({
+                opacity: emphasized ? 0.95 : 0.25,
+                fillOpacity: emphasized ? 0.25 : 0.12,
+                weight: emphasized ? 3 : 1.5
+              });
+            }
+          });
+          if (emphasized) rl._vector.bringToFront?.();
+        } catch (_) { }
+      }
+
+      if (rl._cluster) {
+        rl._cluster.eachLayer(m => {
+          if (m.setOpacity) m.setOpacity(emphasized ? 1.0 : 0.35);
+        });
+        if (emphasized) rl._cluster.bringToFront?.();
+      }
+
+      rl.layer?.eachLayer(l => {
+        if (l.setOpacity) l.setOpacity(emphasized ? 1.0 : 0.35);
+      });
+    }
+
+    updateEmphasis() {
+      const hasActive = this.activeResources.size > 0;
+      Object.keys(this.resourceLayers).forEach(id => {
+        let emphasized = true;
+        if (this.focusMode && this.focusedResourceId) {
+          emphasized = (id === this.focusedResourceId);
+        } else if (!hasActive) {
+          emphasized = true;
+        }
+        this.applyEmphasis(id, emphasized);
+      });
+    }
+
+    fitMapToActiveLayers() {
+      if (this.activeResources.size === 0) return;
+
+      // Throttle this operation
+      if (this.renderThrottle) clearTimeout(this.renderThrottle);
+
+      this.renderThrottle = setTimeout(() => {
+        const allBounds = [];
+        this.activeResources.forEach(resourceId => {
+          const rl = this.resourceLayers[resourceId];
+          if (rl && rl.visible && rl.layer.getLayers().length > 0) {
+            rl.layer.eachLayer(layer => {
+              if (layer.getBounds) {
+                allBounds.push(layer.getBounds());
+              } else if (layer.getLatLng) {
+                const ll = layer.getLatLng();
+                allBounds.push(L.latLngBounds([ll, ll]));
+              }
+            });
+          }
+        });
+
+        if (allBounds.length > 0) {
+          const group = new L.featureGroup();
+          allBounds.forEach(b => group.addLayer(L.rectangle(b, { opacity: 0 })));
+          if (group.getLayers().length > 0) {
+            this.map.fitBounds(group.getBounds(), { padding: [20, 20], animate: false });
+          }
+        }
+      }, 100);
+    }
+
+    renderSelectedLayersPanel() {
+      const panel = document.getElementById('selectedLayersPanel');
+      const ids = [...this.activeResources];
+
+      if (ids.length === 0) {
+        panel.style.display = 'none';
+        return;
+      }
+
+      panel.style.display = 'flex';
+
+      const chips = ids.map(id => {
+        const res = this.resourceLayers[id].resource;
+        const color = this.getResourceColor(id);
+        const focused = (this.focusMode && this.focusedResourceId === id);
+        return `
+          <div class="sel-chip" data-res="${id}">
+            <div class="sel-dot" style="background:${color}"></div>
+            <div class="sel-name">${res.resource_name}</div>
+            <div class="sel-actions">
+              <button class="sel-btn ${focused ? 'active' : ''}" onclick="spatialMapManager.onChipFocus('${id}')" title="Odağı bu katmana al">🎯</button>
+              <button class="sel-btn" onclick="spatialMapManager.showRelatedData('${id}')" title="İlişkili verileri görüntüle">📊</button>
+              <button class="sel-btn danger" onclick="spatialMapManager.onChipClose('${id}')" title="Kapat">✕</button>
+            </div>
+          </div>`;
+      }).join('');
+
+      const clearBtn = (this.focusMode && this.focusedResourceId)
+        ? `<div class="sel-chip" style="grid-template-columns:auto;gap:6px;justify-items:center;">
+             <button class="sel-btn" onclick="spatialMapManager.clearFocus()" title="Odağı temizle">Odağı Temizle</button>
+           </div>`
+        : '';
+
+      panel.innerHTML = clearBtn + chips;
+    }
+
+    onChipFocus(resourceId) {
+      if (this.focusMode && this.focusedResourceId === resourceId) {
+        this.clearFocus();
+      } else {
+        this.setFocus(resourceId);
+      }
+    }
+
+    onChipClose(resourceId) {
+      this.toggleResource(resourceId, false);
+    }
+
+    togglePackageCollapse(packageId) {
+      if (this.collapsedPackages.has(packageId)) {
+        this.collapsedPackages.delete(packageId);
+      } else {
+        this.collapsedPackages.add(packageId);
+      }
+      const container = document.getElementById(`resources-${packageId}`);
+      const indicator = document.getElementById(`indicator-${packageId}`);
+      if (container && indicator) {
+        const collapsed = this.collapsedPackages.has(packageId);
+        container.classList.toggle('collapsed', collapsed);
+        indicator.classList.toggle('collapsed', collapsed);
+      }
+    }
+
+    handleResourceClick(resourceId, event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      const checkbox = event.currentTarget.querySelector('input[type="checkbox"]');
+      const isCurrentlyActive = this.activeResources.has(resourceId);
+
+      // Toggle state
+      const newState = !isCurrentlyActive;
+
+      // Update checkbox
+      if (checkbox) {
+        checkbox.checked = newState;
+      }
+
+      // Toggle resource
+      this.toggleResource(resourceId, newState);
+    }
+
+    setupEventListeners() {
+      // Arama
+      const searchInput = document.getElementById('layerSearch');
+      let t;
+      searchInput.addEventListener('input', () => {
+        clearTimeout(t);
+        t = setTimeout(() => {
+          this.searchTerm = searchInput.value.toLowerCase();
+          this.renderLayers();
+        }, 250);
+      });
+
+      // Organization filter
+      document.getElementById('organizationFilter').addEventListener('change', (e) => {
+        this.selectedOrganization = e.target.value;
+        this.renderLayers();
+      });
+
+      // Format filter
+      document.getElementById('formatFilter').addEventListener('change', (e) => {
+        this.selectedFormat = e.target.value;
+        this.renderLayers();
+      });
+
+      // Theme filter
+      document.getElementById('themeFilter').addEventListener('change', (e) => {
+        this.selectedTheme = e.target.value;
+        this.renderLayers();
+      });
+
+      // Category filter
+      document.getElementById('categoryFilter').addEventListener('change', (e) => {
+        this.selectedCategory = e.target.value;
+        this.renderLayers();
+      });
+    }
+
+    renderLayers() {
+      const container = document.getElementById('spatialLayersContainer');
+      if (this.spatialData.length === 0) {
+        container.innerHTML = `<div class="error-section">Henüz mekansal kaynak bulunamadı.<br><small>Yönetim panelinden kaynakları mekansal olarak işaretleyin.</small></div>`;
+        return;
+      }
+
+      const filteredGroups = this.filterPackages();
+      const html = Object.values(filteredGroups).map(pg => this.renderPackageGroup(pg)).join('');
+
+      if (Object.keys(filteredGroups).length === 0) {
+        container.innerHTML = `<div class="error-section">Filtrelere uygun kaynak bulunamadı.</div>`;
+      } else {
+        container.innerHTML = html;
+      }
+    }
+
+    renderPackageGroup(group) {
+      const isCollapsed = this.collapsedPackages.has(group.id);
+      const filteredResources = group.resources || [];
+      if (filteredResources.length === 0) return '';
+
+      const theme = group.theme || 'Tema yok';
+      const categories = group.groups?.map(g => g.display_name || g.name).join(', ') || 'Kategori yok';
+
+      return `
+        <div class="package-group" id="package-${group.id}">
+          <div class="package-header" onclick="spatialMapManager.togglePackageCollapse('${group.id}')">
+            <div class="package-title-row">
+              <h4 class="package-title">${group.name}</h4>
+              <button class="collapse-indicator ${isCollapsed ? 'collapsed' : ''}" id="indicator-${group.id}">▼</button>
+            </div>
+            <div class="package-meta">
+              <span class="resource-count">${filteredResources.length} kaynak</span>
+              <span class="theme-badge">${theme}</span>
+              <span class="category-badge">${categories}</span>
+            </div>
+          </div>
+          <div class="resources-container ${isCollapsed ? 'collapsed' : ''}" id="resources-${group.id}">
+            ${filteredResources.map(r => this.renderResourceItem(r)).join('')}
+          </div>
+        </div>`;
+    }
+
+    renderResourceItem(resource) {
+      const format = (resource.format || 'other').toLowerCase();
+      const formatClass = this.getFormatClass(format);
+      const activeClass = this.activeResources.has(resource.resource_id) ? 'active' : '';
+      const extraClass = ['wms', 'geotiff'].includes(format) ? `${format}-resource` : '';
+
+      return `
+        <div class="resource-item ${activeClass} ${extraClass}" 
+             id="resource-${resource.resource_id}">
+          <div class="resource-info">
+            <div class="resource-name" title="${resource.resource_name}">${resource.resource_name}</div>
+            <div class="resource-meta">
+              <span class="format-badge ${formatClass}">${format.toUpperCase()}</span>
+            </div>
+          </div>
+          <div class="resource-actions">
+            <button class="download-resource-btn" 
+                    onclick="spatialMapManager.downloadResourceData('${resource.resource_id}')"
+                    title="Veriyi indir">
+              <span>💾</span>
+              <span>İndir</span>
+            </button>
+            <label class="modern-toggle" onclick="spatialMapManager.handleResourceClick('${resource.resource_id}', event)">
+              <input type="checkbox" 
+                     data-resource="${resource.resource_id}" 
+                     ${this.activeResources.has(resource.resource_id) ? 'checked' : ''}>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+        </div>`;
+    }
+
+    getFormatClass(format) {
+      const map = {
+        'csv': 'format-csv', 'json': 'format-json', 'geojson': 'format-geojson',
+        'xlsx': 'format-xlsx', 'xls': 'format-xlsx', 'shp': 'format-shp',
+        'kml': 'format-kml', 'api': 'format-api', 'rest': 'format-api',
+        'wms': 'format-wms', 'geotiff': 'format-geotiff'
+      };
+      return map[format] || 'format-other';
+    }
+
+    updateStats() {
+      const totalResources = this.spatialData.length;
+      const totalPackages = Object.keys(this.packageGroups).length;
+      const activeResourceCount = this.activeResources.size;
+      const totalFormats = [...new Set(this.spatialData.map(r => r.format))].filter(Boolean).length;
+
+      document.getElementById('totalSpatialResources').textContent = totalResources.toLocaleString('tr-TR');
+      document.getElementById('totalSpatialPackages').textContent = totalPackages.toLocaleString('tr-TR');
+      document.getElementById('activeLayers').textContent = activeResourceCount.toLocaleString('tr-TR');
+      document.getElementById('totalFormats').textContent = totalFormats.toLocaleString('tr-TR');
+    }
+
+    showManualColumnSelection(resourceId, columns) {
+      return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'column-modal-overlay';
+        modal.innerHTML = `
+          <style>
+            .column-modal-overlay {
+              position:fixed;top:0;left:0;width:100%;height:100%;
+              background:rgba(0,0,0,0.5);z-index:2000;
+              display:flex;align-items:center;justify-content:center;
+            }
+            .column-modal {
+              background:#fff;padding:22px;border-radius:12px;
+              max-width:450px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.2);
+            }
+            .column-modal h3 {
+              margin-bottom:16px;color:#2c3e50;font-size:18px;
+            }
+            .column-select-group {
+              margin:12px 0;
+            }
+            .column-select-group label {
+              display:block;margin-bottom:8px;font-weight:500;color:#495057;
+            }
+            .column-select-group select {
+              width:100%;padding:10px 12px;border:1px solid #ced4da;
+              border-radius:6px;font-size:14px;background:#fff;
+            }
+            .modal-actions {
+              margin-top:18px;display:flex;justify-content:flex-end;gap:10px;
+            }
+            .modal-btn {
+              padding:10px 16px;border:none;border-radius:6px;
+              font-weight:500;cursor:pointer
+            }
+            .modal-btn.cancel {
+              background:#6c757d;color:#fff;
+            }
+            .modal-btn.primary {
+              background:#007bff;color:#fff;
+            }
+            .modal-btn:hover {
+              opacity:.9;
+            }
+          </style>
+          <div class="column-modal">
+            <h3>Koordinat Sütunlarını Seçin</h3>
+            <div class="column-select-group">
+              <label>Enlem (Latitude) Sütunu:</label>
+              <select id="latColumn">
+                <option value="">Seçiniz...</option>
+                ${columns.map(col => `<option value="${col}">${col}</option>`).join('')}
+              </select>
+            </div>
+            <div class="column-select-group">
+              <label>Boylam (Longitude) Sütunu:</label>
+              <select id="lonColumn">
+                <option value="">Seçiniz...</option>
+                ${columns.map(col => `<option value="${col}">${col}</option>`).join('')}
+              </select>
+            </div>
+            <div class="modal-actions">
+              <button class="modal-btn cancel" onclick="this.closest('.column-modal-overlay').remove()">İptal</button>
+              <button class="modal-btn primary" onclick="spatialMapManager.processManualSelection('${resourceId}', this)">Uygula</button>
+            </div>
+          </div>`;
+        document.body.appendChild(modal);
+        resolve();
+      });
+    }
+
+    async showRelatedData(resourceId) {
+      try {
+        const modal = document.getElementById('relatedDataModal');
+        const content = document.getElementById('relatedDataContent');
+
+        modal.style.display = 'flex';
+
+        content.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #6c757d;">
+            <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+            <p>Yükleniyor...</p>
+          </div>
+        `;
+
+        console.log('🔄 Loading related data for:', resourceId);
+
+        const response = await fetch(`/api/spatial-resources/${resourceId}/relationships`, {
+          credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (!data.success) {
+          throw new Error(data.error || 'İlişkili veriler yüklenemedi');
+        }
+
+        const relationships = data.relationships || [];
+        const resource = this.resourceLayers[resourceId]?.resource;
+
+        if (relationships.length === 0) {
+          content.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+              <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+              <h3>İlişkili veri bulunamadı</h3>
+              <p><strong>${resource?.resource_name || 'Bu kaynak'}</strong> için henüz ilişkilendirilmiş veri yok.</p>
+            </div>
+          `;
+          return;
+        }
+
+        content.innerHTML = `
+          <div style="margin-bottom: 16px;">
+            <div style="background: #f8f9fa; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+              <div style="font-size: 14px; font-weight: 600; color: #495057;">
+                🗺️ ${resource?.resource_name || 'Mekansal Kaynak'}
+              </div>
+              <div style="font-size: 12px; color: #6c757d; margin-top: 4px;">
+                ${relationships.length} ilişkili veri seti
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              ${relationships.map(rel => {
+                const formatClass = this.getFormatClass((rel.related_resource_format || 'other').toLowerCase());
+                return `
+                  <div style="background: white; border: 2px solid #e9ecef; border-radius: 8px; padding: 12px; transition: all 0.2s;"
+                       onmouseover="this.style.borderColor='#667eea'; this.style.background='#f8f9fa';"
+                       onmouseout="this.style.borderColor='#e9ecef'; this.style.background='white';">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                      <div style="flex: 1;">
+                        <div style="font-size: 14px; font-weight: 600; color: #495057; margin-bottom: 4px;">
+                          📄 ${rel.related_resource_name}
+                        </div>
+                        <div style="font-size: 12px; color: #6c757d;">
+                          📁 ${rel.package_title || 'Bilinmiyor'}
+                        </div>
+                      </div>
+                      <span class="format-badge ${formatClass}">${rel.related_resource_format}</span>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; margin-top: 12px;">
+                      <a href="/dataset/${rel.package_name}/resource/${rel.related_resource_id}"
+                         target="_blank"
+                         style="flex: 1; background: #28a745; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.2s;"
+                         onmouseover="this.style.background='#218838'"
+                         onmouseout="this.style.background='#28a745'">
+                        👁️ Görüntüle
+                      </a>
+                      ${rel.related_resource_url ? `
+                        <a href="${rel.related_resource_url}"
+                           target="_blank"
+                           download
+                           style="flex: 1; background: #007bff; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; text-align: center; text-decoration: none; transition: all 0.2s;"
+                           onmouseover="this.style.background='#0056b3'"
+                           onmouseout="this.style.background='#007bff'">
+                          ⬇️ İndir
+                        </a>
+                      ` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        `;
+
+      } catch (error) {
+        console.error('❌ Error loading related data:', error);
+        document.getElementById('relatedDataContent').innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #dc3545;">
+            <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+            <h3>Hata oluştu</h3>
+            <p>${error.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    closeRelatedDataModal() {
+      document.getElementById('relatedDataModal').style.display = 'none';
+    }
+
+    getFormatClass(format) {
+      const map = {
+        'csv': 'format-csv', 'json': 'format-json', 'geojson': 'format-geojson',
+        'xml': 'format-xml', 'pdf': 'format-pdf', 'xls': 'format-xls',
+        'xlsx': 'format-xlsx', 'shp': 'format-shp', 'kml': 'format-kml'
+      };
+      return map[format] || 'format-other';
+    }
+
+    showError(message) {
+      const container = document.getElementById('spatialLayersContainer');
+      container.innerHTML = `<div class="error-section">${message}</div>`;
     }
   }
 
-  updateCounts() {
-    const packageCount = this.filteredResources.reduce((acc, r) => {
-      acc.add(r.package_id);
-      return acc;
-    }, new Set()).size;
-    
-    document.getElementById('filteredCount').textContent = packageCount;
-  }
-
-  updateStats() {
-    requestAnimationFrame(() => {
-      document.getElementById('totalPackages').textContent = Object.keys(this.allPackages).length.toLocaleString('tr-TR');
-      document.getElementById('totalResources').textContent = this.allResources.length.toLocaleString('tr-TR');
-      document.getElementById('spatialResources').textContent = this.spatialResourceIds.size.toLocaleString('tr-TR');
-      document.getElementById('totalFormats').textContent = this.formats.size.toLocaleString('tr-TR');
-    });
-  }
-
-  getFormatClass(format) {
-    const map = {
-      'csv': 'format-csv', 'json': 'format-json', 'geojson': 'format-geojson',
-      'xml': 'format-xml', 'pdf': 'format-pdf', 'xls': 'format-xls',
-      'xlsx': 'format-xlsx', 'shp': 'format-shp', 'kml': 'format-kml'
-    };
-    return map[format] || 'format-other';
-  }
-
-  isSpatialFormat(format) {
-    return this.spatialFormats.includes(format.toLowerCase());
-  }
-
-  formatFileSize(bytes) {
-    if (!bytes) return '';
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
-  }
-
-  showError(message) {
-    const grid = document.getElementById('packagesGrid');
-    grid.innerHTML = `
-      <div class="error">
-        <div class="empty-icon">❌</div>
-        <h3>Hata oluştu</h3>
-        <p>${message}</p>
-      </div>
-    `;
-  }
-
-  // Lazy-load modal functions
-  async openMapModal() {
-    await this.loadModalScript('map');
-    if (this.mapModalHandler) {
-      this.mapModalHandler.open();
-    }
-  }
-
-  async openRelationshipModal() {
-    await this.loadModalScript('relationship');
-    if (this.relationshipModalHandler) {
-      this.relationshipModalHandler.open();
-    }
-  }
-
-  async openMetadataModal() {
-    await this.loadModalScript('metadata');
-    if (this.metadataModalHandler) {
-      this.metadataModalHandler.open();
-    }
-  }
-
-  async loadModalScript(modalType) {
-    // Modal kodları lazım olduğunda yüklenecek (lazy loading)
-    // Bu örnekte basitleştirilmiş
-    console.log(`Loading ${modalType} modal...`);
-    // Modal handler'ları burada yüklenebilir
-  }
-}
-
-// Initialize on DOM ready
-let spatialManager;
-if (document.readyState === 'loading') {
+  let spatialMapManager;
   document.addEventListener('DOMContentLoaded', () => {
-    spatialManager = new OptimizedSpatialManager();
+    spatialMapManager = new SpatialMapManager();
   });
-} else {
-  spatialManager = new OptimizedSpatialManager();
-}
 </script>
 
 {% endblock %}

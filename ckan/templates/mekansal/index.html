@@ -609,6 +609,203 @@
     text-decoration: none;
   }
 
+  .btn-color {
+    background: #6f42c1;
+    color: white;
+    position: relative;
+    padding: 4px 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .btn-color:hover {
+    background: #5a32a3;
+    color: white;
+    text-decoration: none;
+  }
+
+  .btn-color.has-color::before {
+    content: '';
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid white;
+    background-color: var(--resource-color, #3388ff);
+  }
+
+  .color-picker-popup {
+    display: none;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    z-index: 10000;
+    min-width: 320px;
+  }
+
+  .color-picker-popup.active {
+    display: block;
+  }
+
+  .color-picker-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 9999;
+  }
+
+  .color-picker-overlay.active {
+    display: block;
+  }
+
+  .color-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .color-picker-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #2c3e50;
+    margin: 0;
+  }
+
+  .color-picker-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+
+  .color-picker-close:hover {
+    color: #dc3545;
+    transform: rotate(90deg);
+  }
+
+  .color-picker-body {
+    margin-bottom: 20px;
+  }
+
+  .color-picker-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 10px;
+  }
+
+  .color-input-wrapper {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .color-input-box {
+    flex: 1;
+  }
+
+  .color-input-box input[type="color"] {
+    width: 100%;
+    height: 48px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+  }
+
+  .color-input-box input[type="color"]:hover {
+    border-color: #667eea;
+  }
+
+  .color-preview {
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+    background-color: var(--preview-color, #3388ff);
+    transition: all 0.2s ease;
+  }
+
+  .color-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .color-preset {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .color-preset:hover {
+    border-color: #667eea;
+    transform: scale(1.1);
+  }
+
+  .color-preset.selected {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px white, 0 0 0 4px #667eea;
+  }
+
+  .color-picker-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+  }
+
+  .color-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .color-btn-cancel {
+    background: #e9ecef;
+    color: #495057;
+  }
+
+  .color-btn-cancel:hover {
+    background: #dee2e6;
+  }
+
+  .color-btn-save {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+  }
+
+  .color-btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
   .bulk-actions {
     display: flex;
     gap: 8px;
@@ -1141,6 +1338,12 @@
   🏷️
 </button>
 
+<!-- Floating Color Settings Button -->
+<button class="floating-map-btn" id="colorFloatingBtn" onclick="spatialManager.openColorSettingsModal()"
+        title="Renk Ayarları" style="bottom: 270px;">
+  🎨
+</button>
+
 <!-- Map Modal -->
 <div class="map-modal-overlay" id="mapModalOverlay" onclick="spatialManager.closeMapModal(event)">
   <div class="map-modal" onclick="event.stopPropagation()">
@@ -1376,6 +1579,82 @@
   </div>
 </div>
 
+<!-- Color Settings Modal -->
+<div class="map-modal-overlay" id="colorSettingsModalOverlay" onclick="spatialManager.closeColorSettingsModal(event)">
+  <div class="map-modal" onclick="event.stopPropagation()" style="max-width: 800px;">
+    <div class="map-modal-header">
+      <h2 class="map-modal-title">🎨 Renk Ayarları</h2>
+      <button class="map-modal-close" onclick="spatialManager.closeColorSettingsModal()">&times;</button>
+    </div>
+    <div class="map-modal-body" style="max-height: calc(80vh - 80px);">
+      <!-- Info Banner -->
+      <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-left: 4px solid #667eea; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+        <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px;">
+          💡 Nasıl Çalışır?
+        </div>
+        <div style="font-size: 12px; color: #6c757d; line-height: 1.5;">
+          Her mekansal kaynak için özel bir renk seçin. Seçtiğiniz renk, anasayfa haritasında o kaynağın noktaları, çizgileri ve alanları için kullanılacaktır.
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <input type="search" id="colorSettingsSearch" placeholder="🔍 Mekansal kaynak ara..."
+               style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px;"
+               oninput="spatialManager.filterColorSettings()">
+      </div>
+
+      <!-- Resource List with Colors -->
+      <div id="colorSettingsList" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+          <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+          <p>Yükleniyor...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Color Picker Overlay and Popup -->
+<div class="color-picker-overlay" id="colorPickerOverlay" onclick="spatialManager.closeColorPicker()"></div>
+<div class="color-picker-popup" id="colorPickerPopup">
+  <div class="color-picker-header">
+    <h3 class="color-picker-title">🎨 Harita Rengi Seç</h3>
+    <button class="color-picker-close" onclick="spatialManager.closeColorPicker()">&times;</button>
+  </div>
+  <div class="color-picker-body">
+    <label class="color-picker-label">Renk Seçin:</label>
+    <div class="color-input-wrapper">
+      <div class="color-input-box">
+        <input type="color" id="colorPickerInput" value="#3388ff" oninput="spatialManager.updateColorPreview(this.value)">
+      </div>
+      <div class="color-preview" id="colorPreview" style="--preview-color: #3388ff;"></div>
+    </div>
+    <div class="color-preset-grid">
+      <div class="color-preset" style="background-color: #FF6B6B;" onclick="spatialManager.selectPresetColor('#FF6B6B')" title="Kırmızı"></div>
+      <div class="color-preset" style="background-color: #4ECDC4;" onclick="spatialManager.selectPresetColor('#4ECDC4')" title="Turkuaz"></div>
+      <div class="color-preset" style="background-color: #45B7D1;" onclick="spatialManager.selectPresetColor('#45B7D1')" title="Mavi"></div>
+      <div class="color-preset" style="background-color: #FFA07A;" onclick="spatialManager.selectPresetColor('#FFA07A')" title="Turuncu"></div>
+      <div class="color-preset" style="background-color: #98D8C8;" onclick="spatialManager.selectPresetColor('#98D8C8')" title="Yeşil"></div>
+      <div class="color-preset" style="background-color: #F7DC6F;" onclick="spatialManager.selectPresetColor('#F7DC6F')" title="Sarı"></div>
+      <div class="color-preset" style="background-color: #BB8FCE;" onclick="spatialManager.selectPresetColor('#BB8FCE')" title="Mor"></div>
+      <div class="color-preset" style="background-color: #85C1E2;" onclick="spatialManager.selectPresetColor('#85C1E2')" title="Açık Mavi"></div>
+      <div class="color-preset" style="background-color: #E74C3C;" onclick="spatialManager.selectPresetColor('#E74C3C')" title="Koyu Kırmızı"></div>
+      <div class="color-preset" style="background-color: #3498DB;" onclick="spatialManager.selectPresetColor('#3498DB')" title="Koyu Mavi"></div>
+      <div class="color-preset" style="background-color: #2ECC71;" onclick="spatialManager.selectPresetColor('#2ECC71')" title="Koyu Yeşil"></div>
+      <div class="color-preset" style="background-color: #F39C12;" onclick="spatialManager.selectPresetColor('#F39C12')" title="Koyu Turuncu"></div>
+      <div class="color-preset" style="background-color: #9B59B6;" onclick="spatialManager.selectPresetColor('#9B59B6')" title="Koyu Mor"></div>
+      <div class="color-preset" style="background-color: #1ABC9C;" onclick="spatialManager.selectPresetColor('#1ABC9C')" title="Yeşil Turkuaz"></div>
+      <div class="color-preset" style="background-color: #E67E22;" onclick="spatialManager.selectPresetColor('#E67E22')" title="Turuncu Kahve"></div>
+      <div class="color-preset" style="background-color: #34495E;" onclick="spatialManager.selectPresetColor('#34495E')" title="Gri Mavi"></div>
+    </div>
+  </div>
+  <div class="color-picker-actions">
+    <button class="color-btn color-btn-cancel" onclick="spatialManager.closeColorPicker()">İptal</button>
+    <button class="color-btn color-btn-save" onclick="spatialManager.saveResourceColor()">Kaydet</button>
+  </div>
+</div>
+
 <script>
 console.log('🚀 Modern Mekansal Resource Yönetimi');
 
@@ -1425,6 +1704,10 @@ class SpatialResourceManager {
     this.currentMetadataSample = null;
     this.metadataMappings = {}; // { fieldName: { displayName: '...', valueMapping: {...}, hidden: bool, visible: bool } }
     this.visibilityMode = 'show_all'; // 'show_all' or 'show_selected'
+
+    // Color picker state
+    this.currentColorResourceId = null;
+    this.currentColor = '#3388ff';
 
     // Performance optimizations
     this.renderCache = new Map(); // Cache rendered HTML
@@ -2014,6 +2297,10 @@ class SpatialResourceManager {
                    onchange="spatialManager.toggleSpatialResource('${resource.resource_id}', this.checked)">
             <span class="toggle-slider"></span>
           </label>
+          ${isSpatial ? `<button class="action-btn btn-color ${resource.color ? 'has-color' : ''}"
+                                  style="${resource.color ? `--resource-color: ${resource.color}` : ''}"
+                                  onclick="spatialManager.openColorPicker('${resource.resource_id}', '${resource.color || '#3388ff'}')"
+                                  title="Harita rengini seç">🎨 Renk</button>` : ''}
           <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" class="action-btn btn-view">👁️ Görüntüle</a>
           ${resource.url ? `<a href="${resource.url}" class="action-btn btn-download" target="_blank">⬇️ İndir</a>` : ''}
         </div>
@@ -3225,6 +3512,261 @@ class SpatialResourceManager {
       console.error('❌ Global reset error:', error);
       alert('❌ Hata: ' + error.message);
     }
+  }
+
+  // ==================== COLOR PICKER METHODS ====================
+
+  openColorPicker(resourceId, currentColor) {
+    this.currentColorResourceId = resourceId;
+    this.currentColor = currentColor || '#3388ff';
+
+    const colorInput = document.getElementById('colorPickerInput');
+    const colorPreview = document.getElementById('colorPreview');
+    const overlay = document.getElementById('colorPickerOverlay');
+    const popup = document.getElementById('colorPickerPopup');
+
+    if (colorInput) colorInput.value = this.currentColor;
+    if (colorPreview) colorPreview.style.setProperty('--preview-color', this.currentColor);
+
+    overlay.classList.add('active');
+    popup.classList.add('active');
+
+    console.log(`🎨 Color picker opened for resource: ${resourceId}, current color: ${this.currentColor}`);
+  }
+
+  closeColorPicker() {
+    const overlay = document.getElementById('colorPickerOverlay');
+    const popup = document.getElementById('colorPickerPopup');
+
+    overlay.classList.remove('active');
+    popup.classList.remove('active');
+
+    this.currentColorResourceId = null;
+    this.currentColor = '#3388ff';
+
+    console.log('🎨 Color picker closed');
+  }
+
+  updateColorPreview(color) {
+    this.currentColor = color;
+    const colorPreview = document.getElementById('colorPreview');
+    if (colorPreview) {
+      colorPreview.style.setProperty('--preview-color', color);
+    }
+  }
+
+  selectPresetColor(color) {
+    this.currentColor = color;
+    const colorInput = document.getElementById('colorPickerInput');
+    const colorPreview = document.getElementById('colorPreview');
+
+    if (colorInput) colorInput.value = color;
+    if (colorPreview) colorPreview.style.setProperty('--preview-color', color);
+
+    console.log(`🎨 Preset color selected: ${color}`);
+  }
+
+  async saveResourceColor() {
+    if (!this.currentColorResourceId) {
+      alert('❌ Hata: Kaynak ID bulunamadı');
+      return;
+    }
+
+    try {
+      console.log(`💾 Saving color ${this.currentColor} for resource ${this.currentColorResourceId}`);
+
+      const response = await fetch(`/api/spatial-resources/${this.currentColorResourceId}/color`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ color: this.currentColor })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Renk kaydedilemedi');
+      }
+
+      // Update the resource in allResources
+      const resource = this.allResources.find(r => r.resource_id === this.currentColorResourceId);
+      if (resource) {
+        resource.color = this.currentColor;
+      }
+
+      console.log(`✅ Color saved successfully: ${this.currentColor}`);
+
+      // Close the picker
+      this.closeColorPicker();
+
+      // Re-render to show the updated color
+      this.filterAndRender();
+
+      // Refresh color settings modal if it's open
+      const colorSettingsModal = document.getElementById('colorSettingsModalOverlay');
+      if (colorSettingsModal && colorSettingsModal.classList.contains('active')) {
+        this.loadColorSettingsList();
+      }
+
+      alert(`✅ Renk kaydedildi!\n\nKaynak rengi: ${this.currentColor}`);
+
+    } catch (error) {
+      console.error('❌ Color save error:', error);
+      alert('❌ Hata: ' + error.message);
+    }
+  }
+
+  // ==================== COLOR SETTINGS MODAL METHODS ====================
+
+  openColorSettingsModal() {
+    const modal = document.getElementById('colorSettingsModalOverlay');
+    if (modal) {
+      modal.classList.add('active');
+      this.loadColorSettingsList();
+    }
+  }
+
+  closeColorSettingsModal(event) {
+    if (event && event.target !== event.currentTarget) return;
+    const modal = document.getElementById('colorSettingsModalOverlay');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+  }
+
+  async loadColorSettingsList() {
+    const container = document.getElementById('colorSettingsList');
+    if (!container) return;
+
+    // Show loading
+    container.innerHTML = `
+      <div style="text-align: center; padding: 40px; color: #6c757d;">
+        <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
+        <p>Yükleniyor...</p>
+      </div>
+    `;
+
+    try {
+      // Get spatial resources
+      const spatialResources = this.allResources.filter(r => r.is_spatial);
+
+      if (spatialResources.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px; color: #6c757d;">
+            <div style="font-size: 48px; margin-bottom: 16px;">📭</div>
+            <p>Henüz mekansal kaynak yok</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Render each resource with color picker
+      const items = spatialResources.map(resource => {
+        const color = resource.color || '#3388ff';
+        const packageName = resource.package_title || resource.package_name;
+        const resourceName = resource.resource_name || 'İsimsiz Kaynak';
+
+        return `
+          <div class="rel-resource-card" style="display: flex; align-items: center; gap: 12px; padding: 14px;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${resourceName}
+              </div>
+              <div style="font-size: 11px; color: #6c757d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                📦 ${packageName}
+              </div>
+              <div style="font-size: 10px; color: #6c757d; margin-top: 4px;">
+                <span class="format-badge format-${(resource.format || 'other').toLowerCase()}">${(resource.format || 'OTHER').toUpperCase()}</span>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div style="width: 32px; height: 32px; border-radius: 50%; background-color: ${color}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"></div>
+              <button class="action-btn btn-color"
+                      onclick="spatialManager.openColorPicker('${resource.resource_id}', '${color}')"
+                      title="Renk Değiştir">
+                🎨 Değiştir
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      container.innerHTML = items;
+
+      // Store filtered resources for search
+      this.colorSettingsResources = spatialResources;
+
+    } catch (error) {
+      console.error('❌ Color settings load error:', error);
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #dc3545;">
+          <div style="font-size: 48px; margin-bottom: 16px;">❌</div>
+          <p>Hata: ${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  filterColorSettings() {
+    const searchInput = document.getElementById('colorSettingsSearch');
+    if (!searchInput) return;
+
+    const searchTerm = searchInput.value.toLowerCase().trim();
+
+    if (!this.colorSettingsResources) return;
+
+    const filtered = searchTerm === ''
+      ? this.colorSettingsResources
+      : this.colorSettingsResources.filter(resource => {
+          const resourceName = (resource.resource_name || '').toLowerCase();
+          const packageName = (resource.package_title || resource.package_name || '').toLowerCase();
+          return resourceName.includes(searchTerm) || packageName.includes(searchTerm);
+        });
+
+    const container = document.getElementById('colorSettingsList');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+          <div style="font-size: 48px; margin-bottom: 16px;">🔍</div>
+          <p>Sonuç bulunamadı</p>
+        </div>
+      `;
+      return;
+    }
+
+    const items = filtered.map(resource => {
+      const color = resource.color || '#3388ff';
+      const packageName = resource.package_title || resource.package_name;
+      const resourceName = resource.resource_name || 'İsimsiz Kaynak';
+
+      return `
+        <div class="rel-resource-card" style="display: flex; align-items: center; gap: 12px; padding: 14px;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              ${resourceName}
+            </div>
+            <div style="font-size: 11px; color: #6c757d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+              📦 ${packageName}
+            </div>
+            <div style="font-size: 10px; color: #6c757d; margin-top: 4px;">
+              <span class="format-badge format-${(resource.format || 'other').toLowerCase()}">${(resource.format || 'OTHER').toUpperCase()}</span>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; background-color: ${color}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"></div>
+            <button class="action-btn btn-color"
+                    onclick="spatialManager.openColorPicker('${resource.resource_id}', '${color}')"
+                    title="Renk Değiştir">
+              🎨 Değiştir
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    container.innerHTML = items;
   }
 }
 

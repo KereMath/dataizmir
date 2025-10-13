@@ -189,7 +189,7 @@ def get_spatial_only():
     """Sadece spatial olarak işaretlenmiş resource'ları getir"""
     try:
         query = text("""
-            SELECT 
+            SELECT
                 p.id as package_id,
                 p.name as package_name,
                 p.title as package_title,
@@ -197,12 +197,13 @@ def get_spatial_only():
                 r.name as resource_name,
                 r.format,
                 r.url,
-                r.size
+                r.size,
+                COALESCE(sr.color, '#3388ff') as color
             FROM package p
             JOIN resource r ON p.id = r.package_id
             JOIN spatial_resources sr ON r.id = sr.resource_id
-            WHERE p.state = 'active' 
-            AND r.state = 'active' 
+            WHERE p.state = 'active'
+            AND r.state = 'active'
             AND sr.is_spatial = true
             ORDER BY p.title, r.name
         """)
@@ -219,7 +220,8 @@ def get_spatial_only():
                 'resource_name': row.resource_name or 'İsimsiz Kaynak',
                 'format': row.format or '',
                 'url': row.url or '',
-                'size': row.size
+                'size': row.size,
+                'color': row.color or '#3388ff'
             })
         
         return jsonify({

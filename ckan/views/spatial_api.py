@@ -100,6 +100,7 @@ def get_spatial_resources():
             r.size,
             COALESCE(sr.is_spatial, false) as is_spatial,
             COALESCE(sr.show_on_homepage, false) as show_on_homepage,
+            COALESCE(sr.color, '#3388ff') as color,
             sr.added_by,
             sr.updated_date
         FROM package p
@@ -139,6 +140,7 @@ def get_spatial_resources():
             'organization_title': org_title,
             'is_spatial': row.is_spatial,
             'show_on_homepage': row.show_on_homepage,
+            'color': row.color or '#3388ff',
             'added_by': row.added_by,
             'updated_date': row.updated_date.isoformat() if row.updated_date else None
         })
@@ -159,36 +161,36 @@ def toggle_spatial_resource():
             return jsonify({'error': 'Unauthorized'}), 403
     except:
         return jsonify({'error': 'Unauthorized'}), 403
-    
+
     data = request.get_json()
     resource_id = data.get('resource_id')
     is_spatial = data.get('is_spatial', False)
-    
+
     if not resource_id:
         return jsonify({'error': 'resource_id gerekli'}), 400
-    
+
     try:
         # Resource'un var olup olmadığını kontrol et
         resource_check = model.Session.execute(
             text("SELECT id FROM resource WHERE id = :resource_id"),
             {'resource_id': resource_id}
         ).fetchone()
-        
+
         if not resource_check:
             return jsonify({'error': 'Resource bulunamadı'}), 404
-        
+
         # Spatial resource kaydını güncelle veya oluştur
         existing = model.Session.execute(
             text("SELECT id FROM spatial_resources WHERE resource_id = :resource_id"),
             {'resource_id': resource_id}
         ).fetchone()
-        
+
         if existing:
             # Güncelle
             model.Session.execute(
                 text("""
-                    UPDATE spatial_resources 
-                    SET is_spatial = :is_spatial, 
+                    UPDATE spatial_resources
+                    SET is_spatial = :is_spatial,
                         added_by = :added_by,
                         updated_date = CURRENT_TIMESTAMP
                     WHERE resource_id = :resource_id
@@ -212,18 +214,100 @@ def toggle_spatial_resource():
                     'added_by': user.name
                 }
             )
-        
+
         model.Session.commit()
-        
+
         return jsonify({
             'success': True,
             'resource_id': resource_id,
             'is_spatial': is_spatial,
             'updated_by': user.name
         })
-        
+
     except Exception as e:
         model.Session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/color', methods=['POST'])
+def set_resource_color(resource_id):
+    """Resource'un harita rengini kaydet"""
+    try:
+        # Admin kontrolü
+        user = toolkit.c.userobj
+        if not user or not authz.is_sysadmin(user.name):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    color = data.get('color', '#3388ff')
+
+    if not resource_id:
+        return jsonify({'error': 'resource_id gerekli'}), 400
+
+    # Hex color validation
+    if not color or not color.startswith('#') or len(color) != 7:
+        return jsonify({'error': 'Geçersiz renk formatı. #RRGGBB formatında olmalı'}), 400
+
+    try:
+        # Spatial resource var mı kontrol et
+        existing = model.Session.execute(
+            text("SELECT id FROM spatial_resources WHERE resource_id = :resource_id"),
+            {'resource_id': resource_id}
+        ).fetchone()
+
+        if not existing:
+            return jsonify({'error': 'Resource spatial olarak işaretlenmemiş'}), 404
+
+        # Rengi güncelle
+        model.Session.execute(
+            text("""
+                UPDATE spatial_resources
+                SET color = :color,
+                    updated_date = CURRENT_TIMESTAMP
+                WHERE resource_id = :resource_id
+            """),
+            {
+                'resource_id': resource_id,
+                'color': color
+            }
+        )
+
+        model.Session.commit()
+
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'color': color,
+            'updated_by': user.name
+        })
+
+    except Exception as e:
+        model.Session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/color', methods=['GET'])
+def get_resource_color(resource_id):
+    """Resource'un harita rengini getir"""
+    try:
+        query = text("""
+            SELECT color
+            FROM spatial_resources
+            WHERE resource_id = :resource_id
+        """)
+
+        result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
+
+        if not result:
+            return jsonify({'success': False, 'color': '#3388ff'})
+
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'color': result.color or '#3388ff'
+        })
+
+    except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @spatial_api.route('/api/spatial-resources/list')
@@ -241,7 +325,8 @@ def get_spatial_resource_list():
                 r.url,
                 r.size,
                 sr.added_by,
-                sr.updated_date
+                sr.updated_date,
+                COALESCE(sr.color, '#3388ff') as color
             FROM package p
             JOIN resource r ON p.id = r.package_id
             JOIN spatial_resources sr ON r.id = sr.resource_id
@@ -261,7 +346,7 @@ def get_spatial_resource_list():
             # URL'yi mutlak hale getir
             absolute_url = get_absolute_url(site_url, row.url, row.package_name, row.resource_id)
 
-            resources.append({
+            resource_dict = {
                 'package_id': row.package_id,
                 'package_name': row.package_name,
                 'package_title': row.package_title,
@@ -272,13 +357,18 @@ def get_spatial_resource_list():
                 'original_url': row.url,
                 'size': row.size,
                 'added_by': row.added_by,
-                'updated_date': row.updated_date.isoformat() if row.updated_date else None
-            })
+                'updated_date': row.updated_date.isoformat() if row.updated_date else None,
+                'color': row.color or '#3388ff'
+            }
+            print(f"[DEBUG LIST] Resource {row.resource_id[:8]}... has color: {row.color}")
+            resources.append(resource_dict)
 
         return jsonify({
             'success': True,
             'count': len(resources),
-            'spatial_resources': resources
+            'spatial_resources': resources,
+            'DEBUG_FILE_TIMESTAMP': '2025-10-13-13:20:00',
+            'DEBUG_COLOR_FIELD_EXISTS': True
         })
 
     except Exception as e:

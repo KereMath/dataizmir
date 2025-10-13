@@ -733,18 +733,20 @@
     letter-spacing: 0.5px;
   }
 
-  .leaflet-popup-content .popup-content > div {
+  .leaflet-popup-content .popup-content>div {
     border-bottom: 1px solid rgba(226, 232, 240, 0.5);
   }
-.leaflet-container a.leaflet-popup-close-button {
-  width:36px !important;
-}
-  .leaflet-popup-content .popup-content > div:last-child {
+
+  .leaflet-container a.leaflet-popup-close-button {
+    width: 36px !important;
+  }
+
+  .leaflet-popup-content .popup-content>div:last-child {
     border-bottom: none;
     padding-bottom: 0;
   }
 
-  .leaflet-popup-content .popup-content > div:first-child {
+  .leaflet-popup-content .popup-content>div:first-child {
     padding-top: 0;
   }
 
@@ -938,6 +940,7 @@
       opacity: 0;
       transform: translateX(-50%) translateY(-20px);
     }
+
     to {
       opacity: 1;
       transform: translateX(-50%) translateY(0);
@@ -949,6 +952,7 @@
       opacity: 1;
       transform: translateX(-50%) translateY(0);
     }
+
     to {
       opacity: 0;
       transform: translateX(-50%) translateY(-20px);
@@ -1110,6 +1114,227 @@
       font-size: 12px;
     }
   }
+
+  .leaflet-popup-content-wrapper {
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+  }
+
+  .leaflet-popup-content {
+    margin: 12px 14px;
+    /* Leaflet default’tan biraz dar */
+  }
+
+  /* İç scroll istiyorsan max-height ver */
+  .leaflet-popup-content .popup-compact {
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  /* İki kolonlu “tablo” düzeni */
+  .popup-compact .popup-table {
+    width: 100%;
+    display: grid;
+    grid-auto-rows: minmax(18px, auto);
+    grid-row-gap: 8px;
+  }
+
+  .popup-compact .popup-row {
+    display: grid;
+    grid-template-columns: 90px 1fr;
+    /* solda etiket, sağda değer */
+    align-items: start;
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(226, 232, 240, .7);
+  }
+
+  .popup-compact .popup-row:last-child {
+    border-bottom: 0;
+  }
+
+  .popup-compact .popup-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #5b75ea;
+    /* mor-gri arası */
+    letter-spacing: .3px;
+    text-transform: uppercase;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .popup-compact .popup-value {
+    font-size: 13px;
+    color: #1f2937;
+    /* koyu gri */
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  /* Uzun metinler için “Daha fazla / Daha az” */
+  .popup-compact .collapsible {
+    position: relative;
+    max-height: 78px;
+    /* ~3-4 satır */
+    overflow: hidden;
+    transition: max-height .25s ease;
+  }
+
+  .popup-compact .collapsible.expanded {
+    max-height: 600px;
+  }
+
+  .popup-compact .collapsible:not(.expanded)::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 28px;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, .96));
+  }
+
+  .popup-compact .toggle-more {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+    padding: 6px 10px;
+    line-height: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+  }
+
+  .popup-compact .toggle-more:hover {
+    background: #f3f4f6;
+  }
+
+  /* Map Legend */
+  .map-legend {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    max-width: 280px;
+    max-height: 400px;
+    z-index: 1000;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease;
+  }
+
+  .map-legend.collapsed {
+    max-height: 48px;
+    padding: 12px 16px;
+  }
+
+  .legend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .map-legend.collapsed .legend-header {
+    margin-bottom: 0;
+  }
+
+  .legend-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-toggle {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+  }
+
+  .map-legend.collapsed .legend-toggle {
+    transform: rotate(180deg);
+  }
+
+  .legend-content {
+    overflow-y: auto;
+    max-height: 320px;
+  }
+
+  .map-legend.collapsed .legend-content {
+    display: none;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s ease;
+  }
+
+  .legend-item:last-child {
+    border-bottom: none;
+  }
+
+  .legend-item:hover {
+    background: #f8f9fa;
+    padding-left: 4px;
+    margin-left: -4px;
+    border-radius: 6px;
+  }
+
+  .legend-color {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 2px solid white;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+  }
+
+  .legend-name {
+    font-size: 12px;
+    color: #495057;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .legend-empty {
+    text-align: center;
+    padding: 20px 10px;
+    color: #6c757d;
+    font-size: 12px;
+  }
+
+  .legend-empty-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+    opacity: 0.5;
+  }
 </style>
 
 <div class="page-container">
@@ -1191,6 +1416,23 @@
 
     <div id="map"></div>
 
+    <!-- Map Legend -->
+    <div class="map-legend" id="mapLegend">
+      <div class="legend-header" onclick="spatialMapManager.toggleLegend()">
+        <div class="legend-title">
+          <span>🗺️</span>
+          <span>Aktif Katmanlar</span>
+        </div>
+        <button class="legend-toggle">▼</button>
+      </div>
+      <div class="legend-content" id="legendContent">
+        <div class="legend-empty">
+          <div class="legend-empty-icon">📍</div>
+          <div>Henüz aktif katman yok</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Loading spinner -->
     <div class="loading-spinner" id="loadingSpinner">
       <div class="spinner"></div>
@@ -1202,11 +1444,15 @@
   </div>
 
   <!-- Related Data Modal (İlişkili Veriler Popup'ı) -->
-  <div id="relatedDataModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
-    <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; max-width: 800px; max-height: 80vh; width: 90%; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.4); margin: auto; margin-top: 5vh;">
-      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
+  <div id="relatedDataModal"
+    style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 10000; align-items: center; justify-content: center;">
+    <div onclick="event.stopPropagation()"
+      style="background: white; border-radius: 12px; max-width: 800px; max-height: 80vh; width: 90%; display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.4); margin: auto; margin-top: 5vh;">
+      <div
+        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 12px 12px 0 0; display: flex; justify-content: space-between; align-items: center;">
         <h3 style="margin: 0; font-size: 18px;">📊 İlişkili Veri Setleri</h3>
-        <button onclick="spatialMapManager.closeRelatedDataModal()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1;">&times;</button>
+        <button onclick="spatialMapManager.closeRelatedDataModal()"
+          style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; line-height: 1;">&times;</button>
       </div>
       <div id="relatedDataContent" style="padding: 20px; overflow-y: auto; flex: 1;">
         <div style="text-align: center; padding: 40px; color: #6c757d;">
@@ -1912,6 +2158,7 @@
         this.updateStats();
         this.updateEmphasis();
         this.renderSelectedLayersPanel();
+        this.updateLegend(); // Update legend when layer is removed
       }
     }
 
@@ -1941,6 +2188,7 @@
         }
 
         this.updateResourceToggleState(resourceId, true);
+        this.updateLegend(); // Update legend when layer is added
         this.updateStats();
         this.fitMapToActiveLayers();
         this.updateEmphasis();
@@ -2714,58 +2962,59 @@
 
     // Synchronous version that uses cached metadata mappings
     createPopupContentSync(feature, resource) {
-      // Get cached metadata mappings (already loaded)
       const mappingsData = this.metadataMappingsCache?.[resource.resource_id] || {
-        mappings: {},
-        visibilityMode: 'show_all',
-        visibleFields: [],
-        hiddenFields: []
+        mappings: {}, visibilityMode: 'show_all', visibleFields: [], hiddenFields: []
       };
       const { mappings, visibilityMode, visibleFields, hiddenFields } = mappingsData;
 
-      let content = '<div class="popup-content">';
+      // Uzun metin sayılacak etiketler
+      const LONG_FIELDS = new Set(['AÇIKLAMA', 'ACIKLAMA', 'ADRES', 'DESCRIPTION', 'ADDRESS']);
+
+      // Başlık + kompakt tablo kapsayıcı
+      let content = '<div class="popup-content popup-compact">';
       content += `<div class="popup-resource-header">${resource.resource_name}<br><small style="opacity:.8;">${resource.format || 'Bilinmiyor'}</small></div>`;
+      content += `<div class="popup-table">`;
 
       if (feature.properties && typeof feature.properties === 'object') {
         Object.entries(feature.properties).forEach(([k, v]) => {
-          if (v !== null && v !== undefined && v !== '') {
-            // Visibility kontrolü
-            if (visibilityMode === 'show_all') {
-              // "Tüm alanları göster" modu - sadece hiddenFields'de olanları gizle
-              if (hiddenFields && hiddenFields.includes(k)) {
-                return; // Skip hidden fields
-              }
-            } else if (visibilityMode === 'show_selected') {
-              // "Sadece seçilenleri göster" modu - sadece visibleFields'de olanları göster
-              if (!visibleFields || !visibleFields.includes(k)) {
-                return; // Skip non-visible fields
-              }
-            }
+          if (v === null || v === undefined || v === '') return;
 
-            // Eski hidden kontrolü (backward compatibility)
-            const mapping = mappings[k];
-            if (mapping && mapping.hidden) {
-              return; // Skip hidden fields
-            }
-
-            // Get display name (default to original key)
-            const displayName = mapping?.displayName || k;
-
-            // Apply value mapping if exists
-            let displayValue = v;
-            if (mapping?.valueMapping && mapping.valueMapping[v]) {
-              displayValue = mapping.valueMapping[v];
-            }
-
-            content += `<div><strong>${displayName}:</strong> <span>${displayValue}</span></div>`;
+          // Görünürlük kuralları
+          if (visibilityMode === 'show_all') {
+            if (hiddenFields && hiddenFields.includes(k)) return;
+          } else if (visibilityMode === 'show_selected') {
+            if (!visibleFields || !visibleFields.includes(k)) return;
           }
+          const mapping = mappings[k];
+          if (mapping && mapping.hidden) return;
+
+          const displayName = (mapping?.displayName || k);
+          let displayValue = (mapping?.valueMapping && mapping.valueMapping[v]) ? mapping.valueMapping[v] : v;
+
+          // Uzun alanlarda collapsible
+          let valueHtml = String(displayValue);
+          if (LONG_FIELDS.has(displayName.toString().toUpperCase()) && valueHtml.replace(/<[^>]*>/g, '').length > 140) {
+            valueHtml = `
+          <div class="collapsible">${valueHtml}</div>
+          <button type="button" class="toggle-more">Daha fazla</button>
+        `;
+          } else {
+            valueHtml = `${valueHtml}`;
+          }
+
+          content += `
+        <div class="popup-row">
+          <div class="popup-label">${displayName}</div>
+          <div class="popup-value">${valueHtml}</div>
+        </div>`;
         });
       }
 
-      content += `<div style="margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; text-align: center;">
-        <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" target="_blank" style="color:#007bff;text-decoration:none;font-weight:500;">Kaynağı Görüntüle →</a>
-      </div>`;
-      content += '</div>';
+      content += `</div>`; // .popup-table
+      content += `<div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;text-align:center;">
+    <a href="/dataset/${resource.package_name}/resource/${resource.resource_id}" target="_blank" style="color:#007bff;text-decoration:none;font-weight:500;">Kaynağı Görüntüle →</a>
+  </div>`;
+      content += `</div>`; // .popup-content
       return content;
     }
 
@@ -2925,6 +3174,13 @@
     }
 
     getResourceColor(resourceId) {
+      // Check if resource has a saved color in spatialData
+      const resource = this.spatialData.find(r => r.resource_id === resourceId);
+      if (resource && resource.color) {
+        return resource.color;
+      }
+
+      // Fallback: use hash-based color from palette
       const colors = [
         '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57',
         '#FF9FF3', '#54A0FF', '#5F27CD', '#00D2D3', '#10AC84',
@@ -3402,8 +3658,8 @@
 
             <div style="display: flex; flex-direction: column; gap: 12px;">
               ${relationships.map(rel => {
-                const formatClass = this.getFormatClass((rel.related_resource_format || 'other').toLowerCase());
-                return `
+          const formatClass = this.getFormatClass((rel.related_resource_format || 'other').toLowerCase());
+          return `
                   <div style="background: white; border: 2px solid #e9ecef; border-radius: 8px; padding: 12px; transition: all 0.2s;"
                        onmouseover="this.style.borderColor='#667eea'; this.style.background='#f8f9fa';"
                        onmouseout="this.style.borderColor='#e9ecef'; this.style.background='white';">
@@ -3440,7 +3696,7 @@
                     </div>
                   </div>
                 `;
-              }).join('')}
+        }).join('')}
             </div>
           </div>
         `;
@@ -3474,12 +3730,161 @@
       const container = document.getElementById('spatialLayersContainer');
       container.innerHTML = `<div class="error-section">${message}</div>`;
     }
+
+    // ==================== LEGEND METHODS ====================
+
+    toggleLegend() {
+      const legend = document.getElementById('mapLegend');
+      if (legend) {
+        legend.classList.toggle('collapsed');
+      }
+    }
+
+    updateLegend() {
+      const legendContent = document.getElementById('legendContent');
+      if (!legendContent) return;
+
+      const activeResourceIds = Array.from(this.activeResources);
+
+      if (activeResourceIds.length === 0) {
+        legendContent.innerHTML = `
+          <div class="legend-empty">
+            <div class="legend-empty-icon">📍</div>
+            <div>Henüz aktif katman yok</div>
+          </div>
+        `;
+        return;
+      }
+
+      const legendItems = activeResourceIds.map(resourceId => {
+        const resource = this.spatialData.find(r => r.resource_id === resourceId);
+        if (!resource) return '';
+
+        const color = this.getResourceColor(resourceId);
+        const name = resource.resource_name || 'İsimsiz Kaynak';
+
+        return `
+          <div class="legend-item" data-resource-id="${resourceId}" title="${name}">
+            <div class="legend-color" style="background-color: ${color};"></div>
+            <div class="legend-name">${name}</div>
+          </div>
+        `;
+      }).filter(item => item !== '').join('');
+
+      legendContent.innerHTML = legendItems || `
+        <div class="legend-empty">
+          <div class="legend-empty-icon">📍</div>
+          <div>Katman bilgisi yüklenemedi</div>
+        </div>
+      `;
+    }
   }
 
   let spatialMapManager;
   document.addEventListener('DOMContentLoaded', () => {
     spatialMapManager = new SpatialMapManager();
   });
+  // "AÇIKLAMA" değerini DOM'dan bulup collapsible yap (etiket <b>/<strong>/span ile yazılsa bile)
+  const DESC_LABELS = ['AÇIKLAMA', 'ACIKLAMA', 'DESCRIPTION'];
+
+  function enhanceDescriptionArea(containerEl) {
+    if (!containerEl) return;
+
+    // 1) Etiketi taşıyan node'u bul (kalın/etiketli yazılmış olabilir)
+    const nodes = containerEl.querySelectorAll('*');
+    let labelEl = null;
+    for (const el of nodes) {
+      const t = (el.innerText || '').trim().replace(/:$/, '').toUpperCase();
+      if (DESC_LABELS.includes(t)) { labelEl = el; break; }
+    }
+    if (!labelEl) return; // açıklama etiketini bulamadı
+
+    // 2) Değerin bulunduğu öğeyi yakala
+    //    - yaygın durumda "etiket" ile "değer" yan yana (aynı satır) veya bir sonraki kardeş blokta duruyor.
+    //    - önce aynı satırdaki etiketten ":" sonrası metni yakalamayı dene:
+    let valueEl = null;
+
+    // a) Aynı parent içinde, labelEl'den sonra gelen ilk "değer" benzeri kardeş
+    const siblings = Array.from(labelEl.parentElement ? labelEl.parentElement.childNodes : []);
+    const idx = siblings.indexOf(labelEl);
+    if (idx > -1) {
+      // label'dan sonra gelen node'larda metin/HTML arayan basit tarama
+      for (let i = idx + 1; i < siblings.length; i++) {
+        const n = siblings[i];
+        const text = (n.textContent || '').trim();
+        // boş olmayan ve ":" değilse değer kabul et
+        if (text && !DESC_LABELS.includes(text.replace(/:$/, '').toUpperCase())) {
+          // metin düğümü ise sarmalamak için bir span yarat
+          if (n.nodeType === Node.TEXT_NODE) {
+            const span = document.createElement('span');
+            span.innerHTML = n.textContent;
+            n.replaceWith(span);
+            valueEl = span;
+          } else if (n.nodeType === Node.ELEMENT_NODE) {
+            valueEl = n;
+          }
+          break;
+        }
+      }
+    }
+
+    // b) Bulunamadıysa: labelEl'in en yakın "sonraki kardeş element"ini değer kabul et
+    if (!valueEl) {
+      let el = labelEl;
+      while (el && !valueEl) {
+        el = el.nextElementSibling;
+        if (el && (el.innerText || '').trim()) valueEl = el;
+      }
+    }
+
+    if (!valueEl) return;
+
+    // 3) Zaten collapsible yapılmış mı?
+    if (valueEl.closest('.collapsible')) return;
+
+    // 4) Değeri collapsible sar
+    const originalHTML = valueEl.innerHTML;
+    const wrapper = document.createElement('div');
+    wrapper.className = 'collapsible';
+    wrapper.innerHTML = originalHTML;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'toggle-more';
+    btn.textContent = 'Daha fazla';
+
+    // Değer elemanını temizleyip yeni yapıyı yerleştir
+    valueEl.innerHTML = '';
+    valueEl.appendChild(wrapper);
+    valueEl.appendChild(btn);
+  }
+
+  // Leaflet popup açıldığında açıklamayı zorla collapsible yap
+  (function hookDescOnly() {
+    const bind = (mapLike) => {
+      if (!mapLike || !mapLike.on) return;
+      mapLike.on('popupopen', (ev) => {
+        const contentEl = ev?.popup?._contentNode || ev?.popup?.getElement()?.querySelector('.leaflet-popup-content');
+        if (!contentEl) return;
+        // Önce bizim tabloya çevrim işlemi çalışsın (eklediysen)
+        // Ardından açıklamayı kesinleştir:
+        enhanceDescriptionArea(contentEl);
+      });
+    };
+
+    if (window.map) bind(window.map);
+    document.addEventListener('DOMContentLoaded', () => window.map && bind(window.map));
+  })();
+   document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-more');
+    if (!btn) return;
+    const box = btn.previousElementSibling;
+    if (!box || !box.classList.contains('collapsible')) return;
+    const expanded = box.classList.toggle('expanded');
+    btn.textContent = expanded ? 'Daha az' : 'Daha fazla';
+  });
+
+ 
 </script>
 
 {% endblock %}

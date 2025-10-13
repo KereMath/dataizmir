@@ -930,12 +930,12 @@
     z-index: 2000;
     backdrop-filter: blur(4px);
     animation: fadeIn 0.3s ease;
+    align-items: center;
+    justify-content: center;
   }
 
   .map-modal-overlay.active {
     display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   @keyframes fadeIn {
@@ -965,6 +965,11 @@
       transform: translateY(0);
       opacity: 1;
     }
+  }
+
+  /* Legend Modal - Wider */
+  .map-modal-legend {
+    max-width: 900px;
   }
 
   .map-modal-header {
@@ -1623,7 +1628,7 @@
 
 <!-- Legend Settings Modal -->
 <div class="map-modal-overlay" id="legendModalOverlay" onclick="spatialManager.closeLegendModal(event)">
-  <div class="map-modal" onclick="event.stopPropagation()" style="max-width: 900px;">
+  <div class="map-modal map-modal-legend" onclick="event.stopPropagation()">
     <div class="map-modal-header">
       <h2 class="map-modal-title">📊 Lejant Ayarları</h2>
       <button class="map-modal-close" onclick="spatialManager.closeLegendModal()">&times;</button>

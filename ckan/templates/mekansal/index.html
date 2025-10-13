@@ -3899,8 +3899,11 @@ class SpatialResourceManager {
         return;
       }
 
+      // Filter only spatial resources (is_spatial = true)
+      const spatialResources = data.resources.filter(resource => resource.is_spatial === true);
+
       // Populate dropdown
-      const options = data.resources.map(resource => {
+      const options = spatialResources.map(resource => {
         const packageName = resource.package_title || resource.package_name;
         const resourceName = resource.resource_name || 'İsimsiz Kaynak';
         return `<option value="${resource.resource_id}">${resourceName} (${packageName})</option>`;
@@ -3908,7 +3911,7 @@ class SpatialResourceManager {
 
       resourceSelect.innerHTML = '<option value="">-- Kaynak Seçin --</option>' + options;
 
-      console.log('📊 Legend resources loaded:', data.resources.length);
+      console.log('📊 Legend resources loaded (spatial only):', spatialResources.length);
 
     } catch (error) {
       console.error('❌ Legend resources load error:', error);

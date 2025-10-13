@@ -3994,11 +3994,11 @@
         const entriesHTML = allResourceLegends.map(resourceLegends => {
           const legendItems = resourceLegends.legends.map(legend => `
             <div style="display: flex; gap: 12px; align-items: center; padding: 8px 0;">
-              <div style="font-size: 11px; font-weight: 600; color: #6c757d; min-width: 80px; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 0;">
+              <div style="font-size: 11px; font-weight: 600; color: #6c757d; flex: 1;">
                 ${resourceLegends.resourceName}
               </div>
               <div class="custom-legend-entry-color" style="background-color: ${legend.color}; width: 32px; height: 32px; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); flex-shrink: 0;"></div>
-              <div style="font-size: 13px; color: #495057; font-weight: 500; flex: 1;">
+              <div style="font-size: 13px; color: #495057; font-weight: 500; flex: 2;">
                 ${legend.description}
               </div>
             </div>

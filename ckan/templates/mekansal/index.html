@@ -1344,6 +1344,12 @@
   🎨
 </button>
 
+<!-- Floating Legend Settings Button -->
+<button class="floating-map-btn" id="legendFloatingBtn" onclick="spatialManager.openLegendModal()"
+        title="Lejant Ayarları" style="bottom: 350px;">
+  📊
+</button>
+
 <!-- Map Modal -->
 <div class="map-modal-overlay" id="mapModalOverlay" onclick="spatialManager.closeMapModal(event)">
   <div class="map-modal" onclick="event.stopPropagation()">
@@ -1610,6 +1616,89 @@
           <div style="font-size: 48px; margin-bottom: 16px;">⏳</div>
           <p>Yükleniyor...</p>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Legend Settings Modal -->
+<div class="map-modal-overlay" id="legendModalOverlay" onclick="spatialManager.closeLegendModal(event)">
+  <div class="map-modal" onclick="event.stopPropagation()" style="max-width: 900px;">
+    <div class="map-modal-header">
+      <h2 class="map-modal-title">📊 Lejant Ayarları</h2>
+      <button class="map-modal-close" onclick="spatialManager.closeLegendModal()">&times;</button>
+    </div>
+    <div class="map-modal-body" style="max-height: calc(80vh - 80px);">
+      <!-- Info Banner -->
+      <div style="background: linear-gradient(135deg, #e8f5e9 0%, #fff3e0 100%); border-left: 4px solid #4caf50; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px;">
+        <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px;">
+          💡 Nasıl Çalışır?
+        </div>
+        <div style="font-size: 12px; color: #6c757d; line-height: 1.5;">
+          Her mekansal kaynak için özel lejant girişleri oluşturun. Lejantlar, anasayfa haritasında aktif resource için sol altta gösterilecektir.
+        </div>
+      </div>
+
+      <!-- Resource Selector -->
+      <div style="background: #f8f9fa; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+        <label style="display: block; font-weight: 600; color: #495057; margin-bottom: 8px; font-size: 14px;">
+          📦 Mekansal Kaynak Seçin
+        </label>
+        <select id="legendResourceSelect"
+                style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;"
+                onchange="spatialManager.loadResourceLegends(this.value)">
+          <option value="">-- Kaynak Seçin --</option>
+        </select>
+      </div>
+
+      <!-- Legend Entries Container -->
+      <div id="legendEntriesContainer" style="display: none;">
+        <!-- Add New Legend Entry Form -->
+        <div style="background: linear-gradient(135deg, #f3e5f5 0%, #e1f5fe 100%); border: 2px dashed #9c27b0; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+          <h4 style="margin: 0 0 12px 0; color: #495057; font-size: 15px; font-weight: 600;">
+            ➕ Yeni Lejant Girişi Ekle
+          </h4>
+          <div style="display: grid; grid-template-columns: 120px 1fr auto; gap: 12px; align-items: end;">
+            <div>
+              <label style="display: block; font-size: 12px; font-weight: 500; color: #495057; margin-bottom: 6px;">
+                Renk
+              </label>
+              <input type="color" id="newLegendColor" value="#3388ff"
+                     style="width: 100%; height: 40px; border: 1px solid #ced4da; border-radius: 6px; cursor: pointer;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 12px; font-weight: 500; color: #495057; margin-bottom: 6px;">
+                Açıklama
+              </label>
+              <input type="text" id="newLegendDescription" placeholder="Örn: Ana yollar, Parklar, Binalar..."
+                     style="width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 14px;">
+            </div>
+            <button onclick="spatialManager.addLegendEntry()"
+                    style="padding: 10px 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 14px; white-space: nowrap;">
+              ✓ Ekle
+            </button>
+          </div>
+        </div>
+
+        <!-- Existing Legend Entries List -->
+        <div>
+          <h4 style="margin: 0 0 12px 0; color: #495057; font-size: 15px; font-weight: 600;">
+            📋 Mevcut Lejant Girişleri
+          </h4>
+          <div id="legendEntriesList" style="display: grid; grid-template-columns: 1fr; gap: 10px;">
+            <div style="text-align: center; padding: 40px; color: #6c757d;">
+              <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+              <p>Henüz lejant girişi yok</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State (shown when no resource selected) -->
+      <div id="legendEmptyState" style="text-align: center; padding: 60px 20px; color: #6c757d;">
+        <div style="font-size: 72px; margin-bottom: 16px;">📊</div>
+        <h3 style="margin: 0 0 8px 0; color: #495057;">Lejant Ayarlarını Başlatın</h3>
+        <p style="margin: 0; font-size: 14px;">Yukarıdan bir mekansal kaynak seçerek başlayın</p>
       </div>
     </div>
   </div>
@@ -3767,6 +3856,260 @@ class SpatialResourceManager {
     }).join('');
 
     container.innerHTML = items;
+  }
+
+  // === LEGEND MANAGEMENT METHODS ===
+
+  openLegendModal() {
+    const overlay = document.getElementById('legendModalOverlay');
+    if (overlay) {
+      overlay.style.display = 'flex';
+      this.loadLegendResources();
+    }
+  }
+
+  closeLegendModal(event) {
+    if (event && event.target.classList.contains('map-modal')) return;
+
+    const overlay = document.getElementById('legendModalOverlay');
+    if (overlay) overlay.style.display = 'none';
+
+    // Reset form
+    const resourceSelect = document.getElementById('legendResourceSelect');
+    if (resourceSelect) resourceSelect.value = '';
+
+    const entriesContainer = document.getElementById('legendEntriesContainer');
+    const emptyState = document.getElementById('legendEmptyState');
+    if (entriesContainer) entriesContainer.style.display = 'none';
+    if (emptyState) emptyState.style.display = 'block';
+
+    console.log('📊 Legend modal closed');
+  }
+
+  async loadLegendResources() {
+    const resourceSelect = document.getElementById('legendResourceSelect');
+    if (!resourceSelect) return;
+
+    try {
+      const response = await fetch('/api/spatial-resources');
+      const data = await response.json();
+
+      if (!data.success || !data.resources) {
+        console.error('Failed to load spatial resources');
+        return;
+      }
+
+      // Populate dropdown
+      const options = data.resources.map(resource => {
+        const packageName = resource.package_title || resource.package_name;
+        const resourceName = resource.resource_name || 'İsimsiz Kaynak';
+        return `<option value="${resource.resource_id}">${resourceName} (${packageName})</option>`;
+      }).join('');
+
+      resourceSelect.innerHTML = '<option value="">-- Kaynak Seçin --</option>' + options;
+
+      console.log('📊 Legend resources loaded:', data.resources.length);
+
+    } catch (error) {
+      console.error('❌ Legend resources load error:', error);
+      alert('Hata: Mekansal kaynaklar yüklenemedi');
+    }
+  }
+
+  async loadResourceLegends(resourceId) {
+    const entriesContainer = document.getElementById('legendEntriesContainer');
+    const emptyState = document.getElementById('legendEmptyState');
+
+    if (!resourceId) {
+      if (entriesContainer) entriesContainer.style.display = 'none';
+      if (emptyState) emptyState.style.display = 'block';
+      return;
+    }
+
+    // Show container, hide empty state
+    if (entriesContainer) entriesContainer.style.display = 'block';
+    if (emptyState) emptyState.style.display = 'none';
+
+    this.currentLegendResourceId = resourceId;
+
+    try {
+      const response = await fetch(`/api/spatial-resources/${resourceId}/legends`);
+      const data = await response.json();
+
+      if (!data.success) {
+        console.error('Failed to load legends:', data.error);
+        alert('Hata: Lejantlar yüklenemedi');
+        return;
+      }
+
+      this.renderLegendEntries(data.legends || []);
+
+      console.log(`📊 Loaded ${data.count} legend entries for resource: ${resourceId}`);
+
+    } catch (error) {
+      console.error('❌ Legend load error:', error);
+      alert('Hata: Lejantlar yüklenemedi');
+    }
+  }
+
+  renderLegendEntries(legends) {
+    const container = document.getElementById('legendEntriesList');
+    if (!container) return;
+
+    if (legends.length === 0) {
+      container.innerHTML = `
+        <div style="text-align: center; padding: 40px; color: #6c757d;">
+          <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+          <p>Henüz lejant girişi yok</p>
+        </div>
+      `;
+      return;
+    }
+
+    const items = legends.map(legend => `
+      <div class="rel-resource-card" style="display: flex; align-items: center; gap: 12px; padding: 14px;">
+        <div style="width: 40px; height: 40px; border-radius: 8px; background-color: ${legend.color}; border: 2px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); flex-shrink: 0;"></div>
+        <div style="flex: 1; min-width: 0;">
+          <div style="font-size: 14px; font-weight: 600; color: #495057; margin-bottom: 2px;">
+            ${legend.description}
+          </div>
+          <div style="font-size: 11px; color: #6c757d;">
+            Renk: ${legend.color}
+          </div>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button class="action-btn btn-edit"
+                  onclick="spatialManager.editLegendEntry(${legend.id}, '${legend.color}', '${legend.description.replace(/'/g, "\\'")}')"
+                  title="Düzenle">
+            ✏️
+          </button>
+          <button class="action-btn btn-delete"
+                  onclick="spatialManager.deleteLegendEntry(${legend.id})"
+                  title="Sil">
+            🗑️
+          </button>
+        </div>
+      </div>
+    `).join('');
+
+    container.innerHTML = items;
+  }
+
+  async addLegendEntry() {
+    if (!this.currentLegendResourceId) {
+      alert('⚠️ Lütfen önce bir kaynak seçin');
+      return;
+    }
+
+    const colorInput = document.getElementById('newLegendColor');
+    const descriptionInput = document.getElementById('newLegendDescription');
+
+    const color = colorInput?.value || '#3388ff';
+    const description = descriptionInput?.value?.trim();
+
+    if (!description) {
+      alert('⚠️ Lütfen bir açıklama girin');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/spatial-resources/${this.currentLegendResourceId}/legends`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color, description })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        alert('❌ Hata: ' + (data.error || 'Lejant eklenemedi'));
+        return;
+      }
+
+      // Clear form
+      if (colorInput) colorInput.value = '#3388ff';
+      if (descriptionInput) descriptionInput.value = '';
+
+      // Reload legends
+      await this.loadResourceLegends(this.currentLegendResourceId);
+
+      console.log('✅ Legend entry added:', data.legend_id);
+
+    } catch (error) {
+      console.error('❌ Add legend error:', error);
+      alert('Hata: Lejant eklenemedi');
+    }
+  }
+
+  editLegendEntry(legendId, currentColor, currentDescription) {
+    const newDescription = prompt('Yeni açıklama girin:', currentDescription);
+    if (!newDescription || newDescription.trim() === '') return;
+
+    const newColor = prompt('Yeni renk girin (HEX formatında, örn: #FF0000):', currentColor);
+    if (!newColor || !newColor.match(/^#[0-9A-Fa-f]{6}$/)) {
+      alert('⚠️ Geçersiz renk formatı. #RRGGBB formatında olmalı (örn: #FF0000)');
+      return;
+    }
+
+    this.updateLegendEntry(legendId, newColor, newDescription.trim());
+  }
+
+  async updateLegendEntry(legendId, color, description) {
+    if (!this.currentLegendResourceId) return;
+
+    try {
+      const response = await fetch(`/api/spatial-resources/${this.currentLegendResourceId}/legends/${legendId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color, description })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        alert('❌ Hata: ' + (data.error || 'Lejant güncellenemedi'));
+        return;
+      }
+
+      // Reload legends
+      await this.loadResourceLegends(this.currentLegendResourceId);
+
+      console.log('✅ Legend entry updated:', legendId);
+
+    } catch (error) {
+      console.error('❌ Update legend error:', error);
+      alert('Hata: Lejant güncellenemedi');
+    }
+  }
+
+  async deleteLegendEntry(legendId) {
+    if (!this.currentLegendResourceId) return;
+
+    if (!confirm('Bu lejant girişini silmek istediğinizden emin misiniz?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/spatial-resources/${this.currentLegendResourceId}/legends/${legendId}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        alert('❌ Hata: ' + (data.error || 'Lejant silinemedi'));
+        return;
+      }
+
+      // Reload legends
+      await this.loadResourceLegends(this.currentLegendResourceId);
+
+      console.log('✅ Legend entry deleted:', legendId);
+
+    } catch (error) {
+      console.error('❌ Delete legend error:', error);
+      alert('Hata: Lejant silinemedi');
+    }
   }
 }
 

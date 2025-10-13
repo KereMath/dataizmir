@@ -1916,3 +1916,242 @@ def save_metadata_mappings(resource_id):
         model.Session.rollback()
         print(f"Save metadata mappings error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+# === SPATIAL LEGENDS ENDPOINTS ===
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/legends')
+def get_resource_legends(resource_id):
+    """Get all legend entries for a spatial resource"""
+    try:
+        # Admin kontrolü
+        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        query = text("""
+            SELECT id, resource_id, color, description, order_index,
+                   created_by, created_date, updated_by, updated_date
+            FROM spatial_legends
+            WHERE resource_id = :resource_id
+            ORDER BY order_index ASC, created_date ASC
+        """)
+
+        result = model.Session.execute(query, {'resource_id': resource_id}).fetchall()
+
+        legends = []
+        for row in result:
+            legends.append({
+                'id': row.id,
+                'resource_id': row.resource_id,
+                'color': row.color,
+                'description': row.description,
+                'order_index': row.order_index,
+                'created_by': row.created_by,
+                'created_date': row.created_date.isoformat() if row.created_date else None,
+                'updated_by': row.updated_by,
+                'updated_date': row.updated_date.isoformat() if row.updated_date else None
+            })
+
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'count': len(legends),
+            'legends': legends
+        })
+
+    except Exception as e:
+        print(f"Get legends error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/legends', methods=['POST'])
+def add_legend_entry(resource_id):
+    """Add a new legend entry for a spatial resource"""
+    try:
+        # Admin kontrolü
+        user = toolkit.c.userobj
+        if not user or not authz.is_sysadmin(user.name):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    color = data.get('color')
+    description = data.get('description')
+    order_index = data.get('order_index', 0)
+
+    if not color or not description:
+        return jsonify({'error': 'color ve description gerekli'}), 400
+
+    # Hex color validation
+    if not color.startswith('#') or len(color) != 7:
+        return jsonify({'error': 'Geçersiz renk formatı. #RRGGBB formatında olmalı'}), 400
+
+    try:
+        # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
+        resource_check = model.Session.execute(
+            text("""
+                SELECT r.id, sr.is_spatial
+                FROM resource r
+                LEFT JOIN spatial_resources sr ON r.id = sr.resource_id
+                WHERE r.id = :resource_id AND r.state = 'active'
+            """),
+            {'resource_id': resource_id}
+        ).fetchone()
+
+        if not resource_check:
+            return jsonify({'error': 'Resource not found'}), 404
+
+        if not resource_check.is_spatial:
+            return jsonify({'error': 'Resource is not marked as spatial'}), 400
+
+        # Legend entry'yi oluştur
+        result = model.Session.execute(
+            text("""
+                INSERT INTO spatial_legends
+                (resource_id, color, description, order_index, created_by, updated_by)
+                VALUES (:resource_id, :color, :description, :order_index, :created_by, :updated_by)
+                RETURNING id
+            """),
+            {
+                'resource_id': resource_id,
+                'color': color,
+                'description': description,
+                'order_index': order_index,
+                'created_by': user.name,
+                'updated_by': user.name
+            }
+        )
+
+        legend_id = result.fetchone()[0]
+        model.Session.commit()
+
+        return jsonify({
+            'success': True,
+            'legend_id': legend_id,
+            'resource_id': resource_id,
+            'color': color,
+            'description': description,
+            'order_index': order_index,
+            'created_by': user.name,
+            'message': 'Legend entry created successfully'
+        }), 201
+
+    except Exception as e:
+        model.Session.rollback()
+        print(f"Add legend error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/legends/<int:legend_id>', methods=['PUT'])
+def update_legend_entry(resource_id, legend_id):
+    """Update a legend entry"""
+    try:
+        # Admin kontrolü
+        user = toolkit.c.userobj
+        if not user or not authz.is_sysadmin(user.name):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    data = request.get_json()
+    color = data.get('color')
+    description = data.get('description')
+    order_index = data.get('order_index')
+
+    if not color or not description:
+        return jsonify({'error': 'color ve description gerekli'}), 400
+
+    # Hex color validation
+    if not color.startswith('#') or len(color) != 7:
+        return jsonify({'error': 'Geçersiz renk formatı. #RRGGBB formatında olmalı'}), 400
+
+    try:
+        # Legend entry'nin var olup olmadığını kontrol et
+        existing = model.Session.execute(
+            text("SELECT id FROM spatial_legends WHERE id = :legend_id AND resource_id = :resource_id"),
+            {'legend_id': legend_id, 'resource_id': resource_id}
+        ).fetchone()
+
+        if not existing:
+            return jsonify({'error': 'Legend entry not found'}), 404
+
+        # Güncelle
+        model.Session.execute(
+            text("""
+                UPDATE spatial_legends
+                SET color = :color,
+                    description = :description,
+                    order_index = :order_index,
+                    updated_by = :updated_by,
+                    updated_date = CURRENT_TIMESTAMP
+                WHERE id = :legend_id AND resource_id = :resource_id
+            """),
+            {
+                'legend_id': legend_id,
+                'resource_id': resource_id,
+                'color': color,
+                'description': description,
+                'order_index': order_index if order_index is not None else 0,
+                'updated_by': user.name
+            }
+        )
+
+        model.Session.commit()
+
+        return jsonify({
+            'success': True,
+            'legend_id': legend_id,
+            'resource_id': resource_id,
+            'color': color,
+            'description': description,
+            'updated_by': user.name,
+            'message': 'Legend entry updated successfully'
+        })
+
+    except Exception as e:
+        model.Session.rollback()
+        print(f"Update legend error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@spatial_api.route('/api/spatial-resources/<resource_id>/legends/<int:legend_id>', methods=['DELETE'])
+def delete_legend_entry(resource_id, legend_id):
+    """Delete a legend entry"""
+    try:
+        # Admin kontrolü
+        user = toolkit.c.userobj
+        if not user or not authz.is_sysadmin(user.name):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
+
+    try:
+        # Legend entry'nin var olup olmadığını kontrol et
+        existing = model.Session.execute(
+            text("SELECT id FROM spatial_legends WHERE id = :legend_id AND resource_id = :resource_id"),
+            {'legend_id': legend_id, 'resource_id': resource_id}
+        ).fetchone()
+
+        if not existing:
+            return jsonify({'error': 'Legend entry not found'}), 404
+
+        # Sil
+        model.Session.execute(
+            text("DELETE FROM spatial_legends WHERE id = :legend_id AND resource_id = :resource_id"),
+            {'legend_id': legend_id, 'resource_id': resource_id}
+        )
+
+        model.Session.commit()
+
+        return jsonify({
+            'success': True,
+            'legend_id': legend_id,
+            'resource_id': resource_id,
+            'deleted_by': user.name,
+            'message': 'Legend entry deleted successfully'
+        })
+
+    except Exception as e:
+        model.Session.rollback()
+        print(f"Delete legend error: {str(e)}")
+        return jsonify({'error': str(e)}), 500

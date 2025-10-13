@@ -1335,6 +1335,143 @@
     margin-bottom: 8px;
     opacity: 0.5;
   }
+
+  /* Custom Legend Box (Sol Alt) */
+  .custom-legend-box {
+    position: absolute;
+    bottom: 30px;
+    left: 390px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    max-width: 320px;
+    max-height: 450px;
+    z-index: 999;
+    overflow: hidden;
+    display: none;
+    flex-direction: column;
+    transition: all 0.3s ease;
+  }
+
+  .custom-legend-box.active {
+    display: flex;
+  }
+
+  .custom-legend-box.collapsed {
+    max-height: 52px;
+    padding: 14px 16px;
+  }
+
+  .custom-legend-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .custom-legend-box.collapsed .custom-legend-header {
+    margin-bottom: 0;
+  }
+
+  .custom-legend-header-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .custom-legend-header-toggle {
+    background: none;
+    border: none;
+    font-size: 16px;
+    color: #6c757d;
+    cursor: pointer;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.3s ease;
+  }
+
+  .custom-legend-box.collapsed .custom-legend-header-toggle {
+    transform: rotate(180deg);
+  }
+
+  .custom-legend-resource-name {
+    font-size: 12px;
+    color: #6c757d;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f0f0f0;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .custom-legend-box.collapsed .custom-legend-resource-name,
+  .custom-legend-box.collapsed .custom-legend-entries {
+    display: none;
+  }
+
+  .custom-legend-entries {
+    overflow-y: auto;
+    max-height: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .custom-legend-entry {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px;
+    border-radius: 8px;
+    background: #f8f9fa;
+    transition: all 0.2s ease;
+  }
+
+  .custom-legend-entry:hover {
+    background: #e9ecef;
+    transform: translateX(2px);
+  }
+
+  .custom-legend-entry-color {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 2px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    flex-shrink: 0;
+  }
+
+  .custom-legend-entry-description {
+    font-size: 13px;
+    color: #495057;
+    flex: 1;
+    font-weight: 500;
+    line-height: 1.4;
+  }
+
+  .custom-legend-empty {
+    text-align: center;
+    padding: 30px 10px;
+    color: #6c757d;
+    font-size: 12px;
+  }
+
+  .custom-legend-empty-icon {
+    font-size: 48px;
+    margin-bottom: 10px;
+    opacity: 0.4;
+  }
 </style>
 
 <div class="page-container">
@@ -1429,6 +1566,26 @@
         <div class="legend-empty">
           <div class="legend-empty-icon">📍</div>
           <div>Henüz aktif katman yok</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Legend Box (Sol Alt) -->
+    <div class="custom-legend-box" id="customLegendBox">
+      <div class="custom-legend-header" onclick="spatialMapManager.toggleCustomLegend()">
+        <div class="custom-legend-header-title">
+          <span>📊</span>
+          <span>LEJANT</span>
+        </div>
+        <button class="custom-legend-header-toggle">▼</button>
+      </div>
+      <div class="custom-legend-resource-name" id="customLegendResourceName">
+        <!-- Resource name will be dynamically inserted -->
+      </div>
+      <div class="custom-legend-entries" id="customLegendEntries">
+        <div class="custom-legend-empty">
+          <div class="custom-legend-empty-icon">📝</div>
+          <div>Bu kaynak için lejant bilgisi yok</div>
         </div>
       </div>
     </div>
@@ -2159,6 +2316,7 @@
         this.updateEmphasis();
         this.renderSelectedLayersPanel();
         this.updateLegend(); // Update legend when layer is removed
+        this.updateCustomLegendForActiveResources(); // Update custom legend
       }
     }
 
@@ -2189,6 +2347,7 @@
 
         this.updateResourceToggleState(resourceId, true);
         this.updateLegend(); // Update legend when layer is added
+        this.updateCustomLegendForActiveResources(); // Update custom legend
         this.updateStats();
         this.fitMapToActiveLayers();
         this.updateEmphasis();
@@ -3777,6 +3936,91 @@
           <div>Katman bilgisi yüklenemedi</div>
         </div>
       `;
+    }
+
+    // ==================== CUSTOM LEGEND METHODS ====================
+
+    toggleCustomLegend() {
+      const legendBox = document.getElementById('customLegendBox');
+      if (legendBox) {
+        legendBox.classList.toggle('collapsed');
+      }
+    }
+
+    async loadCustomLegend(resourceId) {
+      const legendBox = document.getElementById('customLegendBox');
+      const resourceNameEl = document.getElementById('customLegendResourceName');
+      const entriesEl = document.getElementById('customLegendEntries');
+
+      if (!legendBox || !resourceNameEl || !entriesEl) return;
+
+      try {
+        // Fetch legend data from API
+        const response = await fetch(`/api/spatial-resources/${resourceId}/legends`);
+        const data = await response.json();
+
+        if (!data.success) {
+          console.log('No custom legends found for resource:', resourceId);
+          legendBox.classList.remove('active');
+          return;
+        }
+
+        const legends = data.legends || [];
+
+        if (legends.length === 0) {
+          console.log('No legend entries for resource:', resourceId);
+          legendBox.classList.remove('active');
+          return;
+        }
+
+        // Get resource info
+        const resource = this.spatialData.find(r => r.resource_id === resourceId);
+        const resourceName = resource ? (resource.resource_name || 'İsimsiz Kaynak') : 'Kaynak';
+
+        // Update resource name
+        resourceNameEl.textContent = `📦 ${resourceName}`;
+
+        // Render legend entries
+        const entriesHTML = legends.map(legend => `
+          <div class="custom-legend-entry">
+            <div class="custom-legend-entry-color" style="background-color: ${legend.color};"></div>
+            <div class="custom-legend-entry-description">${legend.description}</div>
+          </div>
+        `).join('');
+
+        entriesEl.innerHTML = entriesHTML;
+
+        // Show legend box
+        legendBox.classList.add('active');
+        legendBox.classList.remove('collapsed');
+
+        console.log(`✅ Loaded ${legends.length} custom legend entries for resource: ${resourceId}`);
+
+      } catch (error) {
+        console.error('❌ Error loading custom legend:', error);
+        legendBox.classList.remove('active');
+      }
+    }
+
+    hideCustomLegend() {
+      const legendBox = document.getElementById('customLegendBox');
+      if (legendBox) {
+        legendBox.classList.remove('active');
+      }
+    }
+
+    updateCustomLegendForActiveResources() {
+      // Show legend for the first active resource that has legend entries
+      const activeResourceIds = Array.from(this.activeResources);
+
+      if (activeResourceIds.length === 0) {
+        this.hideCustomLegend();
+        return;
+      }
+
+      // Try to load legend for the first active resource
+      // If it doesn't have legends, we'll hide the box (handled in loadCustomLegend)
+      this.loadCustomLegend(activeResourceIds[0]);
     }
   }
 

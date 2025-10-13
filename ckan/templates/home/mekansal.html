@@ -1404,18 +1404,6 @@
     transform: rotate(180deg);
   }
 
-  .custom-legend-resource-name {
-    font-size: 12px;
-    color: #6c757d;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #f0f0f0;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-  }
-
-  .custom-legend-box.collapsed .custom-legend-resource-name,
   .custom-legend-box.collapsed .custom-legend-entries {
     display: none;
   }
@@ -1579,13 +1567,10 @@
         </div>
         <button class="custom-legend-header-toggle">▼</button>
       </div>
-      <div class="custom-legend-resource-name" id="customLegendResourceName">
-        <!-- Resource name will be dynamically inserted -->
-      </div>
       <div class="custom-legend-entries" id="customLegendEntries">
         <div class="custom-legend-empty">
           <div class="custom-legend-empty-icon">📝</div>
-          <div>Bu kaynak için lejant bilgisi yok</div>
+          <div>Aktif kaynaklar için lejant bilgisi yok</div>
         </div>
       </div>
     </div>
@@ -3948,58 +3933,8 @@
     }
 
     async loadCustomLegend(resourceId) {
-      const legendBox = document.getElementById('customLegendBox');
-      const resourceNameEl = document.getElementById('customLegendResourceName');
-      const entriesEl = document.getElementById('customLegendEntries');
-
-      if (!legendBox || !resourceNameEl || !entriesEl) return;
-
-      try {
-        // Fetch legend data from API
-        const response = await fetch(`/api/spatial-resources/${resourceId}/legends`);
-        const data = await response.json();
-
-        if (!data.success) {
-          console.log('No custom legends found for resource:', resourceId);
-          legendBox.classList.remove('active');
-          return;
-        }
-
-        const legends = data.legends || [];
-
-        if (legends.length === 0) {
-          console.log('No legend entries for resource:', resourceId);
-          legendBox.classList.remove('active');
-          return;
-        }
-
-        // Get resource info
-        const resource = this.spatialData.find(r => r.resource_id === resourceId);
-        const resourceName = resource ? (resource.resource_name || 'İsimsiz Kaynak') : 'Kaynak';
-
-        // Update resource name
-        resourceNameEl.textContent = `📦 ${resourceName}`;
-
-        // Render legend entries
-        const entriesHTML = legends.map(legend => `
-          <div class="custom-legend-entry">
-            <div class="custom-legend-entry-color" style="background-color: ${legend.color};"></div>
-            <div class="custom-legend-entry-description">${legend.description}</div>
-          </div>
-        `).join('');
-
-        entriesEl.innerHTML = entriesHTML;
-
-        // Show legend box
-        legendBox.classList.add('active');
-        legendBox.classList.remove('collapsed');
-
-        console.log(`✅ Loaded ${legends.length} custom legend entries for resource: ${resourceId}`);
-
-      } catch (error) {
-        console.error('❌ Error loading custom legend:', error);
-        legendBox.classList.remove('active');
-      }
+      // Deprecated - use loadAllCustomLegends instead
+      await this.loadAllCustomLegends();
     }
 
     hideCustomLegend() {
@@ -4009,8 +3944,12 @@
       }
     }
 
-    updateCustomLegendForActiveResources() {
-      // Show legend for the first active resource that has legend entries
+    async loadAllCustomLegends() {
+      const legendBox = document.getElementById('customLegendBox');
+      const entriesEl = document.getElementById('customLegendEntries');
+
+      if (!legendBox || !entriesEl) return;
+
       const activeResourceIds = Array.from(this.activeResources);
 
       if (activeResourceIds.length === 0) {
@@ -4018,9 +3957,74 @@
         return;
       }
 
-      // Try to load legend for the first active resource
-      // If it doesn't have legends, we'll hide the box (handled in loadCustomLegend)
-      this.loadCustomLegend(activeResourceIds[0]);
+      try {
+        // Fetch legends for all active resources
+        const legendPromises = activeResourceIds.map(async resourceId => {
+          try {
+            const response = await fetch(`/api/spatial-resources/${resourceId}/legends`);
+            const data = await response.json();
+
+            if (!data.success || !data.legends || data.legends.length === 0) {
+              return null;
+            }
+
+            // Get resource info
+            const resource = this.spatialData.find(r => r.resource_id === resourceId);
+            const resourceName = resource ? (resource.resource_name || 'İsimsiz Kaynak') : 'Kaynak';
+
+            return {
+              resourceId,
+              resourceName,
+              legends: data.legends
+            };
+          } catch (error) {
+            console.error(`Error loading legends for ${resourceId}:`, error);
+            return null;
+          }
+        });
+
+        const allResourceLegends = (await Promise.all(legendPromises)).filter(item => item !== null);
+
+        if (allResourceLegends.length === 0) {
+          this.hideCustomLegend();
+          return;
+        }
+
+        // Render all legends grouped by resource
+        const entriesHTML = allResourceLegends.map(resourceLegends => {
+          const legendItems = resourceLegends.legends.map(legend => `
+            <div style="display: grid; grid-template-columns: 1fr 40px 2fr; gap: 12px; align-items: center; padding: 8px 0;">
+              <div style="font-size: 11px; font-weight: 600; color: #6c757d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                ${resourceLegends.resourceName}
+              </div>
+              <div class="custom-legend-entry-color" style="background-color: ${legend.color}; width: 32px; height: 32px; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15);"></div>
+              <div style="font-size: 13px; color: #495057; font-weight: 500;">
+                ${legend.description}
+              </div>
+            </div>
+          `).join('');
+
+          return legendItems;
+        }).join('<div style="border-top: 2px solid #e9ecef; margin: 8px 0;"></div>');
+
+        entriesEl.innerHTML = entriesHTML;
+
+        // Show legend box
+        legendBox.classList.add('active');
+        legendBox.classList.remove('collapsed');
+
+        const totalLegends = allResourceLegends.reduce((sum, r) => sum + r.legends.length, 0);
+        console.log(`✅ Loaded ${totalLegends} legend entries from ${allResourceLegends.length} resources`);
+
+      } catch (error) {
+        console.error('❌ Error loading custom legends:', error);
+        legendBox.classList.remove('active');
+      }
+    }
+
+    async updateCustomLegendForActiveResources() {
+      // Load legends for ALL active resources
+      await this.loadAllCustomLegends();
     }
   }
 

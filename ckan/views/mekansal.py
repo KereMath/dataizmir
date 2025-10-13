@@ -61,6 +61,7 @@ def get_spatial_resources():
                 p.owner_org,
                 COALESCE(sr.is_spatial, false) as is_spatial,
                 COALESCE(sr.show_on_homepage, false) as show_on_homepage,
+                COALESCE(sr.color, '#3388ff') as color,
                 sr.added_by,
                 sr.updated_date
             FROM package p
@@ -93,6 +94,7 @@ def get_spatial_resources():
                 'organization_title': org_title,
                 'is_spatial': bool(row.is_spatial),
                 'show_on_homepage': bool(row.show_on_homepage),
+                'color': row.color or '#3388ff',
                 'added_by': row.added_by,
                 'updated_date': row.updated_date.isoformat() if row.updated_date else None
             })

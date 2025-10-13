@@ -919,6 +919,13 @@ class HomepageMapManager {
     }
 
     getResourceColor(resourceId, index) {
+        // Önce resource'un database'deki kaydedilmiş rengini kontrol et
+        const resource = this.homepageResources.find(r => r.resource_id === resourceId);
+        if (resource && resource.color) {
+            return resource.color;
+        }
+
+        // Fallback: eski color palette sistemi (artık gerek yok ama güvenlik için kalsın)
         if (!this.resourceColors[resourceId]) {
             this.resourceColors[resourceId] = this.colorPalette[index % this.colorPalette.length];
         }

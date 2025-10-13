@@ -389,7 +389,8 @@ def get_homepage_map_resources():
                 r.name as resource_name,
                 r.format,
                 r.url,
-                sr.show_on_homepage
+                sr.show_on_homepage,
+                COALESCE(sr.color, '#3388ff') as color
             FROM resource r
             JOIN spatial_resources sr ON r.id = sr.resource_id
             WHERE r.state = 'active'
@@ -412,7 +413,8 @@ def get_homepage_map_resources():
                 'resource_name': row.resource_name or 'İsimsiz Kaynak',
                 'format': row.format,
                 'url': url,
-                'show_on_homepage': row.show_on_homepage
+                'show_on_homepage': row.show_on_homepage,
+                'color': row.color or '#3388ff'
             })
 
         return jsonify({

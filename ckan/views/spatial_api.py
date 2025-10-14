@@ -1374,12 +1374,7 @@ def convert_to_geojson(df, coord_columns):
 @spatial_api.route('/api/spatial-resources/<resource_id>/relationships')
 def get_resource_relationships(resource_id):
     """Get all related resources for a spatial resource"""
-    try:
-        # Admin kontrolü
-        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
+    # Public endpoint - herkes ilişkili verileri görüntüleyebilir
 
     try:
         # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et

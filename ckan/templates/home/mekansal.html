@@ -1010,8 +1010,6 @@
     }
 
     .filter-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
       gap: 8px;
       margin-bottom: 8px;
     }
@@ -1462,6 +1460,65 @@
     margin-bottom: 10px;
     opacity: 0.4;
   }
+
+  /* Varsayılan: toggle butonu gizli (masaüstü) */
+  .mobile-filter-toggle {
+    display: none;
+  }
+
+  /* Masaüstü görünürlüğü kontrolü için yardımcı sınıf */
+  .desktop-only {
+    display: block;
+  }
+
+  /* Dropdown gövdesi (kapalıyken) */
+  .filters-body {
+    transition: height .25s ease, opacity .2s ease;
+  }
+
+  /* MOBİL: toggle butonu görünür, başlık gizlenir, gövde varsayılan kapalı */
+  @media (max-width: 900px) {
+    .mobile-filter-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px solid #e5e7eb;
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+    }
+
+    .filter-section {
+      /* Açık/kapalı durumunu sınıfla yöneteceğiz */
+    }
+
+    .filter-section .desktop-only {
+      display: none;
+    }
+
+    /* Kapalı durum (default): gövde gizli */
+    .filter-section:not(.open) .filters-body {
+      display: none;
+      opacity: 0;
+    }
+
+    /* Açık durum: gövde açık */
+    .filter-section.open .filters-body {
+      display: block;
+      opacity: 1;
+      margin-top: 8px;
+    }
+
+    /* Küçük ok işareti döndürme */
+    .filter-section.open .mobile-filter-toggle .chev {
+      transform: rotate(180deg);
+    }
+  }
 </style>
 
 <div class="page-container">
@@ -1486,27 +1543,39 @@
       </div>
 
       <!-- Filtreleme alanı -->
-      <div class="filter-section">
-        <div class="filter-label">Filtreler</div>
-        <div class="filter-row">
-          <select class="filter-select" id="organizationFilter">
-            <option value="">Tüm Veri Paydaşları</option>
-          </select>
-        </div>
-        <div class="filter-row">
-          <select class="filter-select" id="formatFilter">
-            <option value="">Tüm Formatlar</option>
-          </select>
-        </div>
-        <div class="filter-row">
-          <select class="filter-select" id="themeFilter">
-            <option value="">Tüm Temalar</option>
-          </select>
-        </div>
-        <div class="filter-row">
-          <select class="filter-select" id="categoryFilter">
-            <option value="">Tüm Kategoriler</option>
-          </select>
+      <div class="filter-section" id="filterSection">
+        <!-- YENİ: Mobil toggle butonu -->
+        <button class="mobile-filter-toggle" id="mobileFilterToggle" type="button" aria-expanded="false"
+          aria-controls="filtersBody">
+          <span>🔎 Filtreler</span>
+          <span class="chev" aria-hidden="true">▼</span>
+        </button>
+
+        <!-- İSTEĞE BAĞLI: Masaüstü başlık (mobilde gizlenecek) -->
+        <div class="filter-label desktop-only">Filtreler</div>
+
+        <!-- YENİ: Filtrelerin gövdesi -->
+        <div class="filters-body" id="filtersBody">
+          <div class="filter-row">
+            <select class="filter-select" id="organizationFilter">
+              <option value="">Tüm Veri Paydaşları</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <select class="filter-select" id="formatFilter">
+              <option value="">Tüm Formatlar</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <select class="filter-select" id="themeFilter">
+              <option value="">Tüm Temalar</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <select class="filter-select" id="categoryFilter">
+              <option value="">Tüm Kategoriler</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -4125,7 +4194,7 @@
     if (window.map) bind(window.map);
     document.addEventListener('DOMContentLoaded', () => window.map && bind(window.map));
   })();
-   document.addEventListener('click', (e) => {
+  document.addEventListener('click', (e) => {
     const btn = e.target.closest('.toggle-more');
     if (!btn) return;
     const box = btn.previousElementSibling;
@@ -4133,8 +4202,37 @@
     const expanded = box.classList.toggle('expanded');
     btn.textContent = expanded ? 'Daha az' : 'Daha fazla';
   });
+  (function () {
+    const section = document.getElementById('filterSection');
+    const btn = document.getElementById('mobileFilterToggle');
+    const mq = window.matchMedia('(max-width: 900px)');
 
- 
+    if (!section || !btn) return;
+
+    function applyInitialState() {
+      // Mobilde başlangıçta kapalı, masaüstünde her zaman açık
+      if (mq.matches) {
+        section.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+      } else {
+        section.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+      }
+    }
+
+    btn.addEventListener('click', () => {
+      const isOpen = section.classList.toggle('open');
+      btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    // Ekran boyutu değişince doğru durumu uygula
+    mq.addEventListener ? mq.addEventListener('change', applyInitialState)
+      : mq.addListener(applyInitialState); // eski tarayıcılar
+
+    // İlk yüklemede durumu ayarla
+    applyInitialState();
+  })();
+
 </script>
 
 {% endblock %}

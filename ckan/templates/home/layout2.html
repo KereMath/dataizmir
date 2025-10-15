@@ -1,633 +1,764 @@
 {# layout2.html – INTRO (video + metin) ➜ popüler ➜ kategoriler #}
 
 <style>
-/* --- Montserrat Font Tanımı --- */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
+    /* --- Montserrat Font Tanımı --- */
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap');
 
-body, html, * {
-    font-family: 'Montserrat', sans-serif !important;
-}
+    body,
+    html,
+    * {
+        font-family: 'Montserrat', sans-serif !important;
+    }
 
-/* ——— VAR OLAN STILLER (popüler & kategori) ——— */
-.pop-main { background:url("../../populer_veri_setleri_zemin.png") center/220% auto no-repeat!important; }
-.catg-main{ background:url("../../kategoriler_zemin.png") center/170% auto no-repeat!important; }
-.card-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr); /* Varsayılan: 5 kolon */
-    grid-auto-rows: auto;
-    gap: 1rem;
-}
+    /* ——— VAR OLAN STILLER (popüler & kategori) ——— */
+    .pop-main {
+        background: url("../../populer_veri_setleri_zemin.png") center/220% auto no-repeat !important;
+    }
 
-/* Büyük ekranlar (1200px altı) → 4 kolon */
-@media (max-width: 1199px) {
+    .catg-main {
+        background: url("../../kategoriler_zemin.png") center/170% auto no-repeat !important;
+    }
+
     .card-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        /* Varsayılan: 5 kolon */
+        grid-auto-rows: auto;
+        gap: 1rem;
+    }
+
+    /* Büyük ekranlar (1200px altı) → 4 kolon */
+    @media (max-width: 1199px) {
+        .card-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+    }
+
+    /* Orta boy ekranlar (992px altı) → 3 kolon */
+    @media (max-width: 991px) {
+        .card-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+
+    /* Küçük ekranlar (768px altı) → 2 kolon */
+    @media (max-width: 767px) {
+        .card-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    /* Çok küçük ekranlar (576px altı) → 1 kolon */
+    @media (max-width: 575px) {
+        .card-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .card-grid-popular {
+        text-align: justify;
+        display: grid;
         grid-template-columns: repeat(4, 1fr);
+        grid-gap: 1rem;
+        grid-auto-flow: dense;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity .5s
     }
-}
 
-/* Orta boy ekranlar (992px altı) → 3 kolon */
-@media (max-width: 991px) {
-    .card-grid {
-        grid-template-columns: repeat(3, 1fr);
+    @media (max-width:767px) {
+        .card-grid-popular {
+            grid-template-columns: repeat(1, 1fr) !important;
+            padding: 10px !important
+        }
     }
-}
 
-/* Küçük ekranlar (768px altı) → 2 kolon */
-@media (max-width: 767px) {
-    .card-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .card-grid-popular .card-grid-item {
+        min-width: 150px;
+        min-height: 200px;
+        border: none;
+        padding: 20px;
+        text-decoration: none;
+        transition: .2s;
+        font: 700 18px/1 Montserrat, sans-serif;
+        background: #fff;
+        border-radius: 20px;
+        color: #0a1458
     }
-}
 
-/* Çok küçük ekranlar (576px altı) → 1 kolon */
-@media (max-width: 575px) {
-    .card-grid {
-        grid-template-columns: 1fr;
+    .card-grid-popular .card-grid-item:hover {
+        color: #fff
     }
-}
 
-.card-grid-popular           { text-align:justify; display:grid; grid-template-columns:repeat(4,1fr); grid-gap:1rem; grid-auto-flow:dense; visibility:hidden; opacity:0; transition:opacity .5s }
-@media (max-width:767px)     { .card-grid-popular{ grid-template-columns:repeat(1,1fr)!important; padding:10px!important } }
-.card-grid-popular .card-grid-item{ min-width:150px; min-height:200px; border:none; padding:20px; text-decoration:none; transition:.2s; font:700 18px/1 Montserrat,sans-serif; background:#fff; border-radius:20px; color:#0a1458 }
-.card-grid-popular .card-grid-item:hover{ color:#fff }
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        width: 100%;
+        grid-column: 1/-1;
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity .5s
+    }
 
-.pagination-container          { display:flex; justify-content:center; align-items:center; margin-top:20px; width:100%; grid-column:1/-1; visibility:hidden; opacity:0; transition:opacity .5s }
-.pagination-nav-button         { width:14px; height:12px; background:transparent; color:#101752; border:none; cursor:pointer; padding:0; margin:0 10px; display:flex; justify-content:center; align-items:center; font-size:14px }
-.pagination-nav-button:disabled{ opacity:.3; cursor:default }
-.pagination-page-indicator     { font:600 16px Montserrat,sans-serif; color:#101752; margin:0 5px }
+    .pagination-nav-button {
+        width: 14px;
+        height: 12px;
+        background: transparent;
+        color: #101752;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        margin: 0 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 14px
+    }
 
-.veri-sets-ust-baslik          { font:600 18px Montserrat,sans-serif; color:black; margin-bottom:10px }
-.veri-sets-alt-baslik          { font:700 44px/54px Montserrat,sans-serif; color:black; margin-bottom:20px }
-.veri-sets-alt-baslik1         { font:700 44px/54px Montserrat,sans-serif; color:black; margin-bottom:20px }
+    .pagination-nav-button:disabled {
+        opacity: .3;
+        cursor: default
+    }
+
+    .pagination-page-indicator {
+        font: 600 16px Montserrat, sans-serif;
+        color: #101752;
+        margin: 0 5px
+    }
+
+    .veri-sets-ust-baslik {
+        font: 600 18px Montserrat, sans-serif;
+        color: black;
+        margin-bottom: 10px
+    }
+
+    .veri-sets-alt-baslik {
+        font: 700 44px/54px Montserrat, sans-serif;
+        color: black;
+        margin-bottom: 20px
+    }
+
+    .veri-sets-alt-baslik1 {
+        font: 700 44px/54px Montserrat, sans-serif;
+        color: black;
+        margin-bottom: 20px
+    }
 
 
-/* ——— INTRO BÖLÜMÜ ——— */
-.intro-main                    { background:#EEF1F6; }
-.intro-row                     { display:flex; flex-wrap:wrap; justify-content:center; padding:40px 0 }
-.intro-video-col               { flex:0 0 50%; max-width:50%; padding:20px 50px }
-.intro-text-col                { flex:1 1 50%;  padding:0 }
-@media (max-width:991px){
-  .intro-video-col, .intro-text-col{ flex:0 0 90%; max-width:90%; padding:20px }
-}
-.intro-video-col iframe{
-  width:100%; height:268px; max-width:448px;
-  border-radius:8px;
-  box-shadow:0 24px 48px 0 #00000052;
-  transition:box-shadow .3s ease, transform .3s ease;
-}
-.intro-video-col iframe:hover{
-  transform:translateY(-4px);
-  box-shadow:0 32px 64px 0 #00000052;
-}
+    /* ——— INTRO BÖLÜMÜ ——— */
+    .intro-main {
+        background: #EEF1F6;
+    }
 
-/* ——— ANASAYFA TEMA KARTLARI (YENİ EKLENEN) ——— */
-.anasayfa-theme-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center; /* Kartları ortala */
-    gap: 20px; /* Kartlar arası boşluk */
-    padding: 20px 0;
-}
+    .intro-row {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 40px 0
+    }
 
-.anasayfa-theme-card {
-    flex: 1 1 calc(33.333% - 40px); /* Her satırda 3 kart (gap dahil) */
-    max-width: 350px;
-    color: white;
-    border-radius: 16px;
-    padding: 20px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    display: flex;
-    flex-direction: column;
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-    text-decoration: none !important; /* Link olduğu için alt çizgiyi kaldır */
-}
+    .intro-video-col {
+        flex: 0 0 50%;
+        max-width: 50%;
+        padding: 20px 50px
+    }
 
-@media (max-width: 991px) {
+    .intro-text-col {
+        flex: 1 1 50%;
+        padding: 0
+    }
+
+    @media (max-width:991px) {
+
+        .intro-video-col,
+        .intro-text-col {
+            flex: 0 0 90%;
+            max-width: 90%;
+            padding: 20px
+        }
+    }
+
+    .intro-video-col iframe {
+        width: 100%;
+        height: 268px;
+        max-width: 448px;
+        border-radius: 8px;
+        box-shadow: 0 24px 48px 0 #00000052;
+        transition: box-shadow .3s ease, transform .3s ease;
+    }
+
+    .intro-video-col iframe:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 32px 64px 0 #00000052;
+    }
+
+    /* ——— ANASAYFA TEMA KARTLARI (YENİ EKLENEN) ——— */
+    .anasayfa-theme-grid {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        /* Kartları ortala */
+        gap: 20px;
+        /* Kartlar arası boşluk */
+        padding: 20px 0;
+    }
+
     .anasayfa-theme-card {
-        flex: 1 1 calc(50% - 40px); /* Tabletlerde 2 kart */
+        flex: 1 1 calc(33.333% - 40px);
+        /* Her satırda 3 kart (gap dahil) */
+        max-width: 350px;
+        color: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        text-decoration: none !important;
+        /* Link olduğu için alt çizgiyi kaldır */
     }
-}
 
-@media (max-width: 767px) {
-    .anasayfa-theme-card {
-        flex: 1 1 90%; /* Mobil cihazlarda tek kart */
-        max-width: unset; /* Mobil cihazlarda tam genişlik */
+    @media (max-width: 991px) {
+        .anasayfa-theme-card {
+            flex: 1 1 calc(50% - 40px);
+            /* Tabletlerde 2 kart */
+        }
     }
-}
 
-.anasayfa-theme-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-}
+    @media (max-width: 767px) {
+        .anasayfa-theme-card {
+            flex: 1 1 90%;
+            /* Mobil cihazlarda tek kart */
+            max-width: unset;
+            /* Mobil cihazlarda tam genişlik */
+        }
+    }
 
-.anasayfa-theme-card .card-header .title {
-    font-size: 18px !important; /* Font büyüklüğünü artır */
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    margin: 0 0 10px 0;
-    display: flex;
-    align-items: center;
-}
-.anasayfa-theme-card .card-header .title .fa {
-    margin-right: 10px;
-    font-size: 24px; /* İkonu biraz büyüt */
-}
+    .anasayfa-theme-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    }
 
-.anasayfa-theme-card .card-body .description {
-    font-size: 14px !important;
-    margin: 0;
-    min-height: 40px; /* Açıklama alanı için minimum yükseklik */
-    line-height: 1.5;
-}
+    .anasayfa-theme-card .card-header .title {
+        font-size: 18px !important;
+        /* Font büyüklüğünü artır */
+        font-weight: 700 !important;
+        text-transform: uppercase;
+        margin: 0 0 10px 0;
+        display: flex;
+        align-items: center;
+    }
 
-.anasayfa-theme-card .card-body .meta-info {
-    font-size: 12px !important;
-    opacity: 0.8;
-    margin-top: 10px;
-}
+    .anasayfa-theme-card .card-header .title .fa {
+        margin-right: 10px;
+        font-size: 24px;
+        /* İkonu biraz büyüt */
+    }
 
-.anasayfa-theme-card .card-stats {
-    display: flex;
-    justify-content: flex-start;
-    gap: 30px;
-    margin: 20px 0;
-    padding-top: 20px;
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-}
+    .anasayfa-theme-card .card-body .description {
+        font-size: 14px !important;
+        margin: 0;
+        min-height: 40px;
+        /* Açıklama alanı için minimum yükseklik */
+        line-height: 1.5;
+    }
 
-.anasayfa-theme-card .stat-item .number {
-    font-size: 28px !important;
-    font-weight: 700 !important;
-    display: block;
-}
+    .anasayfa-theme-card .card-body .meta-info {
+        font-size: 12px !important;
+        opacity: 0.8;
+        margin-top: 10px;
+    }
 
-.anasayfa-theme-card .stat-item .label {
-    font-size: 14px !important;
-    opacity: 0.8;
-}
+    .anasayfa-theme-card .card-stats {
+        display: flex;
+        justify-content: flex-start;
+        gap: 30px;
+        margin: 20px 0;
+        padding-top: 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
 
-.anasayfa-theme-card .card-footer {
-    margin-top: auto;
-}
+    .anasayfa-theme-card .stat-item .number {
+        font-size: 28px !important;
+        font-weight: 700 !important;
+        display: block;
+    }
 
-.anasayfa-theme-card .btn-details {
-    display: block;
-    width: 100%;
-    text-align: center;
-    background-color: rgba(255, 255, 255, 0.9);
-    color: #333;
-    padding: 12px;
-    border-radius: 10px;
-    text-decoration: none;
-    font-weight: 600 !important;
-    transition: background-color 0.2s;
-}
+    .anasayfa-theme-card .stat-item .label {
+        font-size: 14px !important;
+        opacity: 0.8;
+    }
 
-.anasayfa-theme-card .btn-details:hover {
-    background-color: white;
-    color: #000;
-}
+    .anasayfa-theme-card .card-footer {
+        margin-top: auto;
+    }
 
-/* ——— YENİ PAYDAŞ SLIDER STİLLERİ ——— */
-.paydas-section {
-    background-color: transparent;
-    padding: 40px 0 60px 0;
-}
+    .anasayfa-theme-card .btn-details {
+        display: block;
+        width: 100%;
+        text-align: center;
+        background-color: rgba(255, 255, 255, 0.9);
+        color: #333;
+        padding: 12px;
+        border-radius: 10px;
+        text-decoration: none;
+        font-weight: 600 !important;
+        transition: background-color 0.2s;
+    }
 
-.paydas-slider-container {
-    position: relative;
-    max-width: 100%;
-    margin: 0 auto;
-    padding: 20px 0;
-}
+    .anasayfa-theme-card .btn-details:hover {
+        background-color: white;
+        color: #000;
+    }
 
-.paydas-slider-wrapper {
-    position: relative;
-    overflow: hidden;
-    margin: 0 60px; /* Ok butonları için alan */
-    max-width: 1160px;
-}
+    /* ——— YENİ PAYDAŞ SLIDER STİLLERİ ——— */
+    .paydas-section {
+        background-color: transparent;
+        padding: 40px 0 60px 0;
+    }
 
-.paydas-slider-mask {
-    overflow: hidden;
-    border-radius: 12px;
-}
+    .paydas-slider-container {
+        position: relative;
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 20px 0;
+    }
 
-.paydas-slider-track {
-    display: flex;
-    transition: transform 0.3s ease-in-out;
-    will-change: transform;
-}
-
-.paydas-slide {
-    width: 200px;
-    height: 160px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: white;
-    margin: 20px 10px;
-    border-radius: 10px;
-    border: 0.2px solid #000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    text-decoration: none;
-    flex-shrink: 0;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-
-.paydas-slide:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-}
-
-.paydas-slide img {
-    max-width: 220px;
-    max-height: 100px;
-    object-fit: contain;
-    filter: grayscale(0.3);
-    transition: filter 0.3s ease;
-    pointer-events: none;
-}
-
-.paydas-slide:hover img {
-    filter: grayscale(0);
-}
-
-/* Ok butonları */
-.paydas-nav-button {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    background: white;
-    border: 2px solid #4f7cc1;
-    color: #4f7cc1;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 20px;
-    transition: all 0.3s ease;
-    z-index: 2;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.paydas-nav-button:hover {
-    background: #4f7cc1;
-    color: white;
-    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
-}
-
-.paydas-nav-button.prev {
-    left: -60px;
-}
-
-.paydas-nav-button.next {
-    right: -60px;
-}
-
-.paydas-nav-button:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
-
-.paydas-nav-button:disabled:hover {
-    background: white;
-    color: #4f7cc1;
-}
-
-/* Responsive düzenlemeler */
-@media (max-width: 1200px) {
     .paydas-slider-wrapper {
-        margin: 0 40px;
+        position: relative;
+        overflow: hidden;
+        margin: 0 60px;
+        /* Ok butonları için alan */
+        max-width: 1160px;
     }
-    
-    .paydas-nav-button.prev {
-        left: -40px;
-    }
-    
-    .paydas-nav-button.next {
-        right: -40px;
-    }
-}
 
-@media (max-width: 1024px) {
-    .paydas-slide {
-        width: 240px;
-        height: 140px;
-        margin: 15px 8px;
+    .paydas-slider-mask {
+        overflow: hidden;
+        border-radius: 12px;
     }
-    
-    .paydas-slide img {
-        max-width: 180px;
-        max-height: 90px;
-    }
-}
 
-@media (max-width: 768px) {
-    .paydas-slider-wrapper {
-        margin: 0 30px;
+    .paydas-slider-track {
+        display: flex;
+        transition: transform 0.3s ease-in-out;
+        will-change: transform;
     }
-    
-    .paydas-nav-button {
-        width: 40px;
-        height: 40px;
-        font-size: 16px;
-    }
-    
-    .paydas-nav-button.prev {
-        left: -30px;
-    }
-    
-    .paydas-nav-button.next {
-        right: -30px;
-    }
-    
+
     .paydas-slide {
         width: 200px;
-        height: 120px;
-        margin: 10px 6px;
+        height: 160px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: white;
+        margin: 20px 10px;
+        border-radius: 10px;
+        border: 0.2px solid #000;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        text-decoration: none;
+        flex-shrink: 0;
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
     }
-    
-    .paydas-slide img {
-        max-width: 150px;
-        max-height: 80px;
-    }
-}
 
-@media (max-width: 550px) {
-    .paydas-slide {
-        width: 160px;
-        height: 100px;
-        margin: 10px 5px;
+    .paydas-slide:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
     }
-    
+
     .paydas-slide img {
-        max-width: 120px;
-        max-height: 60px;
+        max-width: 220px;
+        max-height: 100px;
+        object-fit: contain;
+        filter: grayscale(0.3);
+        transition: filter 0.3s ease;
+        pointer-events: none;
     }
-}
+
+    .paydas-slide:hover img {
+        filter: grayscale(0);
+    }
+
+    /* Ok butonları */
+    .paydas-nav-button {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #4f7cc1;
+        color: #4f7cc1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        transition: all 0.3s ease;
+        z-index: 2;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .paydas-nav-button:hover {
+        background: #4f7cc1;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+    }
+
+    .paydas-nav-button.prev {
+        left: -60px;
+    }
+
+    .paydas-nav-button.next {
+        right: -60px;
+    }
+
+    .paydas-nav-button:disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+    }
+
+    .paydas-nav-button:disabled:hover {
+        background: white;
+        color: #4f7cc1;
+    }
+
+    /* Responsive düzenlemeler */
+    @media (max-width: 1200px) {
+        .paydas-slider-wrapper {
+            margin: 0 40px;
+        }
+
+        .paydas-nav-button.prev {
+            left: -40px;
+        }
+
+        .paydas-nav-button.next {
+            right: -40px;
+        }
+    }
+
+    @media (max-width: 1024px) {
+        .paydas-slide {
+            width: 240px;
+            height: 140px;
+            margin: 15px 8px;
+        }
+
+        .paydas-slide img {
+            max-width: 180px;
+            max-height: 90px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .paydas-slider-wrapper {
+            margin: 0 30px;
+        }
+
+        .paydas-nav-button {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+
+        .paydas-nav-button.prev {
+            left: -30px;
+        }
+
+        .paydas-nav-button.next {
+            right: -30px;
+        }
+
+        .paydas-slide {
+            width: 200px;
+            height: 120px;
+            margin: 10px 6px;
+        }
+
+        .paydas-slide img {
+            max-width: 150px;
+            max-height: 80px;
+        }
+    }
+
+    @media (max-width: 550px) {
+        .paydas-slide {
+            width: 160px;
+            height: 100px;
+            margin: 10px 5px;
+        }
+
+        .paydas-slide img {
+            max-width: 120px;
+            max-height: 60px;
+        }
+    }
 </style>
 
 {# ——— HERO BLOĞU ÇIKARILDI; header artık index.html'de ——— #}
 
 <div role="main" style="background-color: white; padding: 20px 0 40px 0;">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <div style="text-align:center">
-          <h1 class="veri-sets-alt-baslik1">6 Ana Tema Altında İzmir'in Tüm Verileri</h1>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div style="text-align:center">
+                    <h1 class="veri-sets-alt-baslik1">6 Ana Tema Altında İzmir'in Tüm Verileri</h1>
+                </div>
+
+                <div id="homepage-theme-grid" class="anasayfa-theme-grid">
+                </div>
+            </div>
         </div>
-        
-        <div id="homepage-theme-grid" class="anasayfa-theme-grid">
-          </div>
-      </div>
     </div>
-  </div>
 </div>
 
 <div role="main" style="background-color: white; padding: 60px 0;">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <div style="text-align:center; margin-bottom: 40px;">
-          <h1 class="veri-sets-alt-baslik" style="font-size: 44px !important; line-height: 54px !important;">
-            🗺️ Şimdi Mekansal Gösterimimiz de Yayında
-          </h1>
-        </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <div style="text-align:center; margin-bottom: 40px;">
+                    <h1 class="veri-sets-alt-baslik" style="font-size: 44px !important; line-height: 54px !important;">
+                        Verilerin Mekansal Gösterimi Yayında
+                    </h1>
+                </div>
+                <a href="/mekansal" style="text-decoration: none; color: inherit;">
+                    <div id="homepage-map-container" style="width: 100%; height: 600px;">
+                        <div id="homepage-map" style="width: 100%; height: 100%;"></div>
+                    </div>
 
-        <div id="homepage-map-container" style="width: 100%; height: 600px;">
-          <div id="homepage-map" style="width: 100%; height: 100%;"></div>
-        </div>
+                    <div id="homepage-map-loading" style="text-align: center; padding: 40px; display: none;">
+                        <p style="font-size: 18px; color: #6c757d;">⏳ Harita yükleniyor...</p>
+                    </div>
 
-        <div id="homepage-map-loading" style="text-align: center; padding: 40px; display: none;">
-          <p style="font-size: 18px; color: #6c757d;">⏳ Harita yükleniyor...</p>
-        </div>
+                    <div id="homepage-map-error" style="text-align: center; padding: 40px; display: none;">
+                        <p style="font-size: 18px; color: #dc3545;">❌ Harita yüklenirken bir hata oluştu.</p>
+                    </div>
+                </a>
 
-        <div id="homepage-map-error" style="text-align: center; padding: 40px; display: none;">
-          <p style="font-size: 18px; color: #dc3545;">❌ Harita yüklenirken bir hata oluştu.</p>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
 <div role="main" class="catg-main" style="padding-bottom:60px;">
-  <div class="container">
-    <div class="category-header" style="text-align:center;margin-bottom:30px">
-      <h1 style="font:700 44px/54px Montserrat,sans-serif !important;color:black">
-        Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi İnceleyin…
-      </h1>
-    </div>
+    <div class="container">
+        <div class="category-header" style="text-align:center;margin-bottom:30px">
+            <h1 style="font:700 44px/54px Montserrat,sans-serif !important;color:black">
+                Sürekli Güncellenen, Genişleyen Veri Kategorilerimizi İnceleyin…
+            </h1>
+        </div>
 
-    <div class="row row2" style="margin-top:30px">
-      <div class="card-grid">
-        {% snippet 'home/snippets/featured_group.html' %}
-      </div>
+        <div class="row row2" style="margin-top:30px">
+            <div class="card-grid">
+                {% snippet 'home/snippets/featured_group.html' %}
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <div role="main" class="paydas-section" style="background-color:transparent !important;">
-  <div class="container">
-    <div class="row">
-      <div class="col-md-12">
-        <h1 style="color: black; font-weight: 700 !important; font-size: 44px !important; line-height: 54px !important; text-align: center !important; margin-bottom: 40px;">
-          Veri Paydaşlarımız
-        </h1>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1
+                    style="color: black; font-weight: 700 !important; font-size: 44px !important; line-height: 54px !important; text-align: center !important; margin-bottom: 40px;">
+                    Veri Paydaşlarımız
+                </h1>
 
-        <div class="paydas-slider-container">
-          <button class="paydas-nav-button prev" id="paydas-prev-btn">‹</button>
-          <button class="paydas-nav-button next" id="paydas-next-btn">›</button>
-          
-          <div class="paydas-slider-wrapper" id="paydas-slider-wrapper">
-            <div class="paydas-slider-mask">
-              <div class="paydas-slider-track" id="paydas-slider-track">
+                <div class="paydas-slider-container">
+                    <button class="paydas-nav-button prev" id="paydas-prev-btn">‹</button>
+                    <button class="paydas-nav-button next" id="paydas-next-btn">›</button>
+
+                    <div class="paydas-slider-wrapper" id="paydas-slider-wrapper">
+                        <div class="paydas-slider-mask">
+                            <div class="paydas-slider-track" id="paydas-slider-track">
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-          </div>
         </div>
-      </div>
     </div>
-  </div>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded",function(){
-  const itemsPerPage=4,container=document.getElementById("featured-datasets");
-  const allItems=[...container.querySelectorAll(".card-grid-item")];
-  const totalItems=allItems.length,totalPages=Math.max(1,Math.ceil(totalItems/itemsPerPage));
-  const paginationContainer=document.getElementById("pagination-container");
-  let currentPage=1;
+    document.addEventListener("DOMContentLoaded", function () {
+        const itemsPerPage = 4, container = document.getElementById("featured-datasets");
+        const allItems = [...container.querySelectorAll(".card-grid-item")];
+        const totalItems = allItems.length, totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+        const paginationContainer = document.getElementById("pagination-container");
+        let currentPage = 1;
 
-  function resetAll(){allItems.forEach(i=>i.style.display="none")}
-  function showPage(p){
-    resetAll();
-    const s=(p-1)*itemsPerPage,e=Math.min(s+itemsPerPage,totalItems);
-    for(let i=s;i<e;i++) allItems[i].style.display="block";
-    updateControls(p); currentPage=p;
-  }
-  function btn(html,disabled,cb){
-    const b=document.createElement("button");
-    b.className="pagination-nav-button"; b.innerHTML=html; b.disabled=disabled; b.onclick=cb; return b;
-  }
-  function updateControls(p){
-    paginationContainer.innerHTML="";
-    if(totalPages<=1){paginationContainer.style.display="none";return}
-    paginationContainer.style.display="flex";
-    paginationContainer.appendChild(btn("←",p===1,()=>showPage(p-1)));
-    const ind=document.createElement("span");
-    ind.className="pagination-page-indicator"; ind.textContent=`${p}/${totalPages}`; paginationContainer.appendChild(ind);
-    paginationContainer.appendChild(btn("→",p===totalPages,()=>showPage(p+1)));
-  }
-
-  setTimeout(()=>{showPage(1); container.style.visibility=paginationContainer.style.visibility="visible";
-                  container.style.opacity =paginationContainer.style.opacity ="1";},500);
-  window.paginationData={showPage,currentPage,totalPages,totalItems};
-});
-
-// Anasayfa Tematik Verilerimiz için JS - UPDATED WITH OPACITY SUPPORT
-document.addEventListener('DOMContentLoaded', function() {
-    const apiUrl = '/api/3/action/theme_category_list';
-    const homepageThemeGrid = document.getElementById('homepage-theme-grid');
-
-    // FIXED: Yardımcı fonksiyon - Hex renk kodunu RGBA'ya çevirir
-    function hexToRgba(hex, alpha) {
-        let r = 0, g = 0, b = 0;
-        
-        // Hex kontrolü ve temizleme
-        if (!hex || typeof hex !== 'string') {
-            return `rgba(108, 117, 125, ${alpha})`; // Fallback
+        function resetAll() { allItems.forEach(i => i.style.display = "none") }
+        function showPage(p) {
+            resetAll();
+            const s = (p - 1) * itemsPerPage, e = Math.min(s + itemsPerPage, totalItems);
+            for (let i = s; i < e; i++) allItems[i].style.display = "block";
+            updateControls(p); currentPage = p;
         }
-        
-        hex = hex.replace('#', '');
-        
-        // #RGB formatını işle (3 karakter)
-        if (hex.length === 3) {
-            r = parseInt(hex[0] + hex[0], 16);
-            g = parseInt(hex[1] + hex[1], 16);
-            b = parseInt(hex[2] + hex[2], 16);
+        function btn(html, disabled, cb) {
+            const b = document.createElement("button");
+            b.className = "pagination-nav-button"; b.innerHTML = html; b.disabled = disabled; b.onclick = cb; return b;
         }
-        // #RRGGBB formatını işle (6 karakter)
-        else if (hex.length === 6) {
-            r = parseInt(hex.substring(0, 2), 16);
-            g = parseInt(hex.substring(2, 4), 16);
-            b = parseInt(hex.substring(4, 6), 16);
+        function updateControls(p) {
+            paginationContainer.innerHTML = "";
+            if (totalPages <= 1) { paginationContainer.style.display = "none"; return }
+            paginationContainer.style.display = "flex";
+            paginationContainer.appendChild(btn("←", p === 1, () => showPage(p - 1)));
+            const ind = document.createElement("span");
+            ind.className = "pagination-page-indicator"; ind.textContent = `${p}/${totalPages}`; paginationContainer.appendChild(ind);
+            paginationContainer.appendChild(btn("→", p === totalPages, () => showPage(p + 1)));
         }
-        
-        // Geçersiz değerler için fallback
-        if (isNaN(r) || isNaN(g) || isNaN(b)) {
-            console.warn('Invalid hex color:', hex);
-            return `rgba(108, 117, 125, ${alpha})`;
+
+        setTimeout(() => {
+            showPage(1); container.style.visibility = paginationContainer.style.visibility = "visible";
+            container.style.opacity = paginationContainer.style.opacity = "1";
+        }, 500);
+        window.paginationData = { showPage, currentPage, totalPages, totalItems };
+    });
+
+    // Anasayfa Tematik Verilerimiz için JS - UPDATED WITH OPACITY SUPPORT
+    document.addEventListener('DOMContentLoaded', function () {
+        const apiUrl = '/api/3/action/theme_category_list';
+        const homepageThemeGrid = document.getElementById('homepage-theme-grid');
+
+        // FIXED: Yardımcı fonksiyon - Hex renk kodunu RGBA'ya çevirir
+        function hexToRgba(hex, alpha) {
+            let r = 0, g = 0, b = 0;
+
+            // Hex kontrolü ve temizleme
+            if (!hex || typeof hex !== 'string') {
+                return `rgba(108, 117, 125, ${alpha})`; // Fallback
+            }
+
+            hex = hex.replace('#', '');
+
+            // #RGB formatını işle (3 karakter)
+            if (hex.length === 3) {
+                r = parseInt(hex[0] + hex[0], 16);
+                g = parseInt(hex[1] + hex[1], 16);
+                b = parseInt(hex[2] + hex[2], 16);
+            }
+            // #RRGGBB formatını işle (6 karakter)
+            else if (hex.length === 6) {
+                r = parseInt(hex.substring(0, 2), 16);
+                g = parseInt(hex.substring(2, 4), 16);
+                b = parseInt(hex.substring(4, 6), 16);
+            }
+
+            // Geçersiz değerler için fallback
+            if (isNaN(r) || isNaN(g) || isNaN(b)) {
+                console.warn('Invalid hex color:', hex);
+                return `rgba(108, 117, 125, ${alpha})`;
+            }
+
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
-        
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    }
 
-    // Tarih formatlama fonksiyonu (şu an kullanılmıyor ama kalsın)
-    function formatDate(dateString) {
-        if (!dateString) return 'N/A';
-        const options = { day: 'numeric', month: 'short', year: 'numeric' };
-        return new Date(dateString).toLocaleDateString('tr-TR', options);
-    }
+        // Tarih formatlama fonksiyonu (şu an kullanılmıyor ama kalsın)
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const options = { day: 'numeric', month: 'short', year: 'numeric' };
+            return new Date(dateString).toLocaleDateString('tr-TR', options);
+        }
 
-    fetch(apiUrl)
-        .then(response => {
-            if (!response.ok) { throw new Error(`Sunucuya ulaşılamadı. Durum: ${response.status}`); }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                let categories = data.result; 
-                
-                // Tema isimlerine göre istediğimiz sıralamayı tanımlayalım
-                const desiredOrder = [
-                    "Yeşil Veriler",
-                    "Mavi Veriler",
-                    "Turuncu Veriler",
-                    "Genel Görünüm",
-                    "Yatırım ve İş Ortamı Verileri",
-                    "Kent ve Kültür Verileri"
-                ];
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) { throw new Error(`Sunucuya ulaşılamadı. Durum: ${response.status}`); }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    let categories = data.result;
 
-                // Temaları istediğimiz sıraya göre sıralayalım
-                categories.sort((a, b) => {
-                    const indexA = desiredOrder.indexOf(a.name);
-                    const indexB = desiredOrder.indexOf(b.name);
-                    
-                    if (indexA === -1 && indexB === -1) return 0; // İkisi de listede yoksa, mevcut sırayı koru
-                    if (indexA === -1) return 1; // A listede yoksa, B'den sonra gelsin
-                    if (indexB === -1) return -1; // B listede yoksa, A'dan önce gelsin
-                    return indexA - indexB; // Listedeki sıralamaya göre sırala
-                });
+                    // Tema isimlerine göre istediğimiz sıralamayı tanımlayalım
+                    const desiredOrder = [
+                        "Yeşil Veriler",
+                        "Mavi Veriler",
+                        "Turuncu Veriler",
+                        "Genel Görünüm",
+                        "Yatırım ve İş Ortamı Verileri",
+                        "Kent ve Kültür Verileri"
+                    ];
 
-                // İlk 6 temayı alıyoruz (Eğer 6'dan az tema varsa hepsi alınır)
-                categories = categories.slice(0, 6);
+                    // Temaları istediğimiz sıraya göre sıralayalım
+                    categories.sort((a, b) => {
+                        const indexA = desiredOrder.indexOf(a.name);
+                        const indexB = desiredOrder.indexOf(b.name);
 
-                if (categories && categories.length > 0) {
-                    homepageThemeGrid.innerHTML = ''; 
-                    
-                    categories.forEach((category, index) => {
-                        const card = document.createElement('a');
-                        card.href = `/temalar/${category.slug}`;
-                        card.className = 'anasayfa-theme-card';
-                        
-                        // FIXED: Opacity değerini doğru şekilde al
-                        let effectiveOpacity = 1.0; // Varsayılan değer
-                        
-                        if (category.opacity !== undefined && category.opacity !== null) {
-                            effectiveOpacity = parseFloat(category.opacity);
-                            // Geçersiz değerleri kontrol et
-                            if (isNaN(effectiveOpacity) || effectiveOpacity < 0 || effectiveOpacity > 1) {
-                                effectiveOpacity = 1.0;
+                        if (indexA === -1 && indexB === -1) return 0; // İkisi de listede yoksa, mevcut sırayı koru
+                        if (indexA === -1) return 1; // A listede yoksa, B'den sonra gelsin
+                        if (indexB === -1) return -1; // B listede yoksa, A'dan önce gelsin
+                        return indexA - indexB; // Listedeki sıralamaya göre sırala
+                    });
+
+                    // İlk 6 temayı alıyoruz (Eğer 6'dan az tema varsa hepsi alınır)
+                    categories = categories.slice(0, 6);
+
+                    if (categories && categories.length > 0) {
+                        homepageThemeGrid.innerHTML = '';
+
+                        categories.forEach((category, index) => {
+                            const card = document.createElement('a');
+                            card.href = `/temalar/${category.slug}`;
+                            card.className = 'anasayfa-theme-card';
+
+                            // FIXED: Opacity değerini doğru şekilde al
+                            let effectiveOpacity = 1.0; // Varsayılan değer
+
+                            if (category.opacity !== undefined && category.opacity !== null) {
+                                effectiveOpacity = parseFloat(category.opacity);
+                                // Geçersiz değerleri kontrol et
+                                if (isNaN(effectiveOpacity) || effectiveOpacity < 0 || effectiveOpacity > 1) {
+                                    effectiveOpacity = 1.0;
+                                }
                             }
-                        }
-                        
-                        const baseColor = category.color || '#6c757d';
-                        
-                        console.log(`Homepage Tema ${index + 1} (${category.name}):`, {
-                            color: baseColor,
-                            opacity: effectiveOpacity,
-                            background_image: category.background_image
-                        });
 
-                        if (category.background_image) {
-                            // Arka plan görsel varsa - opacity sadece foto için geçerli
-                            const imageUrl = `/uploads/theme_background/${category.background_image}`;
-                            const rgbaOverlay = hexToRgba(baseColor, effectiveOpacity);
-                            
-                            console.log(`  - RGBA overlay (foto üzerinde): ${rgbaOverlay}`);
-                            
-                            // Background image + color overlay (blend mode olmadan)
-                            card.style.background = `linear-gradient(${rgbaOverlay}, ${rgbaOverlay}), url('${imageUrl}')`;
-                            card.style.backgroundSize = 'cover';
-                            card.style.backgroundPosition = 'center';
-                            // Background blend mode kaldırıldı
-                        } else {
-                            // Arka plan görsel yoksa - sadece renk (TAM OPAK, opacity yok sayılır)
-                            const rgbColor = hexToRgba(baseColor, 1.0); // Her zaman 1.0 opacity
-                            console.log(`  - Background color (tam opak): ${rgbColor}`);
-                            card.style.backgroundColor = rgbColor;
-                        }
+                            const baseColor = category.color || '#6c757d';
 
-                        const iconHtml = category.icon ? `<i class="fa fa-${category.icon}"></i>` : '';
+                            console.log(`Homepage Tema ${index + 1} (${category.name}):`, {
+                                color: baseColor,
+                                opacity: effectiveOpacity,
+                                background_image: category.background_image
+                            });
 
-                        let cardBodyHtml = '';
-                        if (category.description) {
-                            cardBodyHtml = `
+                            if (category.background_image) {
+                                // Arka plan görsel varsa - opacity sadece foto için geçerli
+                                const imageUrl = `/uploads/theme_background/${category.background_image}`;
+                                const rgbaOverlay = hexToRgba(baseColor, effectiveOpacity);
+
+                                console.log(`  - RGBA overlay (foto üzerinde): ${rgbaOverlay}`);
+
+                                // Background image + color overlay (blend mode olmadan)
+                                card.style.background = `linear-gradient(${rgbaOverlay}, ${rgbaOverlay}), url('${imageUrl}')`;
+                                card.style.backgroundSize = 'cover';
+                                card.style.backgroundPosition = 'center';
+                                // Background blend mode kaldırıldı
+                            } else {
+                                // Arka plan görsel yoksa - sadece renk (TAM OPAK, opacity yok sayılır)
+                                const rgbColor = hexToRgba(baseColor, 1.0); // Her zaman 1.0 opacity
+                                console.log(`  - Background color (tam opak): ${rgbColor}`);
+                                card.style.backgroundColor = rgbColor;
+                            }
+
+                            const iconHtml = category.icon ? `<i class="fa fa-${category.icon}"></i>` : '';
+
+                            let cardBodyHtml = '';
+                            if (category.description) {
+                                cardBodyHtml = `
                                 <div class="card-body">
                                     <p class="description">${category.description}</p>
                                 </div>
                             `;
-                        }
+                            }
 
-                        card.innerHTML = `
+                            card.innerHTML = `
                             <div class="card-header">
                                 <h3 class="title">${iconHtml} ${category.name}</h3>
                             </div>
@@ -642,128 +773,129 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <span class="btn-details">Detaylı İncele</span>
                             </div>
                         `;
-                        
-                        homepageThemeGrid.appendChild(card);
-                    });
-                } else {
-                    homepageThemeGrid.innerHTML = '<p style="text-align:center; color: #555;">Gösterilecek tema bulunamadı.</p>';
-                }
-            } else {
-                homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Bir hata oluştu: ${data.error ? data.error.message : 'API bilinmeyen bir hata döndürdü.'}</p>`;
-            }
-        })
-        .catch(error => {
-            console.error('Hata:', error);
-            homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Temalar yüklenirken bir hata oluştu: ${error.message}</p>`;
-        });
-});
 
-// Yeni Paydaş Slider JavaScript - Circular carousel
-const paydas_slider = {
-    currentIndex: 0,
-    organizations: [],
-    autoSlideInterval: null,
-    isDragging: false,
-    startX: 0,
-    currentX: 0,
-    translateX: 0,
-    visibleCount: 4,
-    slideWidth: 300,
-    
-    init: function() {
-        this.loadOrganizations();
-        this.setupEventListeners();
-        this.calculateDimensions();
-        window.addEventListener('resize', () => {
+                            homepageThemeGrid.appendChild(card);
+                        });
+                    } else {
+                        homepageThemeGrid.innerHTML = '<p style="text-align:center; color: #555;">Gösterilecek tema bulunamadı.</p>';
+                    }
+                } else {
+                    homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Bir hata oluştu: ${data.error ? data.error.message : 'API bilinmeyen bir hata döndürdü.'}</p>`;
+                }
+            })
+            .catch(error => {
+                console.error('Hata:', error);
+                homepageThemeGrid.innerHTML = `<p style="text-align:center; color: #d9534f;">Temalar yüklenirken bir hata oluştu: ${error.message}</p>`;
+            });
+    });
+
+    // Yeni Paydaş Slider JavaScript - Circular carousel
+    const paydas_slider = {
+        currentIndex: 0,
+        organizations: [],
+        autoSlideInterval: null,
+        isDragging: false,
+        startX: 0,
+        currentX: 0,
+        translateX: 0,
+        visibleCount: 4,
+        slideWidth: 300,
+
+        init: function () {
+            this.loadOrganizations();
+            this.setupEventListeners();
             this.calculateDimensions();
-            this.updateSlidePosition(false);
-        });
+            window.addEventListener('resize', () => {
+                this.calculateDimensions();
+                this.updateSlidePosition(false);
+            });
+        },
+
+        calculateDimensions: function () {
+            const wrapper = document.getElementById('paydas-slider-wrapper');
+            const wrapperWidth = wrapper ? wrapper.offsetWidth : window.innerWidth - 120;
+
+            if (wrapperWidth < 480) {
+                this.visibleCount = 2;
+                this.slideWidth = 170;
+            } else if (wrapperWidth < 768) {
+                this.visibleCount = 3;
+                this.slideWidth = 212;
+            } else if (wrapperWidth < 1024) {
+                this.visibleCount = 3;
+                this.slideWidth = 256;
+            } else {
+                this.visibleCount = 4;
+                this.slideWidth = 300;
+            }
+        },
+
+        loadOrganizations: function () {
+            const allOrganizations = {{ h.organizations_available('read', True) | tojson | safe
+    }};
+    this.organizations = allOrganizations.sort((a, b) => (b.package_count || 0) - (a.package_count || 0));
+
+    this.renderSlides();
+    this.updateSlidePosition(false);
+    this.setupAutoSlide();
     },
-    
-    calculateDimensions: function() {
-        const wrapper = document.getElementById('paydas-slider-wrapper');
-        const wrapperWidth = wrapper ? wrapper.offsetWidth : window.innerWidth - 120;
-        
-        if (wrapperWidth < 480) {
-            this.visibleCount = 2;
-            this.slideWidth = 170;
-        } else if (wrapperWidth < 768) {
-            this.visibleCount = 3;
-            this.slideWidth = 212;
-        } else if (wrapperWidth < 1024) {
-            this.visibleCount = 3;
-            this.slideWidth = 256;
-        } else {
-            this.visibleCount = 4;
-            this.slideWidth = 300;
-        }
-    },
-    
-    loadOrganizations: function() {
-        const allOrganizations = {{ h.organizations_available('read', True)|tojson|safe }};
-        this.organizations = allOrganizations.sort((a, b) => (b.package_count || 0) - (a.package_count || 0));
-        
-        this.renderSlides();
-        this.updateSlidePosition(false);
-        this.setupAutoSlide();
-    },
-    
+
     renderSlides: function() {
         const track = document.getElementById('paydas-slider-track');
         track.innerHTML = '';
-        
+
         // Circular için organizasyonları üç kere kopyala
         const repeatedOrgs = [...this.organizations, ...this.organizations, ...this.organizations];
-        
+
         repeatedOrgs.forEach((org, index) => {
             const slide = document.createElement('a');
             slide.href = `/organization/${org.name}`;
             slide.className = 'paydas-slide';
             slide.title = org.display_name;
-            
+
             const imgSrc = org.image_display_url || '/base/images/placeholder-organization.png';
             slide.innerHTML = `
                 <img src="${imgSrc}" 
                      alt="${org.display_name}" 
                      onerror="this.src='/base/images/placeholder-organization.png'">
             `;
-            
+
             track.appendChild(slide);
         });
-        
+
         // Başlangıç pozisyonunu ortaya ayarla
         this.currentIndex = this.organizations.length;
     },
-    
+
     updateSlidePosition: function(animate = true) {
         const track = document.getElementById('paydas-slider-track');
-        
+
         this.translateX = -(this.currentIndex * this.slideWidth);
-        
+
         if (animate) {
             track.style.transition = 'transform 0.3s ease-in-out';
         } else {
             track.style.transition = 'none';
         }
-        
+
         track.style.transform = `translateX(${this.translateX}px)`;
         this.checkInfiniteLoop();
     },
-    
+
     next: function() {
         this.currentIndex++;
         this.updateSlidePosition();
     },
-    
+
     prev: function() {
         this.currentIndex--;
         this.updateSlidePosition();
     },
-    
+
     checkInfiniteLoop: function() {
         setTimeout(() => {
             const track = document.getElementById('paydas-slider-track');
-            
+
             if (this.currentIndex <= 0) {
                 track.style.transition = 'none';
                 this.currentIndex = this.organizations.length;
@@ -775,7 +907,7 @@ const paydas_slider = {
             }
         }, 300);
     },
-    
+
     setupAutoSlide: function() {
         this.autoSlideInterval = setInterval(() => {
             if (!this.isDragging) {
@@ -783,31 +915,31 @@ const paydas_slider = {
             }
         }, 3000);
     },
-    
+
     resetAutoSlide: function() {
         clearInterval(this.autoSlideInterval);
         this.setupAutoSlide();
     },
-    
+
     setupEventListeners: function() {
         const wrapper = document.getElementById('paydas-slider-wrapper');
         const prevBtn = document.getElementById('paydas-prev-btn');
         const nextBtn = document.getElementById('paydas-next-btn');
-        
+
         // Button clicks
         prevBtn.addEventListener('click', () => {
             this.prev();
             this.resetAutoSlide();
         });
-        
+
         nextBtn.addEventListener('click', () => {
             this.next();
             this.resetAutoSlide();
         });
-        
+
         let isMouseDown = false;
         let hasMoved = false;
-        
+
         // Mouse events
         wrapper.addEventListener('mousedown', (e) => {
             if (e.button !== 0) return;
@@ -816,18 +948,18 @@ const paydas_slider = {
             this.startDrag(e.clientX);
             e.preventDefault();
         });
-        
+
         document.addEventListener('mousemove', (e) => {
             if (!isMouseDown) return;
             hasMoved = true;
             this.drag(e.clientX);
         });
-        
+
         document.addEventListener('mouseup', (e) => {
             if (!isMouseDown) return;
             isMouseDown = false;
             this.endDrag();
-            
+
             if (!hasMoved && e.button === 0) {
                 const link = e.target.closest('.paydas-slide');
                 if (link && link.href) {
@@ -835,21 +967,21 @@ const paydas_slider = {
                 }
             }
         });
-        
+
         // Touch events
         wrapper.addEventListener('touchstart', (e) => {
             this.startDrag(e.touches[0].clientX);
         });
-        
+
         wrapper.addEventListener('touchmove', (e) => {
             this.drag(e.touches[0].clientX);
             e.preventDefault();
         });
-        
+
         wrapper.addEventListener('touchend', (e) => {
             this.endDrag();
         });
-        
+
         wrapper.addEventListener('click', (e) => {
             if (this.isDragging || hasMoved) {
                 e.preventDefault();
@@ -857,31 +989,31 @@ const paydas_slider = {
             }
         });
     },
-    
+
     startDrag: function(clientX) {
         this.isDragging = true;
         this.startX = clientX;
         this.currentX = clientX;
         clearInterval(this.autoSlideInterval);
     },
-    
+
     drag: function(clientX) {
         if (!this.isDragging) return;
-        
+
         this.currentX = clientX;
         const diff = this.currentX - this.startX;
-        
+
         const track = document.getElementById('paydas-slider-track');
         track.style.transition = 'none';
         track.style.transform = `translateX(${this.translateX + diff}px)`;
     },
-    
+
     endDrag: function() {
         if (!this.isDragging) return;
-        
+
         const diff = this.currentX - this.startX;
         const threshold = this.slideWidth / 3;
-        
+
         if (Math.abs(diff) > threshold) {
             if (diff > 0) {
                 this.currentIndex--;
@@ -889,120 +1021,120 @@ const paydas_slider = {
                 this.currentIndex++;
             }
         }
-        
+
         this.updateSlidePosition();
         this.isDragging = false;
         this.resetAutoSlide();
     }
 };
 
-// Slider'ı başlat
-document.addEventListener('DOMContentLoaded', function() {
-    paydas_slider.init();
-});
+    // Slider'ı başlat
+    document.addEventListener('DOMContentLoaded', function () {
+        paydas_slider.init();
+    });
 
-// ============= ANASAYFA HARİTASI =============
-class HomepageMapManager {
-    constructor() {
-        this.map = null;
-        this.layers = [];
-        this.homepageResources = [];
-        this.initialized = false;
-        this.colorPalette = [
-            '#28a745', // Yeşil
-            '#dc3545', // Kırmızı
-            '#ffc107'  // Sarı
-        ];
-        this.resourceColors = {};
-        this.dataCache = new Map();
-        this.cacheExpiry = 10 * 60 * 1000; // 10 dakika
-    }
-
-    getResourceColor(resourceId, index) {
-        // Önce resource'un database'deki kaydedilmiş rengini kontrol et
-        const resource = this.homepageResources.find(r => r.resource_id === resourceId);
-        if (resource && resource.color) {
-            return resource.color;
+    // ============= ANASAYFA HARİTASI =============
+    class HomepageMapManager {
+        constructor() {
+            this.map = null;
+            this.layers = [];
+            this.homepageResources = [];
+            this.initialized = false;
+            this.colorPalette = [
+                '#28a745', // Yeşil
+                '#dc3545', // Kırmızı
+                '#ffc107'  // Sarı
+            ];
+            this.resourceColors = {};
+            this.dataCache = new Map();
+            this.cacheExpiry = 10 * 60 * 1000; // 10 dakika
         }
 
-        // Fallback: eski color palette sistemi (artık gerek yok ama güvenlik için kalsın)
-        if (!this.resourceColors[resourceId]) {
-            this.resourceColors[resourceId] = this.colorPalette[index % this.colorPalette.length];
-        }
-        return this.resourceColors[resourceId];
-    }
-
-    async init() {
-        if (this.initialized) return;
-
-        try {
-            // Leaflet CSS ve JS yükle
-            await this.loadLeaflet();
-
-            // Haritayı başlat
-            this.initMap();
-
-            // Anasayfa kaynaklarını yükle
-            await this.loadHomepageResources();
-
-            this.initialized = true;
-        } catch (error) {
-            console.error('❌ Homepage map initialization error:', error);
-            this.showError();
-        }
-    }
-
-    async loadLeaflet() {
-        return new Promise((resolve, reject) => {
-            // CSS ekle
-            if (!document.getElementById('leaflet-css')) {
-                const link = document.createElement('link');
-                link.id = 'leaflet-css';
-                link.rel = 'stylesheet';
-                link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-                document.head.appendChild(link);
+        getResourceColor(resourceId, index) {
+            // Önce resource'un database'deki kaydedilmiş rengini kontrol et
+            const resource = this.homepageResources.find(r => r.resource_id === resourceId);
+            if (resource && resource.color) {
+                return resource.color;
             }
 
-            // JS ekle
-            if (!window.L) {
-                const script = document.createElement('script');
-                script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            } else {
-                resolve();
+            // Fallback: eski color palette sistemi (artık gerek yok ama güvenlik için kalsın)
+            if (!this.resourceColors[resourceId]) {
+                this.resourceColors[resourceId] = this.colorPalette[index % this.colorPalette.length];
             }
-        });
-    }
+            return this.resourceColors[resourceId];
+        }
 
-    initMap() {
-        // İzmir merkezli harita - tamamen statik, etkileşimsiz
-        this.map = L.map('homepage-map', {
-            center: [38.45, 27.14],
-            zoom: 10,
-            zoomControl: false,
-            dragging: false,
-            scrollWheelZoom: false,
-            doubleClickZoom: false,
-            touchZoom: false,
-            boxZoom: false,
-            keyboard: false,
-            tap: false,
-            attributionControl: false
-        });
+        async init() {
+            if (this.initialized) return;
 
-        // SADE harita - mekansal.html'deki sade görünüm ile aynı
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            maxZoom: 19,
-            attribution: ''
-        }).addTo(this.map);
+            try {
+                // Leaflet CSS ve JS yükle
+                await this.loadLeaflet();
 
-        // Pulse animation için CSS ekle
-        if (!document.getElementById('homepage-map-animations')) {
-            const style = document.createElement('style');
-            style.id = 'homepage-map-animations';
-            style.textContent = `
+                // Haritayı başlat
+                this.initMap();
+
+                // Anasayfa kaynaklarını yükle
+                await this.loadHomepageResources();
+
+                this.initialized = true;
+            } catch (error) {
+                console.error('❌ Homepage map initialization error:', error);
+                this.showError();
+            }
+        }
+
+        async loadLeaflet() {
+            return new Promise((resolve, reject) => {
+                // CSS ekle
+                if (!document.getElementById('leaflet-css')) {
+                    const link = document.createElement('link');
+                    link.id = 'leaflet-css';
+                    link.rel = 'stylesheet';
+                    link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+                    document.head.appendChild(link);
+                }
+
+                // JS ekle
+                if (!window.L) {
+                    const script = document.createElement('script');
+                    script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+                    script.onload = resolve;
+                    script.onerror = reject;
+                    document.head.appendChild(script);
+                } else {
+                    resolve();
+                }
+            });
+        }
+
+        initMap() {
+            // İzmir merkezli harita - tamamen statik, etkileşimsiz
+            this.map = L.map('homepage-map', {
+                center: [38.45, 27.14],
+                zoom: 10,
+                zoomControl: false,
+                dragging: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                touchZoom: false,
+                boxZoom: false,
+                keyboard: false,
+                tap: false,
+                attributionControl: false
+            });
+
+            // SADE harita - mekansal.html'deki sade görünüm ile aynı
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                maxZoom: 19,
+                attribution: ''
+            }).addTo(this.map);
+
+            // Pulse animation için CSS ekle
+            if (!document.getElementById('homepage-map-animations')) {
+                const style = document.createElement('style');
+                style.id = 'homepage-map-animations';
+                style.textContent = `
                 @keyframes pulse {
                     0%, 100% {
                         transform: scale(1);
@@ -1024,352 +1156,352 @@ class HomepageMapManager {
                     animation: fadeInOut 3s ease-in-out infinite;
                 }
             `;
-            document.head.appendChild(style);
+                document.head.appendChild(style);
+            }
         }
-    }
 
-    async loadHomepageResources() {
-        try {
-            // Cache kontrolü - homepage resources listesi
-            const cacheKey = 'homepage-resources-list';
-            const cached = this.dataCache.get(cacheKey);
+        async loadHomepageResources() {
+            try {
+                // Cache kontrolü - homepage resources listesi
+                const cacheKey = 'homepage-resources-list';
+                const cached = this.dataCache.get(cacheKey);
 
-            if (cached && (Date.now() - cached.timestamp < this.cacheExpiry)) {
-                console.log('✅ Using cached homepage resources list');
-                this.homepageResources = cached.data;
+                if (cached && (Date.now() - cached.timestamp < this.cacheExpiry)) {
+                    console.log('✅ Using cached homepage resources list');
+                    this.homepageResources = cached.data;
 
-                // Cached data'dan haritayı render et
+                    // Cached data'dan haritayı render et
+                    for (let i = 0; i < this.homepageResources.length; i++) {
+                        await this.loadAndDisplayResource(this.homepageResources[i], i);
+                    }
+                    return;
+                }
+
+                // Cache yoksa veya expire olmuşsa API'den çek
+                console.log('🔄 Fetching fresh homepage resources from API');
+                const response = await fetch('/api/spatial-resources/homepage-map');
+                const data = await response.json();
+
+                if (!data.success || !data.resources || data.resources.length === 0) {
+                    console.log('ℹ️ No homepage resources to display');
+                    return;
+                }
+
+                this.homepageResources = data.resources;
+
+                // Resource listesini cache'le
+                this.dataCache.set(cacheKey, {
+                    data: data.resources,
+                    timestamp: Date.now()
+                });
+
+                console.log(`📊 Loading ${this.homepageResources.length} homepage map resources`);
+
+                // Her resource için veriyi yükle ve haritaya ekle
                 for (let i = 0; i < this.homepageResources.length; i++) {
                     await this.loadAndDisplayResource(this.homepageResources[i], i);
                 }
-                return;
+
+            } catch (error) {
+                console.error('❌ Error loading homepage resources:', error);
             }
-
-            // Cache yoksa veya expire olmuşsa API'den çek
-            console.log('🔄 Fetching fresh homepage resources from API');
-            const response = await fetch('/api/spatial-resources/homepage-map');
-            const data = await response.json();
-
-            if (!data.success || !data.resources || data.resources.length === 0) {
-                console.log('ℹ️ No homepage resources to display');
-                return;
-            }
-
-            this.homepageResources = data.resources;
-
-            // Resource listesini cache'le
-            this.dataCache.set(cacheKey, {
-                data: data.resources,
-                timestamp: Date.now()
-            });
-
-            console.log(`📊 Loading ${this.homepageResources.length} homepage map resources`);
-
-            // Her resource için veriyi yükle ve haritaya ekle
-            for (let i = 0; i < this.homepageResources.length; i++) {
-                await this.loadAndDisplayResource(this.homepageResources[i], i);
-            }
-
-        } catch (error) {
-            console.error('❌ Error loading homepage resources:', error);
         }
-    }
 
-    async loadAndDisplayResource(resource, index) {
-        try {
-            const format = (resource.format || '').toLowerCase();
-            const color = this.getResourceColor(resource.resource_id, index);
+        async loadAndDisplayResource(resource, index) {
+            try {
+                const format = (resource.format || '').toLowerCase();
+                const color = this.getResourceColor(resource.resource_id, index);
 
-            // WMS/WFS/GeoTIFF gibi formatlar için direkt URL'den yükle
-            if (['wms', 'wfs', 'geotiff'].includes(format)) {
-                await this.addLayerFromUrl(resource.url, format, resource, color);
-                return;
-            }
+                // WMS/WFS/GeoTIFF gibi formatlar için direkt URL'den yükle
+                if (['wms', 'wfs', 'geotiff'].includes(format)) {
+                    await this.addLayerFromUrl(resource.url, format, resource, color);
+                    return;
+                }
 
-            // Cache kontrolü - resource data
-            const cacheKey = `resource-data-${resource.resource_id}`;
-            const cached = this.dataCache.get(cacheKey);
+                // Cache kontrolü - resource data
+                const cacheKey = `resource-data-${resource.resource_id}`;
+                const cached = this.dataCache.get(cacheKey);
 
-            if (cached && (Date.now() - cached.timestamp < this.cacheExpiry)) {
-                console.log(`✅ Using cached data for resource: ${resource.resource_name}`);
-                const data = cached.data;
+                if (cached && (Date.now() - cached.timestamp < this.cacheExpiry)) {
+                    console.log(`✅ Using cached data for resource: ${resource.resource_name}`);
+                    const data = cached.data;
 
-                // Cached veriyi işle
-                if (data.type === 'geojson' && data.data) {
+                    // Cached veriyi işle
+                    if (data.type === 'geojson' && data.data) {
+                        this.addGeoJSONToMap(data.data, resource, color);
+                    } else if (data.type === 'tabular' && data.data) {
+                        this.addGeoJSONToMap(data.data, resource, color);
+                    }
+                    return;
+                }
+
+                // Cache yoksa API'den çek
+                console.log(`🔄 Fetching data for resource: ${resource.resource_name}`);
+                const response = await fetch(`/api/spatial-resources/${resource.resource_id}/data`);
+                const data = await response.json();
+
+                if (!data.success) {
+                    console.warn(`⚠️ Failed to load resource ${resource.resource_id}:`, data.error);
+                    return;
+                }
+
+                // GeoJSON ve tabular veriyi cache'le (URL-based olanları değil)
+                if ((data.type === 'geojson' || data.type === 'tabular') && data.data) {
+                    this.dataCache.set(cacheKey, {
+                        data: data,
+                        timestamp: Date.now()
+                    });
+                }
+
+                // Veri tipine göre işle
+                if (data.type === 'shp') {
+                    await this.processShpData(data.url, resource, color);
+                } else if (data.type === 'api' || data.type === 'api_json') {
+                    await this.processApiData(data.url, resource, color);
+                } else if (data.type === 'geojson_url') {
+                    await this.processGeoJsonUrl(data.url, resource, color);
+                } else if (data.type === 'geojson' && data.data) {
                     this.addGeoJSONToMap(data.data, resource, color);
                 } else if (data.type === 'tabular' && data.data) {
+                    // CSV/Excel verisi - GeoJSON'a çevrilmiş halde gelir
                     this.addGeoJSONToMap(data.data, resource, color);
                 }
-                return;
+
+            } catch (error) {
+                console.error(`❌ Error loading resource ${resource.resource_id}:`, error);
             }
-
-            // Cache yoksa API'den çek
-            console.log(`🔄 Fetching data for resource: ${resource.resource_name}`);
-            const response = await fetch(`/api/spatial-resources/${resource.resource_id}/data`);
-            const data = await response.json();
-
-            if (!data.success) {
-                console.warn(`⚠️ Failed to load resource ${resource.resource_id}:`, data.error);
-                return;
-            }
-
-            // GeoJSON ve tabular veriyi cache'le (URL-based olanları değil)
-            if ((data.type === 'geojson' || data.type === 'tabular') && data.data) {
-                this.dataCache.set(cacheKey, {
-                    data: data,
-                    timestamp: Date.now()
-                });
-            }
-
-            // Veri tipine göre işle
-            if (data.type === 'shp') {
-                await this.processShpData(data.url, resource, color);
-            } else if (data.type === 'api' || data.type === 'api_json') {
-                await this.processApiData(data.url, resource, color);
-            } else if (data.type === 'geojson_url') {
-                await this.processGeoJsonUrl(data.url, resource, color);
-            } else if (data.type === 'geojson' && data.data) {
-                this.addGeoJSONToMap(data.data, resource, color);
-            } else if (data.type === 'tabular' && data.data) {
-                // CSV/Excel verisi - GeoJSON'a çevrilmiş halde gelir
-                this.addGeoJSONToMap(data.data, resource, color);
-            }
-
-        } catch (error) {
-            console.error(`❌ Error loading resource ${resource.resource_id}:`, error);
         }
-    }
 
-    async processShpData(url, resource, color) {
-        try {
-            if (!window.shp) {
-                console.warn('⚠️ Shapefile library not loaded, skipping:', resource.resource_name);
-                return;
+        async processShpData(url, resource, color) {
+            try {
+                if (!window.shp) {
+                    console.warn('⚠️ Shapefile library not loaded, skipping:', resource.resource_name);
+                    return;
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+
+                const buffer = await response.arrayBuffer();
+                const geojson = shp.parseZip(buffer);
+
+                if (geojson && geojson.features && geojson.features.length > 0) {
+                    this.addGeoJSONToMap(geojson, resource, color);
+                }
+            } catch (error) {
+                console.error(`❌ Shapefile processing error for ${resource.resource_id}:`, error);
             }
-
-            const response = await fetch(url);
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
-
-            const buffer = await response.arrayBuffer();
-            const geojson = shp.parseZip(buffer);
-
-            if (geojson && geojson.features && geojson.features.length > 0) {
-                this.addGeoJSONToMap(geojson, resource, color);
-            }
-        } catch (error) {
-            console.error(`❌ Shapefile processing error for ${resource.resource_id}:`, error);
         }
-    }
 
-    async processApiData(url, resource, color) {
-        try {
-            const response = await fetch(url, { mode: 'cors' });
-            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+        async processApiData(url, resource, color) {
+            try {
+                const response = await fetch(url, { mode: 'cors' });
+                if (!response.ok) throw new Error(`API Error: ${response.status}`);
 
-            const json = await response.json();
-            const dataArray = this.findDataArrayInJson(json);
+                const json = await response.json();
+                const dataArray = this.findDataArrayInJson(json);
 
-            if (!dataArray || dataArray.length === 0) {
-                console.warn('⚠️ No valid data in API response:', resource.resource_name);
-                return;
+                if (!dataArray || dataArray.length === 0) {
+                    console.warn('⚠️ No valid data in API response:', resource.resource_name);
+                    return;
+                }
+
+                // Koordinat kolonlarını tespit et
+                const coord = this.detectCoordinateColumns(dataArray);
+                if (coord.found) {
+                    const geojson = this.convertDataToGeoJSON(dataArray, coord.columns);
+                    this.addGeoJSONToMap(geojson, resource, color);
+                }
+            } catch (error) {
+                console.error(`❌ API processing error for ${resource.resource_id}:`, error);
             }
-
-            // Koordinat kolonlarını tespit et
-            const coord = this.detectCoordinateColumns(dataArray);
-            if (coord.found) {
-                const geojson = this.convertDataToGeoJSON(dataArray, coord.columns);
-                this.addGeoJSONToMap(geojson, resource, color);
-            }
-        } catch (error) {
-            console.error(`❌ API processing error for ${resource.resource_id}:`, error);
         }
-    }
 
-    async processGeoJsonUrl(url, resource, color) {
-        try {
-            const response = await fetch(url, { mode: 'cors' });
-            if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
+        async processGeoJsonUrl(url, resource, color) {
+            try {
+                const response = await fetch(url, { mode: 'cors' });
+                if (!response.ok) throw new Error(`HTTP Error: ${response.status}`);
 
-            const geojson = await response.json();
+                const geojson = await response.json();
 
-            if (geojson.type === 'FeatureCollection' || geojson.type === 'Feature') {
-                this.addGeoJSONToMap(geojson, resource, color);
+                if (geojson.type === 'FeatureCollection' || geojson.type === 'Feature') {
+                    this.addGeoJSONToMap(geojson, resource, color);
+                }
+            } catch (error) {
+                console.error(`❌ GeoJSON URL processing error for ${resource.resource_id}:`, error);
             }
-        } catch (error) {
-            console.error(`❌ GeoJSON URL processing error for ${resource.resource_id}:`, error);
         }
-    }
 
-    async addLayerFromUrl(url, format, resource, color) {
-        try {
-            if (format === 'wms') {
-                const wmsLayer = L.tileLayer.wms(url, {
-                    layers: '',
-                    format: 'image/png',
-                    transparent: true,
-                    version: '1.3.0',
-                    opacity: 0.7
-                });
-
-                wmsLayer.addTo(this.map);
-                this.layers.push({ resource_id: resource.resource_id, layer: wmsLayer });
-                console.log(`✅ Added WMS layer for: ${resource.resource_name}`);
-            }
-        } catch (error) {
-            console.error(`❌ Error adding layer from URL for ${resource.resource_id}:`, error);
-        }
-    }
-
-    addGeoJSONToMap(geojsonData, resource, color) {
-        try {
-            // Rastgele animasyon tipi seç
-            const animationTypes = ['pulse', 'fade', 'none'];
-            const randomAnimation = animationTypes[Math.floor(Math.random() * animationTypes.length)];
-
-            const layer = L.geoJSON(geojsonData, {
-                style: {
-                    color: color,
-                    weight: 2,
-                    opacity: 0.7,
-                    fillColor: color,
-                    fillOpacity: 0.3,
-                    className: randomAnimation === 'fade' ? 'fade-marker' : ''
-                },
-                pointToLayer: (feature, latlng) => {
-                    const marker = L.circleMarker(latlng, {
-                        radius: 7,
-                        fillColor: color,
-                        color: '#fff',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8,
-                        interactive: false  // Tıklanamaz yap
+        async addLayerFromUrl(url, format, resource, color) {
+            try {
+                if (format === 'wms') {
+                    const wmsLayer = L.tileLayer.wms(url, {
+                        layers: '',
+                        format: 'image/png',
+                        transparent: true,
+                        version: '1.3.0',
+                        opacity: 0.7
                     });
 
-                    // Pulse animasyonu ekle
-                    if (randomAnimation === 'pulse') {
-                        marker.on('add', function() {
-                            const icon = this._path || this._icon;
-                            if (icon) {
-                                icon.classList.add('pulse-marker');
-                            }
+                    wmsLayer.addTo(this.map);
+                    this.layers.push({ resource_id: resource.resource_id, layer: wmsLayer });
+                    console.log(`✅ Added WMS layer for: ${resource.resource_name}`);
+                }
+            } catch (error) {
+                console.error(`❌ Error adding layer from URL for ${resource.resource_id}:`, error);
+            }
+        }
+
+        addGeoJSONToMap(geojsonData, resource, color) {
+            try {
+                // Rastgele animasyon tipi seç
+                const animationTypes = ['pulse', 'fade', 'none'];
+                const randomAnimation = animationTypes[Math.floor(Math.random() * animationTypes.length)];
+
+                const layer = L.geoJSON(geojsonData, {
+                    style: {
+                        color: color,
+                        weight: 2,
+                        opacity: 0.7,
+                        fillColor: color,
+                        fillOpacity: 0.3,
+                        className: randomAnimation === 'fade' ? 'fade-marker' : ''
+                    },
+                    pointToLayer: (feature, latlng) => {
+                        const marker = L.circleMarker(latlng, {
+                            radius: 7,
+                            fillColor: color,
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 0.8,
+                            interactive: false  // Tıklanamaz yap
+                        });
+
+                        // Pulse animasyonu ekle
+                        if (randomAnimation === 'pulse') {
+                            marker.on('add', function () {
+                                const icon = this._path || this._icon;
+                                if (icon) {
+                                    icon.classList.add('pulse-marker');
+                                }
+                            });
+                        }
+
+                        return marker;
+                    },
+                    onEachFeature: (feature, layer) => {
+                        // Popup'ları devre dışı bırak (interactive: false olduğu için zaten açılmaz)
+                        layer.options.interactive = false;
+                    }
+                });
+
+                layer.addTo(this.map);
+                this.layers.push({ resource_id: resource.resource_id, layer: layer });
+                console.log(`✅ Added GeoJSON layer for: ${resource.resource_name} (animation: ${randomAnimation})`);
+
+            } catch (error) {
+                console.error(`❌ Error adding GeoJSON for ${resource.resource_id}:`, error);
+            }
+        }
+
+        findDataArrayInJson(jsonData) {
+            if (Array.isArray(jsonData)) return jsonData;
+            if (typeof jsonData === 'object' && jsonData !== null) {
+                const keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features'];
+                for (const k of keys) {
+                    if (k in jsonData && Array.isArray(jsonData[k])) return jsonData[k];
+                }
+                for (const k in jsonData) {
+                    if (Array.isArray(jsonData[k]) && jsonData[k].length > 0) return jsonData[k];
+                }
+            }
+            return null;
+        }
+
+        detectCoordinateColumns(dataArray) {
+            if (!dataArray || dataArray.length === 0) return { found: false, columns: [] };
+
+            const columns = Object.keys(dataArray[0]);
+            const latPatterns = [/^(lat|latitude|enlem|y|kuzey)$/i, /lat/i, /enlem/i];
+            const lonPatterns = [/^(lon|lng|longitude|boylam|x|dogu)$/i, /lon|lng/i, /boylam/i];
+
+            let latCol = null, lonCol = null;
+
+            for (const p of latPatterns) {
+                latCol = columns.find(c => p.test(c));
+                if (latCol) break;
+            }
+
+            for (const p of lonPatterns) {
+                lonCol = columns.find(c => p.test(c));
+                if (lonCol) break;
+            }
+
+            if (latCol && lonCol && latCol !== lonCol) {
+                return { found: true, columns: { lat: latCol, lon: lonCol } };
+            }
+
+            return { found: false, columns };
+        }
+
+        convertDataToGeoJSON(dataArray, coordColumns) {
+            const features = [];
+            const { lat: latCol, lon: lonCol } = coordColumns;
+
+            for (const row of dataArray) {
+                try {
+                    const lat = parseFloat(row[latCol]);
+                    const lon = parseFloat(row[lonCol]);
+
+                    if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
+                        features.push({
+                            type: 'Feature',
+                            geometry: {
+                                type: 'Point',
+                                coordinates: [lon, lat]
+                            },
+                            properties: row
                         });
                     }
-
-                    return marker;
-                },
-                onEachFeature: (feature, layer) => {
-                    // Popup'ları devre dışı bırak (interactive: false olduğu için zaten açılmaz)
-                    layer.options.interactive = false;
+                } catch (e) {
+                    // Skip invalid rows
                 }
-            });
-
-            layer.addTo(this.map);
-            this.layers.push({ resource_id: resource.resource_id, layer: layer });
-            console.log(`✅ Added GeoJSON layer for: ${resource.resource_name} (animation: ${randomAnimation})`);
-
-        } catch (error) {
-            console.error(`❌ Error adding GeoJSON for ${resource.resource_id}:`, error);
-        }
-    }
-
-    findDataArrayInJson(jsonData) {
-        if (Array.isArray(jsonData)) return jsonData;
-        if (typeof jsonData === 'object' && jsonData !== null) {
-            const keys = ['data', 'results', 'items', 'onemliyer', 'records', 'features'];
-            for (const k of keys) {
-                if (k in jsonData && Array.isArray(jsonData[k])) return jsonData[k];
             }
-            for (const k in jsonData) {
-                if (Array.isArray(jsonData[k]) && jsonData[k].length > 0) return jsonData[k];
-            }
-        }
-        return null;
-    }
 
-    detectCoordinateColumns(dataArray) {
-        if (!dataArray || dataArray.length === 0) return { found: false, columns: [] };
-
-        const columns = Object.keys(dataArray[0]);
-        const latPatterns = [/^(lat|latitude|enlem|y|kuzey)$/i, /lat/i, /enlem/i];
-        const lonPatterns = [/^(lon|lng|longitude|boylam|x|dogu)$/i, /lon|lng/i, /boylam/i];
-
-        let latCol = null, lonCol = null;
-
-        for (const p of latPatterns) {
-            latCol = columns.find(c => p.test(c));
-            if (latCol) break;
+            return {
+                type: 'FeatureCollection',
+                features: features
+            };
         }
 
-        for (const p of lonPatterns) {
-            lonCol = columns.find(c => p.test(c));
-            if (lonCol) break;
+        showError() {
+            document.getElementById('homepage-map-container').style.display = 'none';
+            document.getElementById('homepage-map-error').style.display = 'block';
         }
+    }
 
-        if (latCol && lonCol && latCol !== lonCol) {
-            return { found: true, columns: { lat: latCol, lon: lonCol } };
+    // Anasayfa haritasını başlat
+    let homepageMapManager = null;
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Harita container'ı görünür mü kontrol et
+        const mapContainer = document.getElementById('homepage-map-container');
+        if (mapContainer) {
+            homepageMapManager = new HomepageMapManager();
+
+            // IntersectionObserver ile harita görünür olduğunda yükle
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && !homepageMapManager.initialized) {
+                        console.log('📍 Homepage map container is visible, initializing...');
+                        homepageMapManager.init();
+                        observer.disconnect();
+                    }
+                });
+            }, { threshold: 0.1 });
+
+            observer.observe(mapContainer);
         }
-
-        return { found: false, columns };
-    }
-
-    convertDataToGeoJSON(dataArray, coordColumns) {
-        const features = [];
-        const { lat: latCol, lon: lonCol } = coordColumns;
-
-        for (const row of dataArray) {
-            try {
-                const lat = parseFloat(row[latCol]);
-                const lon = parseFloat(row[lonCol]);
-
-                if (!isNaN(lat) && !isNaN(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180) {
-                    features.push({
-                        type: 'Feature',
-                        geometry: {
-                            type: 'Point',
-                            coordinates: [lon, lat]
-                        },
-                        properties: row
-                    });
-                }
-            } catch (e) {
-                // Skip invalid rows
-            }
-        }
-
-        return {
-            type: 'FeatureCollection',
-            features: features
-        };
-    }
-
-    showError() {
-        document.getElementById('homepage-map-container').style.display = 'none';
-        document.getElementById('homepage-map-error').style.display = 'block';
-    }
-}
-
-// Anasayfa haritasını başlat
-let homepageMapManager = null;
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Harita container'ı görünür mü kontrol et
-    const mapContainer = document.getElementById('homepage-map-container');
-    if (mapContainer) {
-        homepageMapManager = new HomepageMapManager();
-
-        // IntersectionObserver ile harita görünür olduğunda yükle
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting && !homepageMapManager.initialized) {
-                    console.log('📍 Homepage map container is visible, initializing...');
-                    homepageMapManager.init();
-                    observer.disconnect();
-                }
-            });
-        }, { threshold: 0.1 });
-
-        observer.observe(mapContainer);
-    }
-});
+    });
 </script>

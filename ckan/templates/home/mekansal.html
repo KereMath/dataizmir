@@ -1210,28 +1210,7 @@
     background: #f3f4f6;
   }
 
-  /* Map Legend */
-  .map-legend {
-    position: absolute;
-    bottom: 30%;
-    right: 15px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    padding: 16px;
-    max-width: 280px;
-    max-height: 400px;
-    z-index: 0;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.3s ease;
-  }
 
-  .map-legend.collapsed {
-    max-height: 48px;
-    padding: 12px 16px;
-  }
 
   .legend-header {
     display: flex;
@@ -1240,10 +1219,6 @@
     margin-bottom: 12px;
     cursor: pointer;
     user-select: none;
-  }
-
-  .map-legend.collapsed .legend-header {
-    margin-bottom: 0;
   }
 
   .legend-title {
@@ -1270,18 +1245,14 @@
     transition: transform 0.3s ease;
   }
 
-  .map-legend.collapsed .legend-toggle {
-    transform: rotate(180deg);
-  }
+
 
   .legend-content {
     overflow-y: auto;
     max-height: 320px;
   }
 
-  .map-legend.collapsed .legend-content {
-    display: none;
-  }
+
 
   .legend-item {
     display: flex;
@@ -3930,54 +3901,6 @@
     showError(message) {
       const container = document.getElementById('spatialLayersContainer');
       container.innerHTML = `<div class="error-section">${message}</div>`;
-    }
-
-    // ==================== LEGEND METHODS ====================
-
-    toggleLegend() {
-      const legend = document.getElementById('mapLegend');
-      if (legend) {
-        legend.classList.toggle('collapsed');
-      }
-    }
-
-    updateLegend() {
-      const legendContent = document.getElementById('legendContent');
-      if (!legendContent) return;
-
-      const activeResourceIds = Array.from(this.activeResources);
-
-      if (activeResourceIds.length === 0) {
-        legendContent.innerHTML = `
-          <div class="legend-empty">
-            <div class="legend-empty-icon">📍</div>
-            <div>Henüz aktif katman yok</div>
-          </div>
-        `;
-        return;
-      }
-
-      const legendItems = activeResourceIds.map(resourceId => {
-        const resource = this.spatialData.find(r => r.resource_id === resourceId);
-        if (!resource) return '';
-
-        const color = this.getResourceColor(resourceId);
-        const name = resource.resource_name || 'İsimsiz Kaynak';
-
-        return `
-          <div class="legend-item" data-resource-id="${resourceId}" title="${name}">
-            <div class="legend-color" style="background-color: ${color};"></div>
-            <div class="legend-name">${name}</div>
-          </div>
-        `;
-      }).filter(item => item !== '').join('');
-
-      legendContent.innerHTML = legendItems || `
-        <div class="legend-empty">
-          <div class="legend-empty-icon">📍</div>
-          <div>Katman bilgisi yüklenemedi</div>
-        </div>
-      `;
     }
 
     // ==================== CUSTOM LEGEND METHODS ====================

@@ -2328,7 +2328,6 @@
         this.updateStats();
         this.updateEmphasis();
         this.renderSelectedLayersPanel();
-        this.updateLegend(); // Update legend when layer is removed
         this.updateCustomLegendForActiveResources(); // Update custom legend
       }
     }
@@ -2359,7 +2358,6 @@
         }
 
         this.updateResourceToggleState(resourceId, true);
-        this.updateLegend(); // Update legend when layer is added
         this.updateCustomLegendForActiveResources(); // Update custom legend
         this.updateStats();
         this.fitMapToActiveLayers();

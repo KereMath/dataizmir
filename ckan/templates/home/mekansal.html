@@ -1338,7 +1338,7 @@
   .custom-legend-box {
     position: absolute;
     bottom: 30%;
-    left: 15px;
+    right: 15px;
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -1613,21 +1613,7 @@
     <div id="map"></div>
 
     <!-- Map Legend -->
-    <div class="map-legend" id="mapLegend">
-      <div class="legend-header" onclick="spatialMapManager.toggleLegend()">
-        <div class="legend-title">
-          <span>🗺️</span>
-          <span>Aktif Katmanlar</span>
-        </div>
-        <button class="legend-toggle">▼</button>
-      </div>
-      <div class="legend-content" id="legendContent">
-        <div class="legend-empty">
-          <div class="legend-empty-icon">📍</div>
-          <div>Henüz aktif katman yok</div>
-        </div>
-      </div>
-    </div>
+
 
     <!-- Custom Legend Box (Sol Alt) -->
     <div class="custom-legend-box" id="customLegendBox">

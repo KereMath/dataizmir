@@ -55,6 +55,72 @@
         }
     }
 
+    /* ——— İSTATİSTİKLER BÖLÜMÜ ——— */
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 30px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .stat-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 30px;
+        text-align: center;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .stat-card .stat-icon {
+        width: 64px;
+        height: 64px;
+        margin: 0 auto 20px auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4A00E0 0%, #8E2DE2 100%);
+        color: white;
+    }
+
+    .stat-card .stat-icon svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .stat-card .stat-number {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #1a202c;
+        line-height: 1;
+        margin-bottom: 10px;
+        min-height: 58px;
+    }
+
+    .stat-card .stat-label {
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: #4a5568;
+    }
+
+    @media (max-width: 768px) {
+        .stats-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .stat-card .stat-number {
+            font-size: 2.5rem;
+        }
+    }
+
     .card-grid-popular {
         text-align: justify;
         display: grid;
@@ -580,6 +646,77 @@
                             <div class="paydas-slider-track" id="paydas-slider-track">
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div role="main" style="background-color: white; padding: 60px 0;">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h1 style="color: black; font-weight: 700 !important; font-size: 44px !important; line-height: 54px !important; text-align: center !important; margin-bottom: 40px;">
+                    İstatistikler
+                </h1>
+
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375" />
+                            </svg>
+                        </div>
+                        <div id="stat-datasets" class="stat-number">...</div>
+                        <div class="stat-label">Veri Seti</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21" />
+                            </svg>
+                        </div>
+                        <div id="stat-orgs" class="stat-number">...</div>
+                        <div class="stat-label">Veri Paydaşı</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M3.75 12h16.5m-16.5 3.75h16.5M3.75 19.5h16.5M5.625 4.5h12.75a1.875 1.875 0 010 3.75H5.625a1.875 1.875 0 010-3.75z" />
+                            </svg>
+                        </div>
+                        <div id="stat-groups" class="stat-number">...</div>
+                        <div class="stat-label">Kategori</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6z" />
+                            </svg>
+                        </div>
+                        <div id="stat-tags" class="stat-number">...</div>
+                        <div class="stat-label">Etiket</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m-7.5-2.28a4.5 4.5 0 01.004-6.364 4.5 4.5 0 016.364-.004m-6.364 6.364l10.94-10.94M3.75 12.565c0-1.01.378-2.017 1.07-2.815a4.505 4.505 0 015.29-1.074m6.364 6.364a4.5 4.5 0 01-6.364-.004m-6.364-6.364a4.5 4.5 0 01.004-6.364A4.5 4.5 0 019.75 3.75m-6 8.815c0-1.01.378-2.017 1.07-2.815a4.505 4.505 0 015.29-1.074m0 0a4.5 4.5 0 016.364-.004" />
+                            </svg>
+                        </div>
+                        <div id="stat-licenses" class="stat-number">...</div>
+                        <div class="stat-label">Lisans Tipi</div>
                     </div>
                 </div>
             </div>
@@ -1503,5 +1640,65 @@
 
             observer.observe(mapContainer);
         }
+    });
+
+    // ============= İSTATİSTİKLER =============
+    document.addEventListener('DOMContentLoaded', () => {
+        // API'den veri çekmek için yardımcı fonksiyon
+        const fetchAPI = (action, params = '') => {
+            const url = `/api/3/action/${action}${params ? '?' + params : ''}`;
+            return fetch(url, {
+                method: 'POST',
+                credentials: 'include'
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error(`Network response was not ok for ${action}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (!data.success) throw new Error(`API error for ${action}: ${data.error?.message || 'Unknown error'}`);
+                    return data.result;
+                })
+                .catch(error => {
+                    console.error(`Error fetching ${action}:`, error);
+                    return null;
+                });
+        };
+
+        // Sayı sayma animasyonu
+        const animateCount = (element, finalCount) => {
+            if (finalCount === null || typeof finalCount === 'undefined') {
+                element.textContent = 'N/A';
+                return;
+            }
+            let start = 0;
+            const duration = 1500;
+            const stepTime = Math.max(1, Math.floor(duration / finalCount));
+
+            const timer = setInterval(() => {
+                start++;
+                element.textContent = start;
+                if (start >= finalCount) {
+                    element.textContent = finalCount;
+                    clearInterval(timer);
+                }
+            }, stepTime);
+        };
+
+        // Tüm API isteklerini aynı anda başlat
+        Promise.all([
+            fetchAPI('package_search', 'rows=0&include_private=true'),
+            fetchAPI('organization_list'),
+            fetchAPI('group_list'),
+            fetchAPI('tag_list'),
+            fetchAPI('license_list'),
+        ])
+            .then(([datasets, orgs, groups, tags, licenses]) => {
+                animateCount(document.getElementById('stat-datasets'), datasets ? datasets.count : null);
+                animateCount(document.getElementById('stat-orgs'), orgs ? orgs.length : null);
+                animateCount(document.getElementById('stat-groups'), groups ? groups.length : null);
+                animateCount(document.getElementById('stat-tags'), tags ? tags.length : null);
+                animateCount(document.getElementById('stat-licenses'), licenses ? licenses.length : null);
+            });
     });
 </script>

@@ -1709,10 +1709,54 @@
             }, stepTime);
         };
 
-        // Mekansal veri sayısını çek - mekansal.html'deki gibi
+        // Kullanıcı login kontrolü - mekansal.html'deki gibi
+        const checkUserAuth = async () => {
+            try {
+                const response = await fetch('/api/3/action/dashboard_activity_list', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ limit: 1 })
+                });
+
+                const data = await response.json();
+                const isLoggedIn = data.success;
+                console.log('🔐 Kullanıcı giriş durumu:', isLoggedIn);
+                return isLoggedIn;
+            } catch {
+                return false;
+            }
+        };
+
+        // Public paketleri getir
+        const getPublicPackages = async () => {
+            const publicPackages = new Set();
+            try {
+                const response = await fetch('/api/3/action/package_search?rows=1000', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.success && data.result && data.result.results) {
+                    data.result.results.forEach(pkg => {
+                        if (!pkg.private) {
+                            publicPackages.add(pkg.id);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('❌ Public packages yüklenemedi:', error);
+            }
+            return publicPackages;
+        };
+
+        // Mekansal veri sayısını çek - mekansal.html'deki gibi login kontrolü ile
         const fetchSpatialCount = async () => {
             console.log('🔄 Fetching spatial resources count...');
             try {
+                // Önce login durumunu kontrol et
+                const isLoggedIn = await checkUserAuth();
+
                 const response = await fetch('/api/spatial-resources/list', {
                     credentials: 'include',
                     headers: {
@@ -1727,7 +1771,17 @@
                 console.log('📊 Spatial data received:', data);
 
                 if (data.success && data.spatial_resources) {
-                    const totalResources = data.spatial_resources.length;
+                    let resources = data.spatial_resources;
+
+                    // Giriş yapmamış kullanıcı için private paketleri filtrele
+                    if (!isLoggedIn) {
+                        console.log('⚠️ User not logged in, filtering private packages...');
+                        const publicPackages = await getPublicPackages();
+                        resources = resources.filter(r => publicPackages.has(r.package_id));
+                        console.log(`🔒 Filtered resources: ${data.spatial_resources.length} → ${resources.length}`);
+                    }
+
+                    const totalResources = resources.length;
                     console.log('✅ Spatial resources count:', totalResources);
                     return totalResources;
                 }

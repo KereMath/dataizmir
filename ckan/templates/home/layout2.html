@@ -1709,33 +1709,35 @@
             }, stepTime);
         };
 
-        // Mekansal veri sayısını çek
-        const fetchSpatialCount = () => {
+        // Mekansal veri sayısını çek - mekansal.html'deki gibi
+        const fetchSpatialCount = async () => {
             console.log('🔄 Fetching spatial resources count...');
-            return fetch('/api/spatial-resources/list', {
-                credentials: 'include',
-                headers: {
-                    'Cache-Control': 'max-age=300'
-                }
-            })
-                .then(response => {
-                    console.log('📡 Spatial API response:', response.status);
-                    if (!response.ok) throw new Error(`Spatial resources API error: ${response.status}`);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('📊 Spatial data received:', data);
-                    if (data.success && data.resources) {
-                        console.log('✅ Spatial resources count:', data.resources.length);
-                        return data.resources.length;
+            try {
+                const response = await fetch('/api/spatial-resources/list', {
+                    credentials: 'include',
+                    headers: {
+                        'Cache-Control': 'max-age=300'
                     }
-                    console.warn('⚠️ No spatial resources found');
-                    return 0;
-                })
-                .catch(error => {
-                    console.error('❌ Error fetching spatial resources:', error);
-                    return 0;
                 });
+
+                console.log('📡 Spatial API response:', response.status);
+                if (!response.ok) throw new Error(`Spatial resources API error: ${response.status}`);
+
+                const data = await response.json();
+                console.log('📊 Spatial data received:', data);
+
+                if (data.success && data.spatial_resources) {
+                    const totalResources = data.spatial_resources.length;
+                    console.log('✅ Spatial resources count:', totalResources);
+                    return totalResources;
+                }
+
+                console.warn('⚠️ No spatial_resources found in response');
+                return 0;
+            } catch (error) {
+                console.error('❌ Error fetching spatial resources:', error);
+                return 0;
+            }
         };
 
         // Tüm API isteklerini aynı anda başlat

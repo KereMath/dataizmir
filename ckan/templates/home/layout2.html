@@ -718,6 +718,17 @@
                         <div id="stat-licenses" class="stat-number">...</div>
                         <div class="stat-label">Lisans Tipi</div>
                     </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M9 6.75V15m6-6v8.25m.503 3.498l4.875-2.437c.381-.19.622-.58.622-1.006V4.82c0-.836-.88-1.38-1.628-1.006l-3.869 1.934c-.317.159-.69.159-1.006 0L9.503 3.252a1.125 1.125 0 00-1.006 0L3.622 5.689C3.24 5.88 3 6.27 3 6.695V19.18c0 .836.88 1.38 1.628 1.006l3.869-1.934c.317-.159.69-.159 1.006 0l4.994 2.497c.317.158.69.158 1.006 0z" />
+                            </svg>
+                        </div>
+                        <div id="stat-spatial" class="stat-number">...</div>
+                        <div class="stat-label">Mekansal Veri</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1685,6 +1696,30 @@
             }, stepTime);
         };
 
+        // Mekansal veri sayısını çek
+        const fetchSpatialCount = () => {
+            return fetch('/api/spatial-resources/list', {
+                credentials: 'include',
+                headers: {
+                    'Cache-Control': 'max-age=300'
+                }
+            })
+                .then(response => {
+                    if (!response.ok) throw new Error('Spatial resources API error');
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success && data.resources) {
+                        return data.resources.length;
+                    }
+                    return null;
+                })
+                .catch(error => {
+                    console.error('Error fetching spatial resources:', error);
+                    return null;
+                });
+        };
+
         // Tüm API isteklerini aynı anda başlat
         Promise.all([
             fetchAPI('package_search', 'rows=0&include_private=true'),
@@ -1692,13 +1727,15 @@
             fetchAPI('group_list'),
             fetchAPI('tag_list'),
             fetchAPI('license_list'),
+            fetchSpatialCount()
         ])
-            .then(([datasets, orgs, groups, tags, licenses]) => {
+            .then(([datasets, orgs, groups, tags, licenses, spatialCount]) => {
                 animateCount(document.getElementById('stat-datasets'), datasets ? datasets.count : null);
                 animateCount(document.getElementById('stat-orgs'), orgs ? orgs.length : null);
                 animateCount(document.getElementById('stat-groups'), groups ? groups.length : null);
                 animateCount(document.getElementById('stat-tags'), tags ? tags.length : null);
                 animateCount(document.getElementById('stat-licenses'), licenses ? licenses.length : null);
+                animateCount(document.getElementById('stat-spatial'), spatialCount);
             });
     });
 </script>

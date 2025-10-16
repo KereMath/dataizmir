@@ -737,10 +737,19 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const itemsPerPage = 4, container = document.getElementById("featured-datasets");
-        const allItems = [...container.querySelectorAll(".card-grid-item")];
-        const totalItems = allItems.length, totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+        const container = document.getElementById("featured-datasets");
         const paginationContainer = document.getElementById("pagination-container");
+
+        // Container yoksa çık (bu sayfa featured datasets içermiyor demektir)
+        if (!container || !paginationContainer) {
+            console.log('Featured datasets container not found, skipping pagination');
+            return;
+        }
+
+        const itemsPerPage = 4;
+        const allItems = [...container.querySelectorAll(".card-grid-item")];
+        const totalItems = allItems.length;
+        const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
         let currentPage = 1;
 
         function resetAll() { allItems.forEach(i => i.style.display = "none") }

@@ -16,6 +16,19 @@ this.ckan.module('datatables_view', function (jQuery) {
     initialize: function() {
       var datatable = jQuery('#dtprv').DataTable({});
 
+      // Hide system columns (_id, _full_text, etc.)
+      setTimeout(function() {
+        var headers = datatable.columns().header();
+        jQuery(headers).each(function(index) {
+          var columnText = jQuery(this).text();
+          // Hide columns that start with underscore or are named 'id'/'ID'
+          if (columnText && (columnText.startsWith('_') || columnText.toLowerCase() === 'id')) {
+            datatable.column(index).visible(false);
+            console.log('Hidden system column: ' + columnText);
+          }
+        });
+      }, 500);
+
       // Adds download dropdown to buttons menu
       datatable.button().add(2, {
         text: 'Download',

@@ -34,9 +34,9 @@
       data-keys='true'>
     <thead>
       <tr>
-        {% for field in [{'id': '_id'}] + h.datastore_dictionary(resource.id) %}
-          {% if 'show_fields' not in resource_view
-            or field.id in resource_view.show_fields %}
+        {% for field in h.datastore_dictionary(resource.id) %}
+          {% if not field.id.startswith('_') and ('show_fields' not in resource_view
+            or field.id in resource_view.show_fields) %}
             <th scope="col">{{ field.id }}</th>
           {% endif %}
         {% endfor %}

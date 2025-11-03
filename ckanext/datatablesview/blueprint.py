@@ -61,7 +61,7 @@ def ajax(resource_view_id):
         }
     )
 
-    cols = [f[u'id'] for f in unfiltered_response[u'fields']]
+    cols = [f[u'id'] for f in unfiltered_response[u'fields'] if not f[u'id'].startswith(u'_')]
     if u'show_fields' in resource_view:
         cols = [c for c in cols if c in resource_view[u'show_fields']]
 
@@ -120,7 +120,7 @@ def filtered_download(resource_view_id):
         }
     )
 
-    cols = [f[u'id'] for f in unfiltered_response[u'fields']]
+    cols = [f[u'id'] for f in unfiltered_response[u'fields'] if not f[u'id'].startswith(u'_')]
     if u'show_fields' in resource_view:
         cols = [c for c in cols if c in resource_view[u'show_fields']]
 

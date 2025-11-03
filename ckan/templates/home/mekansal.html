@@ -1307,9 +1307,9 @@
 
   /* Custom Legend Box (Sol Alt) */
   .custom-legend-box {
-    position: absolute;
-    bottom: 20px;  /* Sol alt köşeye sabitlendi */
-    left: 20px;    /* Sağdan sola taşındı */
+    position: fixed;  /* fixed olarak değiştirildi - viewport'a göre konumlanır */
+    bottom: 80px;  /* Alt kenardan biraz yukarı */
+    right: 20px;    /* Sağ tarafta başlasın */
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -4129,17 +4129,17 @@
         } catch (e) {
           console.error('Could not restore legend position:', e);
           // Hata durumunda varsayılan pozisyon
-          legendBox.style.left = '20px';
-          legendBox.style.bottom = '20px';
+          legendBox.style.right = '20px';
+          legendBox.style.bottom = '80px';
           legendBox.style.top = 'auto';
-          legendBox.style.right = 'auto';
+          legendBox.style.left = 'auto';
         }
       } else {
-        // İlk açılışta varsayılan pozisyon (sol alt köşe)
-        legendBox.style.left = '20px';
-        legendBox.style.bottom = '20px';
+        // İlk açılışta varsayılan pozisyon (sağ alt köşe)
+        legendBox.style.right = '20px';
+        legendBox.style.bottom = '80px';
         legendBox.style.top = 'auto';
-        legendBox.style.right = 'auto';
+        legendBox.style.left = 'auto';
       }
     }
 

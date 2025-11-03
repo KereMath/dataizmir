@@ -3254,6 +3254,11 @@ my.SlickGrid = Backbone.View.extend({
     }
 
     _.each(this.model.fields.toJSON(),function(field){
+      // Skip system columns (_id, _full_text, etc.) and columns named 'id' or 'ID'
+      if (field.id && (field.id.startsWith('_') || field.id.toLowerCase() === 'id')) {
+        return; // Skip this field
+      }
+
       var column = {
         id: field.id,
         name: sanitizeFieldName(field.label),
@@ -3319,6 +3324,10 @@ my.SlickGrid = Backbone.View.extend({
     function toRow(m) {
       var row = {};
       self.model.fields.each(function(field) {
+        // Skip system columns (_id, _full_text, etc.) and columns named 'id' or 'ID'
+        if (field.id && (field.id.startsWith('_') || field.id.toLowerCase() === 'id')) {
+          return; // Skip this field
+        }
         var render = "";
         //when adding row from slickgrid the field value is undefined
         if(!_.isUndefined(m.getFieldValueUnrendered(field))){

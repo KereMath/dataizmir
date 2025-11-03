@@ -1307,9 +1307,9 @@
 
   /* Custom Legend Box (Sol Alt) */
   .custom-legend-box {
-    position: absolute;
-    bottom: 20px;  /* Sol alt köşeye sabitlendi */
-    left: 20px;    /* Sağdan sola taşındı */
+    position: absolute;  /* Map container'a göre konumlanır */
+    bottom: 20px;  /* Alt kenardan 20px yukarıda */
+    right: 20px;   /* Sağ kenardan 20px içeride */
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -1318,7 +1318,7 @@
     width: auto;
     max-width: 320px;  /* Maximum genişlik eklendi */
     max-height: 450px;
-    z-index: 1000;  /* Z-index artırıldı */
+    z-index: 400;  /* Leaflet kontrollerinin üzerinde */
     overflow-y: auto;
     overflow-x: hidden;
     display: none;
@@ -3984,7 +3984,8 @@
       if (!legendBox || !legendHeader) return;
 
       let isDragging = false;
-      let offsetX, offsetY;
+      let startX, startY;
+      let initialLeft, initialTop;
 
       // Mouse down - sürükleme başlangıcı
       legendHeader.addEventListener('mousedown', (e) => {
@@ -3994,10 +3995,14 @@
         isDragging = true;
         legendBox.classList.add('dragging');
 
-        // Mouse'un kutu içindeki offset pozisyonunu hesapla
-        const rect = legendBox.getBoundingClientRect();
-        offsetX = e.clientX - rect.left;
-        offsetY = e.clientY - rect.top;
+        // Başlangıç mouse pozisyonu
+        startX = e.clientX;
+        startY = e.clientY;
+
+        // Mevcut box pozisyonu (container'a göre)
+        const computedStyle = window.getComputedStyle(legendBox);
+        initialLeft = parseInt(computedStyle.left) || 0;
+        initialTop = parseInt(computedStyle.top) || 0;
 
         // Seçimi engelle
         e.preventDefault();
@@ -4007,23 +4012,27 @@
       document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
 
-        // Yeni pozisyonu hesapla (offset'i çıkararak)
-        let newLeft = e.clientX - offsetX;
-        let newTop = e.clientY - offsetY;
+        // Mouse hareketini hesapla
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
 
-        // Sınırları kontrol et
+        // Container (main-container) sınırlarını al
+        const container = document.querySelector('.main-container');
+        const containerRect = container.getBoundingClientRect();
+
+        // Yeni pozisyon
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
+
+        // Box boyutları
         const boxWidth = legendBox.offsetWidth;
         const boxHeight = legendBox.offsetHeight;
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
 
-        // Sol-sağ sınırları
-        newLeft = Math.max(10, Math.min(newLeft, windowWidth - boxWidth - 10));
+        // Container içinde sınırla
+        newLeft = Math.max(10, Math.min(newLeft, containerRect.width - boxWidth - 10));
+        newTop = Math.max(10, Math.min(newTop, containerRect.height - boxHeight - 10));
 
-        // Üst-alt sınırları
-        newTop = Math.max(10, Math.min(newTop, windowHeight - boxHeight - 10));
-
-        // Pozisyonu uygula (top/left kullanarak)
+        // Pozisyonu uygula
         legendBox.style.left = newLeft + 'px';
         legendBox.style.top = newTop + 'px';
         legendBox.style.right = 'auto';
@@ -4053,9 +4062,12 @@
         legendBox.classList.add('dragging');
 
         const touch = e.touches[0];
-        const rect = legendBox.getBoundingClientRect();
-        offsetX = touch.clientX - rect.left;
-        offsetY = touch.clientY - rect.top;
+        startX = touch.clientX;
+        startY = touch.clientY;
+
+        const computedStyle = window.getComputedStyle(legendBox);
+        initialLeft = parseInt(computedStyle.left) || 0;
+        initialTop = parseInt(computedStyle.top) || 0;
 
         e.preventDefault();
       });
@@ -4064,16 +4076,20 @@
         if (!isDragging) return;
 
         const touch = e.touches[0];
-        let newLeft = touch.clientX - offsetX;
-        let newTop = touch.clientY - offsetY;
+        const deltaX = touch.clientX - startX;
+        const deltaY = touch.clientY - startY;
+
+        const container = document.querySelector('.main-container');
+        const containerRect = container.getBoundingClientRect();
+
+        let newLeft = initialLeft + deltaX;
+        let newTop = initialTop + deltaY;
 
         const boxWidth = legendBox.offsetWidth;
         const boxHeight = legendBox.offsetHeight;
-        const windowWidth = window.innerWidth;
-        const windowHeight = window.innerHeight;
 
-        newLeft = Math.max(10, Math.min(newLeft, windowWidth - boxWidth - 10));
-        newTop = Math.max(10, Math.min(newTop, windowHeight - boxHeight - 10));
+        newLeft = Math.max(10, Math.min(newLeft, containerRect.width - boxWidth - 10));
+        newTop = Math.max(10, Math.min(newTop, containerRect.height - boxHeight - 10));
 
         legendBox.style.left = newLeft + 'px';
         legendBox.style.top = newTop + 'px';

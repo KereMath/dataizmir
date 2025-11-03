@@ -4113,16 +4113,32 @@
           const windowWidth = window.innerWidth;
           const windowHeight = window.innerHeight;
 
-          let left = Math.max(10, Math.min(position.left, windowWidth - boxWidth - 10));
-          let bottom = Math.max(10, Math.min(position.bottom, windowHeight - boxHeight - 10));
+          // Eğer eski format (bottom) varsa, yeni formata (top) çevir
+          if (position.bottom !== undefined && position.top === undefined) {
+            position.top = windowHeight - position.bottom - boxHeight;
+          }
+
+          let left = Math.max(10, Math.min(position.left || 20, windowWidth - boxWidth - 10));
+          let top = Math.max(10, Math.min(position.top || (windowHeight - boxHeight - 20), windowHeight - boxHeight - 10));
 
           legendBox.style.left = left + 'px';
+          legendBox.style.top = top + 'px';
           legendBox.style.right = 'auto';
-          legendBox.style.bottom = bottom + 'px';
-          legendBox.style.top = 'auto';
+          legendBox.style.bottom = 'auto';
         } catch (e) {
           console.error('Could not restore legend position:', e);
+          // Hata durumunda varsayılan pozisyon
+          legendBox.style.left = '20px';
+          legendBox.style.bottom = '20px';
+          legendBox.style.top = 'auto';
+          legendBox.style.right = 'auto';
         }
+      } else {
+        // İlk açılışta varsayılan pozisyon (sol alt köşe)
+        legendBox.style.left = '20px';
+        legendBox.style.bottom = '20px';
+        legendBox.style.top = 'auto';
+        legendBox.style.right = 'auto';
       }
     }
 

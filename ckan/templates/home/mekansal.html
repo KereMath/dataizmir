@@ -1777,6 +1777,7 @@
         this.renderLayers();
         this.updateStats();
         this.initDraggableLegend();  // Sürükleme fonksiyonunu başlat
+        await this.loadAllCustomLegends();  // Lejantı göster
       } catch (error) {
         console.error('Initialization hatası:', error);
         this.showError('Mekansal veriler yüklenirken hata oluştu: ' + error.message);
@@ -4144,10 +4145,20 @@
 
       if (!legendBox || !entriesEl) return;
 
+      // Lejant kutusunu her zaman göster
+      legendBox.classList.add('active');
+      legendBox.classList.remove('collapsed');
+
       const activeResourceIds = Array.from(this.activeResources);
 
       if (activeResourceIds.length === 0) {
-        this.hideCustomLegend();
+        // Aktif kaynak yoksa boş mesaj göster ama kutuyu gizleme
+        entriesEl.innerHTML = `
+          <div class="custom-legend-empty">
+            <div class="custom-legend-empty-icon">📝</div>
+            <div>Aktif kaynak yok</div>
+          </div>
+        `;
         return;
       }
 
@@ -4180,7 +4191,13 @@
         const allResourceLegends = (await Promise.all(legendPromises)).filter(item => item !== null);
 
         if (allResourceLegends.length === 0) {
-          this.hideCustomLegend();
+          // Lejant verisi yoksa boş mesaj göster ama kutuyu gizleme
+          entriesEl.innerHTML = `
+            <div class="custom-legend-empty">
+              <div class="custom-legend-empty-icon">📝</div>
+              <div>Aktif kaynaklar için lejant bilgisi yok</div>
+            </div>
+          `;
           return;
         }
 

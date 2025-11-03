@@ -3983,8 +3983,7 @@
       if (!legendBox || !legendHeader) return;
 
       let isDragging = false;
-      let startX, startY;
-      let initialLeft, initialBottom;
+      let offsetX, offsetY;
 
       // Mouse down - sürükleme başlangıcı
       legendHeader.addEventListener('mousedown', (e) => {
@@ -3994,14 +3993,10 @@
         isDragging = true;
         legendBox.classList.add('dragging');
 
-        // Başlangıç pozisyonları
-        startX = e.clientX;
-        startY = e.clientY;
-
-        // Mevcut pozisyonu al
+        // Mouse'un kutu içindeki offset pozisyonunu hesapla
         const rect = legendBox.getBoundingClientRect();
-        initialLeft = rect.left;
-        initialBottom = window.innerHeight - rect.bottom;
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
 
         // Seçimi engelle
         e.preventDefault();
@@ -4011,12 +4006,9 @@
       document.addEventListener('mousemove', (e) => {
         if (!isDragging) return;
 
-        // Yeni pozisyonu hesapla
-        const deltaX = e.clientX - startX;
-        const deltaY = startY - e.clientY; // Y ekseni ters
-
-        let newLeft = initialLeft + deltaX;
-        let newBottom = initialBottom + deltaY;
+        // Yeni pozisyonu hesapla (offset'i çıkararak)
+        let newLeft = e.clientX - offsetX;
+        let newTop = e.clientY - offsetY;
 
         // Sınırları kontrol et
         const boxWidth = legendBox.offsetWidth;
@@ -4027,14 +4019,14 @@
         // Sol-sağ sınırları
         newLeft = Math.max(10, Math.min(newLeft, windowWidth - boxWidth - 10));
 
-        // Alt-üst sınırları
-        newBottom = Math.max(10, Math.min(newBottom, windowHeight - boxHeight - 10));
+        // Üst-alt sınırları
+        newTop = Math.max(10, Math.min(newTop, windowHeight - boxHeight - 10));
 
-        // Pozisyonu uygula
+        // Pozisyonu uygula (top/left kullanarak)
         legendBox.style.left = newLeft + 'px';
+        legendBox.style.top = newTop + 'px';
         legendBox.style.right = 'auto';
-        legendBox.style.bottom = newBottom + 'px';
-        legendBox.style.top = 'auto';
+        legendBox.style.bottom = 'auto';
       });
 
       // Mouse up - sürükleme bitişi
@@ -4047,7 +4039,7 @@
           const rect = legendBox.getBoundingClientRect();
           localStorage.setItem('legendPosition', JSON.stringify({
             left: rect.left,
-            bottom: window.innerHeight - rect.bottom
+            top: rect.top
           }));
         }
       });
@@ -4060,12 +4052,9 @@
         legendBox.classList.add('dragging');
 
         const touch = e.touches[0];
-        startX = touch.clientX;
-        startY = touch.clientY;
-
         const rect = legendBox.getBoundingClientRect();
-        initialLeft = rect.left;
-        initialBottom = window.innerHeight - rect.bottom;
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
 
         e.preventDefault();
       });
@@ -4074,11 +4063,8 @@
         if (!isDragging) return;
 
         const touch = e.touches[0];
-        const deltaX = touch.clientX - startX;
-        const deltaY = startY - touch.clientY;
-
-        let newLeft = initialLeft + deltaX;
-        let newBottom = initialBottom + deltaY;
+        let newLeft = touch.clientX - offsetX;
+        let newTop = touch.clientY - offsetY;
 
         const boxWidth = legendBox.offsetWidth;
         const boxHeight = legendBox.offsetHeight;
@@ -4086,12 +4072,12 @@
         const windowHeight = window.innerHeight;
 
         newLeft = Math.max(10, Math.min(newLeft, windowWidth - boxWidth - 10));
-        newBottom = Math.max(10, Math.min(newBottom, windowHeight - boxHeight - 10));
+        newTop = Math.max(10, Math.min(newTop, windowHeight - boxHeight - 10));
 
         legendBox.style.left = newLeft + 'px';
+        legendBox.style.top = newTop + 'px';
         legendBox.style.right = 'auto';
-        legendBox.style.bottom = newBottom + 'px';
-        legendBox.style.top = 'auto';
+        legendBox.style.bottom = 'auto';
       });
 
       document.addEventListener('touchend', () => {
@@ -4102,7 +4088,7 @@
           const rect = legendBox.getBoundingClientRect();
           localStorage.setItem('legendPosition', JSON.stringify({
             left: rect.left,
-            bottom: window.innerHeight - rect.bottom
+            top: rect.top
           }));
         }
       });

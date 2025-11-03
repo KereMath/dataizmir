@@ -1308,21 +1308,69 @@
   /* Custom Legend Box (Sol Alt) */
   .custom-legend-box {
     position: absolute;
-    bottom: 30%;
-    right: 15px;
+    bottom: 20px;  /* Sol alt köşeye sabitlendi */
+    left: 20px;    /* Sağdan sola taşındı */
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     padding: 16px;
     min-width: 250px;
     width: auto;
+    max-width: 320px;  /* Maximum genişlik eklendi */
     max-height: 450px;
-    z-index: 0;
+    z-index: 1000;  /* Z-index artırıldı */
     overflow-y: auto;
     overflow-x: hidden;
     display: none;
     flex-direction: column;
-    transition: all 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    cursor: move;  /* Sürükleme göstergesi */
+  }
+
+  /* Sürükleme sırasında görünüm */
+  .custom-legend-box.dragging {
+    opacity: 0.9;
+    cursor: grabbing;
+    transition: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Resize grip - sağ alt köşede */
+  .custom-legend-resize-grip {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    cursor: nwse-resize;
+    opacity: 0.3;
+    transition: opacity 0.2s;
+  }
+
+  .custom-legend-resize-grip:hover {
+    opacity: 0.6;
+  }
+
+  .custom-legend-resize-grip::before {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    width: 5px;
+    height: 5px;
+    border-right: 2px solid #6c757d;
+    border-bottom: 2px solid #6c757d;
+  }
+
+  .custom-legend-resize-grip::after {
+    content: '';
+    position: absolute;
+    bottom: 3px;
+    right: 8px;
+    width: 5px;
+    height: 5px;
+    border-right: 2px solid #6c757d;
+    border-bottom: 2px solid #6c757d;
   }
 
   .custom-legend-box.active {
@@ -1339,8 +1387,18 @@
     justify-content: space-between;
     align-items: center;
     margin-bottom: 14px;
-    cursor: pointer;
+    cursor: move;  /* Sürükleme göstergesi */
     user-select: none;
+    padding: 4px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 8px;
+    margin: -16px -16px 14px -16px;  /* Tam genişlik */
+    padding: 12px 16px;
+  }
+
+  .custom-legend-header:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
   }
 
   .custom-legend-box.collapsed .custom-legend-header {
@@ -1350,25 +1408,30 @@
   .custom-legend-header-title {
     font-size: 15px;
     font-weight: 700;
-    color: #2c3e50;
+    color: white;  /* Beyaz yapıldı */
     display: flex;
     align-items: center;
     gap: 8px;
   }
 
   .custom-legend-header-toggle {
-    background: none;
-    border: none;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
     font-size: 16px;
-    color: #6c757d;
+    color: white;  /* Beyaz yapıldı */
     cursor: pointer;
     padding: 0;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, background 0.2s ease;
+  }
+
+  .custom-legend-header-toggle:hover {
+    background: rgba(255, 255, 255, 0.3);
   }
 
   .custom-legend-box.collapsed .custom-legend-header-toggle {
@@ -1588,12 +1651,12 @@
 
     <!-- Custom Legend Box (Sol Alt) -->
     <div class="custom-legend-box" id="customLegendBox">
-      <div class="custom-legend-header" onclick="spatialMapManager.toggleCustomLegend()">
+      <div class="custom-legend-header">
         <div class="custom-legend-header-title">
           <span>📊</span>
           <span>LEJANT</span>
         </div>
-        <button class="custom-legend-header-toggle">▼</button>
+        <button class="custom-legend-header-toggle" onclick="spatialMapManager.toggleCustomLegend(); event.stopPropagation();">▼</button>
       </div>
       <div class="custom-legend-entries" id="customLegendEntries">
         <div class="custom-legend-empty">
@@ -1601,6 +1664,7 @@
           <div>Aktif kaynaklar için lejant bilgisi yok</div>
         </div>
       </div>
+      <div class="custom-legend-resize-grip"></div>
     </div>
 
     <!-- Loading spinner -->
@@ -1712,6 +1776,7 @@
         this.setupEventListeners();
         this.renderLayers();
         this.updateStats();
+        this.initDraggableLegend();  // Sürükleme fonksiyonunu başlat
       } catch (error) {
         console.error('Initialization hatası:', error);
         this.showError('Mekansal veriler yüklenirken hata oluştu: ' + error.message);
@@ -3907,6 +3972,171 @@
       const legendBox = document.getElementById('customLegendBox');
       if (legendBox) {
         legendBox.classList.toggle('collapsed');
+      }
+    }
+
+    // Lejant kutusunu sürüklenebilir yapar
+    initDraggableLegend() {
+      const legendBox = document.getElementById('customLegendBox');
+      const legendHeader = legendBox?.querySelector('.custom-legend-header');
+
+      if (!legendBox || !legendHeader) return;
+
+      let isDragging = false;
+      let startX, startY;
+      let initialLeft, initialBottom;
+
+      // Mouse down - sürükleme başlangıcı
+      legendHeader.addEventListener('mousedown', (e) => {
+        // Toggle butonuna tıklanmışsa sürüklemeyi başlatma
+        if (e.target.classList.contains('custom-legend-header-toggle')) return;
+
+        isDragging = true;
+        legendBox.classList.add('dragging');
+
+        // Başlangıç pozisyonları
+        startX = e.clientX;
+        startY = e.clientY;
+
+        // Mevcut pozisyonu al
+        const rect = legendBox.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialBottom = window.innerHeight - rect.bottom;
+
+        // Seçimi engelle
+        e.preventDefault();
+      });
+
+      // Mouse move - sürükleme
+      document.addEventListener('mousemove', (e) => {
+        if (!isDragging) return;
+
+        // Yeni pozisyonu hesapla
+        const deltaX = e.clientX - startX;
+        const deltaY = startY - e.clientY; // Y ekseni ters
+
+        let newLeft = initialLeft + deltaX;
+        let newBottom = initialBottom + deltaY;
+
+        // Sınırları kontrol et
+        const boxWidth = legendBox.offsetWidth;
+        const boxHeight = legendBox.offsetHeight;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        // Sol-sağ sınırları
+        newLeft = Math.max(10, Math.min(newLeft, windowWidth - boxWidth - 10));
+
+        // Alt-üst sınırları
+        newBottom = Math.max(10, Math.min(newBottom, windowHeight - boxHeight - 10));
+
+        // Pozisyonu uygula
+        legendBox.style.left = newLeft + 'px';
+        legendBox.style.right = 'auto';
+        legendBox.style.bottom = newBottom + 'px';
+        legendBox.style.top = 'auto';
+      });
+
+      // Mouse up - sürükleme bitişi
+      document.addEventListener('mouseup', () => {
+        if (isDragging) {
+          isDragging = false;
+          legendBox.classList.remove('dragging');
+
+          // Pozisyonu localStorage'a kaydet
+          const rect = legendBox.getBoundingClientRect();
+          localStorage.setItem('legendPosition', JSON.stringify({
+            left: rect.left,
+            bottom: window.innerHeight - rect.bottom
+          }));
+        }
+      });
+
+      // Touch events for mobile
+      legendHeader.addEventListener('touchstart', (e) => {
+        if (e.target.classList.contains('custom-legend-header-toggle')) return;
+
+        isDragging = true;
+        legendBox.classList.add('dragging');
+
+        const touch = e.touches[0];
+        startX = touch.clientX;
+        startY = touch.clientY;
+
+        const rect = legendBox.getBoundingClientRect();
+        initialLeft = rect.left;
+        initialBottom = window.innerHeight - rect.bottom;
+
+        e.preventDefault();
+      });
+
+      document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - startX;
+        const deltaY = startY - touch.clientY;
+
+        let newLeft = initialLeft + deltaX;
+        let newBottom = initialBottom + deltaY;
+
+        const boxWidth = legendBox.offsetWidth;
+        const boxHeight = legendBox.offsetHeight;
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        newLeft = Math.max(10, Math.min(newLeft, windowWidth - boxWidth - 10));
+        newBottom = Math.max(10, Math.min(newBottom, windowHeight - boxHeight - 10));
+
+        legendBox.style.left = newLeft + 'px';
+        legendBox.style.right = 'auto';
+        legendBox.style.bottom = newBottom + 'px';
+        legendBox.style.top = 'auto';
+      });
+
+      document.addEventListener('touchend', () => {
+        if (isDragging) {
+          isDragging = false;
+          legendBox.classList.remove('dragging');
+
+          const rect = legendBox.getBoundingClientRect();
+          localStorage.setItem('legendPosition', JSON.stringify({
+            left: rect.left,
+            bottom: window.innerHeight - rect.bottom
+          }));
+        }
+      });
+
+      // Kaydedilmiş pozisyonu yükle
+      this.restoreLegendPosition();
+    }
+
+    // Kaydedilmiş lejant pozisyonunu geri yükle
+    restoreLegendPosition() {
+      const legendBox = document.getElementById('customLegendBox');
+      if (!legendBox) return;
+
+      const savedPosition = localStorage.getItem('legendPosition');
+      if (savedPosition) {
+        try {
+          const position = JSON.parse(savedPosition);
+
+          // Pencere sınırlarını kontrol et
+          const boxWidth = legendBox.offsetWidth;
+          const boxHeight = legendBox.offsetHeight;
+          const windowWidth = window.innerWidth;
+          const windowHeight = window.innerHeight;
+
+          let left = Math.max(10, Math.min(position.left, windowWidth - boxWidth - 10));
+          let bottom = Math.max(10, Math.min(position.bottom, windowHeight - boxHeight - 10));
+
+          legendBox.style.left = left + 'px';
+          legendBox.style.right = 'auto';
+          legendBox.style.bottom = bottom + 'px';
+          legendBox.style.top = 'auto';
+        } catch (e) {
+          console.error('Could not restore legend position:', e);
+        }
       }
     }
 

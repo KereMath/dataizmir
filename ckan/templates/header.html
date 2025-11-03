@@ -501,6 +501,7 @@
           ('organization.index', _('Veri Paydaşları')),
           ('group.index', _('Kategoriler')) ) }}
           <li><a href="/temalar">{{ _('Temalar') }}</a></li>
+          <li><a href="{{ h.url_for('home.mekansal') }}">{{ _('Mekansal Gösterim') }}</a></li>
           <li><a href="{{ h.url_for('home.about') }}">İstatistikler</a></li>
           {% if not c.userobj %}
           <li><a href="/user/login" class="mobile-giris">Giriş Yap</a></li>

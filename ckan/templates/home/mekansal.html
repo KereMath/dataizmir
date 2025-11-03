@@ -4113,13 +4113,12 @@
           const windowWidth = window.innerWidth;
           const windowHeight = window.innerHeight;
 
-          let left = Math.max(10, Math.min(position.left, windowWidth - boxWidth - 10));
-          let bottom = Math.max(10, Math.min(position.bottom, windowHeight - boxHeight - 10));
-
-          legendBox.style.left = left + 'px';
-          legendBox.style.right = 'auto';
-          legendBox.style.bottom = bottom + 'px';
-          legendBox.style.top = 'auto';
+      let left = Math.max(10, Math.min(position.left, windowWidth - boxWidth - 10));
+      let top = Math.max(10, Math.min(position.top, windowHeight - boxHeight - 10)); // <--- DÜZELTME 1
+      legendBox.style.left = left + 'px';
+      legendBox.style.right = 'auto';
+      legendBox.style.top = top + 'px'; // <--- DÜZELTME 2
+      legendBox.style.bottom = 'auto';
         } catch (e) {
           console.error('Could not restore legend position:', e);
         }

@@ -4053,8 +4053,8 @@
 
         const touch = e.touches[0];
         const rect = legendBox.getBoundingClientRect();
-        offsetX = touch.clientX - rect.left;
-        offsetY = touch.clientY - rect.top;
+        offsetX = touch.clientX + rect.left;
+        offsetY = touch.clientY + rect.top;
 
         e.preventDefault();
       });

@@ -1307,9 +1307,9 @@
 
   /* Custom Legend Box (Sol Alt) */
   .custom-legend-box {
-    position: fixed;  /* fixed olarak değiştirildi - viewport'a göre konumlanır */
-    bottom: 80px;  /* Alt kenardan biraz yukarı */
-    right: 20px;    /* Sağ tarafta başlasın */
+    position: absolute;
+    bottom: 20px;  /* Sol alt köşeye sabitlendi */
+    left: 20px;    /* Sağdan sola taşındı */
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -1777,7 +1777,6 @@
         this.renderLayers();
         this.updateStats();
         this.initDraggableLegend();  // Sürükleme fonksiyonunu başlat
-        await this.loadAllCustomLegends();  // Lejantı göster
       } catch (error) {
         console.error('Initialization hatası:', error);
         this.showError('Mekansal veriler yüklenirken hata oluştu: ' + error.message);
@@ -4114,32 +4113,16 @@
           const windowWidth = window.innerWidth;
           const windowHeight = window.innerHeight;
 
-          // Eğer eski format (bottom) varsa, yeni formata (top) çevir
-          if (position.bottom !== undefined && position.top === undefined) {
-            position.top = windowHeight - position.bottom - boxHeight;
-          }
-
-          let left = Math.max(10, Math.min(position.left || 20, windowWidth - boxWidth - 10));
-          let top = Math.max(10, Math.min(position.top || (windowHeight - boxHeight - 20), windowHeight - boxHeight - 10));
+          let left = Math.max(10, Math.min(position.left, windowWidth - boxWidth - 10));
+          let bottom = Math.max(10, Math.min(position.bottom, windowHeight - boxHeight - 10));
 
           legendBox.style.left = left + 'px';
-          legendBox.style.top = top + 'px';
           legendBox.style.right = 'auto';
-          legendBox.style.bottom = 'auto';
+          legendBox.style.bottom = bottom + 'px';
+          legendBox.style.top = 'auto';
         } catch (e) {
           console.error('Could not restore legend position:', e);
-          // Hata durumunda varsayılan pozisyon
-          legendBox.style.right = '20px';
-          legendBox.style.bottom = '80px';
-          legendBox.style.top = 'auto';
-          legendBox.style.left = 'auto';
         }
-      } else {
-        // İlk açılışta varsayılan pozisyon (sağ alt köşe)
-        legendBox.style.right = '20px';
-        legendBox.style.bottom = '80px';
-        legendBox.style.top = 'auto';
-        legendBox.style.left = 'auto';
       }
     }
 
@@ -4161,19 +4144,10 @@
 
       if (!legendBox || !entriesEl) return;
 
-      // Lejant kutusunu her zaman göster
-      legendBox.classList.add('active');
-
       const activeResourceIds = Array.from(this.activeResources);
 
       if (activeResourceIds.length === 0) {
-        // Aktif kaynak yoksa boş mesajı göster
-        entriesEl.innerHTML = `
-          <div class="custom-legend-empty">
-            <div class="custom-legend-empty-icon">📝</div>
-            <div>Aktif kaynak yok</div>
-          </div>
-        `;
+        this.hideCustomLegend();
         return;
       }
 
@@ -4206,13 +4180,7 @@
         const allResourceLegends = (await Promise.all(legendPromises)).filter(item => item !== null);
 
         if (allResourceLegends.length === 0) {
-          // Lejant verisi yoksa boş mesajı göster ama kutuyu gizleme
-          entriesEl.innerHTML = `
-            <div class="custom-legend-empty">
-              <div class="custom-legend-empty-icon">📝</div>
-              <div>Aktif kaynaklar için lejant bilgisi yok</div>
-            </div>
-          `;
+          this.hideCustomLegend();
           return;
         }
 

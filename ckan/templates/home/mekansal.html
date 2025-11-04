@@ -3987,6 +3987,7 @@
     }
 
     // Lejant kutusunu sürüklenebilir yapar
+    // Lejant kutusunu sürüklenebilir yapar
     initDraggableLegend() {
       const legendBox = document.getElementById('customLegendBox');
       const legendHeader = legendBox?.querySelector('.custom-legend-header');
@@ -4005,24 +4006,29 @@
         isDragging = true;
         legendBox.classList.add('dragging');
 
-        // GÜNCELLEME: Sürükleme başladığında 'bottom' pozisyonunu 'top'a dönüştür
         const computedStyle = window.getComputedStyle(legendBox);
-        if (computedStyle.bottom !== 'auto') {
-          // 'bottom'dan 'top'a anlık hesaplama yap
+
+        // GÜNCELLEME: 'left' değerini al
+        initialLeft = parseInt(computedStyle.left) || 0;
+
+        // GÜNCELLEME: 'top' pozisyonunu al
+        if (computedStyle.top !== 'auto') {
+          // Zaten 'top' ile pozisyonlanmış
+          initialTop = parseInt(computedStyle.top) || 0;
+        } else {
+          // 'bottom' ile pozisyonlanmış, 'top'a çevir
           const rect = legendBox.getBoundingClientRect();
           const containerRect = legendBox.parentElement.getBoundingClientRect();
           initialTop = rect.top - containerRect.top;
-          legendBox.style.top = initialTop + 'px';
-          legendBox.style.bottom = 'auto'; // 'bottom'u devre dışı bırak
-        } else {
-          // Zaten 'top' ile pozisyonlanmış
-          initialTop = parseInt(computedStyle.top) || 0;
         }
+
+        // Pozisyonu 'top' bazlı olarak güncelle
+        legendBox.style.top = initialTop + 'px';
+        legendBox.style.bottom = 'auto'; // 'bottom'u devre dışı bırak
 
         // Başlangıç mouse pozisyonu
         startX = e.clientX;
         startY = e.clientY;
-        initialLeft = parseInt(computedStyle.left) || 0; // 'left' zaten ayarlı
 
         // Seçimi engelle
         e.preventDefault();
@@ -4065,7 +4071,7 @@
           isDragging = false;
           legendBox.classList.remove('dragging');
 
-          // GÜNCELLEME: Pozisyonu localStorage'a kaydet (style values, not viewport rect)
+          // Pozisyonu localStorage'a kaydet
           localStorage.setItem('legendPosition', JSON.stringify({
             left: legendBox.style.left,
             top: legendBox.style.top
@@ -4084,18 +4090,20 @@
         startX = touch.clientX;
         startY = touch.clientY;
 
-        // GÜNCELLEME: Sürükleme başladığında 'bottom' pozisyonunu 'top'a dönüştür
+        // GÜNCELLEME: Mousedown ile aynı mantık
         const computedStyle = window.getComputedStyle(legendBox);
-        if (computedStyle.bottom !== 'auto') {
+        initialLeft = parseInt(computedStyle.left) || 0;
+
+        if (computedStyle.top !== 'auto') {
+          initialTop = parseInt(computedStyle.top) || 0;
+        } else {
           const rect = legendBox.getBoundingClientRect();
           const containerRect = legendBox.parentElement.getBoundingClientRect();
           initialTop = rect.top - containerRect.top;
-          legendBox.style.top = initialTop + 'px';
-          legendBox.style.bottom = 'auto';
-        } else {
-          initialTop = parseInt(computedStyle.top) || 0;
         }
-        initialLeft = parseInt(computedStyle.left) || 0;
+
+        legendBox.style.top = initialTop + 'px';
+        legendBox.style.bottom = 'auto';
         // GÜNCELLEME SONU
 
         e.preventDefault();
@@ -4131,7 +4139,7 @@
           isDragging = false;
           legendBox.classList.remove('dragging');
 
-          // GÜNCELLEME: Pozisyonu localStorage'a kaydet (style values, not viewport rect)
+          // Pozisyonu localStorage'a kaydet
           localStorage.setItem('legendPosition', JSON.stringify({
             left: legendBox.style.left,
             top: legendBox.style.top
@@ -4142,7 +4150,6 @@
       // Kaydedilmiş pozisyonu yükle
       this.restoreLegendPosition();
     }
-
     // YENİ: Varsayılan (sol alt) pozisyonu ayarlar
     setDefaultLegendPosition() {
       const legendBox = document.getElementById('customLegendBox');
@@ -4150,7 +4157,7 @@
 
       // 'left' ve 'bottom' kullanarak sol alt köşeye sabitle
       legendBox.style.left = '10px';
-      legendBox.style.bottom = '100px';
+      legendBox.style.bottom = '10px';
       legendBox.style.top = 'auto';
       legendBox.style.right = 'auto';
     }

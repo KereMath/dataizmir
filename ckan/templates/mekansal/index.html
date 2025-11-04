@@ -1592,7 +1592,7 @@
 
 <!-- Color Settings Modal -->
 <div class="map-modal-overlay" id="colorSettingsModalOverlay" onclick="spatialManager.closeColorSettingsModal(event)">
-  <div class="map-modal" onclick="event.stopPropagation()" style="max-width: 800px;">
+  <div class="map-modal" onclick="event.stopPropagation()" style="max-width: 1100px;">
     <div class="map-modal-header">
       <h2 class="map-modal-title">🎨 Renk Ayarları</h2>
       <button class="map-modal-close" onclick="spatialManager.closeColorSettingsModal()">&times;</button>
@@ -1658,6 +1658,16 @@
 
       <!-- Legend Entries Container -->
       <div id="legendEntriesContainer" style="display: none;">
+        <!-- Fields Display Section -->
+        <div id="legendResourceFields" style="background: linear-gradient(135deg, #e8f5e9 0%, #e1f5fe 100%); padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
+          <div style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 8px;">
+            📋 Veri Sütunları
+          </div>
+          <div id="legendFieldsList" style="display: flex; flex-wrap: wrap; gap: 6px;">
+            <!-- Fields will be populated here -->
+          </div>
+        </div>
+
         <!-- Add New Legend Entry Form -->
         <div style="background: linear-gradient(135deg, #f3e5f5 0%, #e1f5fe 100%); border: 2px dashed #9c27b0; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
           <h4 style="margin: 0 0 12px 0; color: #495057; font-size: 15px; font-weight: 600;">
@@ -3754,32 +3764,80 @@ class SpatialResourceManager {
         return;
       }
 
-      // Render each resource with color picker
+      // Fetch datastore fields for each resource in parallel
+      const fieldsPromises = spatialResources.map(async resource => {
+        try {
+          const response = await fetch(`/api/3/action/datastore_search?resource_id=${resource.resource_id}&limit=0`);
+          const data = await response.json();
+          if (data.success && data.result && data.result.fields) {
+            return {
+              resourceId: resource.resource_id,
+              fields: data.result.fields.filter(f => !f.id.startsWith('_'))
+            };
+          }
+        } catch (error) {
+          console.warn(`Could not fetch fields for ${resource.resource_id}`);
+        }
+        return { resourceId: resource.resource_id, fields: [] };
+      });
+
+      const fieldsData = await Promise.all(fieldsPromises);
+      const fieldsMap = {};
+      fieldsData.forEach(item => {
+        fieldsMap[item.resourceId] = item.fields;
+      });
+
+      // Render each resource with color picker and fields
       const items = spatialResources.map(resource => {
         const color = resource.color || '#3388ff';
         const packageName = resource.package_title || resource.package_name;
         const resourceName = resource.resource_name || 'İsimsiz Kaynak';
+        const fields = fieldsMap[resource.resource_id] || [];
+
+        // Create fields list HTML
+        const fieldsHtml = fields.length > 0
+          ? fields.map(field => `
+              <div style="padding: 4px 8px; background: #f8f9fa; border-radius: 4px; font-size: 11px; color: #495057;">
+                📊 ${field.id}
+              </div>
+            `).join('')
+          : '<div style="font-size: 11px; color: #6c757d; font-style: italic;">Sütun bilgisi yok</div>';
 
         return `
-          <div class="rel-resource-card" style="display: flex; align-items: center; gap: 12px; padding: 14px;">
-            <div style="flex: 1; min-width: 0;">
-              <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                ${resourceName}
+          <div class="rel-resource-card" style="padding: 14px;">
+            <div style="display: flex; gap: 12px;">
+              <!-- Sol Taraf - Resource Bilgileri -->
+              <div style="flex: 2; min-width: 0;">
+                <div style="font-size: 13px; font-weight: 600; color: #495057; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  ${resourceName}
+                </div>
+                <div style="font-size: 11px; color: #6c757d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                  📦 ${packageName}
+                </div>
+                <div style="font-size: 10px; color: #6c757d; margin-top: 4px;">
+                  <span class="format-badge format-${(resource.format || 'other').toLowerCase()}">${(resource.format || 'OTHER').toUpperCase()}</span>
+                </div>
               </div>
-              <div style="font-size: 11px; color: #6c757d; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                📦 ${packageName}
+
+              <!-- Orta - Sütunlar Listesi -->
+              <div style="flex: 3; border-left: 2px solid #e9ecef; padding-left: 12px;">
+                <div style="font-size: 11px; font-weight: 600; color: #495057; margin-bottom: 6px;">
+                  📋 Sütunlar (${fields.length})
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 4px; max-height: 60px; overflow-y: auto;">
+                  ${fieldsHtml}
+                </div>
               </div>
-              <div style="font-size: 10px; color: #6c757d; margin-top: 4px;">
-                <span class="format-badge format-${(resource.format || 'other').toLowerCase()}">${(resource.format || 'OTHER').toUpperCase()}</span>
+
+              <!-- Sağ Taraf - Renk Kontrolü -->
+              <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                <div style="width: 32px; height: 32px; border-radius: 50%; background-color: ${color}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"></div>
+                <button class="action-btn btn-color"
+                        onclick="spatialManager.openColorPicker('${resource.resource_id}', '${color}')"
+                        title="Renk Değiştir">
+                  🎨 Değiştir
+                </button>
               </div>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div style="width: 32px; height: 32px; border-radius: 50%; background-color: ${color}; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);"></div>
-              <button class="action-btn btn-color"
-                      onclick="spatialManager.openColorPicker('${resource.resource_id}', '${color}')"
-                      title="Renk Değiştir">
-                🎨 Değiştir
-              </button>
             </div>
           </div>
         `;
@@ -3927,10 +3985,13 @@ class SpatialResourceManager {
   async loadResourceLegends(resourceId) {
     const entriesContainer = document.getElementById('legendEntriesContainer');
     const emptyState = document.getElementById('legendEmptyState');
+    const fieldsContainer = document.getElementById('legendResourceFields');
+    const fieldsList = document.getElementById('legendFieldsList');
 
     if (!resourceId) {
       if (entriesContainer) entriesContainer.style.display = 'none';
       if (emptyState) emptyState.style.display = 'block';
+      if (fieldsContainer) fieldsContainer.style.display = 'none';
       return;
     }
 
@@ -3941,18 +4002,48 @@ class SpatialResourceManager {
     this.currentLegendResourceId = resourceId;
 
     try {
-      const response = await fetch(`/api/spatial-resources/${resourceId}/legends`);
-      const data = await response.json();
+      // Load legends and fields in parallel
+      const [legendResponse, fieldsResponse] = await Promise.all([
+        fetch(`/api/spatial-resources/${resourceId}/legends`),
+        fetch(`/api/3/action/datastore_search?resource_id=${resourceId}&limit=0`)
+      ]);
 
-      if (!data.success) {
-        console.error('Failed to load legends:', data.error);
+      const legendData = await legendResponse.json();
+
+      // Process fields data
+      try {
+        const fieldsData = await fieldsResponse.json();
+        if (fieldsData.success && fieldsData.result && fieldsData.result.fields) {
+          const fields = fieldsData.result.fields.filter(f => !f.id.startsWith('_'));
+
+          if (fields.length > 0 && fieldsContainer && fieldsList) {
+            fieldsContainer.style.display = 'block';
+            fieldsList.innerHTML = fields.map(field => `
+              <div style="padding: 6px 12px; background: white; border: 1px solid #dee2e6; border-radius: 6px; font-size: 12px; color: #495057;">
+                <span style="font-weight: 600;">📊 ${field.id}</span>
+                <span style="color: #6c757d; font-size: 11px; margin-left: 4px;">(${field.type})</span>
+              </div>
+            `).join('');
+          } else if (fieldsContainer) {
+            fieldsContainer.style.display = 'none';
+          }
+        } else if (fieldsContainer) {
+          fieldsContainer.style.display = 'none';
+        }
+      } catch (fieldsError) {
+        console.warn('Could not load fields:', fieldsError);
+        if (fieldsContainer) fieldsContainer.style.display = 'none';
+      }
+
+      if (!legendData.success) {
+        console.error('Failed to load legends:', legendData.error);
         alert('Hata: Lejantlar yüklenemedi');
         return;
       }
 
-      this.renderLegendEntries(data.legends || []);
+      this.renderLegendEntries(legendData.legends || []);
 
-      console.log(`📊 Loaded ${data.count} legend entries for resource: ${resourceId}`);
+      console.log(`📊 Loaded ${legendData.count} legend entries for resource: ${resourceId}`);
 
     } catch (error) {
       console.error('❌ Legend load error:', error);

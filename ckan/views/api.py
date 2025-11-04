@@ -5,6 +5,7 @@ import logging
 import html
 import io
 import datetime
+import requests
 
 from flask import Blueprint, make_response
 import six
@@ -531,3 +532,67 @@ version_rule = u'/<int(min=1, max=2):ver>'
 for rule, view_func in util_rules:
     api.add_url_rule(rule, view_func=view_func)
     api.add_url_rule(version_rule + rule, view_func=view_func)
+
+
+# External API Proxy to bypass HTTP/2 issues
+def proxy_external():
+    """
+    Proxy external API requests to bypass HTTP/2 protocol errors.
+    Specifically for APIs like openapi.izmir.bel.tr that have HTTP/2 issues.
+    """
+    try:
+        # Get the target URL from query parameters
+        target_url = request.args.get('url')
+
+        if not target_url:
+            return _finish_bad_request(u'Missing required parameter: url')
+
+        # Security check - only allow whitelisted domains
+        allowed_domains = [
+            'openapi.izmir.bel.tr',
+            'api.ibb.gov.tr',
+            'dataizmir.izka.org.tr'
+        ]
+
+        # Check if URL is from allowed domain
+        from urllib.parse import urlparse
+        parsed = urlparse(target_url)
+        if not any(domain in parsed.netloc for domain in allowed_domains):
+            return _finish_bad_request(u'Domain not allowed for proxy')
+
+        # Make HTTP/1.1 request using requests library
+        headers = {
+            'User-Agent': 'CKAN-Proxy/1.0',
+            'Accept': 'application/json'
+        }
+
+        # Force HTTP/1.1 by using requests (it doesn't use HTTP/2 by default)
+        response = requests.get(
+            target_url,
+            headers=headers,
+            timeout=10,
+            verify=True  # SSL verification
+        )
+
+        # Return the response with proper CORS headers
+        resp = make_response(response.text)
+        resp.headers['Content-Type'] = response.headers.get('Content-Type', 'application/json')
+        resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        resp.headers['X-Proxy-Status'] = 'success'
+        resp.status_code = response.status_code
+
+        return resp
+
+    except requests.exceptions.Timeout:
+        return _finish(504, {u'error': u'External API timeout'}, content_type=u'json')
+    except requests.exceptions.RequestException as e:
+        log.error(u'Proxy request failed: %s', str(e))
+        return _finish(502, {u'error': u'External API request failed', u'details': str(e)}, content_type=u'json')
+    except Exception as e:
+        log.error(u'Unexpected proxy error: %s', str(e))
+        return _finish(500, {u'error': u'Internal proxy error'}, content_type=u'json')
+
+
+# Add proxy endpoint
+api.add_url_rule(u'/proxy-external', methods=[u'GET'], view_func=proxy_external)

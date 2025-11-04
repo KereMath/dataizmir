@@ -3742,6 +3742,14 @@ class SpatialResourceManager {
     const container = document.getElementById('colorSettingsList');
     if (!container) return;
 
+    // Check cache first
+    if (this.colorSettingsCache && this.colorSettingsCacheTime &&
+        (Date.now() - this.colorSettingsCacheTime < 60000)) { // 1 minute cache
+      container.innerHTML = this.colorSettingsCache;
+      console.log('Loading color settings from cache');
+      return;
+    }
+
     // Show loading
     container.innerHTML = `
       <div style="text-align: center; padding: 40px; color: #6c757d;">
@@ -3767,14 +3775,32 @@ class SpatialResourceManager {
       // Fetch fields for each resource - only for supported formats
       const excludedFormats = ['shp', 'wms', 'wfs', 'geojson', 'kml', 'kmz', 'gpx', 'shapefile', 'wkt', 'gml', 'topojson'];
 
-      // Special cases for resources not in datastore but have downloadable files
-      const specialCaseResources = new Set([
-        '33b08290-d6f1-4b3d-9205-937b43f25ed2' // XLSX file not in datastore
-      ]);
+      // Manual field definitions for resources not in datastore
+      const manualFieldDefinitions = {
+        '33b08290-d6f1-4b3d-9205-937b43f25ed2': [
+          { id: 'GEZICI_BAKKAL', type: 'text' },
+          { id: 'ILCE', type: 'text' },
+          { id: 'MAHALLE', type: 'text' },
+          { id: 'ADRES', type: 'text' },
+          { id: 'TARIH_BASLANGIC', type: 'text' },
+          { id: 'TARIH_BITIS', type: 'text' },
+          { id: 'BOYLAM', type: 'float' },
+          { id: 'ENLEM', type: 'float' }
+        ]
+      };
 
       const fieldsPromises = spatialResources.map(async resource => {
         const resourceFormat = (resource.format || '').toLowerCase().trim();
         const url = (resource.url || '').toLowerCase();
+
+        // Check for manual field definitions FIRST
+        if (manualFieldDefinitions[resource.resource_id]) {
+          console.log(`Using manual field definitions for: ${resource.resource_id}`);
+          return {
+            resourceId: resource.resource_id,
+            fields: manualFieldDefinitions[resource.resource_id]
+          };
+        }
 
         // Skip excluded formats completely
         if (excludedFormats.includes(resourceFormat)) {
@@ -3784,12 +3810,6 @@ class SpatialResourceManager {
         // Skip if URL indicates a spatial service
         if (url.includes('/geoserver/') || url.includes('/wms') || url.includes('/wfs') ||
             url.includes('/arcgis/') || url.includes('/mapserver')) {
-          return { resourceId: resource.resource_id, fields: [] };
-        }
-
-        // Skip special case resources that we know aren't in datastore
-        if (specialCaseResources.has(resource.resource_id)) {
-          console.log(`Skipping datastore for special case resource: ${resource.resource_id}`);
           return { resourceId: resource.resource_id, fields: [] };
         }
 
@@ -3901,6 +3921,11 @@ class SpatialResourceManager {
 
       // Store filtered resources for search
       this.colorSettingsResources = spatialResources;
+
+      // Cache the rendered HTML
+      this.colorSettingsCache = items;
+      this.colorSettingsCacheTime = Date.now();
+      console.log('Color settings cached');
 
     } catch (error) {
       console.error('❌ Color settings load error:', error);

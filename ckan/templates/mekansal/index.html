@@ -3767,6 +3767,11 @@ class SpatialResourceManager {
       // Fetch fields for each resource - only for supported formats
       const excludedFormats = ['shp', 'wms', 'wfs', 'geojson', 'kml', 'kmz', 'gpx', 'shapefile', 'wkt', 'gml', 'topojson'];
 
+      // Special cases for resources not in datastore but have downloadable files
+      const specialCaseResources = new Set([
+        '33b08290-d6f1-4b3d-9205-937b43f25ed2' // XLSX file not in datastore
+      ]);
+
       const fieldsPromises = spatialResources.map(async resource => {
         const resourceFormat = (resource.format || '').toLowerCase().trim();
         const url = (resource.url || '').toLowerCase();
@@ -3779,6 +3784,12 @@ class SpatialResourceManager {
         // Skip if URL indicates a spatial service
         if (url.includes('/geoserver/') || url.includes('/wms') || url.includes('/wfs') ||
             url.includes('/arcgis/') || url.includes('/mapserver')) {
+          return { resourceId: resource.resource_id, fields: [] };
+        }
+
+        // Skip special case resources that we know aren't in datastore
+        if (specialCaseResources.has(resource.resource_id)) {
+          console.log(`Skipping datastore for special case resource: ${resource.resource_id}`);
           return { resourceId: resource.resource_id, fields: [] };
         }
 

@@ -1772,7 +1772,7 @@ def get_metadata_mappings(resource_id):
             'field_mappings': field_mappings,
             'hidden_fields': result.hidden_fields or [],
             'visibility_mode': result.visibility_mode or 'show_all',
-G            'visible_fields': result.visible_fields or [],
+            'visible_fields': result.visible_fields or [],
             'default_fields': result.default_fields or [],
             'created_by': result.created_by,
             'created_date': result.created_date.isoformat() if result.created_date else None,

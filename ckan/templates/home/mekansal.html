@@ -1770,7 +1770,6 @@
 
     async init() {
       try {
-        await this.checkUserAuth();
         this.initMap();
         await this.loadSpatialData();
         this.setupFilters();
@@ -1785,22 +1784,6 @@
       }
     }
 
-    async checkUserAuth() {
-      try {
-        const response = await fetch('/api/3/action/dashboard_activity_list', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ limit: 1 })
-        });
-
-        const data = await response.json();
-        this.isLoggedIn = data.success;
-        console.log('Kullanıcı giriş durumu:', this.isLoggedIn);
-      } catch {
-        this.isLoggedIn = false;
-      }
-    }
 
     initMap() {
       this.map = L.map('map', {

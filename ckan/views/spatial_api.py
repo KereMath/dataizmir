@@ -1727,13 +1727,6 @@ def get_resource_metadata_fields(resource_id):
 def get_metadata_mappings(resource_id):
     """Get metadata mappings for a spatial resource"""
     try:
-        # Admin kontrolü
-        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    try:
         query = text("""
             SELECT field_mappings, hidden_fields, visibility_mode, visible_fields,
                    default_fields, created_by, created_date, updated_by, updated_date

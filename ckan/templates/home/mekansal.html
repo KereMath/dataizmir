@@ -4257,18 +4257,18 @@
         legendBox.classList.remove('collapsed');
 
         // Render all legends grouped by resource
-        const entriesHTML = allResourceLegends.map(resourceLegends => {
+const entriesHTML = allResourceLegends.map(resourceLegends => {
           const legendItems = resourceLegends.legends.map(legend => `
-            <div style="display: flex; gap: 12px; align-items: center; padding: 8px 0; white-space: nowrap;">
-              <div style="font-size: 11px; font-weight: 600; color: #6c757d; white-space: nowrap;">
-                ${resourceLegends.resourceName}
-              </div>
-              <div class="custom-legend-entry-color" style="background-color: ${legend.color}; width: 32px; height: 32px; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); flex-shrink: 0;"></div>
-              <div style="font-size: 13px; color: #495057; font-weight: 500; white-space: nowrap;">
-                ${legend.description}
-              </div>
-            </div>
-          `).join('');
+<div style="display: flex; gap: 12px; align-items: center; padding: 8px 0; white-space: nowrap;">
+  <div style="font-size: 11px; font-weight: 600; color: #6c757d; white-space: nowrap;">
+    ${resourceLegends.resourceName}
+  </div>
+  <div class="custom-legend-entry-color" style="background-color: ${legend.color}; width: 32px; height: 32px; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); flex-shrink: 0;"></div>
+  <div style="font-size: 13px; color: #495057; font-weight: 500; white-space: nowrap;">
+    ${legend.description}
+  </div>
+</div>
+`).join('');
 
           return legendItems;
         }).join('<div style="border-top: 2px solid #e9ecef; margin: 8px 0;"></div>');

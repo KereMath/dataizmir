@@ -3764,28 +3764,11 @@ class SpatialResourceManager {
         return;
       }
 
-      // Fetch fields for each resource - use backend API or frontend fallback
+      // Fetch fields for each resource - same logic as metadata settings
       const fieldsPromises = spatialResources.map(async resource => {
         const resourceFormat = (resource.format || '').toLowerCase();
 
-        // Try backend API first
-        try {
-          const response = await fetch(`/api/spatial-resources/${resource.resource_id}/metadata-fields`, {
-            credentials: 'include'
-          });
-          const data = await response.json();
-
-          if (data.success && data.fields) {
-            return {
-              resourceId: resource.resource_id,
-              fields: data.fields.map(f => ({ id: f, type: 'text' }))
-            };
-          }
-        } catch (error) {
-          console.warn(`Backend API failed for ${resource.resource_id}:`, error);
-        }
-
-        // If backend fails, try datastore for CSV/XLSX formats
+        // For CSV/XLSX formats, try datastore
         if (['csv', 'xlsx', 'xls'].includes(resourceFormat)) {
           try {
             const response = await fetch(`/api/3/action/datastore_search?resource_id=${resource.resource_id}&limit=0`);
@@ -3801,7 +3784,7 @@ class SpatialResourceManager {
           }
         }
 
-        // If API/REST format and backend failed, try frontend fetch
+        // For API/REST formats, try frontend fetch
         if (['api', 'rest', 'json'].includes(resourceFormat) && resource.url) {
           try {
             const res = await fetch(resource.url, { mode: 'cors' });
@@ -3824,6 +3807,8 @@ class SpatialResourceManager {
           }
         }
 
+        // For other formats (GeoJSON, SHP, etc.), return empty fields
+        // These formats are excluded in metadata settings too
         return { resourceId: resource.resource_id, fields: [] };
       });
 
@@ -4056,25 +4041,11 @@ class SpatialResourceManager {
       const legendResponse = await fetch(`/api/spatial-resources/${resourceId}/legends`);
       const legendData = await legendResponse.json();
 
-      // Load fields with smart fallback logic
+      // Load fields - same logic as metadata settings (no backend API)
       let fields = [];
 
-      // Try backend API first
-      try {
-        const response = await fetch(`/api/spatial-resources/${resourceId}/metadata-fields`, {
-          credentials: 'include'
-        });
-        const data = await response.json();
-
-        if (data.success && data.fields) {
-          fields = data.fields.map(f => ({ id: f, type: 'text' }));
-        }
-      } catch (error) {
-        console.warn(`Backend API failed for ${resourceId}:`, error);
-      }
-
-      // If backend fails and resource is CSV/XLSX, try datastore
-      if (fields.length === 0 && ['csv', 'xlsx', 'xls'].includes(resourceFormat)) {
+      // For CSV/XLSX formats, try datastore
+      if (['csv', 'xlsx', 'xls'].includes(resourceFormat)) {
         try {
           const response = await fetch(`/api/3/action/datastore_search?resource_id=${resourceId}&limit=0`);
           const data = await response.json();
@@ -4086,7 +4057,7 @@ class SpatialResourceManager {
         }
       }
 
-      // If API/REST format and backend failed, try frontend fetch
+      // For API/REST formats, try frontend fetch
       if (fields.length === 0 && ['api', 'rest', 'json'].includes(resourceFormat) && currentResource?.url) {
         try {
           const res = await fetch(currentResource.url, { mode: 'cors' });

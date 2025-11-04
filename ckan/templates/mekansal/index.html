@@ -3790,17 +3790,17 @@ class SpatialResourceManager {
       };
 
       const fieldsPromises = spatialResources.map(async resource => {
-        const resourceFormat = (resource.format || '').toLowerCase().trim();
-        const url = (resource.url || '').toLowerCase();
-
-        // Check for manual field definitions FIRST
+        // Check for manual field definitions FIRST - RETURN IMMEDIATELY!
         if (manualFieldDefinitions[resource.resource_id]) {
-          console.log(`Using manual field definitions for: ${resource.resource_id}`);
-          return {
+          console.log(`Using manual field definitions for: ${resource.resource_id} - NO API CALLS`);
+          return Promise.resolve({
             resourceId: resource.resource_id,
             fields: manualFieldDefinitions[resource.resource_id]
-          };
+          });
         }
+
+        const resourceFormat = (resource.format || '').toLowerCase().trim();
+        const url = (resource.url || '').toLowerCase();
 
         // Skip excluded formats completely
         if (excludedFormats.includes(resourceFormat)) {
@@ -4081,6 +4081,20 @@ class SpatialResourceManager {
     this.currentLegendResourceId = resourceId;
 
     try {
+      // Manual field definitions for specific resources
+      const manualFieldDefinitions = {
+        '33b08290-d6f1-4b3d-9205-937b43f25ed2': [
+          { id: 'GEZICI_BAKKAL', type: 'text' },
+          { id: 'ILCE', type: 'text' },
+          { id: 'MAHALLE', type: 'text' },
+          { id: 'ADRES', type: 'text' },
+          { id: 'TARIH_BASLANGIC', type: 'text' },
+          { id: 'TARIH_BITIS', type: 'text' },
+          { id: 'BOYLAM', type: 'float' },
+          { id: 'ENLEM', type: 'float' }
+        ]
+      };
+
       // Get resource info for smarter field loading
       const currentResource = this.allResources.find(r => r.resource_id === resourceId);
       const resourceFormat = currentResource ? (currentResource.format || '').toLowerCase() : '';
@@ -4089,46 +4103,52 @@ class SpatialResourceManager {
       const legendResponse = await fetch(`/api/spatial-resources/${resourceId}/legends`);
       const legendData = await legendResponse.json();
 
-      // Load fields - only for supported formats
-      const excludedFormats = ['shp', 'wms', 'wfs', 'geojson', 'kml', 'kmz', 'gpx', 'shapefile', 'wkt', 'gml', 'topojson'];
-      const url = (currentResource?.url || '').toLowerCase();
+      // Check for manual field definitions FIRST
       let fields = [];
+      if (manualFieldDefinitions[resourceId]) {
+        fields = manualFieldDefinitions[resourceId];
+        console.log(`Using manual field definitions for legend: ${resourceId} - NO API CALLS`);
+      } else {
+        // Load fields - only for supported formats
+        const excludedFormats = ['shp', 'wms', 'wfs', 'geojson', 'kml', 'kmz', 'gpx', 'shapefile', 'wkt', 'gml', 'topojson'];
+        const url = (currentResource?.url || '').toLowerCase();
 
-      // Skip excluded formats completely
-      if (!excludedFormats.includes(resourceFormat)) {
-        // Skip if URL indicates a spatial service
-        if (!url.includes('/geoserver/') && !url.includes('/wms') && !url.includes('/wfs') &&
-            !url.includes('/arcgis/') && !url.includes('/mapserver')) {
+        // Skip excluded formats completely
+        if (!excludedFormats.includes(resourceFormat)) {
+          // Skip if URL indicates a spatial service
+          if (!url.includes('/geoserver/') && !url.includes('/wms') && !url.includes('/wfs') &&
+              !url.includes('/arcgis/') && !url.includes('/mapserver')) {
 
-          // ONLY try datastore for CSV/XLSX/XLS formats
-          if (['csv', 'xlsx', 'xls'].includes(resourceFormat)) {
-            try {
-              const response = await fetch(`/api/3/action/datastore_search?resource_id=${resourceId}&limit=0`);
-              const data = await response.json();
-              if (data.success && data.result && data.result.fields) {
-                fields = data.result.fields.filter(f => !f.id.startsWith('_'));
+            // ONLY try datastore for CSV/XLSX/XLS formats
+            if (['csv', 'xlsx', 'xls'].includes(resourceFormat)) {
+              try {
+                const response = await fetch(`/api/3/action/datastore_search?resource_id=${resourceId}&limit=0`);
+                const data = await response.json();
+                if (data.success && data.result && data.result.fields) {
+                  fields = data.result.fields.filter(f => !f.id.startsWith('_'));
+                }
+              } catch (error) {
+                console.warn(`Datastore API failed for ${resourceId}:`, error);
               }
-            } catch (error) {
-              console.warn(`Datastore API failed for ${resourceId}:`, error);
             }
-          }
-          // ONLY try frontend fetch for API/REST/JSON formats
-          else if (['api', 'rest', 'json'].includes(resourceFormat) && currentResource?.url) {
-            try {
-              const res = await fetch(currentResource.url, { mode: 'cors' });
-              if (res.ok) {
-                const json = await res.json();
-                const dataArray = this.findDataArrayInJson(json);
-                if (dataArray && dataArray.length > 0) {
-                  const firstItem = dataArray[0];
-                  if (typeof firstItem === 'object' && firstItem !== null) {
-                    const fieldNames = Object.keys(firstItem);
-                    fields = fieldNames.map(f => ({ id: f, type: 'text' }));
+            // ONLY try frontend fetch for API/REST/JSON formats
+            else if (['api', 'rest', 'json'].includes(resourceFormat) && currentResource?.url) {
+              try {
+                const res = await fetch(currentResource.url, { mode: 'cors' });
+                if (res.ok) {
+                  const json = await res.json();
+                  const dataArray = this.findDataArrayInJson(json);
+                  if (dataArray && dataArray.length > 0) {
+                    const firstItem = dataArray[0];
+                    if (typeof firstItem === 'object' && firstItem !== null) {
+                      const fieldNames = Object.keys(firstItem);
+                      fields = fieldNames.map(f => ({ id: f, type: 'text' }));
+                    }
                   }
                 }
+              } catch (error) {
+                console.warn(`Frontend fetch failed for ${resourceId}:`, error);
               }
-            } catch (error) {
-              console.warn(`Frontend fetch failed for ${resourceId}:`, error);
             }
           }
         }

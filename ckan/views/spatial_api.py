@@ -1594,13 +1594,6 @@ def delete_resource_relationship(resource_id, related_id):
 def get_resource_metadata_fields(resource_id):
     """Get all metadata fields for a spatial resource by fetching sample data"""
     try:
-        # Admin kontrolü
-        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
-            return jsonify({'error': 'Unauthorized'}), 403
-    except:
-        return jsonify({'error': 'Unauthorized'}), 403
-
-    try:
         # Resource'un var olup olmadığını ve spatial olup olmadığını kontrol et
         query = text("""
             SELECT r.url, r.format, sr.is_spatial, p.name as package_name
@@ -1732,58 +1725,64 @@ def get_resource_metadata_fields(resource_id):
 
 @spatial_api.route('/api/spatial-resources/<resource_id>/metadata-mappings')
 def get_metadata_mappings(resource_id):
-    """Get metadata mappings for a spatial resource"""
-    # Admin kontrolü kaldırıldı
+    """Get metadata mappings for a spatial resource"""
+    try:
+        # Admin kontrolü
+        if not authz.is_sysadmin(toolkit.c.userobj.name if toolkit.c.userobj else None):
+            return jsonify({'error': 'Unauthorized'}), 403
+    except:
+        return jsonify({'error': 'Unauthorized'}), 403
 
-    try:
-        query = text("""
-            SELECT field_mappings, hidden_fields, visibility_mode, visible_fields,
-                   default_fields, created_by, created_date, updated_by, updated_date
-            FROM spatial_metadata_mappings
-            WHERE resource_id = :resource_id
-        """)
+    try:
+        query = text("""
+            SELECT field_mappings, hidden_fields, visibility_mode, visible_fields,
+                   default_fields, created_by, created_date, updated_by, updated_date
+            FROM spatial_metadata_mappings
+            WHERE resource_id = :resource_id
+        """)
 
-        result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
+        result = model.Session.execute(query, {'resource_id': resource_id}).fetchone()
 
-        if not result:
-            # Henüz mapping yok, boş döndür
-            return jsonify({
-                'success': True,
-                'resource_id': resource_id,
-                'field_mappings': {},
-                'default_fields': [],
-                'hidden_fields': [],
-                'visibility_mode': 'show_all',
-                'visible_fields': [],
-                'exists': False
-            })
+        if not result:
+            # Henüz mapping yok, boş döndür
+            return jsonify({
+                'success': True,
+                'resource_id': resource_id,
+                'field_mappings': {},
+                'default_fields': [],
+                'hidden_fields': [],
+                'visibility_mode': 'show_all',
+                'visible_fields': [],
+                'exists': False
+            })
 
-        # JSON string'i parse et
-        field_mappings = result.field_mappings
-        if isinstance(field_mappings, str):
-            try:
-                field_mappings = json.loads(field_mappings)
-            except:
-                field_mappings = {}
+        # JSON string'i parse et
+        field_mappings = result.field_mappings
+        if isinstance(field_mappings, str):
+            try:
+                field_mappings = json.loads(field_mappings)
+            except:
+                field_mappings = {}
 
-        return jsonify({
-            'success': True,
-            'resource_id': resource_id,
-            'field_mappings': field_mappings,
-            'hidden_fields': result.hidden_fields or [],
-            'visibility_mode': result.visibility_mode or 'show_all',
-            'visible_fields': result.visible_fields or [],
-            'default_fields': result.default_fields or [],
-            'created_by': result.created_by,
-            'created_date': result.created_date.isoformat() if result.created_date else None,
-            'updated_by': result.updated_by,
-            'updated_date': result.updated_date.isoformat() if result.updated_date else None,
-            'exists': True
-        })
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'field_mappings': field_mappings,
+            'hidden_fields': result.hidden_fields or [],
+            'visibility_mode': result.visibility_mode or 'show_all',
+            'visible_fields': result.visible_fields or [],
+            'default_fields': result.default_fields or [],
+            'created_by': result.created_by,
+            'created_date': result.created_date.isoformat() if result.created_date else None,
+            'updated_by': result.updated_by,
+            'updated_date': result.updated_date.isoformat() if result.updated_date else None,
+            'exists': True
+        })
 
-    except Exception as e:
-        print(f"Get metadata mappings error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+    except Exception as e:
+        print(f"Get metadata mappings error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
 @spatial_api.route('/api/spatial-resources/<resource_id>/metadata-mappings', methods=['POST'])
 def save_metadata_mappings(resource_id):
     """Save or update metadata mappings for a spatial resource"""
@@ -1910,44 +1909,43 @@ def save_metadata_mappings(resource_id):
 
 @spatial_api.route('/api/spatial-resources/<resource_id>/legends')
 def get_resource_legends(resource_id):
-    """Get all legend entries for a spatial resource"""
-    # Admin kontrolü kaldırıldı
+    """Get all legend entries for a spatial resource"""
+    try:
+        query = text("""
+            SELECT id, resource_id, color, description, order_index,
+                   created_by, created_date, updated_by, updated_date
+            FROM spatial_legends
+            WHERE resource_id = :resource_id
+            ORDER BY order_index ASC, created_date ASC
+        """)
 
-    try:
-        query = text("""
-            SELECT id, resource_id, color, description, order_index,
-                   created_by, created_date, updated_by, updated_date
-            FROM spatial_legends
-            WHERE resource_id = :resource_id
-            ORDER BY order_index ASC, created_date ASC
-        """)
+        result = model.Session.execute(query, {'resource_id': resource_id}).fetchall()
 
-        result = model.Session.execute(query, {'resource_id': resource_id}).fetchall()
+        legends = []
+        for row in result:
+            legends.append({
+                'id': row.id,
+                'resource_id': row.resource_id,
+                'color': row.color,
+                'description': row.description,
+                'order_index': row.order_index,
+                'created_by': row.created_by,
+                'created_date': row.created_date.isoformat() if row.created_date else None,
+                'updated_by': row.updated_by,
+                'updated_date': row.updated_date.isoformat() if row.updated_date else None
+            })
 
-        legends = []
-        for row in result:
-            legends.append({
-                'id': row.id,
-                'resource_id': row.resource_id,
-                'color': row.color,
-                'description': row.description,
-                'order_index': row.order_index,
-                'created_by': row.created_by,
-                'created_date': row.created_date.isoformat() if row.created_date else None,
-                'updated_by': row.updated_by,
-                'updated_date': row.updated_date.isoformat() if row.updated_date else None
-            })
+        return jsonify({
+            'success': True,
+            'resource_id': resource_id,
+            'count': len(legends),
+            'legends': legends
+        })
 
-        return jsonify({
-            'success': True,
-            'resource_id': resource_id,
-            'count': len(legends),
-            'legends': legends
-        })
+    except Exception as e:
+        print(f"Get legends error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
-    except Exception as e:
-        print(f"Get legends error: {str(e)}")
-        return jsonify({'error': str(e)}), 500
 @spatial_api.route('/api/spatial-resources/<resource_id>/legends', methods=['POST'])
 def add_legend_entry(resource_id):
     """Add a new legend entry for a spatial resource"""

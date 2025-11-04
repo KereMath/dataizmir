@@ -545,7 +545,7 @@ def proxy_external():
         target_url = request.args.get('url')
 
         if not target_url:
-            return _finish_bad_request(u'Missing required parameter: url')
+            return _finish(400, {u'error': u'Missing required parameter: url'}, content_type=u'json')
 
         # Security check - only allow whitelisted domains
         allowed_domains = [
@@ -555,10 +555,14 @@ def proxy_external():
         ]
 
         # Check if URL is from allowed domain
-        from urllib.parse import urlparse
+        try:
+            from urllib.parse import urlparse  # Python 3
+        except ImportError:
+            from urlparse import urlparse  # Python 2
+
         parsed = urlparse(target_url)
         if not any(domain in parsed.netloc for domain in allowed_domains):
-            return _finish_bad_request(u'Domain not allowed for proxy')
+            return _finish(403, {u'error': u'Domain not allowed for proxy'}, content_type=u'json')
 
         # Make HTTP/1.1 request using requests library
         headers = {

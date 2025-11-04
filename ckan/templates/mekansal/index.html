@@ -3843,12 +3843,8 @@ class SpatialResourceManager {
           const isProblematicApi = problematicApis.some(domain => resource.url.includes(domain));
 
           try {
-            // Use proxy for problematic APIs to avoid HTTP/2 errors
-            const fetchUrl = isProblematicApi
-              ? `/api/proxy-external?url=${encodeURIComponent(resource.url)}`
-              : resource.url;
-
-            const res = await fetch(fetchUrl, { mode: 'cors' });
+            // Direct fetch - proxy not working properly
+            const res = await fetch(resource.url, { mode: 'cors' });
 
             if (!res.ok) {
               // Silently fail - just return empty fields like metadata does
@@ -3863,9 +3859,8 @@ class SpatialResourceManager {
               if (typeof firstItem === 'object' && firstItem !== null) {
                 const fields = Object.keys(firstItem);
 
-                // Log success with proxy indication
-                const via = isProblematicApi ? ' (via proxy)' : '';
-                console.log(`✅ Loaded ${fields.length} fields from API${via} for ${resource.resource_id}`);
+                // Log success
+                console.log(`✅ Loaded ${fields.length} fields from API for ${resource.resource_id}`);
 
                 return {
                   resourceId: resource.resource_id,
@@ -4192,15 +4187,8 @@ class SpatialResourceManager {
             // ONLY try frontend fetch for API/REST/JSON formats
             else if (['api', 'rest', 'json'].includes(resourceFormat) && currentResource?.url) {
               try {
-                // Use proxy for problematic APIs
-                const problematicApis = ['openapi.izmir.bel.tr', 'api.ibb.gov.tr'];
-                const isProblematicApi = problematicApis.some(domain => currentResource.url.includes(domain));
-
-                const fetchUrl = isProblematicApi
-                  ? `/api/proxy-external?url=${encodeURIComponent(currentResource.url)}`
-                  : currentResource.url;
-
-                const res = await fetch(fetchUrl, { mode: 'cors' });
+                // Direct fetch
+                const res = await fetch(currentResource.url, { mode: 'cors' });
 
                 if (res.ok) {
                   const json = await res.json();

@@ -1306,10 +1306,12 @@
   }
 
   /* Custom Legend Box (Sol Alt) */
+/* Custom Legend Box (Sol Alt) */
   .custom-legend-box {
     position: absolute;  /* Map container'a göre konumlanır */
-    bottom: auto !important;  /* Alt kenardan 20px yukarıda */
-    right: auto !important;   /* Sağ kenardan 20px içeride */
+    /* DEĞİŞİKLİK: !important kaldırıldı */
+    bottom: auto;  /* Alt kenardan 20px yukarıda */
+    right: auto;   /* Sağ kenardan 20px içeride */
     background: white;
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
@@ -1326,7 +1328,6 @@
     transition: opacity 0.3s ease, transform 0.3s ease;
     cursor: move;  /* Sürükleme göstergesi */
   }
-
   /* Sürükleme sırasında görünüm */
   .custom-legend-box.dragging {
     opacity: 0.9;
@@ -1713,7 +1714,7 @@
 <script src="https://unpkg.com/geotiff@2.0.7/dist/geotiff.bundle.min.js"></script>
 
 <script>
-  console.log('Modern Mekansal Görüntüleme Sistemi v4.0 - WMS Layer Switcher Desteği');
+  console.log('Modern Mekansal Görüntüleme Sistemi v4.1 - İyileştirilmiş Lejant Pozisyonlaması');
 
   class SpatialMapManager {
     constructor() {
@@ -3670,6 +3671,15 @@
         this.selectedCategory = e.target.value;
         this.renderLayers();
       });
+
+      // YENİ: Pencere yeniden boyutlandırma dinleyicisi
+      window.addEventListener('resize', () => {
+        // Sadece localStorage'da kayıt yoksa (varsayılan durumdaysa)
+        // pozisyonu sıfırla.
+        if (!localStorage.getItem('legendPosition')) {
+          this.setDefaultLegendPosition();
+        }
+      });
     }
 
     renderLayers() {
@@ -3995,14 +4005,24 @@
         isDragging = true;
         legendBox.classList.add('dragging');
 
+        // GÜNCELLEME: Sürükleme başladığında 'bottom' pozisyonunu 'top'a dönüştür
+        const computedStyle = window.getComputedStyle(legendBox);
+        if (computedStyle.bottom !== 'auto') {
+          // 'bottom'dan 'top'a anlık hesaplama yap
+          const rect = legendBox.getBoundingClientRect();
+          const containerRect = legendBox.parentElement.getBoundingClientRect();
+          initialTop = rect.top - containerRect.top;
+          legendBox.style.top = initialTop + 'px';
+          legendBox.style.bottom = 'auto'; // 'bottom'u devre dışı bırak
+        } else {
+          // Zaten 'top' ile pozisyonlanmış
+          initialTop = parseInt(computedStyle.top) || 0;
+        }
+
         // Başlangıç mouse pozisyonu
         startX = e.clientX;
         startY = e.clientY;
-
-        // Mevcut box pozisyonu (container'a göre)
-        const computedStyle = window.getComputedStyle(legendBox);
-        initialLeft = parseInt(computedStyle.left) || 0;
-        initialTop = parseInt(computedStyle.top) || 0;
+        initialLeft = parseInt(computedStyle.left) || 0; // 'left' zaten ayarlı
 
         // Seçimi engelle
         e.preventDefault();
@@ -4045,11 +4065,10 @@
           isDragging = false;
           legendBox.classList.remove('dragging');
 
-          // Pozisyonu localStorage'a kaydet
-          const rect = legendBox.getBoundingClientRect();
+          // GÜNCELLEME: Pozisyonu localStorage'a kaydet (style values, not viewport rect)
           localStorage.setItem('legendPosition', JSON.stringify({
-            left: rect.left,
-            top: rect.top
+            left: legendBox.style.left,
+            top: legendBox.style.top
           }));
         }
       });
@@ -4065,9 +4084,19 @@
         startX = touch.clientX;
         startY = touch.clientY;
 
+        // GÜNCELLEME: Sürükleme başladığında 'bottom' pozisyonunu 'top'a dönüştür
         const computedStyle = window.getComputedStyle(legendBox);
+        if (computedStyle.bottom !== 'auto') {
+          const rect = legendBox.getBoundingClientRect();
+          const containerRect = legendBox.parentElement.getBoundingClientRect();
+          initialTop = rect.top - containerRect.top;
+          legendBox.style.top = initialTop + 'px';
+          legendBox.style.bottom = 'auto';
+        } else {
+          initialTop = parseInt(computedStyle.top) || 0;
+        }
         initialLeft = parseInt(computedStyle.left) || 0;
-        initialTop = parseInt(computedStyle.top) || 0;
+        // GÜNCELLEME SONU
 
         e.preventDefault();
       });
@@ -4102,10 +4131,10 @@
           isDragging = false;
           legendBox.classList.remove('dragging');
 
-          const rect = legendBox.getBoundingClientRect();
+          // GÜNCELLEME: Pozisyonu localStorage'a kaydet (style values, not viewport rect)
           localStorage.setItem('legendPosition', JSON.stringify({
-            left: rect.left,
-            top: rect.top
+            left: legendBox.style.left,
+            top: legendBox.style.top
           }));
         }
       });
@@ -4114,7 +4143,20 @@
       this.restoreLegendPosition();
     }
 
-    // Kaydedilmiş lejant pozisyonunu geri yükle
+    // YENİ: Varsayılan (sol alt) pozisyonu ayarlar
+    setDefaultLegendPosition() {
+      const legendBox = document.getElementById('customLegendBox');
+      if (!legendBox) return;
+
+      // 'left' ve 'bottom' kullanarak sol alt köşeye sabitle
+      legendBox.style.left = '10px';
+      legendBox.style.bottom = '10px';
+      legendBox.style.top = 'auto';
+      legendBox.style.right = 'auto';
+    }
+
+
+    // GÜNCELLEME: Kaydedilmiş lejant pozisyonunu geri yükle
     restoreLegendPosition() {
       const legendBox = document.getElementById('customLegendBox');
       if (!legendBox) return;
@@ -4122,25 +4164,24 @@
       const savedPosition = localStorage.getItem('legendPosition');
       if (savedPosition) {
         try {
-          const position = JSON.parse(savedPosition);
+          const position = JSON.parse(savedPosition); // { left: "150px", top: "300px" }
 
-          // Pencere sınırlarını kontrol et
-          const boxWidth = legendBox.offsetWidth;
-          const boxHeight = legendBox.offsetHeight;
-          const windowWidth = window.innerWidth;
-          const windowHeight = window.innerHeight;
-
-          let left = Math.max(10, Math.min(position.left, windowWidth - boxWidth - 10));
-          let bottom = Math.max(10, Math.min(position.bottom, windowHeight - boxHeight - 10));
-
-          legendBox.style.left = left + 'px';
-          legendBox.style.right = 'auto';
-          legendBox.style.bottom = bottom + 'px';
-          legendBox.style.top = 'auto';
+          // Sadece geçerli, kaydedilmiş bir pozisyon (left/top) varsa uygula
+          if (position.left && position.top) {
+            legendBox.style.left = position.left;
+            legendBox.style.top = position.top;
+            legendBox.style.right = 'auto';
+            legendBox.style.bottom = 'auto';
+            return; // Başarıyla yüklendi
+          }
         } catch (e) {
           console.error('Could not restore legend position:', e);
         }
       }
+
+      // Kayıtlı pozisyon yoksa veya hatalıysa, varsayılanı (sol alt) ayarla
+      // Bu, öğe gizliyken bile çalışır.
+      this.setDefaultLegendPosition();
     }
 
     async loadCustomLegend(resourceId) {
@@ -4164,6 +4205,11 @@
       // Lejant kutusunu her zaman göster
       legendBox.classList.add('active');
       legendBox.classList.remove('collapsed');
+
+      // GÜNCELLEME: Pozisyonu restoreLegendPosition() halletti.
+      // Burada ekstra bir şey yapmaya gerek yok.
+      // restoreLegendPosition ya localStorage'dan (left/top) ya da
+      // varsayılan (left/bottom) olarak ayarlandı.
 
       const activeResourceIds = Array.from(this.activeResources);
 
@@ -4390,5 +4436,4 @@
   })();
 
 </script>
-
 {% endblock %}

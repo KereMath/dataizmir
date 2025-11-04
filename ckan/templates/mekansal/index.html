@@ -3831,38 +3831,34 @@ class SpatialResourceManager {
         // ONLY try frontend fetch for API/REST/JSON formats
         else if (['api', 'rest', 'json'].includes(resourceFormat) && resource.url) {
           try {
-            const res = await fetch(resource.url, {
-              mode: 'cors',
-              signal: AbortSignal.timeout(5000) // 5 second timeout
-            });
+            // Same as metadata settings - no timeout, just CORS
+            const res = await fetch(resource.url, { mode: 'cors' });
 
             if (!res.ok) {
-              // Log but don't throw - just return empty fields
-              console.warn(`API returned ${res.status} for ${resource.resource_id}: ${resource.url}`);
+              // Silently fail - just return empty fields like metadata does
               return { resourceId: resource.resource_id, fields: [] };
             }
 
-            try {
-              const json = await res.json();
-              const dataArray = this.findDataArrayInJson(json);
-              if (dataArray && dataArray.length > 0) {
-                const firstItem = dataArray[0];
-                if (typeof firstItem === 'object' && firstItem !== null) {
-                  const fields = Object.keys(firstItem);
-                  console.log(`✅ Loaded ${fields.length} fields from API for ${resource.resource_id}`);
-                  return {
-                    resourceId: resource.resource_id,
-                    fields: fields.map(f => ({ id: f, type: 'text' }))
-                  };
-                }
+            const json = await res.json();
+            const dataArray = this.findDataArrayInJson(json);
+
+            if (dataArray && dataArray.length > 0) {
+              const firstItem = dataArray[0];
+              if (typeof firstItem === 'object' && firstItem !== null) {
+                const fields = Object.keys(firstItem);
+                console.log(`✅ Loaded ${fields.length} fields from API for ${resource.resource_id}`);
+                return {
+                  resourceId: resource.resource_id,
+                  fields: fields.map(f => ({ id: f, type: 'text' }))
+                };
               }
-            } catch (parseError) {
-              console.warn(`Failed to parse JSON for ${resource.resource_id}:`, parseError);
-              return { resourceId: resource.resource_id, fields: [] };
             }
+
+            // No data found - return empty
+            return { resourceId: resource.resource_id, fields: [] };
+
           } catch (error) {
-            // Network errors, timeouts, CORS issues
-            console.warn(`Frontend fetch failed for ${resource.resource_id}:`, error.message);
+            // Any error - just return empty fields, don't log
             return { resourceId: resource.resource_id, fields: [] };
           }
         }
@@ -4150,33 +4146,24 @@ class SpatialResourceManager {
             // ONLY try frontend fetch for API/REST/JSON formats
             else if (['api', 'rest', 'json'].includes(resourceFormat) && currentResource?.url) {
               try {
-                const res = await fetch(currentResource.url, {
-                  mode: 'cors',
-                  signal: AbortSignal.timeout(5000) // 5 second timeout
-                });
+                // Same as metadata settings - no timeout, just CORS
+                const res = await fetch(currentResource.url, { mode: 'cors' });
 
-                if (!res.ok) {
-                  // Log but don't throw - just return empty fields
-                  console.warn(`API returned ${res.status} for ${resourceId}: ${currentResource.url}`);
-                } else {
-                  try {
-                    const json = await res.json();
-                    const dataArray = this.findDataArrayInJson(json);
-                    if (dataArray && dataArray.length > 0) {
-                      const firstItem = dataArray[0];
-                      if (typeof firstItem === 'object' && firstItem !== null) {
-                        const fieldNames = Object.keys(firstItem);
-                        fields = fieldNames.map(f => ({ id: f, type: 'text' }));
-                        console.log(`✅ Loaded ${fields.length} fields from API for legend ${resourceId}`);
-                      }
+                if (res.ok) {
+                  const json = await res.json();
+                  const dataArray = this.findDataArrayInJson(json);
+                  if (dataArray && dataArray.length > 0) {
+                    const firstItem = dataArray[0];
+                    if (typeof firstItem === 'object' && firstItem !== null) {
+                      const fieldNames = Object.keys(firstItem);
+                      fields = fieldNames.map(f => ({ id: f, type: 'text' }));
+                      console.log(`✅ Loaded ${fields.length} fields from API for legend ${resourceId}`);
                     }
-                  } catch (parseError) {
-                    console.warn(`Failed to parse JSON for ${resourceId}:`, parseError);
                   }
                 }
+                // If not ok, silently continue with empty fields
               } catch (error) {
-                // Network errors, timeouts, CORS issues
-                console.warn(`Frontend fetch failed for ${resourceId}:`, error.message);
+                // Any error - silently continue with empty fields
               }
             }
           }

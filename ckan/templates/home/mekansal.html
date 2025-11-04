@@ -4204,104 +4204,102 @@
     }
 
     async loadAllCustomLegends() {
-      const legendBox = document.getElementById('customLegendBox');
-      const entriesEl = document.getElementById('customLegendEntries');
+      const legendBox = document.getElementById('customLegendBox');
+      const entriesEl = document.getElementById('customLegendEntries');
 
-      if (!legendBox || !entriesEl) return;
+      if (!legendBox || !entriesEl) return;
 
-      // Lejant kutusunu her zaman göster
-      legendBox.classList.add('active');
-      legendBox.classList.remove('collapsed');
+      // DÜZELTME 1: 'active' sınıfını buradan kaldırıyoruz.
+      // Sadece veri bulunduğunda ekleyeceğiz.
 
-      // GÜNCELLEME: Pozisyonu restoreLegendPosition() halletti.
-      // Burada ekstra bir şey yapmaya gerek yok.
-      // restoreLegendPosition ya localStorage'dan (left/top) ya da
-      // varsayılan (left/bottom) olarak ayarlandı.
+      const activeResourceIds = Array.from(this.activeResources);
 
-      const activeResourceIds = Array.from(this.activeResources);
+      if (activeResourceIds.length === 0) {
+        // Aktif kaynak yoksa kutuyu gizle
+        legendBox.classList.remove('active'); // DÜZELTME 1
+        entriesEl.innerHTML = `
+          <div class="custom-legend-empty">
+            <div class="custom-legend-empty-icon">📝</div>
+            <div>Aktif kaynak yok</div>
+          </div>
+        `;
+        return;
+      }
 
-      if (activeResourceIds.length === 0) {
-        // Aktif kaynak yoksa boş mesaj göster ama kutuyu gizleme
-        entriesEl.innerHTML = `
-          <div class="custom-legend-empty">
-            <div class="custom-legend-empty-icon">📝</div>
-            <div>Aktif kaynak yok</div>
-          </div>
-        `;
-        return;
-      }
+      try {
+        // Fetch legends for all active resources
+        const legendPromises = activeResourceIds.map(async resourceId => {
+          try {
+            // DÜZELTME 2: Login olmadan public verileri çekebilmek için 'credentials' eklendi.
+            const response = await fetch(`/api/spatial-resources/${resourceId}/legends`, {
+              credentials: 'include'
+            });
+            const data = await response.json();
 
-      try {
-        // Fetch legends for all active resources
-        const legendPromises = activeResourceIds.map(async resourceId => {
-          try {
-            const response = await fetch(`/api/spatial-resources/${resourceId}/legends`);
-            const data = await response.json();
+            if (!data.success || !data.legends || data.legends.length === 0) {
+              return null;
+            }
 
-            if (!data.success || !data.legends || data.legends.length === 0) {
-              return null;
-            }
+            // Get resource info
+            const resource = this.spatialData.find(r => r.resource_id === resourceId);
+            const resourceName = resource ? (resource.resource_name || 'İsimsiz Kaynak') : 'Kaynak';
 
-            // Get resource info
-            const resource = this.spatialData.find(r => r.resource_id === resourceId);
-            const resourceName = resource ? (resource.resource_name || 'İsimsiz Kaynak') : 'Kaynak';
+            return {
+              resourceId,
+              resourceName,
+              legends: data.legends
+            };
+          } catch (error) {
+            console.error(`Error loading legends for ${resourceId}:`, error);
+            return null;
+          }
+        });
 
-            return {
-              resourceId,
-              resourceName,
-              legends: data.legends
-            };
-          } catch (error) {
-            console.error(`Error loading legends for ${resourceId}:`, error);
-            return null;
-          }
-        });
+        const allResourceLegends = (await Promise.all(legendPromises)).filter(item => item !== null);
 
-        const allResourceLegends = (await Promise.all(legendPromises)).filter(item => item !== null);
+        if (allResourceLegends.length === 0) {
+          // Lejant verisi yoksa kutuyu gizle
+          legendBox.classList.remove('active'); // DÜZELTME 1
+          entriesEl.innerHTML = `
+            <div class="custom-legend-empty">
+              <div class="custom-legend-empty-icon">📝</div>
+              <div>Aktif kaynaklar için lejant bilgisi yok</div>
+            </div>
+          `;
+          return;
+        }
 
-        if (allResourceLegends.length === 0) {
-          // Lejant verisi yoksa boş mesaj göster ama kutuyu gizleme
-          entriesEl.innerHTML = `
-            <div class="custom-legend-empty">
-              <div class="custom-legend-empty-icon">📝</div>
-              <div>Aktif kaynaklar için lejant bilgisi yok</div>
-            </div>
-          `;
-          return;
-        }
+        // DÜZELTME 1: Veri bulundu! Kutuyu şimdi göster.
+        legendBox.classList.add('active');
+        legendBox.classList.remove('collapsed');
 
-        // Render all legends grouped by resource
-        const entriesHTML = allResourceLegends.map(resourceLegends => {
-          const legendItems = resourceLegends.legends.map(legend => `
-            <div style="display: flex; gap: 12px; align-items: center; padding: 8px 0; white-space: nowrap;">
-              <div style="font-size: 11px; font-weight: 600; color: #6c757d; white-space: nowrap;">
-                ${resourceLegends.resourceName}
-              </div>
-              <div class="custom-legend-entry-color" style="background-color: ${legend.color}; width: 32px; height: 32px; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); flex-shrink: 0;"></div>
-              <div style="font-size: 13px; color: #495057; font-weight: 500; white-space: nowrap;">
-                ${legend.description}
-              </div>
-            </div>
-          `).join('');
+        // Render all legends grouped by resource
+        const entriesHTML = allResourceLegends.map(resourceLegends => {
+          const legendItems = resourceLegends.legends.map(legend => `
+            <div style="display: flex; gap: 12px; align-items: center; padding: 8px 0; white-space: nowrap;">
+              <div style="font-size: 11px; font-weight: 600; color: #6c757d; white-space: nowrap;">
+                ${resourceLegends.resourceName}
+              </div>
+              <div class="custom-legend-entry-color" style="background-color: ${legend.color}; width: 32px; height: 32px; border-radius: 6px; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.15); flex-shrink: 0;"></div>
+              <div style="font-size: 13px; color: #495057; font-weight: 500; white-space: nowrap;">
+                ${legend.description}
+              </div>
+            </div>
+          `).join('');
 
-          return legendItems;
-        }).join('<div style="border-top: 2px solid #e9ecef; margin: 8px 0;"></div>');
+          return legendItems;
+        }).join('<div style="border-top: 2px solid #e9ecef; margin: 8px 0;"></div>');
 
-        entriesEl.innerHTML = entriesHTML;
+        entriesEl.innerHTML = entriesHTML;
 
-        // Show legend box
-        legendBox.classList.add('active');
-        legendBox.classList.remove('collapsed');
+        const totalLegends = allResourceLegends.reduce((sum, r) => sum + r.legends.length, 0);
+        console.log(`✅ Loaded ${totalLegends} legend entries from ${allResourceLegends.length} resources`);
 
-        const totalLegends = allResourceLegends.reduce((sum, r) => sum + r.legends.length, 0);
-        console.log(`✅ Loaded ${totalLegends} legend entries from ${allResourceLegends.length} resources`);
-
-      } catch (error) {
-        console.error('❌ Error loading custom legends:', error);
-        legendBox.classList.remove('active');
-      }
-    }
-
+      } catch (error) {
+        console.error('❌ Error loading custom legends:', error);
+        legendBox.classList.remove('active'); // DÜZELTME 1 (Hata durumunda da gizle)
+      }
+    }
     async updateCustomLegendForActiveResources() {
       // Load legends for ALL active resources
       await this.loadAllCustomLegends();

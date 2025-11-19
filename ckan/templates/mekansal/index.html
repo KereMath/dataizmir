@@ -1343,16 +1343,10 @@
   🏷️
 </button>
 
-<!-- Floating Color Settings Button -->
-<button class="floating-map-btn" id="colorFloatingBtn" onclick="spatialManager.openColorSettingsModal()"
-        title="Renk Ayarları" style="bottom: 270px;">
-  🎨
-</button>
-
-<!-- Floating Legend Settings Button -->
+<!-- Floating Legend & Color Settings Button -->
 <button class="floating-map-btn" id="legendFloatingBtn" onclick="spatialManager.openLegendModal()"
-        title="Lejant Ayarları" style="bottom: 350px;">
-  📊
+        title="Lejant ve Renk Ayarları" style="bottom: 270px;">
+  🎨
 </button>
 
 <!-- Map Modal -->
@@ -1630,7 +1624,7 @@
 <div class="map-modal-overlay" id="legendModalOverlay" onclick="spatialManager.closeLegendModal(event)">
   <div class="map-modal map-modal-legend" onclick="event.stopPropagation()">
     <div class="map-modal-header">
-      <h2 class="map-modal-title">📊 Lejant Ayarları</h2>
+      <h2 class="map-modal-title">🎨 Lejant ve Renk Ayarları</h2>
       <button class="map-modal-close" onclick="spatialManager.closeLegendModal()">&times;</button>
     </div>
     <div class="map-modal-body" style="max-height: calc(80vh - 80px);">
@@ -1640,7 +1634,7 @@
           💡 Nasıl Çalışır?
         </div>
         <div style="font-size: 12px; color: #6c757d; line-height: 1.5;">
-          Her mekansal kaynak için özel lejant girişleri oluşturun. Lejantlar, anasayfa haritasında aktif resource için sol altta gösterilecektir.
+          Her mekansal kaynak için katman rengi ve lejant girişleri ayarlayın. Katman rengi haritada gösterilen tüm özelliklerin rengini belirler, lejantlar ise sol altta gösterilir.
         </div>
       </div>
 
@@ -1658,6 +1652,52 @@
 
       <!-- Legend Entries Container -->
       <div id="legendEntriesContainer" style="display: none;">
+        <!-- Layer Color Section -->
+        <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); border: 2px solid #ff9800; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+          <h4 style="margin: 0 0 12px 0; color: #495057; font-size: 15px; font-weight: 600;">
+            🎨 Katman Rengi
+          </h4>
+          <div style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">
+            Bu renk, haritada gösterilen tüm noktalar, çizgiler ve alanlar için kullanılacaktır.
+          </div>
+          <div style="display: flex; gap: 12px; align-items: center;">
+            <div style="flex: 1;">
+              <input type="color" id="layerColorPicker" value="#3388ff"
+                     style="width: 100%; height: 50px; border: 2px solid #ced4da; border-radius: 8px; cursor: pointer;"
+                     oninput="spatialManager.updateLayerColorPreview(this.value)">
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <div id="layerColorPreview" style="width: 120px; height: 50px; border: 2px solid #ced4da; border-radius: 8px; background-color: #3388ff;"></div>
+              <button onclick="spatialManager.saveLayerColor()"
+                      style="padding: 8px 16px; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; white-space: nowrap;">
+                💾 Rengi Kaydet
+              </button>
+            </div>
+          </div>
+          <!-- Preset Colors -->
+          <div style="margin-top: 12px;">
+            <div style="font-size: 11px; color: #6c757d; margin-bottom: 6px; font-weight: 600;">Hazır Renkler:</div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <div style="width: 32px; height: 32px; background-color: #FF6B6B; border-radius: 6px; cursor: pointer; border: 2px solid transparent;"
+                   onclick="spatialManager.selectLayerPresetColor('#FF6B6B')" title="Kırmızı"></div>
+              <div style="width: 32px; height: 32px; background-color: #4ECDC4; border-radius: 6px; cursor: pointer; border: 2px solid transparent;"
+                   onclick="spatialManager.selectLayerPresetColor('#4ECDC4')" title="Turkuaz"></div>
+              <div style="width: 32px; height: 32px; background-color: #45B7D1; border-radius: 6px; cursor: pointer; border: 2px solid transparent;"
+                   onclick="spatialManager.selectLayerPresetColor('#45B7D1')" title="Mavi"></div>
+              <div style="width: 32px; height: 32px; background-color: #FFA07A; border-radius: 6px; cursor: pointer; border: 2px solid transparent;"
+                   onclick="spatialManager.selectLayerPresetColor('#FFA07A')" title="Turuncu"></div>
+              <div style="width: 32px; height: 32px; background-color: #98D8C8; border-radius: 6px; cursor: pointer; border: 2px solid transparent;"
+                   onclick="spatialManager.selectLayerPresetColor('#98D8C8')" title="Yeşil"></div>
+              <div style="width: 32px; height: 32px; background-color: #F7DC6F; border-radius: 6px; cursor: pointer; border: 2px solid transparent;"
+                   onclick="spatialManager.selectLayerPresetColor('#F7DC6F')" title="Sarı"></div>
+              <div style="width: 32px; height: 32px; background-color: #BB8FCE; border-radius: 6px; cursor: pointer; border: 2px solid transparent;"
+                   onclick="spatialManager.selectLayerPresetColor('#BB8FCE')" title="Mor"></div>
+              <div style="width: 32px; height: 32px; background-color: #85C1E2; border-radius: 6px; cursor: pointer; border: 2px solid transparent;"
+                   onclick="spatialManager.selectLayerPresetColor('#85C1E2')" title="Açık Mavi"></div>
+            </div>
+          </div>
+        </div>
+
         <!-- Fields Display Section -->
         <div id="legendResourceFields" style="background: linear-gradient(135deg, #e8f5e9 0%, #e1f5fe 100%); padding: 12px; border-radius: 8px; margin-bottom: 16px; display: none;">
           <div style="font-size: 12px; font-weight: 600; color: #495057; margin-bottom: 8px;">
@@ -4133,6 +4173,9 @@ class SpatialResourceManager {
 
     this.currentLegendResourceId = resourceId;
 
+    // Load and display current layer color
+    await this.loadLayerColor(resourceId);
+
     try {
       // Manual field definitions for specific resources
       const manualFieldDefinitions = {
@@ -4397,6 +4440,80 @@ class SpatialResourceManager {
     } catch (error) {
       console.error('❌ Delete legend error:', error);
       alert('Hata: Lejant silinemedi');
+    }
+  }
+
+  // Layer Color Management Functions
+  async loadLayerColor(resourceId) {
+    try {
+      // Fetch current color from API
+      const response = await fetch(`/api/spatial-resources/${resourceId}/color`);
+      const data = await response.json();
+
+      const color = data.success && data.color ? data.color : '#3388ff';
+
+      // Update color picker and preview
+      const colorPicker = document.getElementById('layerColorPicker');
+      const colorPreview = document.getElementById('layerColorPreview');
+
+      if (colorPicker) colorPicker.value = color;
+      if (colorPreview) colorPreview.style.backgroundColor = color;
+
+      console.log(`✅ Loaded layer color for ${resourceId}:`, color);
+    } catch (error) {
+      console.error('❌ Load layer color error:', error);
+      // Set default color on error
+      const colorPicker = document.getElementById('layerColorPicker');
+      const colorPreview = document.getElementById('layerColorPreview');
+      if (colorPicker) colorPicker.value = '#3388ff';
+      if (colorPreview) colorPreview.style.backgroundColor = '#3388ff';
+    }
+  }
+
+  updateLayerColorPreview(color) {
+    const preview = document.getElementById('layerColorPreview');
+    if (preview) {
+      preview.style.backgroundColor = color;
+    }
+  }
+
+  selectLayerPresetColor(color) {
+    const colorPicker = document.getElementById('layerColorPicker');
+    const preview = document.getElementById('layerColorPreview');
+
+    if (colorPicker) colorPicker.value = color;
+    if (preview) preview.style.backgroundColor = color;
+  }
+
+  async saveLayerColor() {
+    if (!this.currentLegendResourceId) {
+      alert('⚠️ Lütfen önce bir kaynak seçin');
+      return;
+    }
+
+    const colorPicker = document.getElementById('layerColorPicker');
+    const color = colorPicker ? colorPicker.value : '#3388ff';
+
+    try {
+      const response = await fetch(`/api/spatial-resources/${this.currentLegendResourceId}/color`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ color })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        alert('❌ Hata: ' + (data.error || 'Renk kaydedilemedi'));
+        return;
+      }
+
+      alert('✅ Katman rengi başarıyla kaydedildi!');
+      console.log('✅ Layer color saved:', this.currentLegendResourceId, color);
+
+    } catch (error) {
+      console.error('❌ Save layer color error:', error);
+      alert('Hata: Renk kaydedilemedi');
     }
   }
 }

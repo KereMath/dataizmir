@@ -1318,7 +1318,7 @@
     padding: 16px;
     min-width: 250px;
     width: auto;
-    max-width: 320px;  /* Maximum genişlik eklendi */
+    max-width: 400px;  /* Maximum genişlik eklendi */
     max-height: 450px;
     z-index: 400;  /* Leaflet kontrollerinin üzerinde */
     overflow-y: auto;
@@ -1336,42 +1336,117 @@
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
   }
 
-  /* Resize grip - sağ alt köşede */
-  .custom-legend-resize-grip {
+  /* Boyutlandırma sırasında görünüm */
+  .custom-legend-box.resizing {
+    opacity: 0.95;
+    transition: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    user-select: none;
+  }
+
+  /* Resize handles - 4 taraftan ve 4 köşeden */
+  .custom-legend-resize-handle {
     position: absolute;
+    background: transparent;
+    z-index: 10;
+  }
+
+  /* Kenar handles - üst, sağ, alt, sol */
+  .custom-legend-resize-handle.top {
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    cursor: ns-resize;
+  }
+
+  .custom-legend-resize-handle.right {
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: ew-resize;
+  }
+
+  .custom-legend-resize-handle.bottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    cursor: ns-resize;
+  }
+
+  .custom-legend-resize-handle.left {
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 6px;
+    cursor: ew-resize;
+  }
+
+  /* Köşe handles - daha büyük hit area */
+  .custom-legend-resize-handle.top-left {
+    top: 0;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    cursor: nwse-resize;
+  }
+
+  .custom-legend-resize-handle.top-right {
+    top: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    cursor: nesw-resize;
+  }
+
+  .custom-legend-resize-handle.bottom-left {
+    bottom: 0;
+    left: 0;
+    width: 12px;
+    height: 12px;
+    cursor: nesw-resize;
+  }
+
+  .custom-legend-resize-handle.bottom-right {
     bottom: 0;
     right: 0;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     cursor: nwse-resize;
-    opacity: 0.3;
+  }
+
+  /* Görsel gösterge - sadece sağ alt köşede */
+  .custom-legend-resize-handle.bottom-right::before {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    right: 4px;
+    width: 3px;
+    height: 3px;
+    border-right: 2px solid #6c757d;
+    border-bottom: 2px solid #6c757d;
+    opacity: 0.4;
     transition: opacity 0.2s;
   }
 
-  .custom-legend-resize-grip:hover {
-    opacity: 0.6;
-  }
-
-  .custom-legend-resize-grip::before {
+  .custom-legend-resize-handle.bottom-right::after {
     content: '';
     position: absolute;
-    bottom: 3px;
-    right: 3px;
-    width: 5px;
-    height: 5px;
-    border-right: 2px solid #6c757d;
-    border-bottom: 2px solid #6c757d;
-  }
-
-  .custom-legend-resize-grip::after {
-    content: '';
-    position: absolute;
-    bottom: 3px;
+    bottom: 4px;
     right: 8px;
-    width: 5px;
-    height: 5px;
+    width: 3px;
+    height: 3px;
     border-right: 2px solid #6c757d;
     border-bottom: 2px solid #6c757d;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+  }
+
+  .custom-legend-resize-handle.bottom-right:hover::before,
+  .custom-legend-resize-handle.bottom-right:hover::after {
+    opacity: 0.8;
   }
 
   .custom-legend-box.active {
@@ -1665,7 +1740,15 @@
           <div>Aktif kaynaklar için lejant bilgisi yok</div>
         </div>
       </div>
-      <div class="custom-legend-resize-grip"></div>
+      <!-- Resize handles - 4 kenar + 4 köşe -->
+      <div class="custom-legend-resize-handle top" data-direction="top"></div>
+      <div class="custom-legend-resize-handle right" data-direction="right"></div>
+      <div class="custom-legend-resize-handle bottom" data-direction="bottom"></div>
+      <div class="custom-legend-resize-handle left" data-direction="left"></div>
+      <div class="custom-legend-resize-handle top-left" data-direction="top-left"></div>
+      <div class="custom-legend-resize-handle top-right" data-direction="top-right"></div>
+      <div class="custom-legend-resize-handle bottom-left" data-direction="bottom-left"></div>
+      <div class="custom-legend-resize-handle bottom-right" data-direction="bottom-right"></div>
     </div>
 
     <!-- Loading spinner -->
@@ -1777,6 +1860,7 @@
         this.renderLayers();
         this.updateStats();
         this.initDraggableLegend();  // Sürükleme fonksiyonunu başlat
+        this.initResizableLegend();  // Boyutlandırma fonksiyonunu başlat
         await this.loadAllCustomLegends();  // Lejantı göster
       } catch (error) {
         console.error('Initialization hatası:', error);
@@ -4025,9 +4109,9 @@
         const deltaX = e.clientX - startX;
         const deltaY = e.clientY - startY;
 
-        // Container (main-container) sınırlarını al
-        const container = document.querySelector('.main-container');
-        const containerRect = container.getBoundingClientRect();
+        // Viewport boyutlarını al
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
         // Yeni pozisyon
         let newLeft = initialLeft + deltaX;
@@ -4037,9 +4121,9 @@
         const boxWidth = legendBox.offsetWidth;
         const boxHeight = legendBox.offsetHeight;
 
-        // Container içinde sınırla
-        newLeft = Math.max(10, Math.min(newLeft, containerRect.width - boxWidth - 10));
-        newTop = Math.max(10, Math.min(newTop, containerRect.height - boxHeight - 10));
+        // Viewport içinde sınırla - sayfa dışına çıkmasın
+        newLeft = Math.max(0, Math.min(newLeft, viewportWidth - boxWidth));
+        newTop = Math.max(0, Math.min(newTop, viewportHeight - boxHeight));
 
         // Pozisyonu uygula
         legendBox.style.left = newLeft + 'px';
@@ -4099,8 +4183,9 @@
         const deltaX = touch.clientX - startX;
         const deltaY = touch.clientY - startY;
 
-        const container = document.querySelector('.main-container');
-        const containerRect = container.getBoundingClientRect();
+        // Viewport boyutlarını al
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
 
         let newLeft = initialLeft + deltaX;
         let newTop = initialTop + deltaY;
@@ -4108,8 +4193,9 @@
         const boxWidth = legendBox.offsetWidth;
         const boxHeight = legendBox.offsetHeight;
 
-        newLeft = Math.max(10, Math.min(newLeft, containerRect.width - boxWidth - 10));
-        newTop = Math.max(10, Math.min(newTop, containerRect.height - boxHeight - 10));
+        // Viewport içinde sınırla - sayfa dışına çıkmasın
+        newLeft = Math.max(0, Math.min(newLeft, viewportWidth - boxWidth));
+        newTop = Math.max(0, Math.min(newTop, viewportHeight - boxHeight));
 
         legendBox.style.left = newLeft + 'px';
         legendBox.style.top = newTop + 'px';
@@ -4172,6 +4258,181 @@
       // Kayıtlı pozisyon yoksa veya hatalıysa, varsayılanı (sol alt) ayarla
       // Bu, öğe gizliyken bile çalışır.
       this.setDefaultLegendPosition();
+    }
+
+    // Lejant kutusunu 4 taraftan boyutlandırılabilir yapar
+    initResizableLegend() {
+      const legendBox = document.getElementById('customLegendBox');
+      const resizeHandles = legendBox?.querySelectorAll('.custom-legend-resize-handle');
+
+      if (!legendBox || !resizeHandles || resizeHandles.length === 0) return;
+
+      let isResizing = false;
+      let resizeDirection = null;
+      let startX, startY;
+      let startWidth, startHeight, startLeft, startTop;
+
+      // Her handle için mousedown event ekle
+      resizeHandles.forEach(handle => {
+        handle.addEventListener('mousedown', (e) => {
+          isResizing = true;
+          resizeDirection = handle.dataset.direction;
+
+          // Mevcut boyut ve pozisyonu al
+          const rect = legendBox.getBoundingClientRect();
+          startWidth = rect.width;
+          startHeight = rect.height;
+          startLeft = rect.left;
+          startTop = rect.top;
+
+          // Başlangıç mouse pozisyonu
+          startX = e.clientX;
+          startY = e.clientY;
+
+          // Görsel feedback
+          legendBox.classList.add('resizing');
+
+          // Seçimi engelle
+          e.preventDefault();
+          e.stopPropagation();
+        });
+      });
+
+      // Mouse move - boyutlandırma
+      document.addEventListener('mousemove', (e) => {
+        if (!isResizing || !resizeDirection) return;
+
+        const deltaX = e.clientX - startX;
+        const deltaY = e.clientY - startY;
+
+        // Viewport sınırları
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        let newWidth = startWidth;
+        let newHeight = startHeight;
+        let newLeft = startLeft;
+        let newTop = startTop;
+
+        // Minimum boyutlar
+        const minWidth = 250;
+        const minHeight = 200;
+
+        // Yön bazlı resize
+        switch (resizeDirection) {
+          case 'right':
+            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft));
+            break;
+
+          case 'left':
+            const maxLeftShift = startWidth - minWidth;
+            const actualLeftShift = Math.min(deltaX, maxLeftShift);
+            newWidth = startWidth - actualLeftShift;
+            newLeft = Math.max(0, startLeft + actualLeftShift);
+            break;
+
+          case 'bottom':
+            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop));
+            break;
+
+          case 'top':
+            const maxTopShift = startHeight - minHeight;
+            const actualTopShift = Math.min(deltaY, maxTopShift);
+            newHeight = startHeight - actualTopShift;
+            newTop = Math.max(0, startTop + actualTopShift);
+            break;
+
+          case 'bottom-right':
+            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft));
+            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop));
+            break;
+
+          case 'bottom-left':
+            const maxLeftShiftBL = startWidth - minWidth;
+            const actualLeftShiftBL = Math.min(deltaX, maxLeftShiftBL);
+            newWidth = startWidth - actualLeftShiftBL;
+            newLeft = Math.max(0, startLeft + actualLeftShiftBL);
+            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop));
+            break;
+
+          case 'top-right':
+            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft));
+            const maxTopShiftTR = startHeight - minHeight;
+            const actualTopShiftTR = Math.min(deltaY, maxTopShiftTR);
+            newHeight = startHeight - actualTopShiftTR;
+            newTop = Math.max(0, startTop + actualTopShiftTR);
+            break;
+
+          case 'top-left':
+            const maxLeftShiftTL = startWidth - minWidth;
+            const actualLeftShiftTL = Math.min(deltaX, maxLeftShiftTL);
+            newWidth = startWidth - actualLeftShiftTL;
+            newLeft = Math.max(0, startLeft + actualLeftShiftTL);
+
+            const maxTopShiftTL = startHeight - minHeight;
+            const actualTopShiftTL = Math.min(deltaY, maxTopShiftTL);
+            newHeight = startHeight - actualTopShiftTL;
+            newTop = Math.max(0, startTop + actualTopShiftTL);
+            break;
+        }
+
+        // Viewport sınırlarını kontrol et
+        if (newLeft + newWidth > viewportWidth) {
+          newWidth = viewportWidth - newLeft;
+        }
+        if (newTop + newHeight > viewportHeight) {
+          newHeight = viewportHeight - newTop;
+        }
+
+        // Stil uygula
+        legendBox.style.width = newWidth + 'px';
+        legendBox.style.height = newHeight + 'px';
+        legendBox.style.maxHeight = newHeight + 'px';
+        legendBox.style.left = newLeft + 'px';
+        legendBox.style.top = newTop + 'px';
+      });
+
+      // Mouse up - boyutlandırma bitişi
+      document.addEventListener('mouseup', () => {
+        if (isResizing) {
+          isResizing = false;
+          resizeDirection = null;
+          legendBox.classList.remove('resizing');
+
+          // Boyut ve pozisyonu localStorage'a kaydet
+          localStorage.setItem('legendSize', JSON.stringify({
+            width: legendBox.style.width,
+            height: legendBox.style.height
+          }));
+          localStorage.setItem('legendPosition', JSON.stringify({
+            left: legendBox.style.left,
+            top: legendBox.style.top
+          }));
+        }
+      });
+
+      // Kaydedilmiş boyutu yükle
+      this.restoreLegendSize();
+    }
+
+    // Kaydedilmiş lejant boyutunu geri yükle
+    restoreLegendSize() {
+      const legendBox = document.getElementById('customLegendBox');
+      if (!legendBox) return;
+
+      const savedSize = localStorage.getItem('legendSize');
+      if (savedSize) {
+        try {
+          const size = JSON.parse(savedSize);
+          if (size.width && size.height) {
+            legendBox.style.width = size.width;
+            legendBox.style.height = size.height;
+            legendBox.style.maxHeight = size.height;
+          }
+        } catch (e) {
+          console.error('Could not restore legend size:', e);
+        }
+      }
     }
 
     async loadCustomLegend(resourceId) {

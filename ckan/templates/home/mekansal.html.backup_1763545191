@@ -4059,19 +4059,6 @@
       }
     }
 
-    // Manuel resize durumunu sıfırla ve dinamik height'a geri dön
-    resetLegendManualResize() {
-      const legendBox = document.getElementById('customLegendBox');
-      if (legendBox) {
-        legendBox.classList.remove('manually-resized');
-        legendBox.style.removeProperty('--manual-height');
-        localStorage.removeItem('legendManuallyResized');
-        // Lejantı yeniden yükleyerek dinamik height hesaplat
-        this.loadAllCustomLegends();
-      }
-    }
-
-
     // Lejant kutusunu sürüklenebilir yapar
     // Lejant kutusunu sürüklenebilir yapar
     initDraggableLegend() {
@@ -4118,16 +4105,6 @@
 
         // Seçimi engelle
         e.preventDefault();
-      });
-
-      // Double click - manuel resize durumunu sıfırla
-      legendHeader.addEventListener('dblclick', (e) => {
-        // Toggle butonuna tıklanmışsa işlem yapma
-        if (e.target.classList.contains('custom-legend-header-toggle')) return;
-
-        this.resetLegendManualResize();
-        e.preventDefault();
-        e.stopPropagation();
       });
 
       // Mouse move - sürükleme
@@ -4581,23 +4558,6 @@ const entriesHTML = allResourceLegends.map(resourceLegends => {
         const totalLegends = allResourceLegends.reduce((sum, r) => sum + r.legends.length, 0);
         console.log(`✅ Loaded ${totalLegends} legend entries from ${allResourceLegends.length} resources`);
 
-
-        // Dinamik height ayarlaması - sadece manuel resize yapılmamışsa
-        if (!legendBox.classList.contains('manually-resized')) {
-          // İçeriğe göre uygun height hesapla
-          const contentHeight = entriesEl.scrollHeight;
-          const padding = 32; // 16px üst + 16px alt padding
-          const calculatedHeight = contentHeight + padding;
-
-          // Min/max sınırları içinde tut
-          const minHeight = 100;
-          const maxHeight = 600;
-          const finalHeight = Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
-
-          // Height'i ayarla
-          legendBox.style.height = `${finalHeight}px`;
-          legendBox.style.maxHeight = `${finalHeight}px`;
-        }
       } catch (error) {
         console.error('❌ Error loading custom legends:', error);
         legendBox.classList.remove('active'); // DÜZELTME 1 (Hata durumunda da gizle)

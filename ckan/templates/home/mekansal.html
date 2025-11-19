@@ -4447,48 +4447,22 @@
       const defaultWidth = '150px';
       const defaultHeight = '150px';
 
-      // İlk olarak default boyutları ayarla
+      // localStorage'ı TAMAMEN TEMİZLE - her seferinde yeni başla
+      localStorage.removeItem('legendSize');
+      localStorage.removeItem('legendPosition');
+      localStorage.removeItem('legendManuallyResized');
+
+      // ÖNCE HER ŞEYİ TEMİZLE - tüm inline style'ları kaldır
+      legendBox.removeAttribute('style');
+      legendBox.classList.remove('manually-resized');
+
+      // ŞİMDİ default boyutları uygula
       legendBox.style.width = defaultWidth;
       legendBox.style.height = defaultHeight;
       legendBox.style.minHeight = defaultHeight;
       legendBox.style.maxHeight = defaultHeight;
 
-      // SADECE manuel resize yapılmışsa kaydedilmiş boyutları kullan
-      const isManuallyResized = localStorage.getItem('legendManuallyResized') === 'true';
-
-      if (isManuallyResized) {
-        const savedSize = localStorage.getItem('legendSize');
-        const savedPosition = localStorage.getItem('legendPosition');
-
-        if (savedSize) {
-          try {
-            const size = JSON.parse(savedSize);
-            if (size.width && size.height) {
-              legendBox.style.width = size.width;
-              legendBox.style.height = size.height;
-              legendBox.style.minHeight = size.height;
-              legendBox.style.maxHeight = size.height;
-              legendBox.classList.add('manually-resized');
-              legendBox.style.setProperty('--manual-height', size.height);
-            }
-          } catch (e) {
-            console.error('Could not restore legend size:', e);
-          }
-        }
-
-        // Kaydedilmiş pozisyonu da yükle
-        if (savedPosition) {
-          try {
-            const pos = JSON.parse(savedPosition);
-            if (pos.left && pos.top) {
-              legendBox.style.left = pos.left;
-              legendBox.style.top = pos.top;
-            }
-          } catch (e) {
-            console.error('Could not restore legend position:', e);
-          }
-        }
-      }
+      console.log('Legend box reset to default: 150x150');
     }
 
     async loadCustomLegend(resourceId) {

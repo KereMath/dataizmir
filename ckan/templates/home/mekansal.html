@@ -1316,7 +1316,7 @@
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     padding: 16px;
-    height: auto;  /* Dinamik yükseklik için auto olarak ayarlandı */
+    height: 150px;  /* Başlangıç yüksekliği - JavaScript ile dinamik olarak güncellenecek */
     min-height:100px;
     max-height: 600px;  /* Maksimum yükseklik sınırı */
     min-width:130px;
@@ -1326,7 +1326,7 @@
     overflow-x: hidden;
     display: none;
     flex-direction: column;
-    transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease;
+    transition: height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
     cursor: move;  /* Sürükleme göstergesi */
   }
 
@@ -4583,21 +4583,27 @@ const entriesHTML = allResourceLegends.map(resourceLegends => {
 
 
         // Dinamik height ayarlaması - sadece manuel resize yapılmamışsa
-        if (!legendBox.classList.contains('manually-resized')) {
-          // İçeriğe göre uygun height hesapla
-          const contentHeight = entriesEl.scrollHeight;
-          const padding = 32; // 16px üst + 16px alt padding
-          const calculatedHeight = contentHeight + padding;
+        // DOM'un tam render olmasını bekle
+        requestAnimationFrame(() => {
+          if (!legendBox.classList.contains('manually-resized')) {
+            // İçeriğe göre uygun height hesapla
+            const contentHeight = entriesEl.scrollHeight;
+            const padding = 32; // 16px üst + 16px alt padding
+            const headerHeight = legendBox.querySelector('.custom-legend-header')?.offsetHeight || 0;
+            const calculatedHeight = contentHeight + padding + headerHeight;
 
-          // Min/max sınırları içinde tut
-          const minHeight = 100;
-          const maxHeight = 600;
-          const finalHeight = Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
+            // Min/max sınırları içinde tut
+            const minHeight = 100;
+            const maxHeight = 600;
+            const finalHeight = Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
 
-          // Height'i ayarla
-          legendBox.style.height = `${finalHeight}px`;
-          legendBox.style.maxHeight = `${finalHeight}px`;
-        }
+            console.log(`📏 Lejant boyutu: contentHeight=${contentHeight}px, finalHeight=${finalHeight}px, legends=${totalLegends}`);
+
+            // Height'i ayarla
+            legendBox.style.height = `${finalHeight}px`;
+            legendBox.style.maxHeight = `${finalHeight}px`;
+          }
+        });
       } catch (error) {
         console.error('❌ Error loading custom legends:', error);
         legendBox.classList.remove('active'); // DÜZELTME 1 (Hata durumunda da gizle)

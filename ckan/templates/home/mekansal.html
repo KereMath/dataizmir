@@ -1325,7 +1325,7 @@
     overflow-x: hidden;
     display: none;
     flex-direction: column;
-    transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
     cursor: move;  /* Sürükleme göstergesi */
   }
 
@@ -1344,9 +1344,14 @@
   /* Boyutlandırma sırasında görünüm */
   .custom-legend-box.resizing {
     opacity: 0.95;
-    transition: none;
+    transition: none !important;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
     user-select: none;
+  }
+
+  /* Resize sırasında smooth animasyon için tüm transition'ları kaldır */
+  .custom-legend-box.resizing * {
+    transition: none !important;
   }
 
   /* Resize handles - 4 taraftan ve 4 köşeden */
@@ -4304,8 +4309,11 @@
       });
 
       // Mouse move - boyutlandırma
-      document.addEventListener('mousemove', (e) => {
+      const handleMouseMove = (e) => {
         if (!isResizing || !resizeDirection) return;
+
+        // Prevent default browser behavior
+        e.preventDefault();
 
         const deltaX = e.clientX - startX;
         const deltaY = e.clientY - startY;
@@ -4326,76 +4334,81 @@
         // Yön bazlı resize
         switch (resizeDirection) {
           case 'right':
-            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft));
+            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft - 10));
             break;
 
           case 'left':
             const maxLeftShift = startWidth - minWidth;
             const actualLeftShift = Math.min(deltaX, maxLeftShift);
             newWidth = startWidth - actualLeftShift;
-            newLeft = Math.max(0, startLeft + actualLeftShift);
+            newLeft = Math.max(10, startLeft + actualLeftShift);
             break;
 
           case 'bottom':
-            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop));
+            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop - 10));
             break;
 
           case 'top':
             const maxTopShift = startHeight - minHeight;
             const actualTopShift = Math.min(deltaY, maxTopShift);
             newHeight = startHeight - actualTopShift;
-            newTop = Math.max(0, startTop + actualTopShift);
+            newTop = Math.max(10, startTop + actualTopShift);
             break;
 
           case 'bottom-right':
-            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft));
-            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop));
+            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft - 10));
+            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop - 10));
             break;
 
           case 'bottom-left':
             const maxLeftShiftBL = startWidth - minWidth;
             const actualLeftShiftBL = Math.min(deltaX, maxLeftShiftBL);
             newWidth = startWidth - actualLeftShiftBL;
-            newLeft = Math.max(0, startLeft + actualLeftShiftBL);
-            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop));
+            newLeft = Math.max(10, startLeft + actualLeftShiftBL);
+            newHeight = Math.max(minHeight, Math.min(startHeight + deltaY, viewportHeight - startTop - 10));
             break;
 
           case 'top-right':
-            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft));
+            newWidth = Math.max(minWidth, Math.min(startWidth + deltaX, viewportWidth - startLeft - 10));
             const maxTopShiftTR = startHeight - minHeight;
             const actualTopShiftTR = Math.min(deltaY, maxTopShiftTR);
             newHeight = startHeight - actualTopShiftTR;
-            newTop = Math.max(0, startTop + actualTopShiftTR);
+            newTop = Math.max(10, startTop + actualTopShiftTR);
             break;
 
           case 'top-left':
             const maxLeftShiftTL = startWidth - minWidth;
             const actualLeftShiftTL = Math.min(deltaX, maxLeftShiftTL);
             newWidth = startWidth - actualLeftShiftTL;
-            newLeft = Math.max(0, startLeft + actualLeftShiftTL);
+            newLeft = Math.max(10, startLeft + actualLeftShiftTL);
 
             const maxTopShiftTL = startHeight - minHeight;
             const actualTopShiftTL = Math.min(deltaY, maxTopShiftTL);
             newHeight = startHeight - actualTopShiftTL;
-            newTop = Math.max(0, startTop + actualTopShiftTL);
+            newTop = Math.max(10, startTop + actualTopShiftTL);
             break;
         }
 
         // Viewport sınırlarını kontrol et
-        if (newLeft + newWidth > viewportWidth) {
-          newWidth = viewportWidth - newLeft;
+        if (newLeft + newWidth > viewportWidth - 10) {
+          newWidth = viewportWidth - newLeft - 10;
         }
-        if (newTop + newHeight > viewportHeight) {
-          newHeight = viewportHeight - newTop;
+        if (newTop + newHeight > viewportHeight - 10) {
+          newHeight = viewportHeight - newTop - 10;
         }
 
-        // Stil uygula
-        legendBox.style.width = newWidth + 'px';
-        legendBox.style.height = newHeight + 'px';
-        legendBox.style.maxHeight = newHeight + 'px';
-        legendBox.style.left = newLeft + 'px';
-        legendBox.style.top = newTop + 'px';
-      });
+        // Stil uygula - GERÇEK ZAMANLI
+        requestAnimationFrame(() => {
+          legendBox.style.width = `${newWidth}px`;
+          legendBox.style.height = `${newHeight}px`;
+          legendBox.style.minHeight = `${newHeight}px`;
+          legendBox.style.maxHeight = `${newHeight}px`;
+          legendBox.style.left = `${newLeft}px`;
+          legendBox.style.top = `${newTop}px`;
+        });
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
 
       // Mouse up - boyutlandırma bitişi
       document.addEventListener('mouseup', () => {

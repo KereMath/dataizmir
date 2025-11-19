@@ -1316,17 +1316,16 @@
     border-radius: 12px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     padding: 16px;
-    height: 150px;  /* Başlangıç yüksekliği - JavaScript ile dinamik olarak güncellenecek */
-    min-height:100px;
-    max-height: 600px;  /* Maksimum yükseklik sınırı */
-    min-width:130px;
-    width: 200px;
+    height: auto;  /* Dinamik yükseklik için auto olarak ayarlandı */
+    min-height:150px;
+    min-width:150px;
+    width: auto;
     z-index: 400;  /* Leaflet kontrollerinin üzerinde */
     overflow-y: auto;
     overflow-x: hidden;
     display: none;
     flex-direction: column;
-    transition: height 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease, height 0.3s ease;
     cursor: move;  /* Sürükleme göstergesi */
   }
 
@@ -4059,19 +4058,6 @@
       }
     }
 
-    // Manuel resize durumunu sıfırla ve dinamik height'a geri dön
-    resetLegendManualResize() {
-      const legendBox = document.getElementById('customLegendBox');
-      if (legendBox) {
-        legendBox.classList.remove('manually-resized');
-        legendBox.style.removeProperty('--manual-height');
-        localStorage.removeItem('legendManuallyResized');
-        // Lejantı yeniden yükleyerek dinamik height hesaplat
-        this.loadAllCustomLegends();
-      }
-    }
-
-
     // Lejant kutusunu sürüklenebilir yapar
     // Lejant kutusunu sürüklenebilir yapar
     initDraggableLegend() {
@@ -4118,16 +4104,6 @@
 
         // Seçimi engelle
         e.preventDefault();
-      });
-
-      // Double click - manuel resize durumunu sıfırla
-      legendHeader.addEventListener('dblclick', (e) => {
-        // Toggle butonuna tıklanmışsa işlem yapma
-        if (e.target.classList.contains('custom-legend-header-toggle')) return;
-
-        this.resetLegendManualResize();
-        e.preventDefault();
-        e.stopPropagation();
       });
 
       // Mouse move - sürükleme
@@ -4581,29 +4557,6 @@ const entriesHTML = allResourceLegends.map(resourceLegends => {
         const totalLegends = allResourceLegends.reduce((sum, r) => sum + r.legends.length, 0);
         console.log(`✅ Loaded ${totalLegends} legend entries from ${allResourceLegends.length} resources`);
 
-
-        // Dinamik height ayarlaması - sadece manuel resize yapılmamışsa
-        // DOM'un tam render olmasını bekle
-        requestAnimationFrame(() => {
-          if (!legendBox.classList.contains('manually-resized')) {
-            // İçeriğe göre uygun height hesapla
-            const contentHeight = entriesEl.scrollHeight;
-            const padding = 32; // 16px üst + 16px alt padding
-            const headerHeight = legendBox.querySelector('.custom-legend-header')?.offsetHeight || 0;
-            const calculatedHeight = contentHeight + padding + headerHeight;
-
-            // Min/max sınırları içinde tut
-            const minHeight = 100;
-            const maxHeight = 600;
-            const finalHeight = Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
-
-            console.log(`📏 Lejant boyutu: contentHeight=${contentHeight}px, finalHeight=${finalHeight}px, legends=${totalLegends}`);
-
-            // Height'i ayarla
-            legendBox.style.height = `${finalHeight}px`;
-            legendBox.style.maxHeight = `${finalHeight}px`;
-          }
-        });
       } catch (error) {
         console.error('❌ Error loading custom legends:', error);
         legendBox.classList.remove('active'); // DÜZELTME 1 (Hata durumunda da gizle)

@@ -136,6 +136,20 @@ def groups():
     return base.render(u'user/dashboard_groups.html', extra_vars)
 
 
+def validity():
+    '''Veri geçerliliği yönetim sayfası'''
+    import ckan.authz as authz
+
+    context = {u'for_view': True, u'user': g.user, u'auth_user_obj': g.userobj}
+    data_dict = {u'user_obj': g.userobj}
+    extra_vars = _extra_template_variables(context, data_dict)
+
+    # Kullanıcının admin olup olmadığını kontrol et
+    extra_vars['is_sysadmin'] = authz.is_sysadmin(g.user)
+
+    return base.render(u'user/dashboard_validity.html', extra_vars)
+
+
 dashboard.add_url_rule(
     u'/', view_func=index, strict_slashes=False, defaults={
         u'offset': 0
@@ -145,3 +159,4 @@ dashboard.add_url_rule(u'/<int:offset>', view_func=index)
 dashboard.add_url_rule(u'/datasets', view_func=datasets)
 dashboard.add_url_rule(u'/groups', view_func=groups)
 dashboard.add_url_rule(u'/organizations', view_func=organizations)
+dashboard.add_url_rule(u'/validity', view_func=validity)

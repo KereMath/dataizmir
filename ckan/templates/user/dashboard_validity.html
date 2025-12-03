@@ -1,0 +1,1139 @@
+{% extends "page.html" %}
+
+{% block subtitle %}{{ _('Veri Geçerliliği') }}{% endblock %}
+
+{%- block header %}
+{% include "header.html" %}
+<div id="title" class="package-title container-fluid"
+  style="background-image:url(&quot;/base/images/theme/background_photo.jpg&quot;);color: #fff;">
+  <div class="background-overlay">
+    <div class="restricted-max-width">
+      <div class="col-xs-12 col-md-10 col-md-offset-1">
+        <div id="title-container" class="col-xs-10 col-md-6 text-left">
+          <h1 style="margin-left: 200px;">Veri Geçerlilik Tarihi Yönetimi</h1>
+        </div>
+        <div id="stats" class="col-xs-12 col-md-4 col-md-offset-2">
+          <div class="col-xs-12" style="text-align: center;margin-top: 20px;font-size: 16px;">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{%- endblock %}
+
+{% block primary %}
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    min-height: 100vh;
+  }
+
+  .validity-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+
+  /* Tab Navigation */
+  .tab-navigation {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #e9ecef;
+  }
+
+  .tab-button {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: #6c757d;
+    transition: all 0.3s;
+  }
+
+  .tab-button:hover {
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.05);
+  }
+
+  .tab-button.active {
+    color: #667eea;
+    border-bottom-color: #667eea;
+    background: rgba(102, 126, 234, 0.08);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* FAB Button */
+  .fab-container {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 1100;
+  }
+
+  .validity-fab {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 62px;
+    height: 60px;
+    padding: 0 21px;
+    background: linear-gradient(45deg, #dc3545, #c82333);
+    color: #fff;
+    border-radius: 30px;
+    box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+    text-decoration: none;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    border: none;
+  }
+
+  .validity-fab .fab-icon {
+    font-size: 22px;
+    line-height: 1;
+    transition: transform 0.5s ease;
+  }
+
+  .validity-fab .fab-text {
+    font-size: 16px;
+    font-weight: 600;
+    margin-left: 12px;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out 0.1s;
+  }
+
+  .validity-fab:hover {
+    width: 220px;
+    box-shadow: 0 10px 25px rgba(220, 53, 69, 0.5);
+    transform: translateY(-2px);
+  }
+
+  .validity-fab:hover .fab-text {
+    opacity: 1;
+  }
+
+  .validity-fab:hover .fab-icon {
+    transform: rotate(180deg);
+  }
+
+  /* Outdated packages table */
+  .outdated-badge {
+    background: #dc3545;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .days-old {
+    color: #dc3545;
+    font-weight: 600;
+  }
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .stat-box {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+
+  .stat-box .number {
+    font-size: 36px;
+    font-weight: bold;
+    color: #667eea;
+    display: block;
+    margin-bottom: 5px;
+  }
+
+  .stat-box .label {
+    color: #6c757d;
+    font-size: 14px;
+  }
+
+  .content-box {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  }
+
+  .search-bar {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+  }
+
+  .search-bar input {
+    flex: 1;
+    padding: 12px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  .search-bar input:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .search-bar select {
+    padding: 12px 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+
+  .table-container {
+    overflow-x: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th {
+    background: #f8f9fa;
+    padding: 15px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    color: #2c3e50;
+    border-bottom: 2px solid #dee2e6;
+  }
+
+  td {
+    padding: 15px;
+    border-bottom: 1px solid #f1f3f5;
+  }
+
+  tr:hover {
+    background: #f8f9fa;
+  }
+
+  .dataset-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .dataset-link:hover {
+    text-decoration: underline;
+  }
+
+  .org-badge {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 10px;
+    border-radius: 5px;
+    font-size: 12px;
+  }
+
+  .date-input {
+    padding: 8px 12px;
+    border: 2px solid #e9ecef;
+    border-radius: 6px;
+    font-size: 13px;
+    width: 150px;
+  }
+
+  .date-input:focus {
+    outline: none;
+    border-color: #667eea;
+  }
+
+  .save-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s;
+  }
+
+  .save-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+
+  .clear-btn {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .clear-btn:hover {
+    background: #c82333;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 40px;
+    color: #6c757d;
+  }
+
+  .pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .pagination button {
+    padding: 8px 16px;
+    border: 1px solid #dee2e6;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+
+  .pagination button:hover:not(:disabled) {
+    background: #667eea;
+    color: white;
+  }
+
+  .pagination button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  /* Status badges */
+  .status-badge {
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-block;
+  }
+
+  .status-badge.status-ok {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .status-badge.status-mild {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  .status-badge.status-warning {
+    background: #ffc107;
+    color: #000;
+  }
+
+  .status-badge.status-critical {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .status-badge.status-irregular {
+    background: #e2e3e5;
+    color: #6c757d;
+  }
+
+  .status-badge.status-unknown {
+    background: #f8f9fa;
+    color: #6c757d;
+  }
+</style>
+
+<div class="validity-container">
+  <!-- Tab Navigation -->
+  <div class="tab-navigation">
+    <button class="tab-button active" onclick="switchTab('management')">
+      <i class="fa fa-calendar"></i> Tarih Yönetimi
+    </button>
+    <button class="tab-button" onclick="switchTab('check')">
+      <i class="fa fa-exclamation-triangle"></i> Güncellik Kontrolü
+    </button>
+  </div>
+
+  <!-- TAB 1: Tarih Yönetimi -->
+  <div id="tab-management" class="tab-content active">
+    <div class="stats">
+      <div class="stat-box">
+        <span class="number" id="totalDatasets">0</span>
+        <span class="label">Toplam Veri Seti</span>
+      </div>
+      <div class="stat-box">
+        <span class="number" id="datasetsWithValidity" style="color: #28a745;">0</span>
+        <span class="label">Tarih Girilmiş</span>
+      </div>
+    </div>
+
+    <div class="content-box">
+    <div class="search-bar">
+      <input type="text" id="searchInput" placeholder="🔍 Veri seti başlığı veya organizasyon ile ara...">
+      <select id="itemsPerPage">
+        <option value="10">10 / sayfa</option>
+        <option value="20" selected>20 / sayfa</option>
+        <option value="50">50 / sayfa</option>
+        <option value="100">100 / sayfa</option>
+      </select>
+    </div>
+
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 40px;">#</th>
+            <th style="width: 25%;">Veri Seti</th>
+            <th style="width: 15%;">Organizasyon</th>
+            <th style="width: 12%;">Son Güncelleme</th>
+            <th style="width: 18%;">Güncellenme Sıklığı</th>
+            <th style="width: 15%;">Geçerlilik Tarihi</th>
+            <th style="width: 15%;">Durum</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr>
+            <td colspan="7" class="loading">
+              <i class="fa fa-spinner fa-spin" style="font-size: 30px; color: #667eea;"></i>
+              <p style="margin-top: 15px;">Veri setleri yükleniyor...</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+      <div class="pagination" id="pagination"></div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Güncellik Kontrolü -->
+  <div id="tab-check" class="tab-content">
+    <div class="stats">
+      <div class="stat-box">
+        <span class="number" id="totalOutdated">0</span>
+        <span class="label">Güncellenmeli</span>
+      </div>
+      <div class="stat-box">
+        <span class="number" id="avgDaysOld" style="color: #dc3545;">0</span>
+        <span class="label">Ortalama Gün Farkı</span>
+      </div>
+      <div class="stat-box">
+        <span class="number" id="criticalCount" style="color: #dc3545;">0</span>
+        <span class="label">Kritik (>90 gün)</span>
+      </div>
+    </div>
+
+    <div class="content-box">
+      <div class="search-bar">
+        <input type="text" id="searchOutdated" placeholder="🔍 Veri seti ara...">
+        <select id="outdatedFilter">
+          <option value="all">Tüm Durum</option>
+          <option value="critical">Kritik (>90 gün)</option>
+          <option value="warning">Uyarı (30-90 gün)</option>
+          <option value="mild">Hafif (<30 gün)</option>
+        </select>
+        <select id="outdatedSort">
+          <option value="days_desc">En Eskiden Yeniye</option>
+          <option value="days_asc">En Yeniden Eskiye</option>
+          <option value="name_asc">İsim (A-Z)</option>
+        </select>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 5%;">#</th>
+              <th style="width: 30%;">Veri Seti</th>
+              <th style="width: 15%;">Organizasyon</th>
+              <th style="width: 15%;">Geçerlilik Tarihi</th>
+              <th style="width: 15%;">Son Güncelleme</th>
+              <th style="width: 10%;">Fark (Gün)</th>
+              <th style="width: 10%;">Durum</th>
+            </tr>
+          </thead>
+          <tbody id="outdatedTableBody">
+            <tr>
+              <td colspan="7" class="loading">
+                <i class="fa fa-spinner fa-spin" style="font-size: 30px; color: #667eea;"></i>
+                <p style="margin-top: 15px;">Analiz ediliyor...</p>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pagination" id="outdatedPagination"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Action Button -->
+<div class="fab-container">
+  <button class="validity-fab" onclick="switchTab('check')" title="Güncellik Kontrolü">
+    <span class="fab-icon"><i class="fa fa-exclamation-triangle"></i></span>
+    <span class="fab-text">Güncellik Kontrolü</span>
+  </button>
+</div>
+
+<script>
+  let allPackages = [];
+  let filteredPackages = [];
+  let currentPage = 1;
+  let itemsPerPage = 20;
+  const isSysadmin = {% if is_sysadmin %}true{% else %}false{% endif %};
+
+  // Güncellenme sıklığı mapping
+  const frequencies = {
+    'Günlük': { days: 1, label: 'Günlük' },
+    'Haftalık': { days: 7, label: 'Haftalık' },
+    'İki Haftalık': { days: 14, label: 'İki Haftalık' },
+    'Aylık': { days: 30, label: 'Aylık' },
+    '3 Aylık': { days: 90, label: '3 Aylık' },
+    '6 Aylık': { days: 180, label: '6 Aylık' },
+    'Yıllık': { days: 365, label: 'Yıllık' },
+    'Düzensiz': { days: null, label: 'Düzensiz' }
+  };
+
+  // Geçerlilik tarihini hesapla
+  function calculateValidityDate(lastModified, frequency) {
+    if (!frequency || frequency === 'Düzensiz' || !frequencies[frequency]) {
+      return null;
+    }
+
+    const freqDays = frequencies[frequency].days;
+    if (!freqDays) return null;
+
+    const lastModDate = new Date(lastModified);
+    const validityDate = new Date(lastModDate);
+    validityDate.setDate(validityDate.getDate() + freqDays);
+
+    return validityDate;
+  }
+
+  // Güncellik durumunu kontrol et
+  function checkValidityStatus(pkg) {
+    // Gerçek veri güncellenme tarihini belirle
+    const lastDataUpdate = pkg.last_data_update || pkg.metadata_modified;
+
+    if (!pkg.update_frequency || !lastDataUpdate) {
+      return {
+        isOutdated: false,
+        validityDate: null,
+        daysOverdue: 0,
+        status: 'unknown',
+        statusText: 'Belirtilmemiş',
+        statusClass: 'unknown'
+      };
+    }
+
+    const validityDate = calculateValidityDate(lastDataUpdate, pkg.update_frequency);
+
+    if (!validityDate) {
+      return {
+        isOutdated: false,
+        validityDate: null,
+        daysOverdue: 0,
+        status: 'irregular',
+        statusText: 'Düzensiz',
+        statusClass: 'irregular'
+      };
+    }
+
+    const now = new Date();
+    const isOutdated = now > validityDate;
+    const diffTime = now - validityDate;
+    const daysOverdue = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+    let status, statusText, statusClass;
+
+    if (!isOutdated) {
+      status = 'ok';
+      statusText = '✅ Güncel';
+      statusClass = 'ok';
+    } else if (daysOverdue > 90) {
+      status = 'critical';
+      statusText = `🔴 ${daysOverdue} gün gecikti`;
+      statusClass = 'critical';
+    } else if (daysOverdue > 30) {
+      status = 'warning';
+      statusText = `⚠️ ${daysOverdue} gün gecikti`;
+      statusClass = 'warning';
+    } else {
+      status = 'mild';
+      statusText = `⚡ ${daysOverdue} gün gecikti`;
+      statusClass = 'mild';
+    }
+
+    return {
+      isOutdated,
+      validityDate,
+      daysOverdue,
+      status,
+      statusText,
+      statusClass
+    };
+  }
+
+  // Sayfa yüklenince
+  document.addEventListener('DOMContentLoaded', function() {
+    loadPackages();
+
+    document.getElementById('searchInput').addEventListener('input', debounce(filterPackages, 300));
+    document.getElementById('itemsPerPage').addEventListener('change', function() {
+      itemsPerPage = parseInt(this.value);
+      currentPage = 1;
+      renderTable();
+    });
+  });
+
+  function debounce(func, wait) {
+    let timeout;
+    return function(...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+  }
+
+  async function loadPackages() {
+    try {
+      const response = await fetch('/api/3/action/package_search?rows=1000&include_private=true', {
+        credentials: 'include'
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.result && data.result.results) {
+        allPackages = data.result.results;
+
+        // Extras array'den validity_date, update_frequency ve last_data_update'i çıkar
+        allPackages.forEach(pkg => {
+          if (pkg.extras) {
+            const validityExtra = pkg.extras.find(e => e.key === 'validity_date');
+            if (validityExtra) {
+              pkg.validity_date = validityExtra.value;
+            }
+            const frequencyExtra = pkg.extras.find(e => e.key === 'update_frequency');
+            if (frequencyExtra) {
+              pkg.update_frequency = frequencyExtra.value;
+            }
+            const lastDataUpdateExtra = pkg.extras.find(e => e.key === 'last_data_update');
+            if (lastDataUpdateExtra) {
+              pkg.last_data_update = lastDataUpdateExtra.value;
+            }
+          }
+        });
+
+        filteredPackages = allPackages;
+        updateStats();
+        renderTable();
+      }
+    } catch (error) {
+      console.error('Hata:', error);
+      document.getElementById('tableBody').innerHTML = '<tr><td colspan="7" style="text-align:center; color: red;">Veri setleri yüklenemedi!</td></tr>';
+    }
+  }
+
+  function updateStats() {
+    document.getElementById('totalDatasets').textContent = allPackages.length;
+    document.getElementById('datasetsWithValidity').textContent = allPackages.filter(p => p.validity_date).length;
+  }
+
+  function filterPackages() {
+    const search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    if (!search) {
+      filteredPackages = allPackages;
+    } else {
+      filteredPackages = allPackages.filter(pkg => {
+        const title = (pkg.title || pkg.name || '').toLowerCase();
+        const org = (pkg.organization?.title || '').toLowerCase();
+        return title.includes(search) || org.includes(search);
+      });
+    }
+
+    currentPage = 1;
+    renderTable();
+  }
+
+  function renderTable() {
+    const tbody = document.getElementById('tableBody');
+    const totalPages = Math.ceil(filteredPackages.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, filteredPackages.length);
+    const pagePackages = filteredPackages.slice(startIndex, endIndex);
+
+    if (pagePackages.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px;">Veri seti bulunamadı</td></tr>';
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    pagePackages.forEach((pkg, index) => {
+      const globalIndex = startIndex + index + 1;
+      const title = pkg.title || pkg.name || 'İsimsiz';
+      const org = pkg.organization?.title || 'Yok';
+      // Gerçek veri güncellenme tarihini göster
+      const lastDataUpdate = pkg.last_data_update || pkg.metadata_modified;
+      const lastModified = lastDataUpdate ? new Date(lastDataUpdate).toLocaleDateString('tr-TR') : '-';
+      const updateFrequency = pkg.update_frequency || '';
+
+      // Yetki kontrolü: Sysadmin veya package'ı edit edebilen kullanıcılar
+      const canEdit = isSysadmin || (pkg.creator_user_id === '{{ c.userobj.id }}');
+
+      // Güncellenme sıklığı dropdown
+      let frequencyCell = '';
+      if (canEdit) {
+        frequencyCell = `
+          <select class="date-input" id="freq_${pkg.id}" style="width: 150px;">
+            <option value="">Seçiniz...</option>
+            <option value="Günlük" ${updateFrequency === 'Günlük' ? 'selected' : ''}>Günlük</option>
+            <option value="Haftalık" ${updateFrequency === 'Haftalık' ? 'selected' : ''}>Haftalık</option>
+            <option value="İki Haftalık" ${updateFrequency === 'İki Haftalık' ? 'selected' : ''}>İki Haftalık</option>
+            <option value="Aylık" ${updateFrequency === 'Aylık' ? 'selected' : ''}>Aylık</option>
+            <option value="3 Aylık" ${updateFrequency === '3 Aylık' ? 'selected' : ''}>3 Aylık</option>
+            <option value="6 Aylık" ${updateFrequency === '6 Aylık' ? 'selected' : ''}>6 Aylık</option>
+            <option value="Yıllık" ${updateFrequency === 'Yıllık' ? 'selected' : ''}>Yıllık</option>
+            <option value="Düzensiz" ${updateFrequency === 'Düzensiz' ? 'selected' : ''}>Düzensiz</option>
+          </select>
+          <button class="save-btn" onclick="saveFrequency('${pkg.id}')">
+            <i class="fa fa-save"></i>
+          </button>
+          ${updateFrequency ? `<button class="clear-btn" onclick="clearFrequency('${pkg.id}')"><i class="fa fa-times"></i></button>` : ''}
+        `;
+      } else {
+        frequencyCell = updateFrequency || '<span style="color: #6c757d;">–</span>';
+      }
+
+      // Geçerlilik durumunu hesapla
+      const validityStatus = checkValidityStatus(pkg);
+
+      // Geçerlilik tarihi (otomatik hesaplanan)
+      let validityDateCell = '';
+      if (validityStatus.validityDate) {
+        validityDateCell = validityStatus.validityDate.toLocaleDateString('tr-TR');
+      } else if (updateFrequency === 'Düzensiz') {
+        validityDateCell = '<span style="color: #6c757d;">Düzensiz</span>';
+      } else {
+        validityDateCell = '<span style="color: #6c757d;">–</span>';
+      }
+
+      // Durum badge
+      const statusCell = `<span class="status-badge status-${validityStatus.statusClass}">${validityStatus.statusText}</span>`;
+
+      html += `
+        <tr>
+          <td><strong>${globalIndex}</strong></td>
+          <td><a href="/dataset/${pkg.name}" class="dataset-link" target="_blank">${title}</a></td>
+          <td><span class="org-badge">${org}</span></td>
+          <td>${lastModified}</td>
+          <td>${frequencyCell}</td>
+          <td>${validityDateCell}</td>
+          <td>${statusCell}</td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = html;
+    renderPagination(totalPages);
+  }
+
+  function renderPagination(totalPages) {
+    const container = document.getElementById('pagination');
+
+    if (totalPages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+
+    html += `<button ${currentPage === 1 ? 'disabled' : ''} onclick="changePage(${currentPage - 1})">
+      <i class="fa fa-chevron-left"></i> Önceki
+    </button>`;
+
+    const startItem = (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, filteredPackages.length);
+    html += `<span style="padding: 8px 16px;">${startItem}-${endItem} / ${filteredPackages.length}</span>`;
+
+    html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="changePage(${currentPage + 1})">
+      Sonraki <i class="fa fa-chevron-right"></i>
+    </button>`;
+
+    container.innerHTML = html;
+  }
+
+  function changePage(page) {
+    currentPage = page;
+    renderTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+
+  async function saveFrequency(packageId) {
+    const select = document.getElementById('freq_' + packageId);
+    const updateFrequency = select.value;
+
+    if (!updateFrequency) {
+      alert('Lütfen bir güncellenme sıklığı seçin!');
+      return;
+    }
+
+    try {
+      // Önce package bilgisini al
+      const pkgResponse = await fetch('/api/3/action/package_show?id=' + packageId, {
+        credentials: 'include'
+      });
+      const pkgData = await pkgResponse.json();
+
+      if (!pkgData.success) {
+        alert('❌ Hata: Veri seti bilgisi alınamadı');
+        return;
+      }
+
+      const pkg = pkgData.result;
+
+      // Eğer daha önce kaydedilmiş gerçek veri güncellenme tarihi varsa onu kullan
+      // Yoksa şu anki metadata_modified'ı kullan (ilk kayıt)
+      let lastDataUpdate = pkg.metadata_modified;
+      const lastDataUpdateExtra = pkg.extras?.find(e => e.key === 'last_data_update');
+      if (lastDataUpdateExtra && lastDataUpdateExtra.value) {
+        lastDataUpdate = lastDataUpdateExtra.value;
+      }
+
+      // Geçerlilik tarihini hesapla (gerçek veri güncellenme tarihi üzerinden)
+      const validityDate = calculateValidityDate(lastDataUpdate, updateFrequency);
+      const validityDateStr = validityDate ? validityDate.toISOString().split('T')[0] : null;
+
+      // Extras array'ini güncelle
+      let extras = (pkg.extras || []).filter(e =>
+        e.key &&
+        e.key !== 'update_frequency' &&
+        e.key !== 'validity_date' &&
+        e.key !== 'last_data_update'
+      );
+
+      // Update frequency'yi ekle
+      extras.push({
+        key: 'update_frequency',
+        value: updateFrequency
+      });
+
+      // Hesaplanan validity_date'i ekle (düzensiz değilse)
+      if (validityDateStr) {
+        extras.push({
+          key: 'validity_date',
+          value: validityDateStr
+        });
+      }
+
+      // Gerçek veri güncellenme tarihini kaydet (eğer yoksa şimdiki metadata_modified)
+      extras.push({
+        key: 'last_data_update',
+        value: lastDataUpdate
+      });
+
+      // Tüm package objesini gönder
+      const updateData = {
+        ...pkg,
+        extras: extras
+      };
+
+      // Package'ı güncelle
+      const response = await fetch('/api/3/action/package_update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updateData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const localPkg = allPackages.find(p => p.id === packageId);
+        if (localPkg) {
+          localPkg.update_frequency = updateFrequency;
+          localPkg.validity_date = validityDateStr;
+          localPkg.last_data_update = lastDataUpdate;
+        }
+
+        alert('✅ Başarılı! Güncellenme sıklığı kaydedildi.');
+        renderTable();
+
+        // Güncellik kontrolü tab'ı yüklenmişse onu da yenile
+        if (window.outdatedLoaded) {
+          loadOutdatedCheck();
+        }
+      } else {
+        console.error('API Error:', data.error);
+        alert('❌ Hata: ' + JSON.stringify(data.error));
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('❌ Hata: ' + error.message);
+    }
+  }
+
+  async function clearFrequency(packageId) {
+    if (!confirm('Güncellenme sıklığını silmek istediğinizden emin misiniz?')) {
+      return;
+    }
+
+    try {
+      const pkgResponse = await fetch('/api/3/action/package_show?id=' + packageId, {
+        credentials: 'include'
+      });
+      const pkgData = await pkgResponse.json();
+
+      if (!pkgData.success) {
+        alert('❌ Hata: Veri seti bilgisi alınamadı');
+        return;
+      }
+
+      const pkg = pkgData.result;
+
+      // Extras'dan update_frequency, validity_date ve last_data_update'i tamamen kaldır
+      let extras = (pkg.extras || []).filter(e => e.key && e.key !== 'update_frequency' && e.key !== 'validity_date' && e.key !== 'last_data_update');
+
+      const updateData = {
+        ...pkg,
+        extras: extras
+      };
+
+      const response = await fetch('/api/3/action/package_update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(updateData)
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const localPkg = allPackages.find(p => p.id === packageId);
+        if (localPkg) localPkg.update_frequency = null;
+
+        alert('✅ Başarılı! Güncellenme sıklığı silindi.');
+        renderTable();
+
+        // Güncellik kontrolü tab'ı yüklenmişse onu da yenile
+        if (window.outdatedLoaded) {
+          loadOutdatedCheck();
+        }
+      } else {
+        console.error('API Error:', data.error);
+        alert('❌ Hata: ' + JSON.stringify(data.error));
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('❌ Hata: ' + error.message);
+    }
+  }
+
+  // Tab switching
+  function switchTab(tabName) {
+    // Tab buttons
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.tab-button')?.classList.add('active');
+
+    // Tab contents
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    document.getElementById('tab-' + tabName).classList.add('active');
+
+    // Load outdated check if switching to check tab (her seferinde yeniden yükle)
+    if (tabName === 'check') {
+      loadOutdatedCheck();
+      window.outdatedLoaded = true;
+    }
+  }
+
+  // Güncellik Kontrolü
+  let outdatedPackages = [];
+  let filteredOutdated = [];
+  let outdatedCurrentPage = 1;
+  let outdatedItemsPerPage = 20;
+
+  function loadOutdatedCheck() {
+    // SADECE güncellenme sıklığı olan ve süresi geçmiş paketleri göster
+    outdatedPackages = allPackages.filter(pkg => {
+      // Güncelleme sıklığı olmalı
+      if (!pkg.update_frequency || !pkg.metadata_modified) return false;
+
+      // Otomatik geçerlilik kontrolü yap
+      const validityStatus = checkValidityStatus(pkg);
+
+      // Sadece süresi geçmiş olanları filtrele
+      return validityStatus.isOutdated;
+    }).map(pkg => {
+      const validityStatus = checkValidityStatus(pkg);
+
+      return {
+        ...pkg,
+        daysDiff: validityStatus.daysOverdue,
+        status: validityStatus.status
+      };
+    });
+
+    filteredOutdated = outdatedPackages;
+    updateOutdatedStats();
+    renderOutdatedTable();
+
+    // Event listeners
+    document.getElementById('searchOutdated').addEventListener('input', debounce(filterOutdated, 300));
+    document.getElementById('outdatedFilter').addEventListener('change', filterOutdated);
+    document.getElementById('outdatedSort').addEventListener('change', renderOutdatedTable);
+  }
+
+  function updateOutdatedStats() {
+    const total = outdatedPackages.length;
+    const critical = outdatedPackages.filter(p => p.status === 'critical').length;
+    const avgDays = total > 0 ? Math.round(outdatedPackages.reduce((sum, p) => sum + p.daysDiff, 0) / total) : 0;
+
+    document.getElementById('totalOutdated').textContent = total;
+    document.getElementById('criticalCount').textContent = critical;
+    document.getElementById('avgDaysOld').textContent = avgDays;
+  }
+
+  function filterOutdated() {
+    const search = document.getElementById('searchOutdated').value.toLowerCase().trim();
+    const filter = document.getElementById('outdatedFilter').value;
+
+    filteredOutdated = outdatedPackages.filter(pkg => {
+      // Search filter
+      if (search) {
+        const title = (pkg.title || pkg.name || '').toLowerCase();
+        const org = (pkg.organization?.title || '').toLowerCase();
+        if (!title.includes(search) && !org.includes(search)) return false;
+      }
+
+      // Status filter
+      if (filter !== 'all' && pkg.status !== filter) return false;
+
+      return true;
+    });
+
+    outdatedCurrentPage = 1;
+    renderOutdatedTable();
+  }
+
+  function renderOutdatedTable() {
+    const tbody = document.getElementById('outdatedTableBody');
+    const sort = document.getElementById('outdatedSort').value;
+
+    // Sort
+    let sorted = [...filteredOutdated];
+    if (sort === 'days_desc') sorted.sort((a, b) => b.daysDiff - a.daysDiff);
+    else if (sort === 'days_asc') sorted.sort((a, b) => a.daysDiff - b.daysDiff);
+    else if (sort === 'name_asc') sorted.sort((a, b) => (a.title || a.name).localeCompare(b.title || b.name));
+
+    // Pagination
+    const startIndex = (outdatedCurrentPage - 1) * outdatedItemsPerPage;
+    const endIndex = Math.min(startIndex + outdatedItemsPerPage, sorted.length);
+    const pagePackages = sorted.slice(startIndex, endIndex);
+
+    if (pagePackages.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 40px;">✅ Tüm veri setleri güncel!</td></tr>';
+      document.getElementById('outdatedPagination').innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    pagePackages.forEach((pkg, index) => {
+      const globalIndex = startIndex + index + 1;
+      const title = pkg.title || pkg.name || 'İsimsiz';
+      const org = pkg.organization?.title || 'Yok';
+
+      // Geçerlilik ve güncellenme tarihlerini hesapla
+      const lastDataUpdate = pkg.last_data_update || pkg.metadata_modified;
+      const validityStatus = checkValidityStatus(pkg);
+      const validity = validityStatus.validityDate ? validityStatus.validityDate.toLocaleDateString('tr-TR') : (pkg.validity_date ? new Date(pkg.validity_date).toLocaleDateString('tr-TR') : '-');
+      const modified = lastDataUpdate ? new Date(lastDataUpdate).toLocaleDateString('tr-TR') : '-';
+
+      let statusBadge = '';
+      if (pkg.status === 'critical') statusBadge = '<span class="outdated-badge" style="background: #dc3545;">KRİTİK</span>';
+      else if (pkg.status === 'warning') statusBadge = '<span class="outdated-badge" style="background: #ffc107; color: #000;">UYARI</span>';
+      else statusBadge = '<span class="outdated-badge" style="background: #17a2b8;">HAFİF</span>';
+
+      html += `
+        <tr>
+          <td><strong>${globalIndex}</strong></td>
+          <td><a href="/dataset/${pkg.name}" class="dataset-link" target="_blank">${title}</a></td>
+          <td><span class="org-badge">${org}</span></td>
+          <td>${validity}</td>
+          <td>${modified}</td>
+          <td><span class="days-old">${pkg.daysDiff} gün</span></td>
+          <td>${statusBadge}</td>
+        </tr>
+      `;
+    });
+
+    tbody.innerHTML = html;
+    renderOutdatedPagination(Math.ceil(sorted.length / outdatedItemsPerPage));
+  }
+
+  function renderOutdatedPagination(totalPages) {
+    const container = document.getElementById('outdatedPagination');
+    if (totalPages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    let html = `<button ${outdatedCurrentPage === 1 ? 'disabled' : ''} onclick="changeOutdatedPage(${outdatedCurrentPage - 1})">
+      <i class="fa fa-chevron-left"></i> Önceki
+    </button>`;
+
+    const startItem = (outdatedCurrentPage - 1) * outdatedItemsPerPage + 1;
+    const endItem = Math.min(outdatedCurrentPage * outdatedItemsPerPage, filteredOutdated.length);
+    html += `<span style="padding: 8px 16px;">${startItem}-${endItem} / ${filteredOutdated.length}</span>`;
+
+    html += `<button ${outdatedCurrentPage === totalPages ? 'disabled' : ''} onclick="changeOutdatedPage(${outdatedCurrentPage + 1})">
+      Sonraki <i class="fa fa-chevron-right"></i>
+    </button>`;
+
+    container.innerHTML = html;
+  }
+
+  function changeOutdatedPage(page) {
+    outdatedCurrentPage = page;
+    renderOutdatedTable();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+
+{% endblock %}
+
+{% block secondary %}
+{% endblock %}

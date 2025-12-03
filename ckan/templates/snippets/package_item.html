@@ -453,6 +453,7 @@
     .t-theme { width: 130px; min-width: 110px; }
     .t-upd { width: 140px; min-width: 140px; }
     .t-validity {width: 140px; min-width: 140px;}
+    .t-frequency {width: 150px; min-width: 130px;}
     .t-spatial { width: 130px; min-width: 110px; }
     .t-formats { width: 120px; min-width: 100px; }
     .t-actions { width: 150px; min-width: 130px; }
@@ -582,6 +583,8 @@
           <option value="date_asc">En Eski Önce</option>
           <option value="title_asc">A-Z (Alfabetik)</option>
           <option value="title_desc">Z-A (Alfabetik)</option>
+          <option value="validity_desc">Geçerlilik Tarihi (Yeni-Eski)</option>
+          <option value="validity_asc">Geçerlilik Tarihi (Eski-Yeni)</option>
         </select>
       </div>
       <div class="filter-section">
@@ -663,7 +666,8 @@
                 <th class="t-tags">Etiketler<div class="column-resizer"></div></th>
                 <th class="t-theme">Tema<div class="column-resizer"></div></th>
                 <th class="t-upd">Güncellenme<div class="column-resizer"></div></th>
-                <th class="t-validity">Veri Geçerlilik Yılı<div class="column-resizer"></div></th>
+                <th class="t-validity">Veri Geçerlilik Tarihi<div class="column-resizer"></div></th>
+                <th class="t-frequency">Güncellenme Sıklığı<div class="column-resizer"></div></th>
                 <th class="t-spatial">Mekansal gösterim<div class="column-resizer"></div></th>
                 <th class="t-formats">Formatlar<div class="column-resizer"></div></th>
                 <th class="t-actions">İşlemler</th>
@@ -688,9 +692,64 @@
     var currentPage = 1;
     var itemsPerPage = 20;
     var usersLoaded = false;
-    
+
     var currentThemeSlugFromURL = null; // URL'den alınan temanın slug'ı
     var currentThemeData = null; // URL'deki temaya ait tüm veriler (profil kartı için)
+
+    // Güncellenme sıklığı mapping
+    const frequencies = {
+      'Günlük': { days: 1, label: 'Günlük' },
+      'Haftalık': { days: 7, label: 'Haftalık' },
+      'İki Haftalık': { days: 14, label: 'İki Haftalık' },
+      'Aylık': { days: 30, label: 'Aylık' },
+      '3 Aylık': { days: 90, label: '3 Aylık' },
+      '6 Aylık': { days: 180, label: '6 Aylık' },
+      'Yıllık': { days: 365, label: 'Yıllık' },
+      'Düzensiz': { days: null, label: 'Düzensiz' }
+    };
+
+    // Geçerlilik tarihini hesapla
+    function calculateValidityDate(lastModified, frequency) {
+      if (!frequency || frequency === 'Düzensiz' || !frequencies[frequency]) {
+        return null;
+      }
+
+      const freqDays = frequencies[frequency].days;
+      if (!freqDays) return null;
+
+      const lastModDate = new Date(lastModified);
+      const validityDate = new Date(lastModDate);
+      validityDate.setDate(validityDate.getDate() + freqDays);
+
+      return validityDate;
+    }
+
+    // Güncellik durumunu kontrol et
+    function checkValidityStatus(pkg) {
+      // Gerçek veri güncellenme tarihini belirle
+      const lastDataUpdate = pkg.last_data_update || pkg.metadata_modified;
+
+      if (!pkg.update_frequency || !lastDataUpdate) {
+        return null;
+      }
+
+      const validityDate = calculateValidityDate(lastDataUpdate, pkg.update_frequency);
+
+      if (!validityDate) {
+        return null; // Düzensiz
+      }
+
+      const now = new Date();
+      const isOutdated = now > validityDate;
+      const diffTime = now - validityDate;
+      const daysOverdue = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+      return {
+        isOutdated,
+        validityDate,
+        daysOverdue
+      };
+    }
 
     // YENİ: Görünürlük filtresi değişkenleri
     var showPublic = true;
@@ -978,16 +1037,16 @@
         await Promise.all(batch.map(userId => fetchUsername(userId)));
         const progress = Math.min(batches.indexOf(batch) * batchSize + batch.length, uniqueUserIds.length);
         console.log(`📊 User yükleme: ${progress}/${uniqueUserIds.length}`);
-        
-        // UI'yi güncelle ama çok sık değil
+
+        // UI'yi güncelle ama çok sık değil (updateUsersFilter kaldırıldı - kullanılmıyor)
         if (progress % 50 === 0 || progress === uniqueUserIds.length) {
-          updateUsersFilter();
+          // Skip - no filter update needed
         }
       }
-      
+
       usersLoaded = true;
       console.log('✅ Tüm user bilgileri yüklendi:', Object.keys(userCache).length);
-      updateUsersFilter();
+      // updateUsersFilter kaldırıldı - kullanılmıyor
     }
 
 
@@ -1255,6 +1314,14 @@
             var ta = a.metadata_modified ? Date.parse(a.metadata_modified) : 0;
             var tb = b.metadata_modified ? Date.parse(b.metadata_modified) : 0;
             return ta - tb;
+          case 'validity_desc':
+            var va = a.validity_date ? Date.parse(a.validity_date) : 0;
+            var vb = b.validity_date ? Date.parse(b.validity_date) : 0;
+            return vb - va;
+          case 'validity_asc':
+            var va = a.validity_date ? Date.parse(a.validity_date) : 0;
+            var vb = b.validity_date ? Date.parse(b.validity_date) : 0;
+            return va - vb;
           case 'title_asc':
             var titleA = (a.title || a.name || '').toLowerCase();
             var titleB = (b.title || b.name || '').toLowerCase();
@@ -1339,7 +1406,7 @@
       
       if (pageDatasets.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="11" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td>`;
+        tr.innerHTML = `<td colspan="12" style="text-align:center; color:#9b98a7; font-size:1.08em; padding:46px 0;">Filtreye uyan kayıt yok.</td>`;
         fragment.appendChild(tr);
       } else {
         pageDatasets.forEach(pkg => {
@@ -1353,14 +1420,33 @@
           var groups = pkg.groups?.length ? pkg.groups.map(g => `<span class="group-tag">${g.display_name || g.title || g.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
           var tags = pkg.tags?.length ? pkg.tags.map(t => `<span class="tag-tag">${t.display_name || t.name}</span>`).join(' ') : '<span class="empty-cell">Yok</span>';
           var theme = pkg.themeName ? `<span class="theme-tag">${pkg.themeName}</span>` : '<span class="empty-cell">Yok</span>';
-          var upd = pkg.metadata_modified ? new Date(pkg.metadata_modified).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
-          var validity = pkg.metadata_created ? new Date(pkg.metadata_created).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
+
+          // Gerçek veri güncellenme tarihini göster
+          var lastDataUpdate = pkg.last_data_update || pkg.metadata_modified;
+          var upd = lastDataUpdate ? new Date(lastDataUpdate).toLocaleDateString('tr-TR') : '<span class="empty-cell">–</span>';
+
+          // Geçerlilik tarihi otomatik hesapla
+          var validity = '<span class="empty-cell">–</span>';
+          if (pkg.update_frequency && lastDataUpdate) {
+            const validityStatus = checkValidityStatus(pkg);
+            if (validityStatus && validityStatus.validityDate) {
+              validity = validityStatus.validityDate.toLocaleDateString('tr-TR');
+              // Gecikmiş ise kırmızı yap
+              if (validityStatus.isOutdated) {
+                validity = `<span style="color: #dc3545; font-weight: 600;">${validity} <small>(${validityStatus.daysOverdue}g)</small></span>`;
+              }
+            } else if (pkg.update_frequency === 'Düzensiz') {
+              validity = '<span class="empty-cell">Düzensiz</span>';
+            }
+          }
+
+          var frequency = pkg.update_frequency ? pkg.update_frequency : '<span class="empty-cell">–</span>';
           var spatial = pkg.hasSpatial ? '<span class="spatial-tag var">Var</span>' : '<span class="spatial-tag yok">Yok</span>';
           var formats = Object.keys(pkg.fmts).length ? Object.keys(pkg.fmts).map(f => `<span class="format-tag ${formatClass(f)}">${f.toUpperCase()}</span>`).join(' ') : '<span class="empty-cell">–</span>';
 
           var editLink = '/dataset/edit/' + encodeURIComponent(pkg.name);
           var deleteLink = '/dataset/delete/' + encodeURIComponent(pkg.name);
-          
+
           tr.innerHTML = `
             <td class="t-title"><a href="${link}" class="dataset-link">${title}</a>${pkg.private ? '<span title="Gizli" style="color:#d32f2f;margin-left:7px;font-size:1em;">🔒</span>' : ''}</td>
             <td class="t-desc">${desc}</td>
@@ -1370,6 +1456,7 @@
             <td class="t-theme">${theme}</td>
             <td class="t-upd">${upd}</td>
             <td class="t-validity">${validity}</td>
+            <td class="t-frequency">${frequency}</td>
             <td class="t-spatial">${spatial}</td>
             <td class="t-formats">${formats}</td>
             <td class="t-actions">
@@ -1477,6 +1564,25 @@
           const themeName = datasetThemeMap[pkg.id] || null;
           const hasSpatial = spatialResourcesMap[pkg.id] || false;
 
+          // Extras'tan validity_date, update_frequency ve last_data_update'i çıkar
+          let validityDate = null;
+          let updateFrequency = null;
+          let lastDataUpdate = null;
+          if (pkg.extras) {
+            const validityExtra = pkg.extras.find(e => e.key === 'validity_date');
+            if (validityExtra) {
+              validityDate = validityExtra.value;
+            }
+            const frequencyExtra = pkg.extras.find(e => e.key === 'update_frequency');
+            if (frequencyExtra) {
+              updateFrequency = frequencyExtra.value;
+            }
+            const lastDataUpdateExtra = pkg.extras.find(e => e.key === 'last_data_update');
+            if (lastDataUpdateExtra) {
+              lastDataUpdate = lastDataUpdateExtra.value;
+            }
+          }
+
           return {
             ...pkg,
             orgTitle: orgTitle,
@@ -1485,7 +1591,10 @@
             groupTitles: groupTitles,
             tagNames: tagNames,
             themeName: themeName,
-            hasSpatial: hasSpatial
+            hasSpatial: hasSpatial,
+            validity_date: validityDate,
+            update_frequency: updateFrequency,
+            last_data_update: lastDataUpdate
           };
         });
         
@@ -1545,7 +1654,7 @@
 
       } catch (error) {
         console.error('Veri yüklenirken hata:', error);
-        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="11" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
+        document.getElementById('dataset-table-body').innerHTML = `<tr><td colspan="12" style="text-align:center; color:#d32f2f; font-size:1.08em; padding:46px 0;">Veri yüklenirken hata oluştu.</td></tr>`;
       }
     }
 

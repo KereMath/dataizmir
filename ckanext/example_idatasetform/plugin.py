@@ -98,6 +98,15 @@ class ExampleIDatasetFormPlugin(plugins.SingletonPlugin,
         schema['resources'].update({
                 'custom_resource_text' : [ tk.get_validator('ignore_missing') ]
                 })
+        # Add update frequency and next update date fields
+        schema.update({
+                'update_frequency': [tk.get_validator('ignore_missing'),
+                    tk.get_converter('convert_to_extras')]
+                })
+        schema.update({
+                'next_update_date': [tk.get_validator('ignore_missing'),
+                    tk.get_converter('convert_to_extras')]
+                })
         return schema
 
     def create_package_schema(self):
@@ -133,6 +142,17 @@ class ExampleIDatasetFormPlugin(plugins.SingletonPlugin,
         schema['resources'].update({
                 'custom_resource_text' : [ tk.get_validator('ignore_missing') ]
             })
+
+        # Add update frequency and next update date fields
+        schema.update({
+            'update_frequency': [tk.get_converter('convert_from_extras'),
+                tk.get_validator('ignore_missing')]
+            })
+        schema.update({
+            'next_update_date': [tk.get_converter('convert_from_extras'),
+                tk.get_validator('ignore_missing')]
+            })
+
         return schema
 
     # These methods just record how many times they're called, for testing

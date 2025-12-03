@@ -22,6 +22,52 @@
     {{ form.input('maintainer_email', label=_('Maintainer Email'), id='field-maintainer-email', placeholder=_('joe@example.com'), value=data.maintainer_email, error=errors.maintainer_email, classes=['control-medium']) }}
   {% endblock %}
 
+  {% block package_metadata_fields_update_frequency %}
+    {% set update_frequency_value = data.get('update_frequency', '') %}
+    {% if data.extras %}
+      {% for extra in data.extras %}
+        {% if extra.key == 'update_frequency' %}
+          {% set update_frequency_value = extra.value %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {{ form.select('update_frequency', label=_('Veri Güncellenme Sıklığı'),
+      id='field-update-frequency',
+      options=[
+        {'value': '', 'text': _('Seçiniz')},
+        {'value': 'daily', 'text': _('Günlük')},
+        {'value': 'weekly', 'text': _('Haftalık')},
+        {'value': 'monthly', 'text': _('Aylık')},
+        {'value': 'quarterly', 'text': _('3 Aylık')},
+        {'value': 'biannually', 'text': _('6 Aylık')},
+        {'value': 'annually', 'text': _('Yıllık')},
+        {'value': 'irregularly', 'text': _('Düzensiz')}
+      ],
+      selected=update_frequency_value,
+      error=errors.update_frequency,
+      classes=['control-medium']
+    ) }}
+
+    {% set next_update_date_value = data.get('next_update_date', '') %}
+    {% if data.extras %}
+      {% for extra in data.extras %}
+        {% if extra.key == 'next_update_date' %}
+          {% set next_update_date_value = extra.value %}
+        {% endif %}
+      {% endfor %}
+    {% endif %}
+
+    {{ form.input('next_update_date', label=_('Sonraki Güncellenme Tarihi'),
+      id='field-next-update-date',
+      type='date',
+      placeholder=_('YYYY-MM-DD'),
+      value=next_update_date_value,
+      error=errors.next_update_date,
+      classes=['control-medium']
+    ) }}
+  {% endblock %}
+
   {% block package_metadata_fields_custom %}
     {% block custom_fields %}
       {% snippet 'snippets/custom_form_fields.html', extras=data.extras, errors=errors, limit=3 %}

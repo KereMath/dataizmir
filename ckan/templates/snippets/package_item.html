@@ -682,6 +682,10 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tinycolor/1.6.0/tinycolor.min.js"></script>
 <script>
+  // Sadece bir kere çalıştır - multiple include koruması
+  if (typeof window.packageItemInitialized === 'undefined') {
+    window.packageItemInitialized = true;
+
     // --- Değişkenler ---
     var allDatasets = [];
     var filteredDatasets = [];
@@ -862,12 +866,12 @@
       e.preventDefault();
     }
 
-    const doResize = rafDebounce((e) => {
+    var doResize = rafDebounce((e) => {
       if (!isResizing || !currentColumn) return;
-      
+
       const width = startWidth + e.pageX - startX;
       const minWidth = parseInt(window.getComputedStyle(currentColumn).minWidth, 10) || 100;
-      
+
       if (width >= minWidth) {
         currentColumn.style.width = width + 'px';
       }
@@ -2120,6 +2124,8 @@
       // 2 saniye bekleyip rolleri çek (sayfanın tamamen yüklenmesi için)
       setTimeout(getCurrentUserRoles, 2000);
     });
+
+  } // End of initialization guard
 </script>
 </body>
 </html>

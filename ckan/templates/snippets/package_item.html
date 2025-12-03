@@ -696,17 +696,20 @@
     var currentThemeSlugFromURL = null; // URL'den alınan temanın slug'ı
     var currentThemeData = null; // URL'deki temaya ait tüm veriler (profil kartı için)
 
-    // Güncellenme sıklığı mapping
-    const frequencies = {
-      'Günlük': { days: 1, label: 'Günlük' },
-      'Haftalık': { days: 7, label: 'Haftalık' },
-      'İki Haftalık': { days: 14, label: 'İki Haftalık' },
-      'Aylık': { days: 30, label: 'Aylık' },
-      '3 Aylık': { days: 90, label: '3 Aylık' },
-      '6 Aylık': { days: 180, label: '6 Aylık' },
-      'Yıllık': { days: 365, label: 'Yıllık' },
-      'Düzensiz': { days: null, label: 'Düzensiz' }
-    };
+    // Güncellenme sıklığı mapping - sadece bir kere tanımla
+    if (typeof window.frequencies === 'undefined') {
+      window.frequencies = {
+        'Günlük': { days: 1, label: 'Günlük' },
+        'Haftalık': { days: 7, label: 'Haftalık' },
+        'İki Haftalık': { days: 14, label: 'İki Haftalık' },
+        'Aylık': { days: 30, label: 'Aylık' },
+        '3 Aylık': { days: 90, label: '3 Aylık' },
+        '6 Aylık': { days: 180, label: '6 Aylık' },
+        'Yıllık': { days: 365, label: 'Yıllık' },
+        'Düzensiz': { days: null, label: 'Düzensiz' }
+      };
+    }
+    const frequencies = window.frequencies;
 
     // Geçerlilik tarihini hesapla
     function calculateValidityDate(lastModified, frequency) {
